@@ -1,4 +1,4 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -22,7 +22,7 @@ body {
   min-height: 100vh;
   background: linear-gradient(135deg, #d9d9da, #228db7);
   padding: 1rem;
-  padding-bottom: 5rem; /* Added padding for footer */
+  padding-bottom: 5rem;
 }
 
 .card {
@@ -80,7 +80,6 @@ a:hover {
   color: #0284c7;
 }
 
-/* Navigation Bar Styles */
 nav {
   border-radius: 0 0 12px 12px;
   margin: 0 1rem;
@@ -97,7 +96,6 @@ nav a:hover {
   color: #06b6d4;
 }
 
-/* Footer Styles */
 footer {
   box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1),
     0 -2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -105,21 +103,22 @@ footer {
 
 body {
   display: flex;
-  flex-direction: column; /* Ensures navbar, content, and footer align properly */
+  flex-direction: column;
   align-items: center;
 }
 
 main {
-  flex-grow: 1; /* Pushes content to take up remaining space */
+  flex-grow: 1;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  margin-top: 80px; /* Prevents navbar from overlapping */
-  margin-bottom: 80px; /* Prevents footer from overlapping */
+  margin-top: 80px;
+  margin-bottom: 80px;
 }
 
-nav, footer {
+nav,
+footer {
   position: fixed;
   left: 0;
   width: 100%;
@@ -137,7 +136,6 @@ footer {
 }
 
 
-/* Responsive Design */
 @media (max-width: 1024px) {
   .card {
     max-width: 90%;
@@ -150,17 +148,21 @@ footer {
     flex-direction: column;
     padding: 1rem;
   }
+
   .card {
     width: 100%;
     padding: 1.2rem;
   }
+
   input {
     font-size: 0.9rem;
     padding: 0.6rem;
   }
+
   button {
     padding: 0.7rem;
   }
+
   nav {
     margin: 0 0.5rem;
   }
@@ -172,12 +174,206 @@ footer {
     padding: 1rem;
     border-radius: 12px;
   }
+
   input {
     font-size: 0.85rem;
     padding: 0.5rem;
   }
+
   button {
     font-size: 0.9rem;
     padding: 0.6rem;
+  }
+} */
+
+
+/* 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 199 89% 57%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.75rem;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+}
+
+.glass-card {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  border-radius: var(--radius);
+}
+
+.hover-transform {
+  @apply transition-transform duration-200 hover:scale-[1.02];
+}
+*/
+
+/* 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 252 100% 97%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+} */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 199 89% 57%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.75rem;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg shadow-sm;
+  }
+
+  .hover-transform {
+    @apply transition-transform duration-200 hover:scale-[1.02];
+  }
+
+  .primary-button {
+    @apply px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors;
+  }
+
+  .secondary-button {
+    @apply px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors;
+  }
+
+  .form-input {
+    @apply w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
   }
 }
