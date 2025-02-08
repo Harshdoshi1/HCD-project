@@ -3,7 +3,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/auth_routes');
-
 const app = express();
 
 // Connect to Database
@@ -15,6 +14,7 @@ app.use(bodyParser.json());
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/', userRoutes);
 
 const PORT = process.env.PORT || 5000; // Changed from 5000 to 5001
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

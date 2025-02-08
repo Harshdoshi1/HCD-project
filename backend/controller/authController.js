@@ -2,6 +2,41 @@ const User = require('../models/users');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Faculty = require('../models/faculty');
+const Batch = require("../models/batch");
+
+// @desc    Create a new batch
+// @route   POST /api/batches
+// @access  Admin (HOD)
+
+
+const getAllBatches = async (req, res) => {
+    try {
+      const batches = await Batch.find();
+      res.status(200).json(batches);
+    } catch (error) {
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  };
+
+
+const addBatch = async (req, res) => {
+  try {
+    const { batchName } = req.body;
+
+    // Check if batch already exists
+    const existingBatch = await Batch.findOne({ batchName });
+    if (existingBatch) {
+      return res.status(400).json({ message: "Batch already exists" });
+    }
+
+    const batch = new Batch({ batchName });
+    await batch.save();
+    res.status(201).json({ message: "Batch created successfully", batch });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 
 // @desc    Register new user
 // @route   POST /api/users/register
@@ -114,4 +149,4 @@ const getAllUsers = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getAllUsers, addFaculty };
+module.exports = { registerUser, loginUser, getAllUsers, addFaculty, addBatch, getAllBatches };
