@@ -3,60 +3,67 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #f5f8ff;
+    background: linear-gradient(135deg, #c5dce4, rgb(167, 193, 210));
     padding: 20px;
+    animation: fadeInBg 1s ease-in-out;
 }
 
+/* Login Box */
 .login-box {
     background: white;
     padding: 40px;
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
-    animation: fadeIn 0.5s ease-out;
+    text-align: center;
+    animation: slideIn 0.6s ease-out;
 }
 
+/* Title */
 .login-box h1 {
-    margin: 0 0 8px 0;
-    color: #333;
+    color: #062c43;
     font-size: 28px;
-    font-weight: 600;
+    font-weight: 700;
+    margin-bottom: 8px;
 }
 
 .subtitle {
-    color: #666;
-    margin-bottom: 30px;
+    color: #555;
     font-size: 16px;
+    margin-bottom: 30px;
 }
 
+/* Input Groups */
 .input-group {
+    text-align: left;
     margin-bottom: 24px;
 }
 
 .input-group label {
     display: block;
-    margin-bottom: 8px;
-    color: #333;
+    margin-bottom: 6px;
+    color: #062c43;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .input-group input {
     width: 100%;
     padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    border: 1px solid #c4d7e0;
+    border-radius: 8px;
     font-size: 15px;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .input-group input:focus {
     outline: none;
-    border-color: #33C3F0;
-    box-shadow: 0 0 0 2px rgba(51, 195, 240, 0.1);
+    border-color: #20a7db;
+    box-shadow: 0 0 8px rgba(32, 167, 219, 0.3);
 }
 
+/* Forgot Password */
 .form-footer {
     display: flex;
     justify-content: flex-end;
@@ -66,38 +73,68 @@
 .forgot-password {
     background: none;
     border: none;
-    color: #33C3F0;
+    color: #20a7db;
     font-size: 14px;
     cursor: pointer;
-    padding: 0;
+    font-weight: 500;
     transition: color 0.3s ease;
 }
 
 .forgot-password:hover {
-    color: #0FA0CE;
+    color: #0d87b8;
 }
 
+/* Login Button */
 .login-button {
     width: 100%;
     padding: 12px;
-    background-color: #33C3F0;
+    background: linear-gradient(90deg, #20a7db, #0d87b8);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 .login-button:hover {
-    background-color: #0FA0CE;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(32, 167, 219, 0.3);
 }
 
-@keyframes fadeIn {
+.login-button:disabled {
+    background: #a0d8ef;
+    cursor: not-allowed;
+}
+
+/* Error Message */
+.error-message {
+    background: #ffdddd;
+    color: #d32f2f;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* Animations */
+@keyframes fadeInBg {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: scale(1.02);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
     }
 
     to {
@@ -106,6 +143,7 @@
     }
 }
 
+/* Responsive */
 @media (max-width: 480px) {
     .login-box {
         padding: 30px 20px;
