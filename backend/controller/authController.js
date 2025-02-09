@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Faculty = require('../models/faculty');
 const Batch = require("../models/batch");
+const Semester = require("../models/semester");
 
 // @desc    Create a new batch
 // @route   POST /api/batches
@@ -149,4 +150,61 @@ const getAllUsers = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getAllUsers, addFaculty, addBatch, getAllBatches };
+
+
+const addSemester = async (req, res) => {
+    try {
+        const { batchName, semesterNumber, startDate, endDate } = req.body;
+
+        // Validate input
+        if (!batchName || !semesterNumber || !startDate || !endDate) {
+            return res.status(400).json({ message: "All fields are required." });
+        }
+
+        // Find the batch by name
+        const batch = await Batch.findOne({ batchName });
+
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found." });
+        }
+
+        // Create new semester
+        const newSemester = new Semester({
+            batchId: batch._id, 
+            semesterNumber, 
+            startDate, 
+            endDate
+        });
+
+        await newSemester.save();
+        res.status(201).json({ message: "Semester added successfully", semester: newSemester });
+
+    } catch (error) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+
+
+
+// Get semesters by batch name
+const getSemestersByBatch = async (req, res) => {
+    try {
+        const { batchName } = req.query;
+        if (!batchName) return res.status(400).json({ message: "Batch name is required" });
+
+        // Find batch by name
+        const batch = await Batch.findOne({ batchName });
+        if (!batch) return res.status(404).json({ message: "Batch not found" });
+
+        // Get semesters for the batch
+        const semesters = await Semester.find({ batchId: batch._id });
+        res.status(200).json(semesters);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
+
+module.exports = { registerUser, loginUser,getSemestersByBatch, getAllUsers, addFaculty, addBatch, getAllBatches ,addSemester};
