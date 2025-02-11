@@ -1,62 +1,3 @@
-// import React, { useState } from 'react';
-// import './Login.css';
-
-// const Login = () => {
-//     const [email, setEmail] = useState('');
-//     const [password, setPassword] = useState('');
-
-//     const handleSubmit = (e) => {
-//         e.preventDefault();
-//         console.log('Login attempt with:', { email });
-//     };
-
-//     return (
-//         <div className="login-container">
-//             <div className="login-box">
-//                 <h1>Welcome Back</h1>
-//                 <p className="subtitle">Please enter your details</p>
-
-//                 <form onSubmit={handleSubmit}>
-//                     <div className="input-group">
-//                         <label htmlFor="email">Email</label>
-//                         <input
-//                             type="email"
-//                             id="email"
-//                             value={email}
-//                             onChange={(e) => setEmail(e.target.value)}
-//                             placeholder="Enter your email"
-//                             required
-//                         />
-//                     </div>
-
-//                     <div className="input-group">
-//                         <label htmlFor="password">Password</label>
-//                         <input
-//                             type="password"
-//                             id="password"
-//                             value={password}
-//                             onChange={(e) => setPassword(e.target.value)}
-//                             placeholder="Enter your password"
-//                             required
-//                         />
-//                     </div>
-
-//                     <div className="form-footer">
-//                         <button type="button" className="forgot-password">
-//                             Forgot password?
-//                         </button>
-//                     </div>
-
-//                     <button type="submit" className="login-button">
-//                         Log in
-//                     </button>
-//                 </form>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default Login;
 
 import React, { useState } from 'react';
 import './Login.css';
@@ -73,7 +14,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5000/api/users/loginUser', {
+            const response = await fetch('http://localhost:5001/api/users/loginUser', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

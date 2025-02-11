@@ -1,16 +1,20 @@
 .navbar {
+    position: fixed;
+    top: 0px;
+    max-width: 78vw;
+    left: 20vw;
+    width: calc(100% - 220px);
     background-color: white;
-    padding: 1rem 2rem;
+    padding: 0.7rem;
     display: flex;
-    justify-content: space-between;
+    justify-content: end;
     align-items: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.welcome {
-    font-size: 1.2rem;
-    color: #333;
-    font-weight: 500;
+    border-radius: 10px;
+    margin-bottom: 3px;
+    height: 5.5vh;
+    z-index: 1000;
+    margin-left: -5px;
 }
 
 .nav-right {
@@ -33,4 +37,23 @@
 
 .nav-button:hover {
     background-color: #D3E4FD;
+}
+
+
+.profile-img {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.profile-img {
+    width: 38px;
+    height: auto;
+    border: 1px solid #33C3F0;
+    border-radius: 50%;
+}
+
+.profile-img:hover {
+    transform: scale(1.1);
+
 }

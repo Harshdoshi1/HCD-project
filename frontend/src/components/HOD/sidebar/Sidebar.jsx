@@ -13,15 +13,12 @@ const Sidebar = ({ activeItem, setActiveItem }) => {
 
     return (
         <div className="sidebar">
+            <div className="sidebar-logo">
+                <img className="logo-img" src="https://ictmu.in/frontpage/page/images/ict_logo2.png" alt="ict-logo" />
+                <h3>Some Text</h3>
+            </div>
             {menuItems.map((item) => (
-                // <button
-                //     key={item.id}
-                //     className={`sidebar-item ${activeItem === item.id ? 'active' : ''}`}
-                //     onClick={() => setActiveItem(item.id)}
-                // >
-                //     <item.icon size={20} />
-                //     <span>{item.label}</span>
-                // </button>
+
                 <button
                     key={item.id}
                     className={`sidebar-item ${activeItem === item.id ? 'active' : ''}`}

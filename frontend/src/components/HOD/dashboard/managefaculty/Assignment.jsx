@@ -11,14 +11,14 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     const [batches, setBatches] = useState([]);
     const [semesters, setSemesters] = useState([]);
     const [faculties, setFaculties] = useState([]);
-    
+
     const subjects = ["Data Structures", "Digital Electronics", "Computer Networks", "Database Management"];
 
     // Fetch all batches from backend
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/getAllBatches");
+                const response = await fetch("http://localhost:5001/api/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data);
@@ -34,10 +34,10 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     useEffect(() => {
         const fetchFaculties = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/getAllUsers");
+                const response = await fetch("http://localhost:5001/api/getAllUsers");
                 if (!response.ok) throw new Error("Failed to fetch faculty members");
                 const data = await response.json();
-                
+
                 // Filter only users with role "Faculty"
                 const facultyList = data.filter(user => user.role === "Faculty");
                 setFaculties(facultyList);
@@ -57,7 +57,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                 return;
             }
 
-            const response = await fetch(`http://localhost:5000/api/getSemestersByBatch?batchName=${batchName}`);
+            const response = await fetch(`http://localhost:5001/api/getSemestersByBatch?batchName=${batchName}`);
             if (!response.ok) throw new Error("Failed to fetch semesters");
             const data = await response.json();
             setSemesters(data);
@@ -68,7 +68,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        
+
         setAssignment((prev) => ({
             ...prev,
             [name]: value,
@@ -90,7 +90,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         <div className="faculty-assignment-container">
             <form onSubmit={handleSubmit} className="assignment-form">
                 <div className="form-grid">
-                    
+
                     {/* Select Batch */}
                     <div className="form-group">
                         <label>Select Batch</label>
