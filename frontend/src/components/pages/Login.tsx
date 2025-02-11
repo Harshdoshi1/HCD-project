@@ -1,14 +1,56 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+=======
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+>>>>>>> ccc19ce8b349fcded2340686a68d563fe6b325ba
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+<<<<<<< HEAD
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Login attempt', { email, password });
+=======
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/users/loginUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Store the token and user data in local storage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirect to the dashboard or any protected page
+      window.location.href = '/dashboard';
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+>>>>>>> ccc19ce8b349fcded2340686a68d563fe6b325ba
   };
 
   return (
@@ -22,9 +64,18 @@ const Login: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-grow flex justify-center items-center">
+<<<<<<< HEAD
         <div className="card p-8 shadow-lg rounded-lg bg-white">
           <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
           <p className="mb-6 opacity-80 text-center">Sign in to access your dashboard</p>
+=======
+        <div className="card p-8 shadow-lg rounded-lg bg-white w-96">
+          <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+          <p className="mb-6 opacity-80 text-center">Sign in to access your dashboard</p>
+          
+          {error && <p className="text-red-500 text-sm text-center mb-2">{error}</p>}
+
+>>>>>>> ccc19ce8b349fcded2340686a68d563fe6b325ba
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input 
               type="email" 
@@ -43,8 +94,13 @@ const Login: React.FC = () => {
             <div className="text-right">
               <a href="#" className="text-sm hover:underline">Forgot password?</a>
             </div>
+<<<<<<< HEAD
             <Button type="submit" className="w-full rounded-[20px]">
               Sign in
+=======
+            <Button type="submit" className="w-full rounded-[20px]" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign in'}
+>>>>>>> ccc19ce8b349fcded2340686a68d563fe6b325ba
             </Button>
           </form>
         </div>
