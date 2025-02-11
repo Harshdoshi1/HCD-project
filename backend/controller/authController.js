@@ -1,45 +1,40 @@
-const User = require('../models/users');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const Faculty = require('../models/faculty');
-const Batch = require("../models/batch");
-const Semester = require("../models/semester");
+const { User, Faculty, Batch, Semester } = require('../models'); // Import models
 
-// @desc    Create a new batch
-// @route   POST /api/batches
+// @desc    Get all batches
+// @route   GET /api/batches
 // @access  Admin (HOD)
-
-
 const getAllBatches = async (req, res) => {
     try {
-      const batches = await Batch.find();
-      res.status(200).json(batches);
+        const batches = await Batch.findAll(); // Sequelize equivalent of find()
+        res.status(200).json(batches);
     } catch (error) {
-      res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error", error: error.message });
     }
-  };
-
-
-const addBatch = async (req, res) => {
-  try {
-    const { batchName } = req.body;
-
-    // Check if batch already exists
-    const existingBatch = await Batch.findOne({ batchName });
-    if (existingBatch) {
-      return res.status(400).json({ message: "Batch already exists" });
-    }
-
-    const batch = new Batch({ batchName });
-    await batch.save();
-    res.status(201).json({ message: "Batch created successfully", batch });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
 };
 
+// @desc    Add a new batch
+// @route   POST /api/batches
+// @access  Admin (HOD)
+const addBatch = async (req, res) => {
+    try {
+        const { batchName } = req.body;
 
-// @desc    Register new user
+        // Check if batch already exists
+        const existingBatch = await Batch.findOne({ where: { batchName } });
+        if (existingBatch) {
+            return res.status(400).json({ message: "Batch already exists" });
+        }
+
+        const batch = await Batch.create({ batchName });
+        res.status(201).json({ message: "Batch created successfully", batch });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+// @desc    Register a new user
 // @route   POST /api/users/register
 // @access  Public
 const registerUser = async (req, res) => {
@@ -47,7 +42,7 @@ const registerUser = async (req, res) => {
         const { name, email, password, role } = req.body;
 
         // Check if user already exists
-        const userExists = await User.findOne({ email });
+        const userExists = await User.findOne({ where: { email } });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
@@ -56,9 +51,8 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create new user
-        const user = new User({ name, email, password: hashedPassword, role });
-        await user.save();
+        // Create user
+        const user = await User.create({ name, email, password: hashedPassword, role });
 
         res.status(201).json({ message: 'User registered successfully', user });
     } catch (error) {
@@ -66,19 +60,19 @@ const registerUser = async (req, res) => {
     }
 };
 
-
-
+// @desc    Add faculty (Admin/HOD only)
+// @route   POST /api/faculty
+// @access  Admin (HOD)
 const addFaculty = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
-        // Ensure role is 'faculty'
         if (role !== 'Faculty') {
             return res.status(400).json({ message: 'Invalid role. Only faculty can be added.' });
         }
 
-        // Check if user already exists
-        const userExists = await User.findOne({ email });
+        // Check if faculty already exists
+        const userExists = await User.findOne({ where: { email } });
         if (userExists) {
             return res.status(400).json({ message: 'Faculty already exists' });
         }
@@ -87,18 +81,16 @@ const addFaculty = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create new faculty user
-        const newUser = new User({ name, email, password: hashedPassword, role });
-        await newUser.save();
+        // Create faculty user
+        const newUser = await User.create({ name, email, password: hashedPassword, role });
 
-        // Create faculty record with user ID
-        const newFaculty = new Faculty({ user: newUser._id });
-        await newFaculty.save();
+        // Create faculty record
+        const newFaculty = await Faculty.create({ userId: newUser.id });
 
         res.status(201).json({ 
             message: 'Faculty registered successfully', 
             user: newUser, 
-            facultyId: newFaculty._id 
+            facultyId: newFaculty.id 
         });
 
     } catch (error) {
@@ -114,7 +106,7 @@ const loginUser = async (req, res) => {
         const { email, password } = req.body;
 
         // Check if user exists
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ where: { email } });
         if (!user) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
@@ -127,7 +119,7 @@ const loginUser = async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { id: user._id, role: user.role },
+            { id: user.id, role: user.role },
             process.env.JWT_SECRET || 'your_secret_key',
             { expiresIn: '1h' }
         );
@@ -143,40 +135,38 @@ const loginUser = async (req, res) => {
 // @access  Private (Requires Admin Role)
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find().select('-password'); // Exclude passwords
+        const users = await User.findAll({ attributes: { exclude: ['password'] } }); // Exclude password
         res.status(200).json(users);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 
-
-
+// @desc    Add a semester to a batch
+// @route   POST /api/semesters
+// @access  Admin (HOD)
 const addSemester = async (req, res) => {
     try {
         const { batchName, semesterNumber, startDate, endDate } = req.body;
 
-        // Validate input
         if (!batchName || !semesterNumber || !startDate || !endDate) {
             return res.status(400).json({ message: "All fields are required." });
         }
 
-        // Find the batch by name
-        const batch = await Batch.findOne({ batchName });
-
+        // Find batch
+        const batch = await Batch.findOne({ where: { batchName } });
         if (!batch) {
             return res.status(404).json({ message: "Batch not found." });
         }
 
-        // Create new semester
-        const newSemester = new Semester({
-            batchId: batch._id, 
+        // Create semester
+        const newSemester = await Semester.create({
+            batchId: batch.id, 
             semesterNumber, 
             startDate, 
             endDate
         });
 
-        await newSemester.save();
         res.status(201).json({ message: "Semester added successfully", semester: newSemester });
 
     } catch (error) {
@@ -184,27 +174,31 @@ const addSemester = async (req, res) => {
     }
 };
 
-
-
-
-// Get semesters by batch name
+// @desc    Get semesters by batch
+// @route   GET /api/semesters/:batchId
+// @access  Admin (HOD)
 const getSemestersByBatch = async (req, res) => {
     try {
-        const { batchName } = req.query;
-        if (!batchName) return res.status(400).json({ message: "Batch name is required" });
+        const { batchId } = req.params;
 
-        // Find batch by name
-        const batch = await Batch.findOne({ batchName });
-        if (!batch) return res.status(404).json({ message: "Batch not found" });
+        const semesters = await Semester.findAll({ where: { batchId } });
+        if (!semesters.length) {
+            return res.status(404).json({ message: "No semesters found for this batch." });
+        }
 
-        // Get semesters for the batch
-        const semesters = await Semester.find({ batchId: batch._id });
         res.status(200).json(semesters);
     } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
 
-
-
-module.exports = { registerUser, loginUser,getSemestersByBatch, getAllUsers, addFaculty, addBatch, getAllBatches ,addSemester};
+module.exports = {
+    registerUser,
+    loginUser,
+    getSemestersByBatch,
+    getAllUsers,
+    addFaculty,
+    addBatch,
+    getAllBatches,
+    addSemester
+};
