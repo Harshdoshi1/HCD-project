@@ -17,16 +17,16 @@ const AddFaculty = ({ onSuccess }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         const facultyDetails = {
             name: facultyData.name,
             email: facultyData.email,
-            password: facultyData.password, 
+            password: facultyData.password,
             role: 'Faculty', // Ensure faculty role
         };
 
         try {
-            const response = await fetch('http://localhost:5000/api/users/addfaculty', {
+            const response = await fetch('http://localhost:5001/api/users/addfaculty', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

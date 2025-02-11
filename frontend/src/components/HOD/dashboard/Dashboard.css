@@ -1,7 +1,9 @@
 .dashboard-container {
     display: flex;
     min-height: 100vh;
-    background-color: #f5f8ff;
+    background-color: hwb(222 96% 0%);
+    margin-left: 18vw;
+    margin-top: 8vh;
 }
 
 .main-content {
