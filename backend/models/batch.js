@@ -1,7 +1,9 @@
-const mongoose = require("mongoose");
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
 
-const batchSchema = new mongoose.Schema({
-  batchName: { type: String, unique: true, required: true }  // Example: "2022-2026"
-});
+const Batch = sequelize.define('Batch', {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    batchName: { type: DataTypes.STRING, unique: true, allowNull: false }
+}, { timestamps: false });
 
-module.exports = mongoose.model("Batch", batchSchema);
+module.exports = Batch;

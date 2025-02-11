@@ -1,8 +1,12 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
+const User = require('./users');
 
-const facultySchema = new mongoose.Schema({
-    _id: { type: mongoose.Schema.Types.ObjectId, auto: true }, // Faculty ID (PK)
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true }, // Foreign Key
+const Faculty = sequelize.define('Faculty', {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    userId: { type: DataTypes.INTEGER, unique: true, allowNull: false, references: { model: User, key: 'id' } }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Faculty', facultySchema);
+Faculty.belongsTo(User, { foreignKey: 'userId' });
+
+module.exports = Faculty;

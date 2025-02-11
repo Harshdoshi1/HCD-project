@@ -1,14 +1,31 @@
 const express = require('express');
-const { registerUser, loginUser,getAllUsers, addFaculty, addBatch, getAllBatches, addSemester, getSemestersByBatch } = require('../controller/authController');
+const {
+    registerUser,
+    loginUser,
+    getAllUsers,
+    addFaculty,
+    addBatch,
+    getAllBatches,
+    addSemester,
+    getSemestersByBatch
+} = require('../controller/authController'); // Ensure correct path
 
 const router = express.Router();
 
+// User Routes
 router.post('/register', registerUser);
-router.post('/loginUser', loginUser);
-router.post('/addfaculty', addFaculty);
-router.post('/addbatch', addBatch);
-router.get('/getAllBatches', getAllBatches);
+router.post('/login', loginUser);
 router.get('/getAllUsers', getAllUsers);
+
+// Faculty Routes
+router.post('/addFaculty', addFaculty);
+
+// Batch Routes
+router.post('/addBatch', addBatch);
+router.get('/getAllBatches', getAllBatches);
+
+// Semester Routes
 router.post('/addSemester', addSemester);
-router.get('/getSemestersByBatch', getSemestersByBatch);
+router.get('/getSemestersByBatch/:batchId', getSemestersByBatch);
+
 module.exports = router;
