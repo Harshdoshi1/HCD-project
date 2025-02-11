@@ -1,0 +1,162 @@
+/* General Styles */
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.min-h-screen {
+    min-height: 100vh;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.px-8 {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+.py-6 {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.bg-opacity-20 {
+    background-color: rgba(142, 145, 150, 0.2);
+}
+
+.backdrop-blur-md {
+    backdrop-filter: blur(12px);
+}
+
+.z-10 {
+    z-index: 10;
+}
+
+.border-b {
+    border-bottom-width: 1px;
+}
+
+.border-opacity-30 {
+    border-color: rgba(142, 145, 150, 0.3);
+}
+
+.text-4xl {
+    font-size: 2.25rem;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.text-gray-700 {
+    color: #403E43;
+}
+
+.tracking-wide {
+    letter-spacing: 0.025em;
+}
+
+.hover-text-primary:hover {
+    color: #6D28D9;
+}
+
+.transition-colors {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+.card {
+    background-color: white;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 0.5rem;
+    width: 24rem;
+}
+
+.text-2xl {
+    font-size: 1.5rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.opacity-80 {
+    opacity: 0.8;
+}
+
+.mb-6 {
+    margin-bottom: 1.5rem;
+}
+
+.text-red-500 {
+    color: #EF4444;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.space-y-4 > * + * {
+    margin-top: 1rem;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.hover-underline:hover {
+    text-decoration: underline;
+}
+
+.rounded-20px {
+    border-radius: 20px;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.border-t {
+    border-top-width: 1px;
+}
+
+.mx-1 {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+}
+
+.font-semibold {
+    font-weight: 600;
+}   

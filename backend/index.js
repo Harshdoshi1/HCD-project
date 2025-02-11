@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-const express = require("express");
-const app = express();
-const port = 3000;
-
-app.get("/", (req, res) => {
-  res.send("Let's start the project");
-});
-
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
-=======
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -31,4 +18,3 @@ app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
->>>>>>> ccc19ce8b349fcded2340686a68d563fe6b325ba
