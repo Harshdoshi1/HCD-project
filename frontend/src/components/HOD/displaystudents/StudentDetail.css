@@ -63,7 +63,7 @@
     min-width: 150px;
 }
 
-.subjects-grid {
+.subjects-grid-std {
     display: inline;
     /* background-color: #991b1b; */
     gap: 1rem;
