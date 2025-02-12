@@ -177,20 +177,43 @@ const addSemester = async (req, res) => {
 // @desc    Get semesters by batch
 // @route   GET /api/semesters/:batchId
 // @access  Admin (HOD)
+
 const getSemestersByBatch = async (req, res) => {
     try {
-        const { batchId } = req.params;
+        console.log("Received request with params:", req.params); // Debugging log
 
-        const semesters = await Semester.findAll({ where: { batchId } });
+        const { batchName } = req.params; // Use params instead of query
+        if (!batchName) {
+            console.log("❌ Missing batchName in request.");
+            return res.status(400).json({ message: "Batch name is required." });
+        }
+
+        console.log(`🔍 Searching for batch: ${batchName}`);
+        const batch = await Batch.findOne({ where: { batchName } });
+
+        if (!batch) {
+            console.log(`❌ Batch '${batchName}' not found in DB.`);
+            return res.status(404).json({ message: "Batch not found." });
+        }
+
+        console.log(`✅ Found batch with ID: ${batch.id}, fetching semesters...`);
+        const semesters = await Semester.findAll({ where: { batchId: batch.id } });
+
         if (!semesters.length) {
+            console.log(`⚠️ No semesters found for batch ID: ${batch.id}`);
             return res.status(404).json({ message: "No semesters found for this batch." });
         }
 
+        console.log(`✅ Found ${semesters.length} semesters. Sending response.`);
         res.status(200).json(semesters);
     } catch (error) {
+        console.error("❌ Server Error:", error.message);
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
+
+
+
 
 module.exports = {
     registerUser,

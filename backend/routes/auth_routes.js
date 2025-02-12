@@ -26,6 +26,7 @@ router.get('/getAllBatches', getAllBatches);
 
 // Semester Routes
 router.post('/addSemester', addSemester);
-router.get('/getSemestersByBatch/:batchId', getSemestersByBatch);
+router.get('/getSemestersByBatch/:batchName', getSemestersByBatch);
+router.get('/getSemestersByBatch', getSemestersByBatch);
 
 module.exports = router;
