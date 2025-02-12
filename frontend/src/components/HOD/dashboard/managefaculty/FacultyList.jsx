@@ -14,7 +14,7 @@ const FacultyList = ({ onSelectFaculty }) => {
     useEffect(() => {
         const fetchFacultyData = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllUsers"); // Replace with your API URL
+                const response = await fetch("http://localhost:5000/api/users/getAllUsers"); // Replace with your API URL
                 if (!response.ok) {
                     throw new Error('Failed to fetch faculty data');
                 }

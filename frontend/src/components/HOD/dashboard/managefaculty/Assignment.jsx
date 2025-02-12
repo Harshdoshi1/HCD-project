@@ -17,7 +17,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllBatches");
+                const response = await fetch("http://localhost:5000/api/users/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data);
@@ -33,7 +33,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     useEffect(() => {
         const fetchFaculties = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllUsers");
+                const response = await fetch("http://localhost:5000/api/users/getAllUsers");
                 if (!response.ok) throw new Error("Failed to fetch faculty members");
                 const data = await response.json();
                 setFaculties(data.filter(user => user.role === "Faculty"));
@@ -54,7 +54,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                     return;
                 }
 
-                const response = await fetch(`http://localhost:5001/api/users/getSemestersByBatch/${assignment.batch}`);
+                const response = await fetch(`http://localhost:5000/api/users/getSemestersByBatch/${assignment.batch}`);
                 if (!response.ok) throw new Error("Failed to fetch semesters");
                 const data = await response.json();
                 setSemesters(data);
@@ -76,7 +76,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                 }
 
                 const response = await fetch(
-                    `http://localhost:5001/api/users/getSubjects/${assignment.batch}/${assignment.semester}`
+                    `http://localhost:5000/api/users/getSubjects/${assignment.batch}/${assignment.semester}`
                 );
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();

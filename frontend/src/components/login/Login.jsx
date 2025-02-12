@@ -14,7 +14,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5001/api/users/login', {
+            const response = await fetch('http://localhost:5000/api/users/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -45,7 +45,8 @@ const Login = () => {
         <div className="login-container">
             <div className="login-box">
                 <h1>Welcome Back</h1>
-                <p className="subtitle">Please enter your details</p>
+                <p className="subtitle">Please enter your details😅
+                </p>
 
                 {error && <p className="error-message">{error}</p>}
 
