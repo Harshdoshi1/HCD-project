@@ -1,17 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const { syncDB } = require('./models');
-// const userRoutes = require('./routes/userRoutes');
-// const batchRoutes = require('./routes/batchRoutes');
-// const semesterRoutes = require('./routes/semesterRoutes');
-// const facultyRoutes = require('./routes/facultyRoutes');
+
 const userRoutes = require('./routes/auth_routes');
 
 const cors = require('cors');
 
 const app = express();
-//5173
-// ✅ Enable CORS
+
 app.use(cors({
     origin: 'http://localhost:5173', // Allow requests from frontend
     methods: 'GET,POST,PUT,DELETE',
