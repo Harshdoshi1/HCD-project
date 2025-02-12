@@ -7,25 +7,7 @@ const FacultyList = ({ onSelectFaculty }) => {
     const [facultyMembers, setFacultyMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    // Mock data - replace with actual data
-    // const facultyMembers = [
-    //     {
-    //         id: 1,
-    //         name: "Dr. Sarah Johnson",
-    //         department: "Computer Science",
-    //         specialization: "Machine Learning",
-    //         email: "sarah.j@university.edu",
-    //         subjects: ["Data Structures", "Artificial Intelligence"]
-    //     },
-    //     {
-    //         id: 2,
-    //         name: "Prof. Michael Chen",
-    //         department: "Electronics",
-    //         specialization: "Digital Systems",
-    //         email: "m.chen@university.edu",
-    //         subjects: ["Digital Electronics", "Microprocessors"]
-    //     }
-    // ];
+
 
     const departments = ["all", "Computer Science", "Electronics", "Mechanical", "Civil"];
 
@@ -57,18 +39,8 @@ const FacultyList = ({ onSelectFaculty }) => {
 
     return (
         <div className="faculty-list-container">
-            {/* <div className="faculty-filters">
-                <input
-                    type="text"
-                    placeholder="Search faculty..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="faculty-search"
-                />
 
-            </div> */}
             <div className="faculty-filters">
-                {/* Search Input */}
                 <input
                     type="text"
                     placeholder="Search faculty..."

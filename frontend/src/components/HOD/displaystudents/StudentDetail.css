@@ -1,154 +1,3 @@
-/* .student-detail-container {
-    padding: 20px;
-    background-color: #f5f5f5;
-}
-
-.student-header {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.student-profile {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.student-detail-image {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.student-info h2 {
-    margin: 0 0 10px 0;
-    color: #333;
-}
-
-.student-info p {
-    margin: 5px 0;
-    color: #666;
-}
-
-.semester-selector {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.semester-select {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.grades-section {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.grades-section h3 {
-    margin: 0 0 20px 0;
-    color: #333;
-}
-
-.grades-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.grades-table th,
-.grades-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.grades-table th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-}
-
-.marks-input {
-    width: 80px;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    text-align: center;
-}
-
-.save-marks-btn {
-    padding: 8px 16px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.save-marks-btn:hover {
-    background-color: #218838;
-}
-
-@media (max-width: 768px) {
-    .student-header {
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .student-profile {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .semester-selector {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .grades-table {
-        overflow-x: auto;
-        display: block;
-    }
-}
-
-.student-detail-container {
-    padding: 20px;
-    background-color: #f5f5f5;
-}
-
-.student-header {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-}
-
-.student-profile {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.student-detail-image {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-} */
-
 .student-detail-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -215,7 +64,8 @@
 }
 
 .subjects-grid {
-    display: grid;
+    display: inline;
+    /* background-color: #991b1b; */
     gap: 1rem;
     margin-top: 1.5rem;
 }
@@ -448,4 +298,10 @@
 
 .activities-tabs {
     margin-top: 2rem;
+    /* border: 0px solid black; */
+}
+
+.marks-type {
+    display: flex;
+    justify-content: space-between;
 }

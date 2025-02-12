@@ -10,7 +10,7 @@ const userRoutes = require('./routes/auth_routes');
 const cors = require('cors');
 
 const app = express();
-
+//5173
 // ✅ Enable CORS
 app.use(cors({
     origin: 'http://localhost:5173', // Allow requests from frontend
@@ -28,7 +28,7 @@ app.use('/api/semesters', userRoutes);
 app.use('/api/faculties', userRoutes);
 
 // Sync Database and Start Server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 syncDB().then(() => {
     app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 });
