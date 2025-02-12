@@ -7,7 +7,9 @@ const {
     addBatch,
     getAllBatches,
     addSemester,
-    getSemestersByBatch
+    getSemestersByBatch,
+    addSubject,
+    getSubjectsByBatchAndSemester
 } = require('../controller/authController'); // Ensure correct path
 
 const router = express.Router();
@@ -16,6 +18,7 @@ const router = express.Router();
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.get('/getAllUsers', getAllUsers);
+
 
 // Faculty Routes
 router.post('/addFaculty', addFaculty);
@@ -28,5 +31,8 @@ router.get('/getAllBatches', getAllBatches);
 router.post('/addSemester', addSemester);
 router.get('/getSemestersByBatch/:batchName', getSemestersByBatch);
 router.get('/getSemestersByBatch', getSemestersByBatch);
+
+router.post('/addSubject', addSubject);
+router.get("/getSubjects/:batchName/:semesterNumber", getSubjectsByBatchAndSemester);
 
 module.exports = router;

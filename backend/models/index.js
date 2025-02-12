@@ -3,6 +3,7 @@ const User = require('./users');
 const Batch = require('./batch');
 const Semester = require('./semester');
 const Faculty = require('./faculty');
+const Subject = require('./subjects');
 
 const syncDB = async () => {
     try {
@@ -13,4 +14,4 @@ const syncDB = async () => {
     }
 };
 
-module.exports = { User, Batch, Semester, Faculty, syncDB };
+module.exports = { User, Batch, Semester, Faculty, Subject, syncDB };

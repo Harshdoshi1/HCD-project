@@ -5,7 +5,7 @@ const StudentSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     phone: { type: String },
-    batch_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Batch' },
+    batchId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Batch, key: 'id' } },
     parent_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Parent' }
 }, { timestamps: true });
 
