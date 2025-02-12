@@ -2,6 +2,35 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User, Faculty, Batch, Semester } = require('../models'); // Import models
 
+const Subject = require("../models/subjects");
+
+const getSubjectsByBatchAndSemester = async (req, res) => {
+    try {
+        const { batchName, semesterNumber } = req.params;
+
+        // Find batch ID from batchName
+        const batch = await Batch.findOne({ where: { batchName } });
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found" });
+        }
+
+        // Find semester where batchId matches
+        const semester = await Semester.findOne({ where: { semesterNumber, batchId: batch.id } });
+        if (!semester) {
+            return res.status(404).json({ message: "Semester not found for this batch" });
+        }
+
+        // Fetch subjects for the given batch and semester
+        const subjects = await Subject.findAll({ where: { semesterId: semester.id, batchId: batch.id } });
+
+        res.status(200).json(subjects);
+    } catch (error) {
+        console.error("Error fetching subjects:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
 // @desc    Get all batches
 // @route   GET /api/batches
 // @access  Admin (HOD)
@@ -13,6 +42,47 @@ const getAllBatches = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
+
+// ✅ Add Subject (Check if already assigned to batch & semester)
+const addSubject = async (req, res) => {
+    try {
+        const { subjectName, semesterNumber, batchName } = req.body;
+
+        // Find batch ID from batchName
+        const batch = await Batch.findOne({ where: { batchName } });
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found" });
+        }
+        const batchId = batch.id;
+
+        // Find semester where batchId matches
+        const semester = await Semester.findOne({ where: { semesterNumber, batchId } });
+        if (!semester) {
+            return res.status(404).json({ message: "Semester not found for this batch" });
+        }
+        const semesterId = semester.id;
+
+        // ✅ Use batchId instead of batch object
+        const existingSubject = await Subject.findOne({ where: { subjectName, semesterId, batchId } });
+
+        if (existingSubject) {
+            return res.status(400).json({ message: "Subject already assigned to this batch and semester" });
+        }
+
+        // Create the subject
+        const subject = await Subject.create({ subjectName, semesterId, batchId });
+
+        return res.status(201).json({ message: "Subject added successfully", subject });
+    } catch (error) {
+        console.error("Error adding subject:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
+
+module.exports = { addSubject };
 
 // @desc    Add a new batch
 // @route   POST /api/batches
@@ -223,5 +293,7 @@ module.exports = {
     addFaculty,
     addBatch,
     getAllBatches,
-    addSemester
+    addSemester,
+    addSubject,
+    getSubjectsByBatchAndSemester
 };

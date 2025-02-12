@@ -10,11 +10,10 @@ const FacultyAssignment = ({ selectedFaculty }) => {
 
     const [batches, setBatches] = useState([]);
     const [semesters, setSemesters] = useState([]);
+    const [subjects, setSubjects] = useState([]);
     const [faculties, setFaculties] = useState([]);
 
-    const subjects = ["Data Structures", "Digital Electronics", "Computer Networks", "Database Management"];
-
-    // Fetch all batches from backend
+    // Fetch batches
     useEffect(() => {
         const fetchBatches = async () => {
             try {
@@ -30,17 +29,14 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         fetchBatches();
     }, []);
 
-    // Fetch faculty members from backend
+    // Fetch faculties
     useEffect(() => {
         const fetchFaculties = async () => {
             try {
                 const response = await fetch("http://localhost:5000/api/users/getAllUsers");
                 if (!response.ok) throw new Error("Failed to fetch faculty members");
                 const data = await response.json();
-
-                // Filter only users with role "Faculty"
-                const facultyList = data.filter(user => user.role === "Faculty");
-                setFaculties(facultyList);
+                setFaculties(data.filter(user => user.role === "Faculty"));
             } catch (error) {
                 console.error("Error fetching faculty members:", error);
             }
@@ -54,7 +50,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         const fetchSemesters = async () => {
             try {
                 if (!assignment.batch) {
-                    setSemesters([]); // Reset semesters when no batch is selected
+                    setSemesters([]);
                     return;
                 }
 
@@ -68,7 +64,30 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         };
 
         fetchSemesters();
-    }, [assignment.batch]); // Runs every time batch changes
+    }, [assignment.batch]);
+
+    // Fetch subjects when batch and semester are selected
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            try {
+                if (!assignment.batch || !assignment.semester) {
+                    setSubjects([]);
+                    return;
+                }
+
+                const response = await fetch(
+                    `http://localhost:5000/api/users/getSubjects/${assignment.batch}/${assignment.semester}`
+                );
+                if (!response.ok) throw new Error("Failed to fetch subjects");
+                const data = await response.json();
+                setSubjects(data);
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+            }
+        };
+
+        fetchSubjects();
+    }, [assignment.batch, assignment.semester]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -76,7 +95,8 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         setAssignment((prev) => ({
             ...prev,
             [name]: value,
-            ...(name === "batch" ? { semester: "" } : {}), // Reset semester when batch changes
+            ...(name === "batch" ? { semester: "", subject: "" } : {}),
+            ...(name === "semester" ? { subject: "" } : {}),
         }));
     };
 
@@ -90,13 +110,14 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         <div className="faculty-assignment-container">
             <form onSubmit={handleSubmit} className="assignment-form">
                 <div className="form-grid">
-
                     <div className="form-group">
                         <label>Select Batch</label>
                         <select name="batch" value={assignment.batch} onChange={handleChange} required>
                             <option value="">Select Batch</option>
                             {batches.map((batch, index) => (
-                                <option key={batch._id || index} value={batch.batchName}>{batch.batchName}</option>
+                                <option key={batch._id || index} value={batch.batchName}>
+                                    {batch.batchName}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -106,7 +127,9 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                         <select name="semester" value={assignment.semester} onChange={handleChange} required>
                             <option value="">Select Semester</option>
                             {semesters.map((sem, index) => (
-                                <option key={sem._id || index} value={sem.semesterNumber}>Semester {sem.semesterNumber}</option>
+                                <option key={sem._id || index} value={sem.semesterNumber}>
+                                    Semester {sem.semesterNumber}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -116,25 +139,30 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                         <select name="subject" value={assignment.subject} onChange={handleChange} required>
                             <option value="">Select Subject</option>
                             {subjects.map((subject, index) => (
-                                <option key={subject + index} value={subject}>{subject}</option>
+                                <option key={subject.id || index} value={subject.subjectName}>
+                                    {subject.subjectName}
+                                </option>
                             ))}
                         </select>
                     </div>
 
-                    {/* Select Faculty */}
                     <div className="form-group">
                         <label>Select Faculty</label>
                         <select name="faculty" value={assignment.faculty} onChange={handleChange} required>
                             <option value="">Select Faculty</option>
                             {faculties.map((faculty, index) => (
-                                <option key={faculty._id || index} value={faculty._id}>{faculty.name}</option>
+                                <option key={faculty._id || index} value={faculty._id}>
+                                    {faculty.name}
+                                </option>
                             ))}
                         </select>
                     </div>
                 </div>
 
                 <div className="form-actions">
-                    <button type="submit" className="submit-btn">Assign Faculty</button>
+                    <button type="submit" className="submit-btn">
+                        Assign Faculty
+                    </button>
                 </div>
             </form>
         </div>
