@@ -6,7 +6,17 @@ const { syncDB } = require('./models');
 // const semesterRoutes = require('./routes/semesterRoutes');
 // const facultyRoutes = require('./routes/facultyRoutes');
 const userRoutes = require('./routes/auth_routes');
+
+const cors = require('cors');
+
 const app = express();
+
+// ✅ Enable CORS
+app.use(cors({
+    origin: 'http://localhost:5173', // Allow requests from frontend
+    methods: 'GET,POST,PUT,DELETE',
+    credentials: true // Allow cookies and authentication headers
+}));
 
 // Middleware.js
 app.use(express.json());

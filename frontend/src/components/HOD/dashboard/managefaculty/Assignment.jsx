@@ -18,7 +18,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/getAllBatches");
+                const response = await fetch("http://localhost:5000/api/users/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data);
@@ -34,7 +34,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     useEffect(() => {
         const fetchFaculties = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/getAllUsers");
+                const response = await fetch("http://localhost:5000/api/users/getAllUsers");
                 if (!response.ok) throw new Error("Failed to fetch faculty members");
                 const data = await response.json();
 
@@ -50,21 +50,25 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     }, []);
 
     // Fetch semesters when batch is selected
-    const fetchSemesters = async (batchName) => {
-        try {
-            if (!batchName) {
-                setSemesters([]); // Reset semesters when no batch is selected
-                return;
-            }
+    useEffect(() => {
+        const fetchSemesters = async () => {
+            try {
+                if (!assignment.batch) {
+                    setSemesters([]); // Reset semesters when no batch is selected
+                    return;
+                }
 
-            const response = await fetch(`http://localhost:5001/api/getSemestersByBatch?batchName=${batchName}`);
-            if (!response.ok) throw new Error("Failed to fetch semesters");
-            const data = await response.json();
-            setSemesters(data);
-        } catch (error) {
-            console.error("Error fetching semesters:", error);
-        }
-    };
+                const response = await fetch(`http://localhost:5000/api/users/getSemestersByBatch/${assignment.batch}`);
+                if (!response.ok) throw new Error("Failed to fetch semesters");
+                const data = await response.json();
+                setSemesters(data);
+            } catch (error) {
+                console.error("Error fetching semesters:", error);
+            }
+        };
+
+        fetchSemesters();
+    }, [assignment.batch]); // Runs every time batch changes
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -72,12 +76,8 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         setAssignment((prev) => ({
             ...prev,
             [name]: value,
+            ...(name === "batch" ? { semester: "" } : {}), // Reset semester when batch changes
         }));
-
-        // Fetch semesters dynamically when batch changes
-        if (name === "batch") {
-            fetchSemesters(value);
-        }
     };
 
     const handleSubmit = (e) => {
@@ -96,8 +96,8 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                         <label>Select Batch</label>
                         <select name="batch" value={assignment.batch} onChange={handleChange} required>
                             <option value="">Select Batch</option>
-                            {batches.map((batch) => (
-                                <option key={batch._id} value={batch.batchName}>{batch.batchName}</option>
+                            {batches.map((batch, index) => (
+                                <option key={batch._id || index} value={batch.batchName}>{batch.batchName}</option>
                             ))}
                         </select>
                     </div>
@@ -107,8 +107,8 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                         <label>Select Semester</label>
                         <select name="semester" value={assignment.semester} onChange={handleChange} required>
                             <option value="">Select Semester</option>
-                            {semesters.map((sem) => (
-                                <option key={sem._id} value={sem.semesterNumber}>Semester {sem.semesterNumber}</option>
+                            {semesters.map((sem, index) => (
+                                <option key={sem._id || index} value={sem.semesterNumber}>Semester {sem.semesterNumber}</option>
                             ))}
                         </select>
                     </div>
@@ -118,8 +118,8 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                         <label>Select Subject</label>
                         <select name="subject" value={assignment.subject} onChange={handleChange} required>
                             <option value="">Select Subject</option>
-                            {subjects.map((subject) => (
-                                <option key={subject} value={subject}>{subject}</option>
+                            {subjects.map((subject, index) => (
+                                <option key={subject + index} value={subject}>{subject}</option>
                             ))}
                         </select>
                     </div>
@@ -129,8 +129,8 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                         <label>Select Faculty</label>
                         <select name="faculty" value={assignment.faculty} onChange={handleChange} required>
                             <option value="">Select Faculty</option>
-                            {faculties.map((faculty) => (
-                                <option key={faculty._id} value={faculty._id}>{faculty.name}</option>
+                            {faculties.map((faculty, index) => (
+                                <option key={faculty._id || index} value={faculty._id}>{faculty.name}</option>
                             ))}
                         </select>
                     </div>
