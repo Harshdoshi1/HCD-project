@@ -1,8 +1,41 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User, Faculty, Batch, Semester } = require('../models'); // Import models
+const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma } = require('../models'); // Import models
 
-const Subject = require("../models/subjects");
+
+// Function to add a unique subject for Degree
+const addUniqueSubDegree = async (req, res) => {
+    try {
+        const { sub_code, sub_level, sub_name, sub_credit } = req.body;
+
+        if (!sub_code || !sub_level || !sub_name || !sub_credit) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        const subject = await UniqueSubDegree.create({ sub_code, sub_level, sub_name, sub_credit });
+        return res.status(201).json({ message: 'Degree subject added successfully', subject });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error adding degree subject', error: error.message });
+    }
+};
+
+// Function to add a unique subject for Diploma
+const addUniqueSubDiploma = async (req, res) => {
+    try {
+        const { sub_code, sub_level, sub_name, sub_credit } = req.body;
+
+        if (!sub_code || !sub_level || !sub_name || !sub_credit) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        const subject = await UniqueSubDiploma.create({ sub_code, sub_level, sub_name, sub_credit });
+        return res.status(201).json({ message: 'Diploma subject added successfully', subject });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error adding diploma subject', error: error.message });
+    }
+};
+
+module.exports = { addUniqueSubDegree, addUniqueSubDiploma };
 
 const getSubjectsByBatchAndSemester = async (req, res) => {
     try {
@@ -295,5 +328,7 @@ module.exports = {
     getAllBatches,
     addSemester,
     addSubject,
-    getSubjectsByBatchAndSemester
+    getSubjectsByBatchAndSemester,
+    addUniqueSubDegree,
+    addUniqueSubDiploma
 };

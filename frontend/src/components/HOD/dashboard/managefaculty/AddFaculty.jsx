@@ -26,7 +26,7 @@ const AddFaculty = ({ onSuccess }) => {
         };
 
         try {
-            const response = await fetch('http://localhost:5001/api/users/addFaculty', {
+            const response = await fetch('http://localhost:5000/api/users/addFaculty', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
