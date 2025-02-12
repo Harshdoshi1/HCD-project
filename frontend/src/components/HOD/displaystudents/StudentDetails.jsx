@@ -1,127 +1,3 @@
-// import React, { useState } from 'react';
-// import './StudentDetail.css';
-
-// const StudentDetail = ({ studentId }) => {
-//     const [selectedSemester, setSelectedSemester] = useState(1);
-
-//     // Mock data - replace with actual data
-//     const student = {
-//         id: 1,
-//         name: 'John Doe',
-//         enrollmentNo: 'EN2022001',
-//         batch: '2022-2026',
-//         image: 'https://via.placeholder.com/150',
-//         semesters: [
-//             {
-//                 semester: 1,
-//                 subjects: [
-//                     {
-//                         id: 1,
-//                         name: 'Mathematics',
-//                         marks: 85,
-//                         maxMarks: 100
-//                     },
-//                     {
-//                         id: 2,
-//                         name: 'Physics',
-//                         marks: 78,
-//                         maxMarks: 100
-//                     },
-//                 ]
-//             },
-//         ]
-//     };
-
-//     const handleSemesterChange = (e) => {
-//         setSelectedSemester(parseInt(e.target.value));
-//     };
-
-//     const handleMarksUpdate = (subjectId, newMarks) => {
-//         // Implement marks update logic here
-//         console.log(`Updating marks for subject ${subjectId} to ${newMarks}`);
-//     };
-
-//     const currentSemesterData = student.semesters.find(
-//         sem => sem.semester === selectedSemester
-//     );
-
-//     return (
-//         <div className="student-detail-container">
-//             <div className="student-header">
-//                 <div className="student-profile">
-//                     <img
-//                         src={student.image}
-//                         alt={student.name}
-//                         className="student-detail-image"
-//                     />
-//                     <div className="student-info">
-//                         <h2>{student.name}</h2>
-//                         <p>Enrollment No: {student.enrollmentNo}</p>
-//                         <p>Batch: {student.batch}</p>
-//                     </div>
-//                 </div>
-
-//                 <div className="semester-selector">
-//                     <label>Select Semester:</label>
-//                     <select
-//                         value={selectedSemester}
-//                         onChange={handleSemesterChange}
-//                         className="semester-select"
-//                     >
-//                         {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-//                             <option key={sem} value={sem}>
-//                                 Semester {sem}
-//                             </option>
-//                         ))}
-//                     </select>
-//                 </div>
-//             </div>
-
-//             <div className="grades-section">
-//                 <h3>Semester {selectedSemester} Grades</h3>
-//                 <table className="grades-table">
-//                     <thead>
-//                         <tr>
-//                             <th>Subject</th>
-//                             <th>Marks</th>
-//                             <th>Max Marks</th>
-//                             <th>Actions</th>
-//                         </tr>
-//                     </thead>
-//                     <tbody>
-//                         {currentSemesterData?.subjects.map(subject => (
-//                             <tr key={subject.id}>
-//                                 <td>{subject.name}</td>
-//                                 <td>
-//                                     <input
-//                                         type="number"
-//                                         value={subject.marks}
-//                                         onChange={(e) => handleMarksUpdate(subject.id, e.target.value)}
-//                                         className="marks-input"
-//                                         min="0"
-//                                         max={subject.maxMarks}
-//                                     />
-//                                 </td>
-//                                 <td>{subject.maxMarks}</td>
-//                                 <td>
-//                                     <button
-//                                         className="save-marks-btn"
-//                                         onClick={() => handleMarksUpdate(subject.id, subject.marks)}
-//                                     >
-//                                         Save
-//                                     </button>
-//                                 </td>
-//                             </tr>
-//                         ))}
-//                     </tbody>
-//                 </table>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default StudentDetail;
-
 
 
 import React, { useState } from 'react';
@@ -254,17 +130,28 @@ const StudentDetail = ({ studentId }) => {
                             {subject.grade}
                         </span>
                         <span className="credits">Credits: {subject.credits}</span>
+
                     </div>
                     {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </div>
 
                 {isExpanded && (
                     <div className="subject-details">
+                        <div className="marks-type">
+                            <span className="component-type">Component type</span>
+                            <span className="component-weightage">Component Weightage</span>
+                            <span className="obtained-marks">Obtained Marks</span>
+                        </div>
+                        <br />
                         <div className="marks-components">
+
                             {Object.entries(subject.components).map(([component, marks]) => (
                                 <div key={component} className="component-row">
                                     <span className="component-name">
                                         {component.replace(/([A-Z])/g, ' $1').trim()}:
+                                    </span>
+                                    <span className="marks">
+                                        {marks.obtained / 100}
                                     </span>
                                     {isEditing ? (
                                         <input
@@ -391,6 +278,7 @@ const StudentDetail = ({ studentId }) => {
                         {currentSemesterData?.subjects.map(subject =>
                             renderSubjectDetails(subject)
                         )}
+
                     </div>
                 </TabsContent>
 
@@ -407,144 +295,3 @@ const StudentDetail = ({ studentId }) => {
 };
 
 export default StudentDetail;
-
-// import React, { useState } from 'react';
-// import { ChevronDown, ChevronUp, Edit2, Save } from 'lucide-react';
-// import './StudentDetail.css';
-
-// const StudentDetail = ({ studentId }) => {
-//     const [selectedSemester, setSelectedSemester] = useState(1);
-//     const [expandedSubject, setExpandedSubject] = useState(null);
-//     const [editingMarks, setEditingMarks] = useState(null);
-
-//     const student = {
-//         id: 1,
-//         name: 'John Doe',
-//         enrollmentNo: 'EN2022001',
-//         batch: '2022-2026',
-//         image: 'https://via.placeholder.com/150',
-//         semesters: [
-//             {
-//                 semester: 1,
-//                 subjects: [
-//                     {
-//                         id: 1,
-//                         name: 'Mathematics',
-//                         grade: 'O',
-//                         credits: 4,
-//                         components: {
-//                             termWork: { obtained: 23, total: 25 },
-//                             endSemester: { obtained: 72, total: 75 },
-//                             continuous: { obtained: 18, total: 20 },
-//                             internal: { obtained: 27, total: 30 },
-//                             viva: { obtained: 19, total: 20 }
-//                         }
-//                     },
-//                     {
-//                         id: 2,
-//                         name: 'Physics',
-//                         grade: 'A+',
-//                         credits: 4,
-//                         components: {
-//                             termWork: { obtained: 22, total: 25 },
-//                             endSemester: { obtained: 68, total: 75 },
-//                             continuous: { obtained: 17, total: 20 },
-//                             internal: { obtained: 25, total: 30 },
-//                             viva: { obtained: 18, total: 20 }
-//                         }
-//                     },
-//                 ]
-//             }
-//         ]
-//     };
-
-//     const handleSemesterChange = (e) => {
-//         setSelectedSemester(parseInt(e.target.value));
-//         setExpandedSubject(null);
-//     };
-
-//     const toggleSubjectExpansion = (subjectId) => {
-//         setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
-//     };
-
-//     const handleMarksUpdate = (subjectId, component, value) => {
-//         console.log(`Updating ${component} marks for subject ${subjectId} to ${value}`);
-//     };
-
-//     const currentSemesterData = student.semesters.find(
-//         sem => sem.semester === selectedSemester
-//     );
-
-//     const renderSubjectDetails = (subject) => {
-//         const isExpanded = expandedSubject === subject.id;
-//         const isEditing = editingMarks === subject.id;
-
-//         return (
-//             <div key={subject.id} className="subject-card">
-//                 <div className="subject-header" onClick={() => toggleSubjectExpansion(subject.id)}>
-//                     <div className="subject-main-info">
-//                         <h4>{subject.name}</h4>
-//                         <span className={`grade grade-${subject.grade.toLowerCase()}`}>{subject.grade}</span>
-//                         <span className="credits">Credits: {subject.credits}</span>
-//                     </div>
-//                     {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-//                 </div>
-//                 {isExpanded && (
-//                     <div className="subject-details">
-//                         <div className="marks-components">
-//                             {Object.entries(subject.components).map(([component, marks]) => (
-//                                 <div key={component} className="component-row">
-//                                     <span className="component-name">
-//                                         {component.replace(/([A-Z])/g, ' $1').trim()}:
-//                                     </span>
-//                                     {isEditing ? (
-//                                         <input
-//                                             type="number"
-//                                             value={marks.obtained}
-//                                             onChange={(e) => handleMarksUpdate(subject.id, component, e.target.value)}
-//                                             max={marks.total}
-//                                             className="marks-input"
-//                                         />
-//                                     ) : (
-//                                         <span className="marks">{marks.obtained}/{marks.total}</span>
-//                                     )}
-//                                 </div>
-//                             ))}
-//                         </div>
-//                         <button className={`edit-btn ${isEditing ? 'save' : ''}`} onClick={() => setEditingMarks(isEditing ? null : subject.id)}>
-//                             {isEditing ? <><Save size={16} /> Save</> : <><Edit2 size={16} /> Edit</>}
-//                         </button>
-//                     </div>
-//                 )}
-//             </div>
-//         );
-//     };
-
-//     return (
-//         <div className="student-detail-container">
-//             <div className="student-header">
-//                 <div className="student-profile">
-//                     <img src={student.image} alt={student.name} className="student-detail-image" />
-//                     <div className="student-info">
-//                         <h2>{student.name}</h2>
-//                         <p>Enrollment No: {student.enrollmentNo}</p>
-//                         <p>Batch: {student.batch}</p>
-//                     </div>
-//                 </div>
-//             </div>
-//             <div className="semester-selector">
-//                 <label>Select Semester:</label>
-//                 <select value={selectedSemester} onChange={handleSemesterChange} className="semester-select">
-//                     {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-//                         <option key={sem} value={sem}>Semester {sem}</option>
-//                     ))}
-//                 </select>
-//             </div>
-//             <div className="subjects-grid">
-//                 {currentSemesterData?.subjects.map(subject => renderSubjectDetails(subject))}
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default StudentDetail;

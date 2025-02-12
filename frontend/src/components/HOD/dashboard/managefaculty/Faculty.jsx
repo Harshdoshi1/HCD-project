@@ -15,7 +15,6 @@ const Faculty = () => {
 
     return (
         <div className="faculty-container">
-            {/* <h1>Faculty Management</h1> */}
             <div className="faculty-header">
 
                 <div className="faculty-actions">
