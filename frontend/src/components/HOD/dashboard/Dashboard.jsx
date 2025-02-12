@@ -6,7 +6,7 @@ import Sidebar from '../sidebar/Sidebar';
 import Faculty from "../dashboard/managefaculty/Faculty";
 import StudentsList from '../../HOD/displaystudents/StudentsList';
 import StudentDetail from '../../HOD/displaystudents/StudentDetails';
-import DisplaySubjects from '../../HOD/managesubjects/DisplaySubjects';
+import Subject from '../../HOD/managesubjects/Subject';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -87,7 +87,7 @@ const Dashboard = () => {
                     )}
 
                     {activeItem === 'faculty' && <Faculty />}
-                    {activeItem === 'subjects' && <DisplaySubjects />}
+                    {activeItem === 'subjects' && <Subject />}
                 </div>
             </div>
         </div>

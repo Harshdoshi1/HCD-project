@@ -274,7 +274,7 @@ const StudentDetail = ({ studentId }) => {
                         </select>
                     </div>
 
-                    <div className="subjects-grid">
+                    <div className="subjects-grid-std">
                         {currentSemesterData?.subjects.map(subject =>
                             renderSubjectDetails(subject)
                         )}
