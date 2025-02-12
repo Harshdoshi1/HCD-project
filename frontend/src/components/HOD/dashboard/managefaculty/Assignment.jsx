@@ -91,7 +91,6 @@ const FacultyAssignment = ({ selectedFaculty }) => {
             <form onSubmit={handleSubmit} className="assignment-form">
                 <div className="form-grid">
 
-                    {/* Select Batch */}
                     <div className="form-group">
                         <label>Select Batch</label>
                         <select name="batch" value={assignment.batch} onChange={handleChange} required>
@@ -102,7 +101,6 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                         </select>
                     </div>
 
-                    {/* Select Semester */}
                     <div className="form-group">
                         <label>Select Semester</label>
                         <select name="semester" value={assignment.semester} onChange={handleChange} required>
@@ -113,7 +111,6 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                         </select>
                     </div>
 
-                    {/* Select Subject */}
                     <div className="form-group">
                         <label>Select Subject</label>
                         <select name="subject" value={assignment.subject} onChange={handleChange} required>
