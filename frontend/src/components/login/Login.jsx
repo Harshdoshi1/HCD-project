@@ -45,7 +45,8 @@ const Login = () => {
         <div className="login-container">
             <div className="login-box">
                 <h1>Welcome Back</h1>
-                <p className="subtitle">Please enter your details</p>
+                <p className="subtitle">Please enter your details😅
+                </p>
 
                 {error && <p className="error-message">{error}</p>}
 
