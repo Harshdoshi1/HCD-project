@@ -61,8 +61,9 @@ const ManageComponents = ({ selectedSubject }) => {
         <div className="manage-components">
             <div className="filters-section-manage-components">
                 <div className="filter-group">
-                    <label>Program:</label>
+                    {/* <label>Program:</label> */}
                     <select
+                        className="professional-filter"
                         value={filters.program}
                         onChange={(e) => handleFilterChange('program', e.target.value)}
                     >
@@ -73,8 +74,9 @@ const ManageComponents = ({ selectedSubject }) => {
                 </div>
 
                 <div className="filter-group">
-                    <label>Batch:</label>
+                    {/* <label>Batch:</label> */}
                     <select
+                        className="professional-filter"
                         value={filters.batch}
                         onChange={(e) => handleFilterChange('batch', e.target.value)}
                     >
@@ -86,8 +88,9 @@ const ManageComponents = ({ selectedSubject }) => {
                 </div>
 
                 <div className="filter-group">
-                    <label>Semester:</label>
+                    {/* <label>Semester:</label> */}
                     <select
+                        className="professional-filter"
                         value={filters.semester}
                         onChange={(e) => handleFilterChange('semester', e.target.value)}
                     >
@@ -99,8 +102,9 @@ const ManageComponents = ({ selectedSubject }) => {
                 </div>
 
                 <div className="filter-group">
-                    <label>Subject:</label>
+                    {/* <label>Subject:</label> */}
                     <select
+                        className="professional-filter"
                         value={filters.subject}
                         onChange={(e) => handleFilterChange('subject', e.target.value)}
                     >

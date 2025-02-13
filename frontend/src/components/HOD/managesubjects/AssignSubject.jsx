@@ -1,23 +1,44 @@
-import './Subject.css'
-import React, { useState } from 'react';
-// import { saveAssignedSubjects } from '../../../services/subjectService';
+import React, { useState, useEffect } from 'react';
 
-const AssignSubject = ({ selectedSubject }) => {
+const AssignSubject = () => {
     const [filters, setFilters] = useState({
-        program: '',
-        batch: '',
-        semester: ''
+        program: 'all',
+        batch: 'all',
+        semester: 'all'
     });
-    const [availableSubjects, setAvailableSubjects] = useState([
-        { id: 1, code: 'CS101', name: 'Introduction to Programming' },
-        { id: 2, code: 'CS102', name: 'Data Structures' },
-        { id: 3, code: 'CS103', name: 'Database Management' },
-        // Add more subjects as needed
-    ]);
+
+    const [availableSubjects, setAvailableSubjects] = useState([]);
     const [selectedSubjects, setSelectedSubjects] = useState([]);
 
     const batches = ['2022-2026', '2021-2025', '2020-2024', '2019-2023'];
     const semesters = Array.from({ length: 8 }, (_, i) => (i + 1).toString());
+
+    // Fetch subjects based on program selection
+    const fetchSubjects = async () => {
+        if (filters.program === 'all') {
+            setAvailableSubjects([]);
+            return;
+        }
+        try {
+            const response = await fetch('http://localhost:5000/api/users/getSubjects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ program: filters.program })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setAvailableSubjects(data.subjects);
+            } else {
+                console.error('Failed to fetch subjects:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching subjects:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchSubjects();
+    }, [filters.program]);
 
     const handleFilterChange = (filterType, value) => {
         setFilters(prev => ({ ...prev, [filterType]: value }));
@@ -26,71 +47,80 @@ const AssignSubject = ({ selectedSubject }) => {
     const handleSubjectSelect = (subject) => {
         if (!selectedSubjects.some(s => s.id === subject.id)) {
             setSelectedSubjects([...selectedSubjects, subject]);
-            setAvailableSubjects(availableSubjects.filter(s => s.id !== subject.id));
         }
     };
 
     const handleSubjectRemove = (subject) => {
         setSelectedSubjects(selectedSubjects.filter(s => s.id !== subject.id));
-        setAvailableSubjects([...availableSubjects, subject]);
     };
 
-    const handleSave = async () => {
-        if (!filters.program || !filters.batch || !filters.semester) {
-            alert('Please select program, batch and semester before saving');
+    const handleSaveSubjects = async () => {
+        if (filters.batch === 'all' || filters.semester === 'all') {
+            alert("Please select a valid Batch and Semester.");
+            return;
+        }
+
+        if (selectedSubjects.length === 0) {
+            alert("Please select at least one subject.");
             return;
         }
 
         try {
-            await saveAssignedSubjects({
-                program: filters.program,
-                batch: filters.batch,
-                semester: filters.semester,
-                subjects: selectedSubjects.map(s => s.id)
+            const subjects = selectedSubjects.map(subject => ({
+                subjectName: subject.sub_name,
+                semesterNumber: filters.semester,
+                batchName: filters.batch
+            }));
+
+            const response = await fetch('http://localhost:5000/api/users/assignSubject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subjects })
             });
-            alert('Subjects saved successfully!');
-            // Clear selection after save
-            setSelectedSubjects([]);
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('Subjects assigned successfully!');
+            } else {
+                alert(`Error: ${data.message}`);
+            }
         } catch (error) {
-            alert('Failed to save subjects. Please try again.');
+            console.error('Error saving subjects:', error);
+            alert('Failed to assign subjects.');
         }
     };
 
     return (
-        <div className="assign-subject">
-            <div className="filters-section-assign-subjects">
+        <div className="assign-subject-container">
+            <div className="filters-container">
                 <div className="filter-group">
-                    <label>Program:</label>
                     <select
+                        className="professional-filter"
                         value={filters.program}
                         onChange={(e) => handleFilterChange('program', e.target.value)}
                     >
-                        <option value="">Select Program</option>
+                        <option value="all">All Programs</option>
                         <option value="degree">Degree</option>
                         <option value="diploma">Diploma</option>
                     </select>
-                </div>
 
-                <div className="filter-group">
-                    <label>Batch:</label>
                     <select
+                        className="professional-filter"
                         value={filters.batch}
                         onChange={(e) => handleFilterChange('batch', e.target.value)}
                     >
-                        <option value="">Select Batch</option>
+                        <option value="all">All Batches</option>
                         {batches.map(batch => (
                             <option key={batch} value={batch}>{batch}</option>
                         ))}
                     </select>
-                </div>
 
-                <div className="filter-group">
-                    <label>Semester:</label>
                     <select
+                        className="professional-filter"
                         value={filters.semester}
                         onChange={(e) => handleFilterChange('semester', e.target.value)}
                     >
-                        <option value="">Select Semester</option>
+                        <option value="all">All Semesters</option>
                         {semesters.map(sem => (
                             <option key={sem} value={sem}>Semester {sem}</option>
                         ))}
@@ -98,53 +128,36 @@ const AssignSubject = ({ selectedSubject }) => {
                 </div>
             </div>
 
-            <div className="save-section">
-                <button 
-                    className="save-button"
-                    onClick={handleSave}
-                    disabled={selectedSubjects.length === 0}
-                >
-                    Save Selected Subjects
-                </button>
+            <div className="selected-subjects-section">
+                <h3 className='heading1-as'>Selected Subjects</h3>
+                <div className="selected-subjects-container">
+                    {selectedSubjects.map((subject, index) => (
+                        <div key={subject.id || subject.sub_code || index} className="subject-item">
+                            <span>{subject.sub_code} - {subject.sub_name} ({subject.sub_credit} credits)</span>
+                            <button className="remove-subject-btn" onClick={() => handleSubjectRemove(subject)}>×</button>
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            <div className="subjects-containers">
-                <div className="container-section">
-                    <h3>Available Subjects</h3>
-                    <div className="subjects-list">
-                        {availableSubjects.map(subject => (
-                            <div
-                                key={subject.id}
-                                className="subject-item"
-                                onClick={() => handleSubjectSelect(subject)}
-                            >
-                                <div className="subject-code">{subject.code}</div>
-                                <div className="subject-name">{subject.name}</div>
+            <div className="all-subjects-section">
+                <h3 className='heading2-as'>Available Subjects</h3>
+                <div className="all-subjects-container">
+                    {availableSubjects.length > 0 ? (
+                        availableSubjects.map((subject, index) => (
+                            <div key={subject.id || subject.sub_code || index} className="subject-item" onClick={() => handleSubjectSelect(subject)}>
+                                <span>{subject.sub_code} - {subject.sub_name}</span>
+                                <span className="subject-credits">{subject.sub_credit} credits</span>
                             </div>
-                        ))}
-                    </div>
+                        ))
+                    ) : (
+                        <p>No subjects available for the selected program.</p>
+                    )}
                 </div>
+            </div>
 
-                <div className="container-section">
-                    <h3>Selected Subjects</h3>
-                    <div className="subjects-list selected">
-                        {selectedSubjects.map(subject => (
-                            <div
-                                key={subject.id}
-                                className="subject-item selected"
-                            >
-                                <div className="subject-code">{subject.code}</div>
-                                <div className="subject-name">{subject.name}</div>
-                                <button
-                                    className="remove-btn"
-                                    onClick={() => handleSubjectRemove(subject)}
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            <div className="save-subjects-section">
+                <button className="save-subjects-btn" onClick={handleSaveSubjects}>Save Selected Subjects</button>
             </div>
         </div>
     );
