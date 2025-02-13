@@ -76,7 +76,7 @@ const StudentsList = ({ onStudentSelect }) => {
 
     return (
         <div className="students-container">
-            <div className="filters-section">
+            <div className="filters-section-std">
                 <div className="filter-group">
                     <select
                         value={selectedBatch}

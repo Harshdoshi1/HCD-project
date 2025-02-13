@@ -136,7 +136,7 @@ const StudentDetail = ({ studentId }) => {
                 </div>
 
                 {isExpanded && (
-                    <div className="subject-details">
+                    <div className="subject-details-of-student">
                         <div className="marks-type">
                             <span className="component-type">Component type</span>
                             <span className="component-weightage">Component Weightage</span>
@@ -274,7 +274,7 @@ const StudentDetail = ({ studentId }) => {
                         </select>
                     </div>
 
-                    <div className="subjects-grid">
+                    <div className="subjects-grid-std">
                         {currentSemesterData?.subjects.map(subject =>
                             renderSubjectDetails(subject)
                         )}

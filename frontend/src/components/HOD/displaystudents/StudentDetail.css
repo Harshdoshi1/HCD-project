@@ -1,7 +1,6 @@
 .student-detail-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
     background: #fff;
 }
 
@@ -14,6 +13,7 @@
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     margin-bottom: 2rem;
+    flex-direction: row;
 }
 
 .student-profile {
@@ -23,19 +23,21 @@
 }
 
 .student-detail-image {
-    width: 120px;
-    height: 120px;
+    width: 90px;
+    height: 90px;
     border-radius: 60px;
     object-fit: cover;
     border: 3px solid #f3f4f6;
 }
 
 .student-info {
-    flex: 1;
+    /* flex: 1; */
+    /* display: flex;
+    flex-direction: row; */
 }
 
 .student-info h2 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
     color: #1a1a1a;
@@ -63,7 +65,7 @@
     min-width: 150px;
 }
 
-.subjects-grid {
+.subjects-grid-std {
     display: inline;
     /* background-color: #991b1b; */
     gap: 1rem;
@@ -151,7 +153,7 @@
     color: #666;
 }
 
-.subject-details {
+.subject-details-of-student {
     padding: 1.5rem;
     border-top: 1px solid #f0f0f0;
     background: white;

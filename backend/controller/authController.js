@@ -3,6 +3,33 @@ const jwt = require('jsonwebtoken');
 const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma } = require('../models'); // Import models
 
 
+const getDropdownData = async (req, res) => {
+    try {
+        const subjects = await UniqueSubDegree.findAll();
+
+        const batches = [...new Set(subjects.map((s) => s.batch))];
+        const semesters = [...new Set(subjects.map((s) => s.semester))];
+        const programs = [...new Set(subjects.map((s) => s.program))];
+
+        return res.status(200).json({ subjects, batches, semesters, programs });
+    } catch (error) {
+        return res.status(500).json({ message: "Error fetching data", error: error.message });
+    }
+};
+
+
+
+const getSubjects = async (req, res) => {
+    try {
+        const subjects = await UniqueSubDegree.findAll();
+        return res.status(200).json({ subjects });
+    } catch (error) {
+        return res.status(500).json({ message: "Error fetching subjects", error: error.message });
+    }
+};
+
+
+
 // Function to add a unique subject for Degree
 const addUniqueSubDegree = async (req, res) => {
     try {
@@ -330,5 +357,7 @@ module.exports = {
     addSubject,
     getSubjectsByBatchAndSemester,
     addUniqueSubDegree,
-    addUniqueSubDiploma
+    addUniqueSubDiploma,
+    getSubjects,
+    getDropdownData
 };
