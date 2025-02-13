@@ -7,10 +7,22 @@ const Subject = () => {
     const [view, setView] = useState('list'); // list, assign, manage
     const [selectedSubject, setSelectedSubject] = useState(null);
     const [totalWeightage, setTotalWeightage] = useState(0);
+    const [weightages, setWeightages] = useState({
+        CA: 0,
+        ESE: 0,
+        IA: 0,
+        TW: 0,
+        VIVA: 0,
+    });
 
     const handleViewChange = (newView) => {
         setView(newView);
         setSelectedSubject(null);
+    };
+
+    const handleWeightageChange = (component, value) => {
+        setWeightages((prevWeightages) => ({ ...prevWeightages, [component]: parseInt(value) }));
+        setTotalWeightage(Object.values(weightages).reduce((a, b) => a + b, 0));
     };
 
     const handleSave = () => {
@@ -47,43 +59,91 @@ const Subject = () => {
                 {view === 'list' && <SubjectList onSelectSubject={setSelectedSubject} />}
                 {view === 'assign' && <AssignSubject selectedSubject={selectedSubject} />}
                 {view === 'manage' && (
-                    <div className="manage-components-container">
-                        <div className="total-weightage">
-                            Total Weightage: {totalWeightage}%
+                    <div className="manage-weightage-container">
+                        <div className="weightage-header">
+                            <h3>Manage Component Weightage</h3>
+                            <span className="total-weightage">Total: {totalWeightage}%</span>
                         </div>
-                        
-                        {/* Component 1 */}
-                        <div className="manage-component">
-                            <div className="manage-header">
-                                <h3>Assignment</h3>
-                                <span>30%</span>
-                            </div>
-                            {/* Add component specific content here */}
-                        </div>
-
-                        {/* Component 2 */}
-                        <div className="manage-component">
-                            <div className="manage-header">
-                                <h3>Mid Semester</h3>
-                                <span>30%</span>
-                            </div>
-                            {/* Add component specific content here */}
-                        </div>
-
-                        {/* Component 3 */}
-                        <div className="manage-component">
-                            <div className="manage-header">
-                                <h3>End Semester</h3>
-                                <span>40%</span>
-                            </div>
-                            {/* Add component specific content here */}
-                        </div>
-
+                        <table className="weightage-table">
+                            <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Weightage (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Continuous Assessment (CA)</td>
+                                    <td>
+                                        <input 
+                                            type="number" 
+                                            min="0" 
+                                            max="100"
+                                            className="weightage-input"
+                                            value={weightages.CA}
+                                            onChange={(e) => handleWeightageChange('CA', e.target.value)}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>End Semester Exam (ESE)</td>
+                                    <td>
+                                        <input 
+                                            type="number" 
+                                            min="0" 
+                                            max="100"
+                                            className="weightage-input"
+                                            value={weightages.ESE}
+                                            onChange={(e) => handleWeightageChange('ESE', e.target.value)}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Internal Assessment (IA)</td>
+                                    <td>
+                                        <input 
+                                            type="number" 
+                                            min="0" 
+                                            max="100"
+                                            className="weightage-input"
+                                            value={weightages.IA}
+                                            onChange={(e) => handleWeightageChange('IA', e.target.value)}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Term Work (TW)</td>
+                                    <td>
+                                        <input 
+                                            type="number" 
+                                            min="0" 
+                                            max="100"
+                                            className="weightage-input"
+                                            value={weightages.TW}
+                                            onChange={(e) => handleWeightageChange('TW', e.target.value)}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Viva</td>
+                                    <td>
+                                        <input 
+                                            type="number" 
+                                            min="0" 
+                                            max="100"
+                                            className="weightage-input"
+                                            value={weightages.VIVA}
+                                            onChange={(e) => handleWeightageChange('VIVA', e.target.value)}
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                         <button 
-                            className="save-components-btn"
+                            className="save-weightage-btn"
                             onClick={handleSave}
                         >
-                            Save Components
+                            Save Weightage
                         </button>
                     </div>
                 )}
