@@ -11,7 +11,9 @@ const {
     addSubject,
     getSubjectsByBatchAndSemester,
     addUniqueSubDegree,
-    addUniqueSubDiploma
+    addUniqueSubDiploma,
+    getSubjects,
+    getDropdownData
 } = require('../controller/authController'); // Ensure correct path
 
 const router = express.Router();
@@ -40,4 +42,6 @@ router.get("/getSubjects/:batchName/:semesterNumber", getSubjectsByBatchAndSemes
 router.post('/addUniqueSubDegree', addUniqueSubDegree);
 router.post('/addUniqueSubDiploma', addUniqueSubDiploma);
 
+router.get('/getSubjects', getSubjects);
+router.get('/getDropdownData', getDropdownData);
 module.exports = router;
