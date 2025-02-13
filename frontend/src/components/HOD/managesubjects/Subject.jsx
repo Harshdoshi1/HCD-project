@@ -15,7 +15,7 @@ const Subject = () => {
 
     return (
         <div className="subject-container">
-            <div className="subject-header">
+            <div className="subject-header-subjects-sb">
                 <div className="subject-actions">
                     <button
                         className={`subject-action-btn ${view === 'list' ? 'active' : ''}`}
