@@ -40,6 +40,7 @@ const cors = require('cors');
 const { syncDB } = require('./models');
 
 const userRoutes = require('./routes/auth_routes');
+// const subRoutes = require('./routes/sub_routes');
 // const batchRoutes = require('./routes/batchRoutes');
 // const semesterRoutes = require('./routes/semesterRoutes');
 // const facultyRoutes = require('./routes/facultyRoutes');
@@ -58,7 +59,7 @@ app.use(express.json());
 
 // ✅ Routes
 app.use('/api/users', userRoutes);
-// app.use('/api/batches', batchRoutes);
+// app.use('/api/subjects', subRoutes);
 // app.use('/api/semesters', semesterRoutes);
 // app.use('/api/faculties', facultyRoutes);
 
