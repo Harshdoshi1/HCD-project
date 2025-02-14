@@ -1,18 +1,25 @@
 .sidebar {
-    width: 250px;
+
+    width: 17vw;
     background-color: white;
     height: 100vh;
-    padding: 2rem 1rem;
+    padding: 1rem 1rem;
     border-right: 1px solid #eee;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    border-radius: 0 5px 5px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
 }
 
 .sidebar-item {
+    margin-left: -0.2rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.1rem;
     padding: 0.8rem 1rem;
     border: none;
     background: none;
@@ -21,6 +28,7 @@
     border-radius: 8px;
     color: #666;
     transition: all 0.3s ease;
+    background-color: aliceblue;
 }
 
 .sidebar-item:hover {
@@ -31,4 +39,17 @@
 .sidebar-item.active {
     background-color: #33C3F0;
     color: white;
+}
+
+.sidebar-logo {
+    width: 90%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+
+}
+
+.sidebar-logo img {
+    width: 60px;
+    height: auto;
 }

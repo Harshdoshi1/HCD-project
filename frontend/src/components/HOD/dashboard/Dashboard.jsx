@@ -9,7 +9,7 @@ import StudentDetail from '../../HOD/displaystudents/StudentDetails';
 import Subject from '../../HOD/managesubjects/Subject';
 import './Dashboard.css';
 
-const Dashboard = () => {
+const DashboardHOD = () => {
     const [activeItem, setActiveItem] = useState('dashboard');
     const [selectedStudentId, setSelectedStudentId] = useState(null);
 
@@ -94,4 +94,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default DashboardHOD;
