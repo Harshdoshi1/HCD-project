@@ -27,7 +27,7 @@ const SubjectList = ({ onSelectSubject }) => {
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/users/getSubjects', {
+            const response = await fetch('http://localhost:5001/api/users/getSubjects', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -62,7 +62,7 @@ const SubjectList = ({ onSelectSubject }) => {
 
     const handleAddSubject = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/users/addSubject', {
+            const response = await fetch('http://localhost:5001/api/users/addSubject', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
