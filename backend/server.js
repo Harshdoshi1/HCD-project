@@ -28,7 +28,7 @@
 // app.use('/api/faculties', userRoutes);
 
 // // Sync Database and Start Server
-// const PORT = process.env.PORT || 5000;
+// const PORT = process.env.PORT || 5001;
 // syncDB().then(() => {
 //     app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 // });
@@ -64,7 +64,7 @@ app.use('/api/users', userRoutes);
 // app.use('/api/faculties', facultyRoutes);
 
 // ✅ Sync Database and Start Server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 syncDB().then(() => {
     app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 }).catch(err => {

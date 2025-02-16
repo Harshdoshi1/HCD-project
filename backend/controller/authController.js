@@ -165,7 +165,7 @@ const getAllBatches = async (req, res) => {
 const addSubject = async (req, res) => {
     try {
         const { name, code, courseType, credits, subjectType } = req.body;
-        
+
         if (courseType === 'degree') {
             await UniqueSubDegree.create({
                 sub_code: code,
@@ -196,9 +196,35 @@ module.exports = { addSubject };
 // @desc    Add a new batch
 // @route   POST /api/batches
 // @access  Admin (HOD)
+// const addBatch = async (req, res) => {
+//     try {
+//         const { batchName } = req.body;
+
+//         // Check if batch already exists
+//         const existingBatch = await Batch.findOne({ where: { batchName } });
+//         if (existingBatch) {
+//             return res.status(400).json({ message: "Batch already exists" });
+//         }
+
+//         const batch = await Batch.create({ batchName });
+//         res.status(201).json({ message: "Batch created successfully", batch });
+//     } catch (error) {
+//         res.status(500).json({ message: "Server error", error: error.message });
+//     }
+// };
 const addBatch = async (req, res) => {
     try {
-        const { batchName } = req.body;
+        const { batchName, batchStart, batchEnd, courseType } = req.body;
+
+        // Validate that batchStart and batchEnd are dates
+        if (isNaN(new Date(batchStart).getTime()) || isNaN(new Date(batchEnd).getTime())) {
+            return res.status(400).json({ message: "Invalid date format for batchStart or batchEnd" });
+        }
+
+        // Validate that courseType is either "Degree" or "Diploma"
+        if (!['Degree', 'Diploma'].includes(courseType)) {
+            return res.status(400).json({ message: "Invalid courseType. It must be 'Degree' or 'Diploma'" });
+        }
 
         // Check if batch already exists
         const existingBatch = await Batch.findOne({ where: { batchName } });
@@ -206,7 +232,14 @@ const addBatch = async (req, res) => {
             return res.status(400).json({ message: "Batch already exists" });
         }
 
-        const batch = await Batch.create({ batchName });
+        // Create the new batch
+        const batch = await Batch.create({
+            batchName,
+            batchStart: new Date(batchStart),  // Convert to Date object
+            batchEnd: new Date(batchEnd),      // Convert to Date object
+            courseType
+        });
+
         res.status(201).json({ message: "Batch created successfully", batch });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
@@ -266,10 +299,10 @@ const addFaculty = async (req, res) => {
         // Create faculty record
         const newFaculty = await Faculty.create({ userId: newUser.id });
 
-        res.status(201).json({ 
-            message: 'Faculty registered successfully', 
-            user: newUser, 
-            facultyId: newFaculty.id 
+        res.status(201).json({
+            message: 'Faculty registered successfully',
+            user: newUser,
+            facultyId: newFaculty.id
         });
 
     } catch (error) {
@@ -340,9 +373,9 @@ const addSemester = async (req, res) => {
 
         // Create semester
         const newSemester = await Semester.create({
-            batchId: batch.id, 
-            semesterNumber, 
-            startDate, 
+            batchId: batch.id,
+            semesterNumber,
+            startDate,
             endDate
         });
 
