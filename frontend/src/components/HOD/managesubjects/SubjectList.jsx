@@ -1,12 +1,12 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const SubjectList = ({ onSelectSubject }) => {
     const [filters, setFilters] = useState({
-        program: 'all',
+        program: 'degree',
         batch: 'all',
         semester: 'all'
     });
+    const [subjects, setSubjects] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newSubject, setNewSubject] = useState({
         name: '',
@@ -16,14 +16,45 @@ const SubjectList = ({ onSelectSubject }) => {
         subjectType: 'central'
     });
 
-    const subjects = [
-        { id: 1, code: 'CS101', name: 'Introduction to Programming', program: 'degree', batch: '2022-2026', semester: '1' },
-        { id: 2, code: 'CS102', name: 'Data Structures', program: 'degree', batch: '2022-2026', semester: '2' },
-        { id: 3, code: 'DIP101', name: 'Digital Electronics', program: 'diploma', batch: '2021-2024', semester: '1' },
-    ];
-
     const batches = ['2022-2026', '2021-2025', '2020-2024', '2019-2023'];
     const semesters = Array.from({ length: 8 }, (_, i) => (i + 1).toString());
+
+    // Fetch subjects using POST request
+    const fetchSubjects = async () => {
+        if (filters.program === 'all') {
+            setSubjects([]); // Reset if "All Programs" is selected
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:5001/api/users/getSubjects', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    program: filters.program,
+                    // batch: filters.batch === 'all' ? null : filters.batch,
+                    // semester: filters.semester === 'all' ? null : filters.semester
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSubjects(data.subjects);
+            } else {
+                console.error('Failed to fetch subjects:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching subjects:', error);
+        }
+    };
+
+    // Fetch subjects when program, batch, or semester filter changes
+    useEffect(() => {
+        fetchSubjects();
+    }, [filters.program, filters.batch, filters.semester]);
 
     const handleFilterChange = (filterType, value) => {
         setFilters(prev => ({ ...prev, [filterType]: value }));
@@ -31,18 +62,24 @@ const SubjectList = ({ onSelectSubject }) => {
 
     const handleAddSubject = async () => {
         try {
-            await axios.post('/api/subjects', newSubject);
-            setShowAddForm(false);
+            const response = await fetch('http://localhost:5001/api/users/addSubject', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newSubject)
+            });
+
+            if (response.ok) {
+                setShowAddForm(false);
+                fetchSubjects(); // Refresh subjects list
+            } else {
+                console.error('Failed to add subject:', response.statusText);
+            }
         } catch (error) {
             console.error('Error adding subject:', error);
         }
     };
-
-    const filteredSubjects = subjects.filter(subject => (
-        (filters.program === 'all' || subject.program === filters.program) &&
-        (filters.batch === 'all' || subject.batch === filters.batch) &&
-        (filters.semester === 'all' || subject.semester === filters.semester)
-    ));
 
     return (
         <div className="subject-list">
@@ -95,17 +132,21 @@ const SubjectList = ({ onSelectSubject }) => {
             )}
 
             <div className="subjects-grid">
-                {filteredSubjects.map(subject => (
-                    <div key={subject.id} className="subject-card" onClick={() => onSelectSubject(subject)}>
-                        <div className="subject-code">{subject.code}</div>
-                        <div className="subject-name">{subject.name}</div>
-                        <div className="subject-details">
-                            <span>{subject.program}</span>
-                            <span>{subject.batch}</span>
-                            <span>Semester {subject.semester}</span>
+                {subjects.length > 0 ? (
+                    subjects.map(subject => (
+                        <div key={subject.sub_code} className="subject-card" onClick={() => onSelectSubject(subject)}>
+                            <div className="subject-code">{subject.sub_code}</div>
+                            <div className="subject-name">{subject.sub_name}</div>
+                            <div className="subject-details">
+                                <span>{filters.program}</span>
+                                <span>{filters.batch !== 'all' ? filters.batch : 'All Batches'}</span>
+                                <span>{filters.semester !== 'all' ? `Semester ${filters.semester}` : 'All Semesters'}</span>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                ) : (
+                    <p className="no-subjects">No subjects found for the selected filters.</p>
+                )}
             </div>
         </div>
     );

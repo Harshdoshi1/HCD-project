@@ -595,7 +595,7 @@
     min-width: 0;
     max-width: 100%;
     text-align: left;
-    height: fit-content;
+    height: 30px;
 }
 
 .subject-info {
