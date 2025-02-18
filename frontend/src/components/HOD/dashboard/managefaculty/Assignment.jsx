@@ -100,10 +100,39 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Assignment Data:", assignment);
-        // Submit assignment data to the backend here
+
+        try {
+            const response = await fetch("http://localhost:5001/api/faculties/createAssignSubject", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(assignment),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to assign faculty");
+            }
+
+            alert("Faculty assigned successfully!");
+            console.log("Assignment Successful:", data);
+
+            // Reset form after successful submission
+            setAssignment({
+                batch: "",
+                semester: "",
+                subject: "",
+                faculty: selectedFaculty?.id || "",
+            });
+
+        } catch (error) {
+            console.error("Error assigning faculty:", error);
+            alert(error.message);
+        }
     };
 
     return (
