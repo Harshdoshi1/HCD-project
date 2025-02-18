@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Navbar from '../navbar/Navbar';
 import Sidebar from '../sidebar/Sidebar';
-import { StudentGrades } from '../grading/StudentGrades';
+import StudentGrades from "../grading/StudentGrades"
 import './Dashboard.css';
 import Assignedsubjects from "../assignedSubjects/Assignedsubjects"
 
