@@ -5,7 +5,8 @@ const Semester = require('./semester');
 const Faculty = require('./faculty');
 const Subject = require('./subjects');
 const UniqueSubDegree = require('./uniqueSubDegree');
-const UniqueSubDiploma = require('./uniqueDubDiploma');
+const UniqueSubDiploma = require('./uniqueSubDiploma');
+const AssignSubject = require('./assignSubject');
 
 const syncDB = async () => {
     try {
@@ -16,4 +17,4 @@ const syncDB = async () => {
     }
 };
 
-module.exports = { User, Batch, Semester, Faculty, Subject, UniqueSubDegree, UniqueSubDiploma, syncDB };
+module.exports = { User, Batch, Semester, Faculty, Subject, UniqueSubDegree, UniqueSubDiploma, AssignSubject, syncDB };
