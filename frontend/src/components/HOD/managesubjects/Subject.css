@@ -8,36 +8,80 @@
 }
 
 .subject-container {
-    padding: 13px;
+    /* padding: 13px;
     height: 100%;
     overflow-y: auto;
     background-color: #f6faff;
-    margin-bottom: -1vh;
+    margin-bottom: -1vh; */
+    height: calc(100vh - 2rem);
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .subject-header-subjects-sb {
-    margin-bottom: 30px;
+    /* margin-bottom: 30px; */
+    background-color: white;
+    padding: 1.2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(54, 116, 181, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
 }
 
 .subject-actions {
     display: flex;
-    gap: 15px;
-    justify-content: left;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
 }
 
-.subject-action-btn {
-    padding: 10px 20px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    color: #495057;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 1px solid #dee2e6;
+.search-wrapper {
+    position: relative;
+    width: 250px;
+    flex-shrink: 0;
+}
+
+.header-content-subject {
+    background-color: white;
+    padding: 1.2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(54, 116, 181, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+.header-content-subjects-three-button-bt {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: nowrap;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3674B5;
 }
 
 .subject-action-btn:hover {
-    background-color: var(--light-blue);
-    color: var(--white);
+    background-color: #ffffff;
+    color: #0b488a
 }
 
 .subject-action-btn.active {
@@ -266,7 +310,9 @@
     align-items: center;
     margin-bottom: 2rem;
     gap: 1.5rem;
-    /* margin-bottom: -10px; */
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+    width: 58%;
 }
 
 .filter-group {
@@ -418,23 +464,26 @@
     animation: modalSlideIn 0.3s ease;
 }
 
-/* Modal Header */
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem;
     border-bottom: 1px solid #d1e7ff;
-    /* Light blue border */
     background-color: #e6f2ff;
-    /* Slightly darker header */
+}
+
+.subject-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
 }
 
 .modal-header h3 {
     margin: 0;
     font-size: 1.5rem;
     color: #0056b3;
-    /* Dark blue text */
+
 }
 
 .modal-close {
@@ -937,4 +986,66 @@
 .save-weightage-btn:hover {
     background-color: #1a9cc7;
     transform: translateY(-2px);
+}
+
+.subject-action-btn.active {
+    /* padding: 10px 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6; */
+    background: #3674B5;
+    color: white;
+    border-color: #3674B5;
+}
+
+.subject-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.2rem;
+    border: 2px solid #578FCA;
+    border-radius: 8px;
+    background: rgb(255, 255, 255);
+    color: #3674B5;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3sease;
+    white-space: nowrap;
+}
+
+.subject-action-btn:hover {
+
+    border-color: #3674B5;
+    transform: translateY(-2px);
+    background: #A1E3F9;
+}
+
+.toggle-filters-btn {
+    display: flex;
+    align-items: center;
+    background-color: #3674B5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1rem;
+}
+
+.toggle-filters-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.toggle-filters-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(54, 116, 181, 0.3);
+}
+
+.toggle-filters-btn .icon {
+    margin-right: 8px;
 }
