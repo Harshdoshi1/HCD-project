@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+import { Search, Users, UserPlus, UserCog } from 'lucide-react';
 import FacultyList from './FacultyList';
 import AddFaculty from './AddFaculty';
 import FacultyAssignment from './Assignment';
 import './Faculty.css';
 
 const Faculty = () => {
-    const [view, setView] = useState('list'); // list, add, assign
+    const [view, setView] = useState('list');
     const [selectedFaculty, setSelectedFaculty] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const handleViewChange = (newView) => {
         setView(newView);
@@ -16,31 +18,45 @@ const Faculty = () => {
     return (
         <div className="faculty-container">
             <div className="faculty-header">
-
-                <div className="faculty-actions">
-                    <button
-                        className={`faculty-action-btn ${view === 'list' ? 'active' : ''}`}
-                        onClick={() => handleViewChange('list')}
-                    >
-                        View All Faculty
-                    </button>
-                    <button
-                        className={`faculty-action-btn ${view === 'add' ? 'active' : ''}`}
-                        onClick={() => handleViewChange('add')}
-                    >
-                        Add New Faculty
-                    </button>
-                    <button
-                        className={`faculty-action-btn ${view === 'assign' ? 'active' : ''}`}
-                        onClick={() => handleViewChange('assign')}
-                    >
-                        Assign Faculty
-                    </button>
+                <div className="header-content">
+                    <div className="faculty-actions">
+                        <button
+                            className={`faculty-action-btn ${view === 'list' ? 'active' : ''}`}
+                            onClick={() => handleViewChange('list')}
+                        >
+                            <Users size={20} />
+                            <span>View All Faculty</span>
+                        </button>
+                        <button
+                            className={`faculty-action-btn ${view === 'add' ? 'active' : ''}`}
+                            onClick={() => handleViewChange('add')}
+                        >
+                            <UserPlus size={20} />
+                            <span>Add New Faculty</span>
+                        </button>
+                        <button
+                            className={`faculty-action-btn ${view === 'assign' ? 'active' : ''}`}
+                            onClick={() => handleViewChange('assign')}
+                        >
+                            <UserCog size={20} />
+                            <span>Assign Faculty</span>
+                        </button>
+                    </div>
+                    <div className="search-wrapper">
+                        <Search className="search-icon" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search faculty..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="faculty-search"
+                        />
+                    </div>
                 </div>
             </div>
 
             <div className="faculty-content">
-                {view === 'list' && <FacultyList onSelectFaculty={setSelectedFaculty} />}
+                {view === 'list' && <FacultyList searchTerm={searchTerm} onSelectFaculty={setSelectedFaculty} />}
                 {view === 'add' && <AddFaculty onSuccess={() => handleViewChange('list')} />}
                 {view === 'assign' && <FacultyAssignment selectedFaculty={selectedFaculty} />}
             </div>

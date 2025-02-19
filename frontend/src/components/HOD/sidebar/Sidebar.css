@@ -1,76 +1,18 @@
-/* .sidebar {
-
-    width: 17vw;
-    background-color: white;
-    height: 100vh;
-    padding: 1rem 1rem;
-    border-right: 1px solid #eee;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    border-radius: 0 5px 5px 0;
-    position: fixed;
-    top: 0;
-    left: 0;
-    overflow-y: auto;
-}
-
-.sidebar-item {
-    margin-left: -0.2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.1rem;
-    padding: 0.8rem 1rem;
-    border: none;
-    background: none;
-    width: 100%;
-    cursor: pointer;
-    border-radius: 8px;
-    color: #666;
-    transition: all 0.3s ease;
-    background-color: aliceblue;
-}
-
-.sidebar-item:hover {
-    background-color: #D3E4FD;
-    color: #33C3F0;
-}
-
-.sidebar-item.active {
-    background-color: #33C3F0;
-    color: white;
-}
-
-.sidebar-logo {
-    width: 90%;
-    display: flex;
-    justify-content: center;
-    margin-bottom: 14px;
-
-}
-
-.sidebar-logo img {
-    width: 60px;
-    height: auto;
-} */
-/* 
-
 .sidebar {
     width: 17vw;
-    background-color: white;
+    background-color: #3674B5;
     height: 100vh;
     padding: 1rem;
-    border-right: 1px solid #eee;
+    border-right: 1px solid #578FCA;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    border-radius: 0 5px 5px 0;
     position: fixed;
     top: 0;
     left: 0;
     overflow-y: auto;
-    transition: width 0.3s ease-in-out;
+    transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
     align-items: flex-start;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar.collapsed {
@@ -82,6 +24,11 @@
     width: 100%;
     display: flex;
     justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
 }
 
 .toggle-button {
@@ -92,6 +39,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.3s ease-in-out;
+    color: white;
+}
+
+.toggle-button:hover {
+    transform: rotate(90deg);
+}
+
+.sidebar-menu {
+    flex-grow: 0.9;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .sidebar-item {
@@ -104,24 +65,29 @@
     width: 100%;
     cursor: pointer;
     border-radius: 8px;
-    color: #666;
+    color: #D1F8EF;
     transition: all 0.3s ease-in-out;
-    justify-content: flex-start;
+    font-weight: bold;
+}
+
+.sidebar-item .sidebar-icon {
+    min-width: 24px;
+    text-align: center;
 }
 
 .sidebar.collapsed .sidebar-item {
     justify-content: center;
-    width: 100%;
     padding: 0.8rem 0;
 }
 
-.sidebar.collapsed .sidebar-item span {
+.sidebar.collapsed .sidebar-label {
     display: none;
 }
 
 .sidebar-item:hover {
-    background-color: #D3E4FD;
-    color: #33C3F0;
+    background-color: #A1E3F9;
+    color: #3674B5;
+    transform: scale(1.05);
 }
 
 .sidebar-item.active {
@@ -129,87 +95,23 @@
     color: white;
 }
 
-.sidebar.collapsed .toggle-button {
-    justify-content: center;
+.sidebar-footer {
     width: 100%;
-} */
-
-
-.sidebar {
-    width: 17vw;
-    background-color: white;
-    height: 100vh;
-    padding: 1rem;
-    border-right: 1px solid #eee;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    border-radius: 0 5px 5px 0;
-    position: fixed;
-    top: 0;
-    left: 0;
-    overflow-y: auto;
-    transition: width 0.3s ease-in-out;
-    align-items: flex-start;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid #A1E3F9;
+    margin-bottom: 2rem;
 }
 
-.sidebar.collapsed {
-    width: 5vw;
-    align-items: center;
+.sidebar-item.profile:hover {
+    background-color: #A1E3F9;
 }
 
-.sidebar-header {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
+.sidebar-item.logout:hover {
+    background-color: #D1F8EF;
+    color: red;
 }
 
-.toggle-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.sidebar-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.8rem;
-    border: none;
-    background: none;
-    width: 100%;
-    cursor: pointer;
-    border-radius: 8px;
-    color: #666;
-    transition: all 0.3s ease-in-out;
-    justify-content: flex-start;
-}
-
-.sidebar.collapsed .sidebar-item {
-    justify-content: center;
-    width: 100%;
-    padding: 0.8rem 0;
-}
-
-.sidebar.collapsed .sidebar-item span {
+.hidden {
     display: none;
-}
-
-.sidebar-item:hover {
-    background-color: #D3E4FD;
-    color: #33C3F0;
-}
-
-.sidebar-item.active {
-    background-color: #33C3F0;
-    color: white;
-}
-
-.sidebar.collapsed .toggle-button {
-    justify-content: center;
-    width: 100%;
 }

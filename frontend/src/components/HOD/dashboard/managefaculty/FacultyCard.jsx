@@ -1,10 +1,9 @@
-
-
 import React from 'react';
+import { Mail, BookOpen, GraduationCap, Building } from 'lucide-react';
 
 const FacultyCard = ({ faculty, onClick }) => {
     if (!faculty || !faculty.name) {
-        return <p>Error: Faculty data is missing or invalid.</p>;
+        return <div className="error-card">Error: Faculty data is missing or invalid.</div>;
     }
 
     return (
@@ -15,18 +14,26 @@ const FacultyCard = ({ faculty, onClick }) => {
                 </div>
                 <div className="faculty-main-info">
                     <h3>{faculty.name || "Unknown"}</h3>
-                    <p className="department">{faculty.department || "No Department"}</p>
+                    <p className="department">
+                        <Building size={16} className="info-icon" />
+                        {faculty.department || "No Department"}
+                    </p>
                 </div>
             </div>
             <div className="faculty-card-content">
                 <p className="specialization">
-                    <strong>Specialization:</strong> {faculty.specialization || "N/A"}
+                    <GraduationCap size={16} className="info-icon" />
+                    <span>{faculty.specialization || "N/A"}</span>
                 </p>
                 <p className="email">
-                    <strong>Email:</strong> {faculty.email || "N/A"}
+                    <Mail size={16} className="info-icon" />
+                    <span>{faculty.email || "N/A"}</span>
                 </p>
                 <div className="subjects">
-                    <strong>Subjects:</strong>
+                    <div className="subjects-header">
+                        <BookOpen size={16} className="info-icon" />
+                        <strong>Subjects:</strong>
+                    </div>
                     <div className="subject-tags">
                         {faculty.subjects?.length > 0 ? (
                             faculty.subjects.map((subject, index) => (
@@ -35,7 +42,7 @@ const FacultyCard = ({ faculty, onClick }) => {
                                 </span>
                             ))
                         ) : (
-                            <span className="subject-tag">No subjects</span>
+                            <span className="subject-tag">No subjects assigned</span>
                         )}
                     </div>
                 </div>

@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import FacultyCard from './FacultyCard';
+import './Faculty.css';
 
-const FacultyList = ({ onSelectFaculty }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [department, setDepartment] = useState('all');
+const FacultyList = ({ searchTerm, onSelectFaculty }) => {
     const [facultyMembers, setFacultyMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-
-    const departments = ["all", "Computer Science", "Electronics", "Mechanical", "Civil"];
-
     useEffect(() => {
         const fetchFacultyData = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllUsers"); // Replace with your API URL
+                const response = await fetch("http://localhost:5001/api/users/getAllUsers");
                 if (!response.ok) {
                     throw new Error('Failed to fetch faculty data');
                 }
@@ -31,38 +27,28 @@ const FacultyList = ({ onSelectFaculty }) => {
     }, []);
 
     const filteredFaculty = facultyMembers.filter(faculty => {
-        const matchesSearch = faculty.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            faculty.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesDepartment = department === 'all' || faculty.department === department;
-        return matchesSearch && matchesDepartment;
+        return faculty.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               faculty.email?.toLowerCase().includes(searchTerm.toLowerCase());
     });
+
+    if (loading) return <div className="loading-state">Loading faculty data...</div>;
+    if (error) return <div className="error-state">Error: {error}</div>;
 
     return (
         <div className="faculty-list-container">
-
-            <div className="faculty-filters">
-                <input
-                    type="text"
-                    placeholder="Search faculty..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="faculty-search"
-                />
-
-
-            </div>
-
             <div className="faculty-grid">
                 {filteredFaculty.length > 0 ? (
                     filteredFaculty.map(faculty => (
                         <FacultyCard
-                            key={faculty.id}
+                            key={faculty._id}
                             faculty={faculty}
                             onClick={() => onSelectFaculty(faculty)}
                         />
                     ))
                 ) : (
-                    <p className="col-span-full text-center text-gray-500">No faculty members found.</p>
+                    <div className="no-results">
+                        <p>No faculty members found.</p>
+                    </div>
                 )}
             </div>
         </div>
