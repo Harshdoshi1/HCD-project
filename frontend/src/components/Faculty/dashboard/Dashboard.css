@@ -11,7 +11,8 @@
 }
 
 .dashboard-content {
-    padding: 2rem;
+
+    padding-top: 0;
     flex: 1;
 }
 

@@ -1,139 +1,7 @@
-/* .dashboard-container {
-    display: flex;
-    min-height: 100vh;
-    background-color: hwb(222 96% 0%);
-    margin-left: 18vw;
-}
-
-.main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.dashboard-content {
-    padding: 0rem;
-    flex: 1;
-}
-
-.filters-section {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.filter-select {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    min-width: 200px;
-    background-color: white;
-    color: #333;
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: #33C3F0;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card h3 {
-    color: #666;
-    font-size: 0.9rem;
-    margin: 0 0 0.5rem 0;
-}
-
-.stat-card p {
-    color: #333;
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-}
-
-.dashboard-sections {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.section {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.section h2 {
-    color: #333;
-    font-size: 1.2rem;
-    margin: 0 0 1rem 0;
-}
-
-.activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-}
-
-.activity-item {
-    padding: 0.8rem;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.quick-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 1rem;
-}
-
-.action-button {
-    padding: 0.8rem;
-    background-color: #33C3F0;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.action-button:hover {
-    background-color: #0FA0CE;
-}
-
-@media (max-width: 768px) {
-    .filters-section {
-        flex-direction: column;
-    }
-
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-sections {
-        grid-template-columns: 1fr;
-    }
-} */
-
 .dashboard-container {
     display: flex;
     min-height: 100vh;
-    background-color: hwb(222 96% 0%);
+    background-color: rgb(245, 248, 255);
     margin-left: 18vw;
     transition: margin-left 0.3s ease-in-out;
 }
@@ -187,7 +55,8 @@
 }
 
 .dashboard-content {
-    padding: 1rem;
+    padding: 2rem;
+    padding-top: 0;
     flex: 1;
 }
 

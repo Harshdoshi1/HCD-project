@@ -51,7 +51,6 @@ const SubjectList = ({ onSelectSubject }) => {
         }
     };
 
-    // Fetch subjects when program, batch, or semester filter changes
     useEffect(() => {
         fetchSubjects();
     }, [filters.program, filters.batch, filters.semester]);
@@ -72,7 +71,7 @@ const SubjectList = ({ onSelectSubject }) => {
 
             if (response.ok) {
                 setShowAddForm(false);
-                fetchSubjects(); // Refresh subjects list
+                fetchSubjects();
             } else {
                 console.error('Failed to add subject:', response.statusText);
             }
