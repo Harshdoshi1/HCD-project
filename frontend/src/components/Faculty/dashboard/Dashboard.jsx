@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '../navbar/Navbar';
 import Sidebar from '../sidebar/Sidebar';
@@ -23,12 +22,9 @@ const DashboardHOD = () => {
         <div className="dashboard-container">
             <Sidebar activeItem={activeItem} setActiveItem={setActiveItem} />
             <div className="main-content">
-                <Navbar />
                 <div className="dashboard-content">
                     {activeItem === 'dashboard' && (
                         <>
-
-
                             <div className="dashboard-sections">
                                 <div className="section">
                                     <h2>Recent Activity</h2>
