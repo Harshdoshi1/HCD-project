@@ -28,7 +28,7 @@ const FacultyList = ({ searchTerm, onSelectFaculty }) => {
 
     const filteredFaculty = facultyMembers.filter(faculty => {
         return faculty.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               faculty.email?.toLowerCase().includes(searchTerm.toLowerCase());
+            faculty.email?.toLowerCase().includes(searchTerm.toLowerCase());
     });
 
     if (loading) return <div className="loading-state">Loading faculty data...</div>;
