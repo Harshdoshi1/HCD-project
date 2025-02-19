@@ -109,7 +109,6 @@
     padding: 1rem 0;
 }
 
-/* Faculty List Styles */
 .faculty-list-container {
     width: 100%;
     padding: 1rem;
@@ -143,8 +142,8 @@
 
 .faculty-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(54, 116, 181, 0.2);
-    border-color: #A1E3F9;
+    box-shadow: 0 7px 10px rgba(54, 116, 181, 0.2);
+    border-color: rgb(230, 249, 255);
 }
 
 .faculty-card-header {
@@ -176,7 +175,7 @@
 
 .faculty-main-info h3 {
     margin: 0;
-    color: #3674B5;
+    color: #000000;
     font-size: 1.2rem;
     font-weight: 600;
 }
@@ -193,7 +192,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #578FCA;
+    color: #000000;
     margin: 0;
     word-break: break-all;
     font-size: 0.9rem;
@@ -236,7 +235,7 @@
 
 .subject-tag {
     background: #A1E3F9;
-    color: #3674B5;
+    color: #000000;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 0.9rem;
