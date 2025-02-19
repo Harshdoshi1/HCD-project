@@ -5,6 +5,7 @@ const { syncDB } = require('./models');
 
 const userRoutes = require('./routes/auth_routes');
 const facultyRoutes = require('./routes/faculty_routes');
+const componentRoutes = require('./routes/component_routes');
 // const subRoutes = require('./routes/sub_routes');
 // const batchRoutes = require('./routes/batchRoutes');
 // const semesterRoutes = require('./routes/semesterRoutes');
@@ -25,6 +26,7 @@ app.use(express.json());
 // ✅ Routes
 app.use('/api/users', userRoutes);
 app.use('/api/faculties', facultyRoutes);
+app.use('/api/components', componentRoutes);
 // app.use('/api/subjects', subRoutes);
 // app.use('/api/semesters', semesterRoutes);
 // app.use('/api/faculties', facultyRoutes);
