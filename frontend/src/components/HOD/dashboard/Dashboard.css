@@ -14,11 +14,16 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .dashboard-content {
     padding: 1rem;
     flex: 1;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .filters-section {
@@ -30,6 +35,8 @@
 .dashboard-wrapper {
     display: flex;
     transition: all 0.3s ease-in-out;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .dashboard-wrapper.collapsed .dashboard-container {
@@ -42,22 +49,29 @@
     background-color: hwb(222 96% 0%);
     margin-left: 17vw;
     transition: margin-left 0.3s ease-in-out;
+    width: calc(100% - 17vw);
 }
 
 .dashboard-container.collapsed {
     margin-left: 5vw;
+    width: calc(100% - 5vw);
 }
 
 .main-content {
     flex: 1;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .dashboard-content {
     padding: 2rem;
     padding-top: 0;
     flex: 1;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .filter-select {
