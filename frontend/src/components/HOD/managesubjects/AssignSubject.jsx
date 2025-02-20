@@ -47,7 +47,7 @@ const AssignSubject = () => {
         };
 
         fetchSemesters();
-    }, [filters.batch]); // Runs when batch changes
+    }, [filters.batch]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -148,83 +148,116 @@ const AssignSubject = () => {
 
     return (
         <div className="assign-subject-container">
-            {/* Filters */}
-            <div className="filters-container">
-                <div className="filter-group">
-                    <select
-                        className="professional-filter"
-                        value={filters.program}
-                        onChange={handleChange}
-                        name="program"
-                    >
-                        <option value="all">All Programs</option>
-                        <option value="degree">Degree</option>
-                        <option value="diploma">Diploma</option>
-                    </select>
+            <div className="Firstdiv-selected-sub-for-assign">
+                <div className="top-things-for-selected-sub-asssign">
+                    <div style={{ marginRight: "10px" }}>Selected</div><div> Subjects</div>
+                    <div className="filters-container-assign-subject-one">
+                        <div className="filter-group-assign-subject-one">
+                            {/* <select
+                                className="professional-filter"
 
-                    <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
-                        <option value="all">Select Batch</option>
-                        {batches.map((batch, index) => (
-                            <option key={batch._id || index} value={batch.batchName}>
-                                {batch.batchName}
-                            </option>
-                        ))}
-                    </select>
+                                value={filters.program}
+                                onChange={handleChange}
+                                name="program"
+                            >
+                                <option value="all">All Programs</option>
+                                <option value="degree">Degree</option>
+                                <option value="diploma">Diploma</option>
+                            </select> */}
 
-                    <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
-                        <option value="all">Select Semester</option>
-                        {semesters.map((sem, index) => (
-                            <option key={sem._id || index} value={sem.semesterNumber}>
-                                Semester {sem.semesterNumber}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            </div>
+                            <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
+                                <option value="all">Batch</option>
+                                {batches.map((batch, index) => (
+                                    <option key={batch._id || index} value={batch.batchName}>
+                                        {batch.batchName}
+                                    </option>
+                                ))}
+                            </select>
 
-            {/* Selected Subjects */}
-            <div className="selected-subjects-section">
-                <div className="selected-subjects-header">
-                    <h3 className="heading1-as">Selected Subjects</h3>
-                    <div className="selected-subjects-stats">
-                        <span>Selected: {selectedSubjects.length}</span>
-                        <span>Total Credits: {totalCredits}</span>
+                            <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
+                                <option value="all">Semester</option>
+                                {semesters.map((sem, index) => (
+                                    <option key={sem._id || index} value={sem.semesterNumber}>
+                                        Semester {sem.semesterNumber}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div className="selected-subjects-container">
-                    {selectedSubjects.map((subject, index) => (
-                        <div key={subject.sub_code || index} className="subject-item">
-                            <span>
-                                {subject.sub_code} - {subject.sub_name} ({subject.sub_credit} credits)
-                            </span>
-                            <button className="remove-subject-btn" onClick={() => handleSubjectRemove(subject)}>
-                                ×
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
+                <div className="selected-subjects-section">
 
-            {/* Available Subjects */}
-            <div className="all-subjects-section">
-                <h3 className="heading2-as">Available Subjects</h3>
-                <div className="all-subjects-container">
-                    {availableSubjects.length > 0 ? (
-                        availableSubjects.map((subject, index) => (
-                            <div key={subject.sub_code || index} className="subject-item" onClick={() => handleSubjectSelect(subject)}>
+                    <div className="selected-subjects-container">
+                        {selectedSubjects.map((subject, index) => (
+                            <div key={subject.sub_code || index} className="subject-item">
                                 <span>
-                                    {subject.sub_code} - {subject.sub_name}
+                                    {subject.sub_code} - {subject.sub_name} ({subject.sub_credit} credits)
                                 </span>
-                                <span className="subject-credits">{subject.sub_credit} credits</span>
+                                <button className="remove-subject-btn" onClick={() => handleSubjectRemove(subject)}>
+                                    ×
+                                </button>
                             </div>
-                        ))
-                    ) : (
-                        <p>No subjects available for the selected program.</p>
-                    )}
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* Save Button */}
+            <div className="Seconddiv-availabe-sub-for-assign">
+                <div className="top-things-for-selected-sub-asssign">
+                    <div style={{ marginRight: "10px" }}>Available </div> <div>Subjects</div>
+                    <div className="filters-container-assign-subject-two">
+                        <div className="filter-group-assign-subject-two">
+                            <select
+                                className="professional-filter"
+
+                                value={filters.program}
+                                onChange={handleChange}
+                                name="program"
+                            >
+                                <option value="all">All Programs</option>
+                                <option value="degree">Degree</option>
+                                <option value="diploma">Diploma</option>
+                            </select>
+
+                            <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
+                                <option value="all">Batch</option>
+                                {batches.map((batch, index) => (
+                                    <option key={batch._id || index} value={batch.batchName}>
+                                        {batch.batchName}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
+                                <option value="all">Semester</option>
+                                {semesters.map((sem, index) => (
+                                    <option key={sem._id || index} value={sem.semesterNumber}>
+                                        Semester {sem.semesterNumber}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div className="all-subjects-section">
+                    <div></div>
+                    <div className="all-subjects-container">
+                        {availableSubjects.length > 0 ? (
+                            availableSubjects.map((subject, index) => (
+                                <div key={subject.sub_code || index} className="subject-item" onClick={() => handleSubjectSelect(subject)}>
+                                    <span>
+                                        {subject.sub_code} - {subject.sub_name}
+                                    </span>
+                                    <span className="subject-credits">{subject.sub_credit} credits</span>
+                                </div>
+                            ))
+                        ) : (
+                            <p>No subjects available for the selected program.</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             <div className="save-subjects-section">
                 <button className="save-subjects-btn" onClick={handleSaveSubjects}>
                     Save Selected Subjects
