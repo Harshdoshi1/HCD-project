@@ -1,5 +1,5 @@
 .faculty-container {
-    padding: 18px;
+    /* padding: 23px; */
     height: 100%;
     overflow-y: auto;
     margin-top: -1vh;
@@ -17,7 +17,14 @@
 .faculty-actions {
     display: flex;
     gap: 15px;
-    margin-bottom: 20px;
+
+    margin-top: 11px;
+    padding: 13px;
+    background-color: white;
+    width: 100%;
+
+    justify-content: start;
+
 }
 
 .faculty-action-btn {
@@ -43,12 +50,15 @@
 /* Faculty List Styles */
 .faculty-list-container {
     width: 100%;
+    padding: 1rem;
+
 }
 
 .faculty-filters {
     display: flex;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    margin-top: -16px;
 }
 
 .faculty-search,

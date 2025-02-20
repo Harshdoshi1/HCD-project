@@ -9,13 +9,15 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     color: #33C3F0;
 }
 
 .update-grades-header h2 {
     margin: 0;
     font-size: 1.5rem;
+    text-align: left;
+
 }
 
 .update-grades-form {
