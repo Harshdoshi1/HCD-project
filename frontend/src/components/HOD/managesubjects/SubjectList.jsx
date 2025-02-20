@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-const SubjectList = ({ onSelectSubject }) => {
+const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
     const [filters, setFilters] = useState({
         program: 'degree',
         batch: 'all',
         semester: 'all'
     });
     const [subjects, setSubjects] = useState([]);
-    const [showAddForm, setShowAddForm] = useState(false);
     const [newSubject, setNewSubject] = useState({
         name: '',
         code: '',
@@ -78,28 +77,24 @@ const SubjectList = ({ onSelectSubject }) => {
 
     return (
         <div className="subject-list">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div className="filters-container">
-                    <select className="professional-filter" name="program" value={filters.program} onChange={handleChange} required>
-                        <option value="all">All Programs</option>
-                        <option value="degree">Degree</option>
-                        <option value="diploma">Diploma</option>
-                    </select>
-                    <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
-                        <option value="all">Batch</option>
-                        {batches.map((batch, index) => (
-                            <option key={batch} value={batch}>{batch}</option>
-                        ))}
-                    </select>
-                    <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
-                        <option value="all">Semester</option>
-                        {semesters.map((sem, index) => (
-                            <option key={sem} value={sem}>Semester {sem}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <button className="subject-add-toggle" onClick={() => setShowAddForm(true)}>Add New Subject</button>
+            <div className="filters-container">
+                <select className="professional-filter" name="program" value={filters.program} onChange={handleChange} required>
+                    <option value="all">All Programs</option>
+                    <option value="degree">Degree</option>
+                    <option value="diploma">Diploma</option>
+                </select>
+                <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
+                    <option value="all">Batch</option>
+                    {batches.map((batch, index) => (
+                        <option key={batch} value={batch}>{batch}</option>
+                    ))}
+                </select>
+                <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
+                    <option value="all">Semester</option>
+                    {semesters.map((sem, index) => (
+                        <option key={sem} value={sem}>Semester {sem}</option>
+                    ))}
+                </select>
             </div>
 
             {showAddForm && (
