@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import Navbar from '../navbar/Navbar';
 import Sidebar from '../sidebar/Sidebar';
-import { StudentGrades } from '../grading/StudentGrades';
+import StudentGrades from "../grading/StudentGrades"
 import './Dashboard.css';
 import Assignedsubjects from "../assignedSubjects/Assignedsubjects"
 
@@ -23,12 +22,9 @@ const DashboardHOD = () => {
         <div className="dashboard-container">
             <Sidebar activeItem={activeItem} setActiveItem={setActiveItem} />
             <div className="main-content">
-                <Navbar />
                 <div className="dashboard-content">
                     {activeItem === 'dashboard' && (
                         <>
-
-
                             <div className="dashboard-sections">
                                 <div className="section">
                                     <h2>Recent Activity</h2>
