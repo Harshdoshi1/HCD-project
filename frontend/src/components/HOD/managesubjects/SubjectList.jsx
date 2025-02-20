@@ -8,7 +8,6 @@ const SubjectList = ({ onSelectSubject }) => {
     });
     const [subjects, setSubjects] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
-    const [showFilters, setShowFilters] = useState(false);
     const [newSubject, setNewSubject] = useState({
         name: '',
         code: '',
@@ -73,34 +72,31 @@ const SubjectList = ({ onSelectSubject }) => {
         }
     };
 
+    const handleChange = (e) => {
+        handleFilterChange(e.target.name, e.target.value);
+    };
+
     return (
         <div className="subject-list">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                    <button className="toggle-filters-btn" onClick={() => setShowFilters(!showFilters)}>
-                        <span className="icon">🔍</span> {/* Replace with your icon */}
-                        {showFilters ? "Hide Filters" : "Show Filters"}
-                    </button>
-
-                    {showFilters && (
-                        <div className="filters-container" style={{ display: 'flex', flexDirection: 'row', gap: '10px', marginLeft: '10px', flexWrap: 'wrap' }}>
-                            <div className="filter-group">
-                                <select className="professional-filter" value={filters.program} onChange={(e) => handleFilterChange('program', e.target.value)}>
-                                    <option value="all">All Programs</option>
-                                    <option value="degree">Degree</option>
-                                    <option value="diploma">Diploma</option>
-                                </select>
-                                <select className="professional-filter" value={filters.batch} onChange={(e) => handleFilterChange('batch', e.target.value)}>
-                                    <option value="all">All Batches</option>
-                                    {batches.map(batch => <option key={batch} value={batch}>{batch}</option>)}
-                                </select>
-                                <select className="professional-filter" value={filters.semester} onChange={(e) => handleFilterChange('semester', e.target.value)}>
-                                    <option value="all">All Semesters</option>
-                                    {semesters.map(sem => <option key={sem} value={sem}>Semester {sem}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                    )}
+                <div className="filters-container">
+                    <select className="professional-filter" name="program" value={filters.program} onChange={handleChange} required>
+                        <option value="all">All Programs</option>
+                        <option value="degree">Degree</option>
+                        <option value="diploma">Diploma</option>
+                    </select>
+                    <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
+                        <option value="all">Batch</option>
+                        {batches.map((batch, index) => (
+                            <option key={batch} value={batch}>{batch}</option>
+                        ))}
+                    </select>
+                    <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
+                        <option value="all">Semester</option>
+                        {semesters.map((sem, index) => (
+                            <option key={sem} value={sem}>Semester {sem}</option>
+                        ))}
+                    </select>
                 </div>
 
                 <button className="subject-add-toggle" onClick={() => setShowAddForm(true)}>Add New Subject</button>
