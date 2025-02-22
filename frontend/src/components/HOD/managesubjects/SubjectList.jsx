@@ -77,19 +77,19 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
 
     return (
         <div className="subject-list">
-            <div className="filters-container">
-                <select className="professional-filter" name="program" value={filters.program} onChange={handleChange} required>
+            <div className="filters-container-display-subject-list">
+                <select className="professional-filter ds" name="program" value={filters.program} onChange={handleChange} required>
                     <option value="all">All Programs</option>
                     <option value="degree">Degree</option>
                     <option value="diploma">Diploma</option>
                 </select>
-                <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
+                <select className="professional-filter ds" name="batch" value={filters.batch} onChange={handleChange} required>
                     <option value="all">Batch</option>
                     {batches.map((batch, index) => (
                         <option key={batch} value={batch}>{batch}</option>
                     ))}
                 </select>
-                <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
+                <select className="professional-filter ds" name="semester" value={filters.semester} onChange={handleChange} required>
                     <option value="all">Semester</option>
                     {semesters.map((sem, index) => (
                         <option key={sem} value={sem}>Semester {sem}</option>
@@ -134,7 +134,7 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
                             <div className="subject-name">{subject.sub_name}</div>
                             <div className="subject-details">
                                 <span>{filters.program}</span>
-                                <span>{filters.batch !== 'all' ? filters.batch : 'All Batches'}</span>
+                                {/* <span>{filters.batch !== 'all' ? filters.batch : 'Alxl Batches'}</span> */}
                                 <span>{filters.semester !== 'all' ? `Semester ${filters.semester}` : 'All Semesters'}</span>
                             </div>
                         </div>

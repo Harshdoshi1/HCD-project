@@ -101,7 +101,7 @@ const AddStudent = () => {
                         ))}
                     </select>
                 </div>
-                <button type="submit" className="submit-button">Add Student</button>
+                <button type="submit" className="submit-button"> Add Student</button>
             </form>
         </div>
     );
