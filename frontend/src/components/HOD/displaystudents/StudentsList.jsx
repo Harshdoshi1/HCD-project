@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FaPlus } from 'react-icons/fa';
 import './StudentsList.css';
 import Select from 'react-select';
 
@@ -12,43 +13,38 @@ const StudentsList = ({ onStudentSelect }) => {
     const students = [
         {
             id: 1,
-            name: 'ritesh',
+            name: 'Ritesh Scanchla',
             enrollmentNo: '92200133001',
             batch: '2022-2026',
-            semester: 1,
-            image: 'https://via.placeholder.com/50'
+            email: 'ritesh.sanchala@marwadiuniversity.ac.in'
         },
         {
             id: 2,
-            name: 'harsh',
+            name: 'Harsh Doshi',
             enrollmentNo: '92200133002',
             batch: '2022-2026',
-            semester: 1,
-            image: 'https://via.placeholder.com/50'
+            email: 'harsh.doshi@marwadiuniversity.ac.in'
         },
         {
             id: 3,
-            name: 'prashant',
+            name: 'Prashant Sarvaiya',
             enrollmentNo: '92200133003',
             batch: '2022-2026',
-            semester: 1,
-            image: 'https://via.placeholder.com/50'
+            email: 'prashant.sarvaiya@marwadiuniversity.ac.in'
         },
         {
             id: 5,
-            name: 'shyama',
+            name: 'Shyama Vagashia',
             enrollmentNo: '92200133005',
             batch: '2022-2026',
-            semester: 1,
-            image: 'https://via.placeholder.com/50'
+            email: 'shyama.vagashia@marwadiuniversity.ac.in'
         },
         {
             id: 6,
-            name: 'rishit',
+            name: 'Rishit Rathod',
             enrollmentNo: '92100133027',
             batch: '2021-2025',
-            semester: 1,
-            image: 'https://avatars.githubusercontent.com/u/29489915?v=4'
+            email: 'rishit.rathod@marwadiuniversity.ac.in'
         },
 
     ];
@@ -80,32 +76,42 @@ const StudentsList = ({ onStudentSelect }) => {
 
     return (
         <div className="students-container">
-            <div className="filters-section-std">
-                <div className="filter-group">
-                    <Select
-                        value={selectedBatch ? { value: selectedBatch, label: selectedBatch } : null}
-                        onChange={option => setSelectedBatch(option ? option.value : '')}
-                        options={batchesOptions}
-                        placeholder="Select Batch"
-                        isSearchable
-                    />
+            <div className='display-students-top-filter-add-btn'>
+                <div className='student-header-content'>
+                    <div className="filters-section-std">
+                        <div className="filter-group">
+                            <Select
+                                value={selectedBatch ? { value: selectedBatch, label: selectedBatch } : null}
+                                onChange={option => setSelectedBatch(option ? option.value : '')}
+                                options={batchesOptions}
+                                placeholder="Select Batch"
+                                isSearchable
+                            />
 
-                    <Select
-                        value={selectedSemester ? { value: selectedSemester, label: `Semester ${selectedSemester}` } : null}
-                        onChange={option => setSelectedSemester(option ? option.value : '')}
-                        options={semestersOptions}
-                        placeholder="Select Semester"
-                        isSearchable
-                        isDisabled={!selectedBatch}
-                    />
+                            <Select
+                                value={selectedSemester ? { value: selectedSemester, label: `Semester ${selectedSemester}` } : null}
+                                onChange={option => setSelectedSemester(option ? option.value : '')}
+                                options={semestersOptions}
+                                placeholder="Select Semester"
+                                isSearchable
+                                isDisabled={!selectedBatch}
+                            />
 
-                    <input
-                        type="text"
-                        placeholder="Search by name or enrollment..."
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        className="search-input"
-                    />
+                            <input
+                                type="text"
+                                placeholder="Search by name or enrollment..."
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                className="search-input"
+                            />
+                        </div>
+                    </div>
+                    <div className='addstudent-btn-div-display-student'>
+                        <button className='addstudent-btn'>
+                            <FaPlus className='plus-icon' />
+                            Add Student
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -113,26 +119,20 @@ const StudentsList = ({ onStudentSelect }) => {
                 <table>
                     <thead>
                         <tr>
-                            <th>Image</th>
                             <th>Name</th>
                             <th>Enrollment No.</th>
-
+                            <th>Batch</th>
+                            <th>Email ID</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredStudents.map(student => (
                             <tr key={student.id}>
-                                <td>
-                                    <img
-                                        src={student.image}
-                                        alt={student.name}
-                                        className="student-image"
-                                    />
-                                </td>
                                 <td>{student.name}</td>
                                 <td>{student.enrollmentNo}</td>
-
+                                <td>{student.batch}</td>
+                                <td>{student.email}</td>
                                 <td>
                                     <button
                                         className="view-details-btn"
