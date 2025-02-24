@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-const SubjectList = ({ onSelectSubject }) => {
+const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
     const [filters, setFilters] = useState({
         program: 'degree',
         batch: 'all',
         semester: 'all'
     });
     const [subjects, setSubjects] = useState([]);
-    const [showAddForm, setShowAddForm] = useState(false);
     const [newSubject, setNewSubject] = useState({
         name: '',
         code: '',
@@ -19,28 +18,22 @@ const SubjectList = ({ onSelectSubject }) => {
     const batches = ['2022-2026', '2021-2025', '2020-2024', '2019-2023'];
     const semesters = Array.from({ length: 8 }, (_, i) => (i + 1).toString());
 
-    // Fetch subjects using POST request
     const fetchSubjects = async () => {
         if (filters.program === 'all') {
-            setSubjects([]); // Reset if "All Programs" is selected
+            setSubjects([]);
             return;
         }
 
         try {
             const response = await fetch('http://localhost:5001/api/users/getSubjects', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     program: filters.program,
-                    // batch: filters.batch === 'all' ? null : filters.batch,
-                    // semester: filters.semester === 'all' ? null : filters.semester
                 })
             });
 
             const data = await response.json();
-
             if (response.ok) {
                 setSubjects(data.subjects);
             } else {
@@ -63,9 +56,7 @@ const SubjectList = ({ onSelectSubject }) => {
         try {
             const response = await fetch('http://localhost:5001/api/users/addSubject', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newSubject)
             });
 
@@ -80,25 +71,30 @@ const SubjectList = ({ onSelectSubject }) => {
         }
     };
 
+    const handleChange = (e) => {
+        handleFilterChange(e.target.name, e.target.value);
+    };
+
     return (
         <div className="subject-list">
             <div className="filters-container">
-                <div className="filter-group">
-                    <select className="professional-filter" value={filters.program} onChange={(e) => handleFilterChange('program', e.target.value)}>
-                        <option value="all">All Programs</option>
-                        <option value="degree">Degree</option>
-                        <option value="diploma">Diploma</option>
-                    </select>
-                    <select className="professional-filter" value={filters.batch} onChange={(e) => handleFilterChange('batch', e.target.value)}>
-                        <option value="all">All Batches</option>
-                        {batches.map(batch => <option key={batch} value={batch}>{batch}</option>)}
-                    </select>
-                    <select className="professional-filter" value={filters.semester} onChange={(e) => handleFilterChange('semester', e.target.value)}>
-                        <option value="all">All Semesters</option>
-                        {semesters.map(sem => <option key={sem} value={sem}>Semester {sem}</option>)}
-                    </select>
-                </div>
-                <button className="subject-add-toggle" onClick={() => setShowAddForm(true)}>Add New Subject</button>
+                <select className="professional-filter" name="program" value={filters.program} onChange={handleChange} required>
+                    <option value="all">All Programs</option>
+                    <option value="degree">Degree</option>
+                    <option value="diploma">Diploma</option>
+                </select>
+                <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
+                    <option value="all">Batch</option>
+                    {batches.map((batch, index) => (
+                        <option key={batch} value={batch}>{batch}</option>
+                    ))}
+                </select>
+                <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
+                    <option value="all">Semester</option>
+                    {semesters.map((sem, index) => (
+                        <option key={sem} value={sem}>Semester {sem}</option>
+                    ))}
+                </select>
             </div>
 
             {showAddForm && (

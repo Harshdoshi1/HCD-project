@@ -58,7 +58,6 @@ const ManageComponents = ({ selectedSubject }) => {
             alert('Total weightage must equal 100%');
             return;
         }
-        // Add save logic here
         console.log('Saving components...', weightages);
         alert('Components saved successfully!');
     };
