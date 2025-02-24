@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './StudentsList.css';
+import Select from 'react-select';
 
 const StudentsList = ({ onStudentSelect }) => {
     const [selectedBatch, setSelectedBatch] = useState('');
@@ -64,6 +65,9 @@ const StudentsList = ({ onStudentSelect }) => {
         setSearchQuery(e.target.value);
     };
 
+    const batchesOptions = batches.map(batch => ({ value: batch, label: batch }));
+    const semestersOptions = semesters.map(sem => ({ value: sem, label: `Semester ${sem}` }));
+
     const filteredStudents = students.filter(student => {
         const batchMatch = !selectedBatch || student.batch === selectedBatch;
         const semesterMatch = !selectedSemester || student.semester === parseInt(selectedSemester);
@@ -78,27 +82,22 @@ const StudentsList = ({ onStudentSelect }) => {
         <div className="students-container">
             <div className="filters-section-std">
                 <div className="filter-group">
-                    <select
-                        value={selectedBatch}
-                        onChange={handleBatchChange}
-                        className="filter-select"
-                    >
-                        <option value="">Select Batch</option>
-                        {batches.map(batch => (
-                            <option key={batch} value={batch}>{batch}</option>
-                        ))}
-                    </select>
+                    <Select
+                        value={selectedBatch ? { value: selectedBatch, label: selectedBatch } : null}
+                        onChange={option => setSelectedBatch(option ? option.value : '')}
+                        options={batchesOptions}
+                        placeholder="Select Batch"
+                        isSearchable
+                    />
 
-                    <select
-                        value={selectedSemester}
-                        onChange={handleSemesterChange}
-                        className="filter-select"
-                    >
-                        <option value="">Select Semester</option>
-                        {semesters.map(sem => (
-                            <option key={sem} value={sem}>Semester {sem}</option>
-                        ))}
-                    </select>
+                    <Select
+                        value={selectedSemester ? { value: selectedSemester, label: `Semester ${selectedSemester}` } : null}
+                        onChange={option => setSelectedSemester(option ? option.value : '')}
+                        options={semestersOptions}
+                        placeholder="Select Semester"
+                        isSearchable
+                        isDisabled={!selectedBatch}
+                    />
 
                     <input
                         type="text"
