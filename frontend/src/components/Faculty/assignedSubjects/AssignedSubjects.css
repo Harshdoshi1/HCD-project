@@ -1,5 +1,4 @@
 .assigned-subjects-container {
-    padding: 24px;
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -34,41 +33,49 @@
 }
 
 .filters-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    padding: 16px;
-    background-color: #fff;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
+    display: flex;
+    justify-content: end;
+    padding: 20px;
+    border-radius: 12px;
+    background-color: white;
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    min-width: 100px;
 }
 
 .filter-group label {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
+    color: #444;
 }
 
 .filter-group select {
-    padding: 8px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
     background-color: white;
+    color: #333;
     font-size: 14px;
     width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    background-position: right 12px center;
+    background-size: 1em;
+    padding-right: 40px;
 }
 
 .filter-group select:focus {
     outline: none;
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    border-color: #33C3F0;
+    box-shadow: 0 0 0 2px rgba(51, 195, 240, 0.1);
+}
+
+.filter-group select:hover {
+    border-color: #33C3F0;
 }
 
 .subject-card {
