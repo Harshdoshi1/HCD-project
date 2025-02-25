@@ -1,8 +1,8 @@
-import React from 'react';
-import { LayoutDashboard, Users, GraduationCap, BookMarked, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { LayoutDashboard, Users, GraduationCap, BookMarked, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = ({ activeItem, setActiveItem }) => {
+const Sidebar = ({ activeItem, setActiveItem, isExpanded, setIsExpanded }) => {
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'subjects', label: 'Subjects', icon: BookMarked },
@@ -11,10 +11,15 @@ const Sidebar = ({ activeItem, setActiveItem }) => {
     ];
 
     return (
-        <div className="sidebar">
-            <div className="sidebar-logo">
-                <img className="logo-img" src="https://ictmu.in/frontpage/page/images/ict_logo2.png" alt="ict-logo" />
-                <h3>Some Text</h3>
+        <div className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}>
+            <div className="sidebar-header">
+
+                <button
+                    className="toggle-button"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                >
+                    {isExpanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                </button>
             </div>
             {menuItems.map((item) => (
                 <button
@@ -23,7 +28,7 @@ const Sidebar = ({ activeItem, setActiveItem }) => {
                     onClick={() => setActiveItem(item.id)}
                 >
                     <item.icon size={20} />
-                    <span>{item.label}</span>
+                    {isExpanded && <span>{item.label}</span>}
                 </button>
             ))}
         </div>

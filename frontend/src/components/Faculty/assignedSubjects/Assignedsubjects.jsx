@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Book, Users, CalendarDays } from "lucide-react";
-import './AssignSubjects.css';
+import './AssignedSubjects.css';
 
 
 const SubjectCard = ({ subject }) => {
@@ -95,7 +95,6 @@ const Assignedsubjects = () => {
 
             <div className="filters-container">
                 <div className="filter-group">
-                    <label>Batch</label>
                     <select value={batch} onChange={(e) => setBatch(e.target.value)}>
                         <option value="">Select batch</option>
                         <option value="2022-2026">2022-2026</option>
@@ -105,7 +104,6 @@ const Assignedsubjects = () => {
                 </div>
 
                 <div className="filter-group">
-                    <label>Type</label>
                     <select value={type} onChange={(e) => setType(e.target.value)}>
                         <option value="">Select type</option>
                         <option value="degree">Degree</option>
@@ -114,7 +112,6 @@ const Assignedsubjects = () => {
                 </div>
 
                 <div className="filter-group">
-                    <label>Semester</label>
                     <select value={semester} onChange={(e) => setSemester(e.target.value)}>
                         <option value="">Select semester</option>
                         {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
