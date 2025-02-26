@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/login/Login';
+
 import DashboardFaculty from './components/Faculty/dashboard/Dashboard';
 import DashboardHOD from './components/HOD/dashboard/Dashboard';
 import StudentDetail from '../src/components/HOD/displaystudents/StudentDetails'

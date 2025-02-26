@@ -103,65 +103,61 @@ const StudentGrades = () => {
                 <h1>Grade Management</h1>
             </div>
 
-            <div className="filters-section">
-                <div className="filter-group">
-                    <label>Batch</label>
-                    <select value={batch} onChange={(e) => setBatch(e.target.value)}>
-                        <option value="">Select Batch</option>
-                        <option value="2022-2026">2022-2026</option>
-                        <option value="2021-2025">2021-2025</option>
-                        <option value="2020-2024">2020-2024</option>
-                    </select>
-                </div>
+            <div className="student-filter-top">
+                <div className="filters-section">
+                    <div className="filter-group">
+                        <select value={batch} onChange={(e) => setBatch(e.target.value)}>
+                            <option value="">Batch</option>
+                            <option value="2022-2026">2022-2026</option>
+                            <option value="2021-2025">2021-2025</option>
+                            <option value="2020-2024">2020-2024</option>
+                        </select>
+                    </div>
 
-                <div className="filter-group">
-                    <label>Type</label>
-                    <select value={type} onChange={(e) => setType(e.target.value)}>
-                        <option value="">Select Type</option>
-                        <option value="degree">Degree</option>
-                        <option value="diploma">Diploma</option>
-                    </select>
-                </div>
+                    <div className="filter-group">
+                        <select value={type} onChange={(e) => setType(e.target.value)}>
+                            <option value="">Type</option>
+                            <option value="degree">Degree</option>
+                            <option value="diploma">Diploma</option>
+                        </select>
+                    </div>
 
-                <div className="filter-group">
-                    <label>Semester</label>
-                    <select value={semester} onChange={(e) => setSemester(e.target.value)}>
-                        <option value="">Select Semester</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                            <option key={sem} value={sem}>Semester {sem}</option>
-                        ))}
-                    </select>
-                </div>
+                    <div className="filter-group">
+                        <select value={semester} onChange={(e) => setSemester(e.target.value)}>
+                            <option value="">Semester</option>
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+                                <option key={sem} value={sem}>Semester {sem}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                <div className="filter-group">
-                    <label>Subject</label>
-                    <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>
-                        <option value="">Select Subject</option>
-                        {subjects.map(subject => (
-                            <option key={subject.id} value={subject.id}>
-                                {subject.name}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="filter-group">
+                        <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>
+                            <option value="">Subject</option>
+                            {subjects.map(subject => (
+                                <option key={subject.id} value={subject.id}>
+                                    {subject.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            placeholder="Search by name or enrollment number..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="search-input"
+                        />
+                    </div>
                 </div>
             </div>
 
             {selectedSubject && (
                 <>
-                    <div className="search-section">
-                        <div className="search-container">
-                            <Search size={20} className="search-icon" />
-                            <input
-                                type="text"
-                                placeholder="Search by name or enrollment number..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="search-input"
-                            />
-                        </div>
-                        <div className="student-count">
-                            Total Students: {filteredStudents.length}
-                        </div>
+                    <div className="student-count">
+                        Total Students: {filteredStudents.length}
                     </div>
 
                     <div className="students-list">

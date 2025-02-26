@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import './StudentsList.css';
 import Select from 'react-select';
+import StudentModal from './StudentModal';
 
 const StudentsList = ({ onStudentSelect }) => {
     const [selectedBatch, setSelectedBatch] = useState('');
     const [selectedSemester, setSelectedSemester] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const batches = ['2022-2026', '2023-2027', '2024-2028'];
     const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -74,9 +76,17 @@ const StudentsList = ({ onStudentSelect }) => {
         return batchMatch && semesterMatch && searchMatch;
     });
 
+    const handleOpenModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
     return (
-        <div className="students-container">
-            <div className='display-students-top-filter-add-btn'>
+        <div>
+            <div className="display-students-top-filter-add-btn">
                 <div className='student-header-content'>
                     <div className="filters-section-std">
                         <div className="filter-group">
@@ -107,7 +117,7 @@ const StudentsList = ({ onStudentSelect }) => {
                         </div>
                     </div>
                     <div className='addstudent-btn-div-display-student'>
-                        <button className='addstudent-btn'>
+                        <button className='addstudent-btn' onClick={handleOpenModal}>
                             <FaPlus className='plus-icon' />
                             Add Student
                         </button>
@@ -146,6 +156,7 @@ const StudentsList = ({ onStudentSelect }) => {
                     </tbody>
                 </table>
             </div>
+            <StudentModal isOpen={isModalOpen} onClose={handleCloseModal} />
         </div>
     );
 };

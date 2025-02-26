@@ -1,27 +1,25 @@
-
-
 import React, { useState } from 'react';
 import Sidebar from '../sidebar/Sidebar';
 import Faculty from "../dashboard/managefaculty/Faculty";
 import StudentsList from '../../HOD/displaystudents/StudentsList';
 import StudentDetail from '../../HOD/displaystudents/StudentDetails';
 import Subject from '../../HOD/managesubjects/Subject';
+import ManageBatches from '../managebatches/ManageBatches';
 import './Dashboard.css';
-
 
 const DashboardHOD = () => {
     const [activeItem, setActiveItem] = useState('dashboard');
-
     const [selectedStudentId, setSelectedStudentId] = useState(null);
+    const [showStudentDetails, setShowStudentDetails] = useState(false);
 
     const handleStudentSelect = (studentId) => {
         setSelectedStudentId(studentId);
+        setShowStudentDetails(true);
     };
 
     const handleBackToList = () => {
-        setSelectedStudentId(null);
+        setShowStudentDetails(false);
     };
-    // const [activeItem, setActiveItem] = useState('dashboard');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     return (
@@ -36,37 +34,39 @@ const DashboardHOD = () => {
                                     <div className="stats-grid">
                                         home page for HOD
                                     </div>
-
-
                                 </>
                             )}
 
                             {activeItem === 'students' && (
                                 <>
-                                    {selectedStudentId ? (
+                                    {showStudentDetails ? (
                                         <div>
-                                            <button
-                                                onClick={handleBackToList}
-                                                className="back-button"
-                                            >
-                                                Back to Students List
-                                            </button>
-                                            <StudentDetail studentId={selectedStudentId} />
+
+                                            <StudentDetail
+                                                studentId={selectedStudentId}
+                                                handleBackToList={handleBackToList}
+                                            />
                                         </div>
                                     ) : (
-                                        <StudentsList onStudentSelect={handleStudentSelect} />
+                                        <StudentsList
+                                            onStudentSelect={(id) => {
+                                                setSelectedStudentId(id);
+                                                setShowStudentDetails(true);
+                                            }}
+                                        />
                                     )}
                                 </>
                             )}
 
                             {activeItem === 'faculty' && <Faculty />}
-                            {activeItem === 'subjects' && <Subject />}</>
+                            {activeItem === 'subjects' && <Subject />}
+                            {activeItem === 'batches' && <ManageBatches />}
+                        </>
                     </div>
                 </div>
             </div>
         </div>
     );
 };
-
 
 export default DashboardHOD;
