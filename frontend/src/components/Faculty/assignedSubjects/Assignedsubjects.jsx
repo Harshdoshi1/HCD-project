@@ -92,32 +92,35 @@ const Assignedsubjects = () => {
                 <h1>Current Subjects</h1>
                 {/* <p>Manage and view your assigned subjects for the current semester</p> */}
             </div>
+            <hr />
+            <br />
+            <div className="filters-top-assigned-subjects">
+                <div className="filters-container-assigned-subjects">
+                    <div className="filter-group">
+                        <select value={batch} onChange={(e) => setBatch(e.target.value)}>
+                            <option value="">Select batch</option>
+                            <option value="2022-2026">2022-2026</option>
+                            <option value="2021-2025">2021-2025</option>
+                            <option value="2020-2024">2020-2024</option>
+                        </select>
+                    </div>
 
-            <div className="filters-container">
-                <div className="filter-group">
-                    <select value={batch} onChange={(e) => setBatch(e.target.value)}>
-                        <option value="">Select batch</option>
-                        <option value="2022-2026">2022-2026</option>
-                        <option value="2021-2025">2021-2025</option>
-                        <option value="2020-2024">2020-2024</option>
-                    </select>
-                </div>
+                    <div className="filter-group">
+                        <select value={type} onChange={(e) => setType(e.target.value)}>
+                            <option value="">Select type</option>
+                            <option value="degree">Degree</option>
+                            <option value="diploma">Diploma</option>
+                        </select>
+                    </div>
 
-                <div className="filter-group">
-                    <select value={type} onChange={(e) => setType(e.target.value)}>
-                        <option value="">Select type</option>
-                        <option value="degree">Degree</option>
-                        <option value="diploma">Diploma</option>
-                    </select>
-                </div>
-
-                <div className="filter-group">
-                    <select value={semester} onChange={(e) => setSemester(e.target.value)}>
-                        <option value="">Select semester</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                            <option key={sem} value={sem}>Semester {sem}</option>
-                        ))}
-                    </select>
+                    <div className="filter-group">
+                        <select value={semester} onChange={(e) => setSemester(e.target.value)}>
+                            <option value="">Select semester</option>
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                                <option key={sem} value={sem}>Semester {sem}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
