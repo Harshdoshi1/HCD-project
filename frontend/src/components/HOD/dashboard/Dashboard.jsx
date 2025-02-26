@@ -1,17 +1,14 @@
-
-
 import React, { useState } from 'react';
 import Sidebar from '../sidebar/Sidebar';
 import Faculty from "../dashboard/managefaculty/Faculty";
 import StudentsList from '../../HOD/displaystudents/StudentsList';
 import StudentDetail from '../../HOD/displaystudents/StudentDetails';
 import Subject from '../../HOD/managesubjects/Subject';
+import ManageBatches from '../managebatches/ManageBatches';
 import './Dashboard.css';
-
 
 const DashboardHOD = () => {
     const [activeItem, setActiveItem] = useState('dashboard');
-
     const [selectedStudentId, setSelectedStudentId] = useState(null);
 
     const handleStudentSelect = (studentId) => {
@@ -21,7 +18,6 @@ const DashboardHOD = () => {
     const handleBackToList = () => {
         setSelectedStudentId(null);
     };
-    // const [activeItem, setActiveItem] = useState('dashboard');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     return (
@@ -36,8 +32,6 @@ const DashboardHOD = () => {
                                     <div className="stats-grid">
                                         home page for HOD
                                     </div>
-
-
                                 </>
                             )}
 
@@ -60,13 +54,14 @@ const DashboardHOD = () => {
                             )}
 
                             {activeItem === 'faculty' && <Faculty />}
-                            {activeItem === 'subjects' && <Subject />}</>
+                            {activeItem === 'subjects' && <Subject />}
+                            {activeItem === 'batches' && <ManageBatches />}
+                        </>
                     </div>
                 </div>
             </div>
         </div>
     );
 };
-
 
 export default DashboardHOD;

@@ -3,6 +3,7 @@
     max-width: 1200px;
     margin: auto;
     margin-top: -1rem;
+
 }
 
 .grades-header {
@@ -22,19 +23,19 @@
 
 .filters-section {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    padding: 16px;
-    background: white;
+    grid-template-columns: repeat(5, 1fr);
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 24px;
+    margin-bottom: 14px;
+    width: 100%;
+    gap: 16px;
+    align-items: center;
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
+
 }
 
 .filter-group label {
@@ -243,12 +244,10 @@
 .search-container {
     display: flex;
     align-items: center;
-    background: white;
-    border: 1px solid #e5e7eb;
     border-radius: 6px;
     padding: 8px 12px;
     flex: 1;
-    max-width: 400px;
+    max-width: 320px;
 }
 
 .search-icon {
@@ -309,6 +308,34 @@
     font-size: 14px;
     font-weight: 500;
     color: #111827;
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+    background-color: white;
+    width: 100%;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.search-container {
+    position: relative;
+}
+
+.search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
 }
 
 .enrollment-number {
