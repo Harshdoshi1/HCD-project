@@ -5,10 +5,11 @@ const ManageBatches = () => {
     const [batches, setBatches] = useState([]);
     const [newBatch, setNewBatch] = useState({ name: '', semester: { startDate: '', endDate: '' } });
     const [selectedBatch, setSelectedBatch] = useState(null);
-    const [semesterToAdd, setSemesterToAdd] = useState({ startDate: '', endDate: '' });
-    const [showAddBatch, setShowAddBatch] = useState(false);  // Initially false, no form shown
-    const [showAddSemester, setShowAddSemester] = useState(false);  // Initially false, no form shown
-    const [semesterCount, setSemesterCount] = useState(1);  // Tracks the number of semesters for new batch
+    const [semesterToAdd, setSemesterToAdd] = useState({ startDate: '', endDate: '', name: 'Sem 1' });
+    const [showAddBatch, setShowAddBatch] = useState(false);
+    const [showAddSemester, setShowAddSemester] = useState(false);
+    const [semesterCount, setSemesterCount] = useState(1);
+    const [selectedSemester, setSelectedSemester] = useState('1');
 
     useEffect(() => {
         fetchBatches();
@@ -20,39 +21,37 @@ const ManageBatches = () => {
     };
 
     const handleAddBatch = () => {
-        // Ensure the first semester's start date is used for the batch
         const batchWithSemester = {
             ...newBatch,
-            semester: { ...semesterToAdd, name: `Sem ${semesterCount}` },
-            startDate: semesterToAdd.startDate // Set the start date of the first semester as the batch start date
+            semester: [{ ...semesterToAdd, name: `Sem ${semesterCount}` }],
+            startDate: semesterToAdd.startDate
         };
 
         setBatches([...batches, batchWithSemester]);
         setNewBatch({ name: '', semester: { startDate: '', endDate: '' } });
-        setSemesterToAdd({ startDate: '', endDate: '' });
+        setSemesterToAdd({ startDate: '', endDate: '', name: 'Sem 1' });
         setSemesterCount(semesterCount + 1);
-        setShowAddBatch(false); // Close the add batch form after submission
+        setShowAddBatch(false);
     };
 
     const handleAddSemester = () => {
         if (selectedBatch) {
             const updatedBatches = batches.map(batch => {
                 if (batch.name === selectedBatch.name) {
-                    const semesterName = `Sem ${batch.semester.length + 1}`;
-                    return { ...batch, semester: [...batch.semester, { ...semesterToAdd, name: semesterName }] };
+                    return { ...batch, semester: [...batch.semester, { ...semesterToAdd, name: `Sem ${selectedSemester}` }] };
                 }
                 return batch;
             });
             setBatches(updatedBatches);
             setSelectedBatch(null);
-            setSemesterToAdd({ startDate: '', endDate: '' });
-            setShowAddSemester(false); // Close the add semester form after submission
+            setSemesterToAdd({ startDate: '', endDate: '', name: 'Sem 1' });
+            setShowAddSemester(false);
         }
     };
 
     const handleCancel = () => {
         setNewBatch({ name: '', semester: { startDate: '', endDate: '' } });
-        setSemesterToAdd({ startDate: '', endDate: '' });
+        setSemesterToAdd({ startDate: '', endDate: '', name: 'Sem 1' });
         setShowAddBatch(false);
         setShowAddSemester(false);
     };
@@ -67,7 +66,11 @@ const ManageBatches = () => {
 
             {showAddBatch && (
                 <div className="add-section">
-                    <h3>Add New Batch</h3>
+                    <div className="headigsfordt">
+                        <h3>Add New Batch</h3>
+                        <p>Enter starting date of semester 1</p>
+                        <p>Enter ending date of semester 1</p>
+                    </div>
                     <div className="form-row">
                         <input
                             type="text"
@@ -75,6 +78,9 @@ const ManageBatches = () => {
                             value={newBatch.name}
                             onChange={(e) => setNewBatch({ ...newBatch, name: e.target.value })}
                         />
+                        {semesterToAdd.startDate && semesterToAdd.endDate && (
+                            <p className="info-text">Starting Date of Sem 1: {semesterToAdd.startDate}, Ending Date: {semesterToAdd.endDate}</p>
+                        )}
                         <input
                             type="date"
                             value={semesterToAdd.startDate}
@@ -95,11 +101,20 @@ const ManageBatches = () => {
 
             {showAddSemester && (
                 <div className="add-section">
-                    <h3>Add Semester to Existing Batch</h3>
+                    <div className="headigsfordt">
+                        <h3>Add Semester to Existing Batch</h3>
+                        <p className='stdate'>Enter starting date of new semester</p>
+                        <p>Enter ending date of new semester</p>
+                    </div>
                     <div className="form-row">
                         <select onChange={(e) => setSelectedBatch(batches.find(batch => batch.name === e.target.value))}>
                             <option>Select Batch</option>
                             {batches.map(batch => <option key={batch.name} value={batch.name}>{batch.name}</option>)}
+                        </select>
+                        <select value={selectedSemester} onChange={(e) => setSelectedSemester(e.target.value)}>
+                            {[...Array(8).keys()].map(num => (
+                                <option key={num + 1} value={num + 1}>{num + 1}</option>
+                            ))}
                         </select>
                         <input
                             type="date"
