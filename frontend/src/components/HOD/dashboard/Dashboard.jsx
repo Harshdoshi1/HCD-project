@@ -10,13 +10,15 @@ import './Dashboard.css';
 const DashboardHOD = () => {
     const [activeItem, setActiveItem] = useState('dashboard');
     const [selectedStudentId, setSelectedStudentId] = useState(null);
+    const [showStudentDetails, setShowStudentDetails] = useState(false);
 
     const handleStudentSelect = (studentId) => {
         setSelectedStudentId(studentId);
+        setShowStudentDetails(true);
     };
 
     const handleBackToList = () => {
-        setSelectedStudentId(null);
+        setShowStudentDetails(false);
     };
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -37,18 +39,21 @@ const DashboardHOD = () => {
 
                             {activeItem === 'students' && (
                                 <>
-                                    {selectedStudentId ? (
+                                    {showStudentDetails ? (
                                         <div>
-                                            <button
-                                                onClick={handleBackToList}
-                                                className="back-button"
-                                            >
-                                                Back to Students List
-                                            </button>
-                                            <StudentDetail studentId={selectedStudentId} />
+
+                                            <StudentDetail
+                                                studentId={selectedStudentId}
+                                                handleBackToList={handleBackToList}
+                                            />
                                         </div>
                                     ) : (
-                                        <StudentsList onStudentSelect={handleStudentSelect} />
+                                        <StudentsList
+                                            onStudentSelect={(id) => {
+                                                setSelectedStudentId(id);
+                                                setShowStudentDetails(true);
+                                            }}
+                                        />
                                     )}
                                 </>
                             )}

@@ -90,10 +90,8 @@ const Assignedsubjects = () => {
         <div className="assigned-subjects-container">
             <div className="header">
                 <h1>Current Subjects</h1>
-                {/* <p>Manage and view your assigned subjects for the current semester</p> */}
             </div>
-            <hr />
-            <br />
+
             <div className="filters-top-assigned-subjects">
                 <div className="filters-container-assigned-subjects">
                     <div className="filter-group">
