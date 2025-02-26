@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma } = require('../models'); // Import models
+const { Op } = require("sequelize"); // Ensure Op is imported
 
 
 // ✅ Add Subject (Check if already assigned to batch & semester)
@@ -141,7 +142,24 @@ const getSubjectsByBatchAndSemester = async (req, res) => {
         // Fetch subjects for the given batch and semester
         const subjects = await Subject.findAll({ where: { semesterId: semester.id, batchId: batch.id } });
 
-        res.status(200).json(subjects);
+        if (subjects.length === 0) {
+            return res.status(404).json({ message: "No subjects found for this semester and batch" });
+        }
+
+        // Get subject names from subjects
+        const subjectNames = subjects.map(s => s.subjectName);
+
+        // Fetch sub_code and sub_level from UniqueSubDegree using sub_name
+        const uniqueSubs = await UniqueSubDegree.findAll({
+            where: { sub_name: { [Op.in]: subjectNames } },
+            attributes: ["sub_name", "sub_code", "sub_level"], // Fetch only required attributes
+        });
+
+        // Send the response properly formatted
+        res.status(200).json({
+            subjects,
+            uniqueSubjects: uniqueSubs
+        });
     } catch (error) {
         console.error("Error fetching subjects:", error);
         res.status(500).json({ message: "Server error", error: error.message });
