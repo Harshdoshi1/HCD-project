@@ -129,8 +129,8 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
             <div className="subjects-grid">
                 {subjects.length > 0 ? (
                     subjects.map(subject => (
-                        <div key={subject.sub_code} className="subject-card" onClick={() => onSelectSubject(subject)}>
-                            <div className="subject-code">{subject.sub_code}</div>
+                        <div key={subject.sub_code} style={{ padding: '1px' }} className="subject-card" onClick={() => onSelectSubject(subject)}>
+                            <div style={{ marginTop: '10px' }} className="subject-code">{subject.sub_code}</div>
                             <div className="subject-name">{subject.sub_name}</div>
                             <div className="subject-details">
                                 <span>{filters.program}</span>
