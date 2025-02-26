@@ -228,9 +228,8 @@
     flex-direction: column;
     gap: 15px;
     padding: 20px;
-    width: 97%;
-    margin-left: -20px;
-
+    width: 100%;
+    margin: 0 auto;
 }
 
 .subject-card {
@@ -311,18 +310,11 @@
 }
 
 .subject-content {
-    padding: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0;
-    transform: translateY(-10px);
-}
-
-.subject-content.expanded {
-    max-height: 2000px;
+    padding: 20px;
+    max-height: none;
+    overflow: visible;
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
 }
 
 .subject-details {
