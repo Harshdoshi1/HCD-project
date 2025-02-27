@@ -16,7 +16,9 @@
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.1.5"
+    "react-router-dom": "^7.1.5",
+    "react-select": "^5.10.0",
+    "react-spinners": "^0.15.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",

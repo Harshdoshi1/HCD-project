@@ -8,7 +8,6 @@ import StudentDetail from '../../HOD/displaystudents/StudentDetails';
 import Subject from '../../HOD/managesubjects/Subject';
 import './Dashboard.css';
 
-
 const DashboardHOD = () => {
     const [activeItem, setActiveItem] = useState('dashboard');
 
