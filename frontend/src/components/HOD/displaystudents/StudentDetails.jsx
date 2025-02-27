@@ -280,47 +280,47 @@ const StudentDetails = ({ studentId, handleBackToList }) => {
         const isExpanded = expandedSubjects.has(subject.id);
 
         return (
-            <div key={subject.id} className="subject-card">
-                <div className="subject-header" onClick={() => toggleSubject(subject.id)}>
-                    <div className="subject-main-info">
-                        <div className="subject-title-section">
+            <div key={subject.id} style={{ marginLeft: '-35px' }} className="student-subject-card">
+                <div className="student-subject-header" onClick={() => toggleSubject(subject.id)}>
+                    <div className="student-subject-main-info">
+                        <div className="student-subject-title-section">
                             <h4>{subject.name}</h4>
-                            <div className="subject-quick-info">
-                                <span className="quick-info-item">
+                            <div className="student-subject-quick-info">
+                                <span className="student-quick-info-item">
                                     <User size={12} />
                                     {subject.faculty}
                                 </span>
-                                <span className="quick-info-item">
+                                <span className="student-quick-info-item">
                                     <Clock size={12} />
                                     {subject.attendance}
                                 </span>
-                                <span className="quick-info-item">
+                                <span className="student-quick-info-item">
                                     <Award size={12} />
                                     {subject.totalMarks}%
                                 </span>
-                                <span className="quick-info-item">
+                                <span className="student-quick-info-item">
                                     <ChevronRight size={12} />
                                     Rank {subject.classRank}
                                 </span>
                             </div>
                         </div>
                     </div>
-                    <div className={`subject-expand-icon ${isExpanded ? 'expanded' : ''}`}>
+                    <div className={`student-subject-expand-icon ${isExpanded ? 'expanded' : ''}`}>
                         <ChevronDown size={16} />
                     </div>
                 </div>
 
-                <div className={`subject-content ${isExpanded ? 'expanded' : ''}`}>
-                    <div className="subject-details">
-                        <div className="performance-section">
+                <div className={`student-subject-content ${isExpanded ? 'expanded' : ''}`}>
+                    <div className="student-subject-details">
+                        <div className="student-performance-section">
                             <h5>Performance Components</h5>
-                            <div className="performance-grid">
+                            <div className="student-performance-grid">
                                 {Object.entries(subject.components).map(([name, data]) => (
-                                    <div key={name} className="performance-item">
-                                        <div className="performance-label">{name}</div>
-                                        <div className="performance-value">
+                                    <div key={name} className="student-performance-item">
+                                        <div className="student-performance-label">{name}</div>
+                                        <div className="student-performance-value">
                                             {data.marks}/{data.total}
-                                            <div className="marks-percentage">
+                                            <div className="student-marks-percentage">
                                                 {Math.round((data.marks / data.total) * 100)}%
                                             </div>
                                         </div>
@@ -328,54 +328,35 @@ const StudentDetails = ({ studentId, handleBackToList }) => {
                                 ))}
                             </div>
 
-                            <div className="class-standing">
-                                <div className="standing-label">Class Standing</div>
-                                <div className="standing-value">
+                            <div className="student-class-standing">
+                                <div className="student-standing-label">Class Standing</div>
+                                <div className="student-standing-value">
                                     Rank {subject.classRank} of {subject.totalStudents}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="faculty-feedback">
-                            <div className="faculty-rating">
+                        <div className="student-faculty-feedback">
+                            <div className="student-faculty-comments">
+                                <h6>Comments</h6>
+                                <p>{subject.facultyResponse.comments}</p>
+                                <small>Last Updated: {subject.facultyResponse.lastUpdated}</small>
+                            </div>
+                            <div className="student-faculty-rating">
                                 <h6>Faculty Rating</h6>
-                                <div className="rating-stars">
+                                <div className="student-rating-stars">
                                     {[...Array(10)].map((_, i) => (
                                         <Star
                                             key={i}
                                             size={12}
-                                            className={i < Math.floor(subject.facultyRating) ? 'star-filled' : 'star-empty'}
+                                            className={i < Math.floor(subject.facultyRating) ? 'student-star-filled' : 'student-star-empty'}
                                         />
                                     ))}
                                     <span>({subject.facultyRating}/10)</span>
                                 </div>
                             </div>
 
-                            <div className="response-details">
-                                <div className='strength-aoi'>
-                                    <div className="strengths">
-                                        <h6>Strengths</h6>
-                                        <ul>
-                                            {subject.facultyResponse.strengths.map((strength, idx) => (
-                                                <li key={idx}>{strength}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                    <div className="improvements">
-                                        <h6>Areas for Improvement</h6>
-                                        <ul>
-                                            {subject.facultyResponse.improvements.map((improvement, idx) => (
-                                                <li key={idx}>{improvement}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div className="faculty-comments">
-                                    <h6>Comments</h6>
-                                    <p>{subject.facultyResponse.comments}</p>
-                                    <small>Last Updated: {subject.facultyResponse.lastUpdated}</small>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -449,14 +430,6 @@ const StudentDetails = ({ studentId, handleBackToList }) => {
                             ))}
                         </div>
 
-                        {/* <div className="expand-collapse-controls">
-                            <button className="control-btn" onClick={expandAllSubjects}>
-                                Expand All
-                            </button>
-                            <button className="control-btn" onClick={collapseAllSubjects}>
-                                Collapse All
-                            </button>
-                        </div> */}
 
                         <div className="subjects-list-for-sem">
                             {student.semesters[selectedSemester]?.map(subject =>
