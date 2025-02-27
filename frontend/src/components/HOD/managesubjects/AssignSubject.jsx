@@ -62,30 +62,25 @@ const AssignSubject = () => {
     // Fetch subjects based on selected program
     useEffect(() => {
         const fetchSubjects = async () => {
-            if (filters.program === "all") {
-                setAvailableSubjects([]);
-                return;
-            }
             try {
-                const response = await fetch("http://localhost:5001/api/users/getSubjects", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ program: filters.program }),
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    setAvailableSubjects(data.subjects);
-                } else {
-                    console.error("Failed to fetch subjects:", data.message);
+                if (filters.batch === "all" || filters.semester === "all") {
+                    setAvailableSubjects([]);
+                    return;
                 }
+                const response = await fetch(
+                    `http://localhost:5001/api/users/getSubjects/${filters.batch}/${filters.semester}`
+                );
+                if (!response.ok) throw new Error("Failed to fetch subjects");
+                const data = await response.json();
+                setAvailableSubjects(data.uniqueSubjects);
             } catch (error) {
                 console.error("Error fetching subjects:", error);
             }
         };
-
+    
         fetchSubjects();
-    }, [filters.program]); // Runs when program changes
-
+    }, [filters.batch, filters.semester]); // Added batch & semester as dependencies
+    
     // Handle subject selection
     const handleSubjectSelect = (subject) => {
         setSelectedSubjects((prev) => {
