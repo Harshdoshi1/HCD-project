@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
-import { FaPlus } from 'react-icons/fa';
-import './StudentsList.css';
+
+
+import React, { useState, useEffect } from 'react';
+import { FaPlus, FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp, FaUserGraduate } from 'react-icons/fa';
 import Select from 'react-select';
 import StudentModal from './StudentModal';
+import './StudentsList.css';
 
 const StudentsList = ({ onStudentSelect }) => {
     const [selectedBatch, setSelectedBatch] = useState('');
     const [selectedSemester, setSelectedSemester] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [sortField, setSortField] = useState('name');
+    const [sortDirection, setSortDirection] = useState('asc');
+    const [isLoading, setIsLoading] = useState(true);
+    const [showFilters, setShowFilters] = useState(false);
 
     const batches = ['2022-2026', '2023-2027', '2024-2028'];
     const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -48,30 +54,46 @@ const StudentsList = ({ onStudentSelect }) => {
             batch: '2021-2025',
             email: 'rishit.rathod@marwadiuniversity.ac.in'
         },
-
     ];
 
-    const handleBatchChange = (e) => {
-        setSelectedBatch(e.target.value);
-    };
+    useEffect(() => {
+        // Simulate loading data
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1200);
 
-    const handleSemesterChange = (e) => {
-        setSelectedSemester(e.target.value);
-    };
-
-    const handleSearchChange = (e) => {
-        setSearchQuery(e.target.value);
-    };
+        return () => clearTimeout(timer);
+    }, []);
 
     const batchesOptions = batches.map(batch => ({ value: batch, label: batch }));
     const semestersOptions = semesters.map(sem => ({ value: sem, label: `Semester ${sem}` }));
 
-    const filteredStudents = students.filter(student => {
+    const toggleSort = (field) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
+    const sortedStudents = [...students].sort((a, b) => {
+        let comparison = 0;
+        if (a[sortField] < b[sortField]) {
+            comparison = -1;
+        } else if (a[sortField] > b[sortField]) {
+            comparison = 1;
+        }
+        return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    const filteredStudents = sortedStudents.filter(student => {
         const batchMatch = !selectedBatch || student.batch === selectedBatch;
         const semesterMatch = !selectedSemester || student.semester === parseInt(selectedSemester);
         const searchMatch = !searchQuery ||
             student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            student.enrollmentNo.toLowerCase().includes(searchQuery.toLowerCase());
+            student.enrollmentNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            student.email.toLowerCase().includes(searchQuery.toLowerCase());
 
         return batchMatch && semesterMatch && searchMatch;
     });
@@ -84,78 +106,187 @@ const StudentsList = ({ onStudentSelect }) => {
         setIsModalOpen(false);
     };
 
+    const toggleFilters = () => {
+        setShowFilters(!showFilters);
+    };
+
+    // Custom styles for react-select
+    const customSelectStyles = {
+        control: (provided) => ({
+            ...provided,
+            borderRadius: '8px',
+            borderColor: '#e0e0e0',
+            boxShadow: 'none',
+            '&:hover': {
+                borderColor: '#9b87f5',
+            }
+        }),
+        option: (provided, state) => ({
+            ...provided,
+            backgroundColor: state.isSelected ? '#9b87f5' : state.isFocused ? '#f0ebff' : null,
+            color: state.isSelected ? 'white' : '#333',
+        }),
+    };
+
+    const SortIcon = ({ field }) => (
+        <button
+            className="sort-button"
+            onClick={() => toggleSort(field)}
+            title={`Sort by ${field}`}
+        >
+            {sortField === field ? (
+                sortDirection === 'asc' ? <FaSortAmountUp /> : <FaSortAmountDown />
+            ) : (
+                <FaSortAmountDown className="sort-icon-inactive" />
+            )}
+        </button>
+    );
+
     return (
-        <div>
-            <div className="display-students-top-filter-add-btn">
-                <div className='student-header-content'>
-                    <div className="filters-section-std">
-                        <div className="filter-group">
+        <div className="students-list-container">
+            <div className="students-list-header">
+                <div className="header-left">
+                    <div className="header-icon">
+                        <FaUserGraduate />
+                    </div>
+                    <div className="header-text">
+                        <h1>Students Directory</h1>
+                        <p>Manage and view all students</p>
+                    </div>
+                </div>
+
+                <div className="header-actions">
+                    <div className="search-container">
+                        <FaSearch className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search students..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="search-input"
+                        />
+                    </div>
+
+                    <button
+                        className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
+                        onClick={toggleFilters}
+                    >
+                        <FaFilter />
+                        <span>Filters</span>
+                    </button>
+
+                    <button className="add-student-btn" onClick={handleOpenModal}>
+                        <FaPlus />
+                        <span>Add Student</span>
+                    </button>
+                </div>
+            </div>
+
+            {showFilters && (
+                <div className="filters-panel">
+                    <div className="filters-grid">
+                        <div className="filter-item">
+                            <label>Batch</label>
                             <Select
                                 value={selectedBatch ? { value: selectedBatch, label: selectedBatch } : null}
                                 onChange={option => setSelectedBatch(option ? option.value : '')}
                                 options={batchesOptions}
                                 placeholder="Select Batch"
-                                isSearchable
+                                isClearable
+                                styles={customSelectStyles}
                             />
+                        </div>
 
+                        <div className="filter-item">
+                            <label>Semester</label>
                             <Select
                                 value={selectedSemester ? { value: selectedSemester, label: `Semester ${selectedSemester}` } : null}
                                 onChange={option => setSelectedSemester(option ? option.value : '')}
                                 options={semestersOptions}
                                 placeholder="Select Semester"
-                                isSearchable
+                                isClearable
                                 isDisabled={!selectedBatch}
-                            />
-
-                            <input
-                                type="text"
-                                placeholder="Search by name or enrollment..."
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                className="search-input"
+                                styles={customSelectStyles}
                             />
                         </div>
                     </div>
-                    <div className='addstudent-btn-div-display-student'>
-                        <button className='addstudent-btn' onClick={handleOpenModal}>
-                            <FaPlus className='plus-icon' />
-                            Add Student
-                        </button>
-                    </div>
                 </div>
+            )}
+
+            <div className="students-data-container">
+                {isLoading ? (
+                    <div className="loading-container">
+                        <div className="loading-spinner"></div>
+                        <p>Loading students data...</p>
+                    </div>
+                ) : filteredStudents.length > 0 ? (
+                    <div className="students-table-wrapper">
+                        <table className="students-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <div className="th-content">
+                                            <span>Name</span>
+                                            <SortIcon field="name" />
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div className="th-content">
+                                            <span>Enrollment No.</span>
+                                            <SortIcon field="enrollmentNo" />
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div className="th-content">
+                                            <span>Batch</span>
+                                            <SortIcon field="batch" />
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div className="th-content">
+                                            <span>Email ID</span>
+                                        </div>
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredStudents.map(student => (
+                                    <tr key={student.id} className="student-row">
+                                        <td className="student-name-list">{student.name}</td>
+                                        <td>{student.enrollmentNo}</td>
+                                        <td className="batch-cell">
+                                            <span className="batch-badge">{student.batch}</span>
+                                        </td>
+                                        <td className="email-cell">{student.email}</td>
+                                        <td>
+                                            <button
+                                                className="view-details-btn"
+                                                onClick={() => onStudentSelect && onStudentSelect(student.id)}
+                                            >
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="no-results">
+                        <div className="no-results-icon">
+                            <FaSearch />
+                        </div>
+                        <h3>No students found</h3>
+                        <p>Try adjusting your search or filter criteria</p>
+                    </div>
+                )}
             </div>
 
-            <div className="students-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Enrollment No.</th>
-                            <th>Batch</th>
-                            <th>Email ID</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredStudents.map(student => (
-                            <tr key={student.id}>
-                                <td>{student.name}</td>
-                                <td>{student.enrollmentNo}</td>
-                                <td>{student.batch}</td>
-                                <td>{student.email}</td>
-                                <td>
-                                    <button
-                                        className="view-details-btn"
-                                        onClick={() => onStudentSelect(student.id)}
-                                    >
-                                        View Details
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            <div className="students-list-footer">
+                <p>Showing {filteredStudents.length} of {students.length} students</p>
             </div>
+
             <StudentModal isOpen={isModalOpen} onClose={handleCloseModal} />
         </div>
     );

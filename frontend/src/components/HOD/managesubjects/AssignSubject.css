@@ -210,7 +210,7 @@
 
 .save-subjects-section {
     display: flex;
-    justify-content: center;
+    justify-content: end;
 }
 
 .save-subjects-btn {

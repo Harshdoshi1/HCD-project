@@ -108,6 +108,11 @@
     cursor: not-allowed;
 }
 
+.addsubbtn {
+    display: flex;
+    justify-content: end;
+}
+
 .save-weightage-btn {
     padding: 10px 15px;
     background: #4CAF50;
@@ -117,6 +122,8 @@
     cursor: pointer;
     border-radius: 5px;
     margin-top: 10px;
+
+
 }
 
 .save-weightage-btn:hover {

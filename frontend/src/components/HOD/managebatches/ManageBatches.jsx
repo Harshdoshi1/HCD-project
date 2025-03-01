@@ -1,167 +1,3 @@
-// import React, { useState, useEffect } from 'react';
-// import './ManageBatches.css';
-
-// const ManageBatches = () => {
-//     const [batches, setBatches] = useState([]);
-//     const [newBatch, setNewBatch] = useState({ name: '', semester: { startDate: '', endDate: '' } });
-//     const [selectedBatch, setSelectedBatch] = useState(null);
-//     const [semesterToAdd, setSemesterToAdd] = useState({ startDate: '', endDate: '', name: 'Sem 1' });
-//     const [showAddBatch, setShowAddBatch] = useState(false);
-//     const [showAddSemester, setShowAddSemester] = useState(false);
-//     const [semesterCount, setSemesterCount] = useState(1);
-//     const [selectedSemester, setSelectedSemester] = useState('1');
-
-//     useEffect(() => {
-//         fetchBatches();
-//     }, []);
-
-//     const fetchBatches = async () => {
-//         const fetchedBatches = await fetch('/api/batches');
-//         setBatches(await fetchedBatches.json());
-//     };
-
-//     const handleAddBatch = () => {
-//         const batchWithSemester = {
-//             ...newBatch,
-//             semester: [{ ...semesterToAdd, name: `Sem ${semesterCount}` }],
-//             startDate: semesterToAdd.startDate
-//         };
-
-//         setBatches([...batches, batchWithSemester]);
-//         setNewBatch({ name: '', semester: { startDate: '', endDate: '' } });
-//         setSemesterToAdd({ startDate: '', endDate: '', name: 'Sem 1' });
-//         setSemesterCount(semesterCount + 1);
-//         setShowAddBatch(false);
-//     };
-
-//     const handleAddSemester = () => {
-//         if (selectedBatch) {
-//             const updatedBatches = batches.map(batch => {
-//                 if (batch.name === selectedBatch.name) {
-//                     return { ...batch, semester: [...batch.semester, { ...semesterToAdd, name: `Sem ${selectedSemester}` }] };
-//                 }
-//                 return batch;
-//             });
-//             setBatches(updatedBatches);
-//             setSelectedBatch(null);
-//             setSemesterToAdd({ startDate: '', endDate: '', name: 'Sem 1' });
-//             setShowAddSemester(false);
-//         }
-//     };
-
-//     const handleCancel = () => {
-//         setNewBatch({ name: '', semester: { startDate: '', endDate: '' } });
-//         setSemesterToAdd({ startDate: '', endDate: '', name: 'Sem 1' });
-//         setShowAddBatch(false);
-//         setShowAddSemester(false);
-//     };
-
-//     return (
-//         <div className="manage-batches">
-//             <h2>Manage Batches</h2>
-//             <div className="buttons-container">
-//                 <button onClick={() => { setShowAddBatch(true); setShowAddSemester(false); }}>Add Batch</button>
-//                 <button onClick={() => { setShowAddBatch(false); setShowAddSemester(true); }}>Add Semester</button>
-//             </div>
-
-//             {showAddBatch && (
-//                 <div className="add-section">
-//                     <div className="headigsfordt">
-//                         <h3>Add New Batch</h3>
-//                         <p>Enter starting date of semester 1</p>
-//                         <p>Enter ending date of semester 1</p>
-//                     </div>
-//                     <div className="form-row">
-//                         <input
-//                             type="text"
-//                             placeholder="Batch Name"
-//                             value={newBatch.name}
-//                             onChange={(e) => setNewBatch({ ...newBatch, name: e.target.value })}
-//                         />
-//                         {semesterToAdd.startDate && semesterToAdd.endDate && (
-//                             <p className="info-text">Starting Date of Sem 1: {semesterToAdd.startDate}, Ending Date: {semesterToAdd.endDate}</p>
-//                         )}
-//                         <input
-//                             type="date"
-//                             value={semesterToAdd.startDate}
-//                             onChange={(e) => setSemesterToAdd({ ...semesterToAdd, startDate: e.target.value })}
-//                         />
-//                         <input
-//                             type="date"
-//                             value={semesterToAdd.endDate}
-//                             onChange={(e) => setSemesterToAdd({ ...semesterToAdd, endDate: e.target.value })}
-//                         />
-//                     </div>
-//                     <div className="form-actions">
-//                         <button onClick={handleAddBatch}>Add Batch</button>
-//                         <button className="cancel" onClick={handleCancel}>Cancel</button>
-//                     </div>
-//                 </div>
-//             )}
-
-//             {showAddSemester && (
-//                 <div className="add-section">
-//                     <div className="headigsfordt">
-//                         <h3>Add Semester to Existing Batch</h3>
-//                         <p className='stdate'>Enter starting date of new semester</p>
-//                         <p>Enter ending date of new semester</p>
-//                     </div>
-//                     <div className="form-row">
-//                         <select onChange={(e) => setSelectedBatch(batches.find(batch => batch.name === e.target.value))}>
-//                             <option>Select Batch</option>
-//                             {batches.map(batch => <option key={batch.name} value={batch.name}>{batch.name}</option>)}
-//                         </select>
-//                         <select value={selectedSemester} onChange={(e) => setSelectedSemester(e.target.value)}>
-//                             {[...Array(8).keys()].map(num => (
-//                                 <option key={num + 1} value={num + 1}>{num + 1}</option>
-//                             ))}
-//                         </select>
-//                         <input
-//                             type="date"
-//                             value={semesterToAdd.startDate}
-//                             onChange={(e) => setSemesterToAdd({ ...semesterToAdd, startDate: e.target.value })}
-//                         />
-//                         <input
-//                             type="date"
-//                             value={semesterToAdd.endDate}
-//                             onChange={(e) => setSemesterToAdd({ ...semesterToAdd, endDate: e.target.value })}
-//                         />
-//                     </div>
-//                     <div className="form-actions">
-//                         <button onClick={handleAddSemester}>Add Semester</button>
-//                         <button className="cancel" onClick={handleCancel}>Cancel</button>
-//                     </div>
-//                 </div>
-//             )}
-
-//             <div className="past-batches">
-//                 <h3>Past Batches</h3>
-//                 <table>
-//                     <thead>
-//                         <tr>
-//                             <th>Batch Name</th>
-//                             <th>Semester</th>
-//                             <th>Start Date</th>
-//                             <th>End Date</th>
-//                         </tr>
-//                     </thead>
-//                     <tbody>
-//                         {batches.map(batch => batch.semester.map((sem, index) => (
-//                             <tr key={`${batch.name}-sem-${index}`}>
-//                                 <td>{batch.name}</td>
-//                                 <td>{sem.name}</td>
-//                                 <td>{sem.startDate}</td>
-//                                 <td>{sem.endDate}</td>
-//                             </tr>
-//                         )))}
-//                     </tbody>
-//                 </table>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default ManageBatches;
 
 import React, { useState, useEffect } from 'react';
 import './ManageBatches.css';
@@ -171,15 +7,16 @@ const ManageBatches = () => {
     const [newBatch, setNewBatch] = useState({ batchName: '', batchStart: '', batchEnd: '', courseType: '' });
     const [selectedBatch, setSelectedBatch] = useState(null);
     const [semesterToAdd, setSemesterToAdd] = useState({ semesterNumber: '', startDate: '', endDate: '' });
-    const [showAddBatch, setShowAddBatch] = useState(false);
-    const [showAddSemester, setShowAddSemester] = useState(false);
+    const [activeTab, setActiveTab] = useState('batch');
     const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         fetchBatches();
     }, []);
 
     const fetchBatches = async () => {
+        setIsLoading(true);
         try {
             const response = await fetch('http://localhost:5001/api/users/getAllBatches');
             if (!response.ok) throw new Error('Failed to fetch batches');
@@ -187,11 +24,21 @@ const ManageBatches = () => {
             setBatches(data);
         } catch (error) {
             setError(error.message);
+            alert('Error fetching batches: ' + error.message);
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleAddBatch = async () => {
+        // Validation
+        if (!newBatch.batchName || !newBatch.batchStart || !newBatch.batchEnd || !newBatch.courseType) {
+            setError('Please fill all the required fields');
+            return;
+        }
+
+        setIsLoading(true);
         try {
             const response = await fetch('http://localhost:5001/api/users/addBatch', {
                 method: 'POST',
@@ -202,16 +49,24 @@ const ManageBatches = () => {
 
             await fetchBatches();
             setNewBatch({ batchName: '', batchStart: '', batchEnd: '', courseType: '' });
-            setShowAddBatch(false);
+            alert('Batch added successfully!');
         } catch (error) {
             setError(error.message);
+            alert('Error adding batch: ' + error.message);
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleAddSemester = async () => {
         if (!selectedBatch) {
             setError('Please select a batch first');
+            return;
+        }
+
+        if (!semesterToAdd.semesterNumber || !semesterToAdd.startDate || !semesterToAdd.endDate) {
+            setError('Please fill all the required fields');
             return;
         }
 
@@ -222,6 +77,7 @@ const ManageBatches = () => {
             endDate: semesterToAdd.endDate
         };
 
+        setIsLoading(true);
         try {
             const response = await fetch('http://localhost:5001/api/users/addSemester', {
                 method: 'POST',
@@ -233,54 +89,237 @@ const ManageBatches = () => {
             await fetchBatches();
             setSelectedBatch(null);
             setSemesterToAdd({ semesterNumber: '', startDate: '', endDate: '' });
-            setShowAddSemester(false);
+            alert('Semester added successfully!');
         } catch (error) {
             setError(error.message);
+            alert('Error adding semester: ' + error.message);
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleCancel = () => {
-        setNewBatch({ batchName: '', batchStart: '', batchEnd: '', courseType: '' });
-        setSemesterToAdd({ semesterNumber: '', startDate: '', endDate: '' });
-        setShowAddBatch(false);
-        setShowAddSemester(false);
-        setError(null);
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
     };
 
     return (
-        <div className="manage-batches">
-            <h2>Manage Batches</h2>
-            {error && <p className="error-message">{error}</p>}
-            <div className="buttons-container">
-                <button onClick={() => { setShowAddBatch(true); setShowAddSemester(false); }}>Add Batch</button>
-                <button onClick={() => { setShowAddBatch(false); setShowAddSemester(true); }}>Add Semester</button>
+        <div className="manage-batches-container">
+            <div className="header-section">
+                <h4 className="page-title">Batch Management</h4>
             </div>
 
-            {showAddBatch && (
-                <div className="add-section">
-                    <h3>Add New Batch</h3>
-                    <input type="text" placeholder="Batch Name" value={newBatch.batchName} onChange={(e) => setNewBatch({ ...newBatch, batchName: e.target.value })} />
-                    <input type="date" value={newBatch.batchStart} onChange={(e) => setNewBatch({ ...newBatch, batchStart: e.target.value })} />
-                    <input type="date" value={newBatch.batchEnd} onChange={(e) => setNewBatch({ ...newBatch, batchEnd: e.target.value })} />
-                    <input type="text" placeholder="Course Type" value={newBatch.courseType} onChange={(e) => setNewBatch({ ...newBatch, courseType: e.target.value })} />
-                    <button onClick={handleAddBatch}>Add Batch</button>
-                    <button className="cancel" onClick={handleCancel}>Cancel</button>
+            <div className="tab-container">
+                <div className="tab-list">
+                    <button
+                        className={`tab-button ${activeTab === 'batch' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('batch')}
+                    >
+                        Add New Batch
+                    </button>
+                    <button
+                        className={`tab-button ${activeTab === 'semester' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('semester')}
+                    >
+                        Add Semester
+                    </button>
                 </div>
-            )}
 
-            {showAddSemester && (
-                <div className="add-section">
-                    <h3>Add Semester to Existing Batch</h3>
-                    <select onChange={(e) => setSelectedBatch(batches.find(batch => batch.batchName === e.target.value) || null)}>
-                        <option value="">Select Batch</option>
-                        {batches.map(batch => <option key={batch.batchName} value={batch.batchName}>{batch.batchName}</option>)}
-                    </select>
-                    <input type="number" placeholder="Semester Number" value={semesterToAdd.semesterNumber} onChange={(e) => setSemesterToAdd({ ...semesterToAdd, semesterNumber: e.target.value })} />
-                    <input type="date" value={semesterToAdd.startDate} onChange={(e) => setSemesterToAdd({ ...semesterToAdd, startDate: e.target.value })} />
-                    <input type="date" value={semesterToAdd.endDate} onChange={(e) => setSemesterToAdd({ ...semesterToAdd, endDate: e.target.value })} />
-                    <button onClick={handleAddSemester}>Add Semester</button>
-                    <button className="cancel" onClick={handleCancel}>Cancel</button>
+                <div className="tab-content">
+                    {activeTab === 'batch' && (
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">Create New Batch</h2>
+                                <p className="card-description">Add a new batch for your academic program</p>
+                            </div>
+                            <div className="card-content form-container">
+                                <div className="form-group">
+                                    <label htmlFor="batchName">Batch Name</label>
+                                    <input
+                                        id="batchName"
+                                        className="input"
+                                        placeholder="e.g., BTech 2023-27"
+                                        value={newBatch.batchName}
+                                        onChange={(e) => setNewBatch({ ...newBatch, batchName: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label htmlFor="batchStart">Start Date</label>
+                                        <div className="date-input-wrapper">
+                                            <input
+                                                id="batchStart"
+                                                className="input date-input"
+                                                type="date"
+                                                value={newBatch.batchStart}
+                                                onChange={(e) => setNewBatch({ ...newBatch, batchStart: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="batchEnd">End Date</label>
+                                        <div className="date-input-wrapper">
+                                            <input
+                                                id="batchEnd"
+                                                className="input date-input"
+                                                type="date"
+                                                value={newBatch.batchEnd}
+                                                onChange={(e) => setNewBatch({ ...newBatch, batchEnd: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="courseType">Course Type</label>
+                                    <input
+                                        id="courseType"
+                                        className="input"
+                                        placeholder="e.g., BTech, MTech, PhD"
+                                        value={newBatch.courseType}
+                                        onChange={(e) => setNewBatch({ ...newBatch, courseType: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="card-footer">
+                                <button
+                                    onClick={handleAddBatch}
+                                    disabled={isLoading}
+                                    className="button primary-button"
+                                >
+                                    Add Batch
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'semester' && (
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">Add Semester to Batch</h2>
+                                <p className="card-description">Create a new semester for an existing batch</p>
+                            </div>
+                            <div className="card-content form-container">
+                                <div className="form-group">
+                                    <label htmlFor="batchSelect">Select Batch</label>
+                                    <select
+                                        id="batchSelect"
+                                        className="select"
+                                        onChange={(e) => setSelectedBatch(batches.find(batch => batch.batchName === e.target.value) || null)}
+                                    >
+                                        <option value="">Select a batch</option>
+                                        {batches.map(batch => (
+                                            <option key={batch.batchName} value={batch.batchName}>
+                                                {batch.batchName} ({batch.courseType})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {selectedBatch && (
+                                    <div className="selected-batch-info">
+                                        <p><strong>Selected Batch:</strong> {selectedBatch.batchName}</p>
+                                        <p><strong>Course:</strong> {selectedBatch.courseType}</p>
+                                        <p><strong>Duration:</strong> {formatDate(selectedBatch.batchStart)} to {formatDate(selectedBatch.batchEnd)}</p>
+                                    </div>
+                                )}
+
+                                <div className="form-group">
+                                    <label htmlFor="semesterNumber">Semester Number</label>
+                                    <input
+                                        id="semesterNumber"
+                                        className="input"
+                                        type="number"
+                                        placeholder="e.g., 1, 2, 3"
+                                        value={semesterToAdd.semesterNumber}
+                                        onChange={(e) => setSemesterToAdd({ ...semesterToAdd, semesterNumber: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label htmlFor="semesterStart">Start Date</label>
+                                        <div className="date-input-wrapper">
+                                            <input
+                                                id="semesterStart"
+                                                className="input date-input"
+                                                type="date"
+                                                value={semesterToAdd.startDate}
+                                                onChange={(e) => setSemesterToAdd({ ...semesterToAdd, startDate: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="semesterEnd">End Date</label>
+                                        <div className="date-input-wrapper">
+                                            <input
+                                                id="semesterEnd"
+                                                className="input date-input"
+                                                type="date"
+                                                value={semesterToAdd.endDate}
+                                                onChange={(e) => setSemesterToAdd({ ...semesterToAdd, endDate: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="card-footer">
+                                <button
+                                    onClick={handleAddSemester}
+                                    disabled={isLoading}
+                                    className="button primary-button"
+                                >
+                                    Add Semester
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            {batches.length > 0 && (
+                <div className="batches-list-container">
+                    <h2 className="section-title">Current Batches</h2>
+                    <div className="batches-grid">
+                        {batches.map((batch) => (
+                            <div key={batch.batchName} className="batch-card">
+                                <div className="batch-card-header">
+                                    <h3 className="batch-title">{batch.batchName}</h3>
+                                    <p className="batch-subtitle">{batch.courseType}</p>
+                                </div>
+                                <div className="batch-card-content">
+                                    <p><strong>Duration:</strong> {formatDate(batch.batchStart)} - {formatDate(batch.batchEnd)}</p>
+
+                                    {batch.semesters && batch.semesters.length > 0 ? (
+                                        <div className="semester-list">
+                                            <h4>Semesters:</h4>
+                                            <ul>
+                                                {batch.semesters.map((semester) => (
+                                                    <li key={semester.semesterNumber} className="semester-item">
+                                                        <span className="semester-number">Semester {semester.semesterNumber}</span>
+                                                        <span className="semester-dates">{formatDate(semester.startDate)} - {formatDate(semester.endDate)}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    ) : (
+                                        <p className="no-semesters">No semesters added yet</p>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
