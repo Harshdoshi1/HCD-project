@@ -1,22 +1,13 @@
-
 import React, { useState } from 'react';
-import './Subject.css';
+import './ManageComponents.css';
 
 const ManageComponents = ({ selectedSubject }) => {
-    const [filters, setFilters] = useState({
-        program: 'all',
-        batch: 'all',
-        semester: 'all',
-        subject: 'all'
+    const [newSubject, setNewSubject] = useState({
+        code: '',
+        name: '',
+        credits: '',
+        type: 'central' // central or departmental
     });
-    const batches = ['2022-2026', '2021-2025', '2020-2024', '2019-2023'];
-    const semesters = Array.from({ length: 8 }, (_, i) => (i + 1).toString());
-
-    const [selectedSubjects, setSelectedSubjects] = useState([]);
-
-    const handleFilterChange = (filterType, value) => {
-        setFilters(prev => ({ ...prev, [filterType]: value }));
-    };
 
     const [totalWeightage, setTotalWeightage] = useState(0);
     const [weightages, setWeightages] = useState({
@@ -26,23 +17,14 @@ const ManageComponents = ({ selectedSubject }) => {
         TW: { enabled: false, weightage: 0, totalMarks: 0 },
         VIVA: { enabled: false, weightage: 0, totalMarks: 0 }
     });
-    const allSubjects = [
-        { id: 1, code: 'CS101', name: 'Introduction to Programming', credits: 4 },
-        { id: 2, code: 'CS102', name: 'Data Structures', credits: 4 },
-        { id: 3, code: 'CS201', name: 'Database Management Systems', credits: 3 },
-        { id: 4, code: 'CS202', name: 'Operating Systems', credits: 4 },
-        { id: 5, code: 'CS301', name: 'Computer Networks', credits: 3 },
-        { id: 6, code: 'CS302', name: 'Software Engineering', credits: 4 },
-        { id: 7, code: 'CS401', name: 'Artificial Intelligence', credits: 3 },
-        { id: 8, code: 'CS402', name: 'Web Development', credits: 4 },
-        { id: 9, code: 'CS501', name: 'Machine Learning', credits: 4 },
-        { id: 10, code: 'CS502', name: 'Cloud Computing', credits: 3 },
-        { id: 11, code: 'CS601', name: 'Cybersecurity', credits: 4 },
-        { id: 12, code: 'CS602', name: 'Mobile App Development', credits: 3 },
-        { id: 13, code: 'CS701', name: 'Big Data Analytics', credits: 4 },
-        { id: 14, code: 'CS702', name: 'Internet of Things', credits: 3 },
-        { id: 15, code: 'CS801', name: 'Blockchain Technology', credits: 4 }
-    ];
+
+    const handleSubjectChange = (field, value) => {
+        setNewSubject(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     const handleWeightageChange = (component, field, value) => {
         setWeightages(prev => {
             const updated = { ...prev };
@@ -64,69 +46,92 @@ const ManageComponents = ({ selectedSubject }) => {
         });
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (totalWeightage !== 100) {
             alert('Total weightage must equal 100%');
             return;
         }
-        console.log('Saving components...', weightages);
-        alert('Components saved successfully!');
+
+        if (!newSubject.code || !newSubject.name || !newSubject.credits) {
+            alert('Please fill in all subject details');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:5001/api/users/addSubject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...newSubject,
+                    components: weightages
+                })
+            });
+
+            if (response.ok) {
+                alert('Subject added successfully!');
+                // Reset form
+                setNewSubject({
+                    code: '',
+                    name: '',
+                    credits: '',
+                    type: 'central'
+                });
+                setWeightages({
+                    CA: { enabled: false, weightage: 0, totalMarks: 0 },
+                    ESE: { enabled: false, weightage: 0, totalMarks: 0 },
+                    IA: { enabled: false, weightage: 0, totalMarks: 0 },
+                    TW: { enabled: false, weightage: 0, totalMarks: 0 },
+                    VIVA: { enabled: false, weightage: 0, totalMarks: 0 }
+                });
+                setTotalWeightage(0);
+            } else {
+                alert('Failed to add subject');
+            }
+        } catch (error) {
+            console.error('Error adding subject:', error);
+            alert('Error adding subject');
+        }
     };
 
     return (
         <div className="manage-weightage-container">
-
-            <div className="filters-container-manage-component">
-                <div className="weightage-header">
-                    <h3 className="manage-component-header">Manage Component Weightage</h3>
-                </div>
-                <div className="filter-group">
+            <div className="subject-form">
+                <h3>Add New Subject</h3>
+                <div className="form-inputs">
+                    <input
+                        type="text"
+                        placeholder="Subject Code"
+                        value={newSubject.code}
+                        onChange={(e) => handleSubjectChange('code', e.target.value)}
+                        className="subject-input"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Subject Name"
+                        value={newSubject.name}
+                        onChange={(e) => handleSubjectChange('name', e.target.value)}
+                        className="subject-input"
+                    />
+                    <input
+                        type="number"
+                        placeholder="Credits"
+                        value={newSubject.credits}
+                        onChange={(e) => handleSubjectChange('credits', e.target.value)}
+                        className="subject-input"
+                    />
                     <select
-                        className="professional-filter"
-                        value={filters.program}
-                        onChange={(e) => handleFilterChange('program', e.target.value)}
+                        value={newSubject.type}
+                        onChange={(e) => handleSubjectChange('type', e.target.value)}
+                        className="subject-input"
                     >
-                        <option value="all">All Programs</option>
-                        <option value="degree">Degree</option>
-                        <option value="diploma">Diploma</option>
-                    </select>
-
-                    <select
-                        className="professional-filter"
-                        value={filters.batch}
-                        onChange={(e) => handleFilterChange('batch', e.target.value)}
-                    >
-                        <option value="all">All Batches</option>
-                        {batches.map(batch => (
-                            <option key={batch} value={batch}>{batch}</option>
-                        ))}
-                    </select>
-
-                    <select
-                        className="professional-filter"
-                        value={filters.semester}
-                        onChange={(e) => handleFilterChange('semester', e.target.value)}
-                    >
-                        <option value="all">All Semesters</option>
-                        {semesters.map(sem => (
-                            <option key={sem} value={sem}>Semester {sem}</option>
-                        ))}
-                    </select>
-
-                    <select
-                        className="professional-filter"
-                        value={filters.subject}
-                        onChange={(e) => handleFilterChange('subject', e.target.value)}
-                    >
-                        <option value="all">All Subjects</option>
-                        {allSubjects.map(subject => (
-                            <option key={subject.id} value={subject.code}>{subject.name}</option>
-                        ))}
+                        <option value="central">Central</option>
+                        <option value="departmental">Departmental</option>
                     </select>
                 </div>
             </div>
 
             <div className='manage-subjct-container-bottom'>
+                <h3>Subject Components</h3>
                 <table className="weightage-table">
                     <thead>
                         <tr>
@@ -182,7 +187,7 @@ const ManageComponents = ({ selectedSubject }) => {
                     onClick={handleSave}
                     disabled={totalWeightage !== 100}
                 >
-                    Save Weightage
+                    Add Subject
                 </button>
             </div>
         </div>
