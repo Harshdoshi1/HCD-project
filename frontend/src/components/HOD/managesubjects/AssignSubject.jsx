@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+import "./AssignSubject.css";
 const AssignSubject = () => {
     const [filters, setFilters] = useState({
         program: "all",
@@ -11,6 +11,10 @@ const AssignSubject = () => {
     const [selectedSubjects, setSelectedSubjects] = useState([]);
     const [batches, setBatches] = useState([]);
     const [semesters, setSemesters] = useState([]);
+    const [assignFilters, setAssignFilters] = useState({
+        batch: "all",
+        semester: "all",
+    });
 
     // Fetch batches from the database
     useEffect(() => {
@@ -59,6 +63,18 @@ const AssignSubject = () => {
         }));
     };
 
+    // Handle filters for selected subjects section
+    const handleAssignFiltersChange = (e) => {
+        const { name, value } = e.target;
+        const filterName = name.replace("-to-assign", "");
+
+        setAssignFilters((prev) => ({
+            ...prev,
+            [filterName]: value,
+            ...(name === "batch-to-assign" ? { semester: "all" } : {}), // Reset semester when batch changes
+        }));
+    };
+
     // Fetch subjects based on selected program
     useEffect(() => {
         const fetchSubjects = async () => {
@@ -77,10 +93,10 @@ const AssignSubject = () => {
                 console.error("Error fetching subjects:", error);
             }
         };
-    
+
         fetchSubjects();
     }, [filters.batch, filters.semester]); // Added batch & semester as dependencies
-    
+
     // Handle subject selection
     const handleSubjectSelect = (subject) => {
         setSelectedSubjects((prev) => {
@@ -99,7 +115,7 @@ const AssignSubject = () => {
 
     // Save selected subjects
     const handleSaveSubjects = async () => {
-        if (filters.batch === "all" || filters.semester === "all") {
+        if (assignFilters.batch === "all" || assignFilters.semester === "all") {
             alert("Please select a valid Batch and Semester.");
             return;
         }
@@ -112,8 +128,8 @@ const AssignSubject = () => {
         try {
             const subjects = selectedSubjects.map((subject) => ({
                 subjectName: subject.sub_name,
-                semesterNumber: filters.semester,
-                batchName: filters.batch,
+                semesterNumber: assignFilters.semester,
+                batchName: assignFilters.batch,
             }));
 
             const response = await fetch("http://localhost:5001/api/users/assignSubject", {
@@ -145,22 +161,18 @@ const AssignSubject = () => {
         <div className="assign-subject-container">
             <div className="Firstdiv-selected-sub-for-assign">
                 <div className="top-things-for-selected-sub-asssign">
-                    <div style={{ marginRight: "10px" }}>Selected</div><div> Subjects</div>
+                    <span>Assigned</span>&nbsp; <span> Subjects</span>
                     <div className="filters-container-assign-subject-one">
                         <div className="filter-group-assign-subject-one">
-                            {/* <select
+
+
+                            <select
                                 className="professional-filter"
-
-                                value={filters.program}
-                                onChange={handleChange}
-                                name="program"
+                                name="batch-to-assign"
+                                value={assignFilters.batch}
+                                onChange={handleAssignFiltersChange}
+                                required
                             >
-                                <option value="all">All Programs</option>
-                                <option value="degree">Degree</option>
-                                <option value="diploma">Diploma</option>
-                            </select> */}
-
-                            <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
                                 <option value="all">Batch</option>
                                 {batches.map((batch, index) => (
                                     <option key={batch._id || index} value={batch.batchName}>
@@ -169,7 +181,13 @@ const AssignSubject = () => {
                                 ))}
                             </select>
 
-                            <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
+                            <select
+                                className="professional-filter"
+                                name="semester-to-assign"
+                                value={assignFilters.semester}
+                                onChange={handleAssignFiltersChange}
+                                required
+                            >
                                 <option value="all">Semester</option>
                                 {semesters.map((sem, index) => (
                                     <option key={sem._id || index} value={sem.semesterNumber}>
@@ -186,7 +204,7 @@ const AssignSubject = () => {
                         {selectedSubjects.map((subject, index) => (
                             <div key={subject.sub_code || index} className="subject-item">
                                 <span>
-                                    {subject.sub_code} - {subject.sub_name} ({subject.sub_credit} credits)
+                                    {subject.sub_code} - {subject.sub_name} ({subject.sub_credit} )
                                 </span>
                                 <button className="remove-subject-btn" onClick={() => handleSubjectRemove(subject)}>
                                     ×
@@ -199,7 +217,7 @@ const AssignSubject = () => {
 
             <div className="Seconddiv-availabe-sub-for-assign">
                 <div className="top-things-for-selected-sub-asssign">
-                    <div style={{ marginRight: "10px" }}>Available </div> <div>Subjects</div>
+                    <span>All</span>&nbsp; <span> Subjects</span>
                     <div className="filters-container-assign-subject-two">
                         <div className="filter-group-assign-subject-two">
                             <select
