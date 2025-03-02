@@ -214,73 +214,75 @@ const StudentsList = ({ onStudentSelect }) => {
             )}
 
             <div className="students-data-container">
-                {isLoading ? (
-                    <div className="loading-container">
-                        <div className="loading-spinner"></div>
-                        <p>Loading students data...</p>
-                    </div>
-                ) : filteredStudents.length > 0 ? (
-                    <div className="students-table-wrapper">
-                        <table className="students-table">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <div className="th-content">
-                                            <span>Name</span>
-                                            <SortIcon field="name" />
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="th-content">
-                                            <span>Enrollment No.</span>
-                                            <SortIcon field="enrollmentNo" />
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="th-content">
-                                            <span>Batch</span>
-                                            <SortIcon field="batch" />
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="th-content">
-                                            <span>Email ID</span>
-                                        </div>
-                                    </th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredStudents.map(student => (
-                                    <tr key={student.id} className="student-row">
-                                        <td className="student-name-list">{student.name}</td>
-                                        <td>{student.enrollmentNo}</td>
-                                        <td className="batch-cell">
-                                            <span className="batch-badge">{student.batch}</span>
-                                        </td>
-                                        <td className="email-cell">{student.email}</td>
-                                        <td>
-                                            <button
-                                                className="view-details-btn"
-                                                onClick={() => onStudentSelect && onStudentSelect(student.id)}
-                                            >
-                                                View Details
-                                            </button>
-                                        </td>
+                {
+                    // isLoading ? (
+                    //     <div className="loading-container">
+                    //         <div className="loading-spinner"></div>
+                    //         <p>Loading students data...</p>
+                    //     </div>
+                    // ) : 
+                    filteredStudents.length > 0 ? (
+                        <div className="students-table-wrapper">
+                            <table className="students-table">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <div className="th-content">
+                                                <span>Name</span>
+                                                <SortIcon field="name" />
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div className="th-content">
+                                                <span>Enrollment No.</span>
+                                                <SortIcon field="enrollmentNo" />
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div className="th-content">
+                                                <span>Batch</span>
+                                                <SortIcon field="batch" />
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div className="th-content">
+                                                <span>Email ID</span>
+                                            </div>
+                                        </th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <div className="no-results">
-                        <div className="no-results-icon">
-                            <FaSearch />
+                                </thead>
+                                <tbody>
+                                    {filteredStudents.map(student => (
+                                        <tr key={student.id} className="student-row">
+                                            <td className="student-name-list">{student.name}</td>
+                                            <td>{student.enrollmentNo}</td>
+                                            <td className="batch-cell">
+                                                <span className="batch-badge">{student.batch}</span>
+                                            </td>
+                                            <td className="email-cell">{student.email}</td>
+                                            <td>
+                                                <button
+                                                    className="view-details-btn"
+                                                    onClick={() => onStudentSelect && onStudentSelect(student.id)}
+                                                >
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                        <h3>No students found</h3>
-                        <p>Try adjusting your search or filter criteria</p>
-                    </div>
-                )}
+                    ) : (
+                        <div className="no-results">
+                            <div className="no-results-icon">
+                                <FaSearch />
+                            </div>
+                            <h3>No students found</h3>
+                            <p>Try adjusting your search or filter criteria</p>
+                        </div>
+                    )}
             </div>
 
             <div className="students-list-footer">

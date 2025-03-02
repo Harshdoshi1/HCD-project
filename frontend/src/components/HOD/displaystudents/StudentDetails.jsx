@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Book, Clock, Mail, Phone, MapPin, ChevronDown, User, Award, ChevronRight, Calendar, Trophy, FileText, MessageSquare, Activity, Home } from 'lucide-react';
+import { ArrowLeft, Star, Book, Clock, Mail, Phone, MapPin, ChevronDown, User, Award, ChevronRight, Calendar, Trophy, FileText, MessageSquare, Activity, Home, Plus, Edit, Trash, Filter } from 'lucide-react';
 import './StudentDetail.css';
 
 const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.history.back() }) => {
@@ -9,12 +9,24 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
     const [selectedSemester, setSelectedSemester] = useState(1);
     const [expandedSubjects, setExpandedSubjects] = useState(new Set());
     const [isLoading, setIsLoading] = useState(true);
+    const [activityFilter, setActivityFilter] = useState('all'); // 'all', 'semester'
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [showEditForm, setShowEditForm] = useState(false);
+    const [currentActivityType, setCurrentActivityType] = useState(''); // 'co', 'extra'
+    const [currentActivity, setCurrentActivity] = useState(null);
+    const [newActivity, setNewActivity] = useState({
+        title: '',
+        date: '',
+        description: '',
+        achievement: '',
+        attachments: 0,
+        semester: 1
+    });
 
     useEffect(() => {
-        // Simulate loading data
         setTimeout(() => {
             setIsLoading(false);
-        }, 800);
+        }, 500);
     }, []);
 
     const toggleSubject = (subjectId) => {
@@ -36,7 +48,75 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         setExpandedSubjects(new Set());
     };
 
-    // Enhanced mock data for student
+    const handleAddActivity = (type) => {
+        setCurrentActivityType(type);
+        setShowAddForm(true);
+        setShowEditForm(false);
+        setNewActivity({
+            title: '',
+            date: '',
+            description: '',
+            achievement: '',
+            attachments: 0,
+            semester: selectedSemester
+        });
+    };
+
+    const handleEditActivity = (activity, type) => {
+        setCurrentActivityType(type);
+        setCurrentActivity(activity);
+        setShowAddForm(false);
+        setShowEditForm(true);
+        setNewActivity({
+            ...activity,
+            semester: activity.semester || selectedSemester
+        });
+    };
+
+    const handleFormChange = (e) => {
+        const { name, value } = e.target;
+        setNewActivity(prev => ({
+            ...prev,
+            [name]: name === 'attachments' ? parseInt(value) || 0 : value
+        }));
+    };
+
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+
+        // In a real app, you would save to a backend
+        // For now, we'll just close the form
+        setShowAddForm(false);
+        setShowEditForm(false);
+
+        // Show success message
+        alert(showAddForm ? 'Activity added successfully!' : 'Activity updated successfully!');
+    };
+
+    const calculateActivityPoints = (activityList) => {
+        return activityList.reduce((total, activity) => {
+            // Points based on achievement
+            let points = 0;
+            if (activity.achievement && activity.achievement.toLowerCase().includes('first')) {
+                points = 10;
+            } else if (activity.achievement && activity.achievement.toLowerCase().includes('second')) {
+                points = 8;
+            } else if (activity.achievement && activity.achievement.toLowerCase().includes('third')) {
+                points = 6;
+            } else if (activity.achievement) {
+                points = 5;
+            } else {
+                points = 3; // Base points for participation
+            }
+            return total + points;
+        }, 0);
+    };
+
+    const filterActivitiesBySemester = (activities, semester) => {
+        if (activityFilter === 'all') return activities;
+        return activities.filter(activity => activity.semester === semester);
+    };
+
     const student = {
         id: studentId,
         name: "Alexandra Richardson",
@@ -68,6 +148,13 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 { semester: 4, value: 9.2 },
                 { semester: 5, value: 9.4 }
             ],
+            semesterRanks: [
+                { semester: 1, rank: 3, totalStudents: 120 },
+                { semester: 2, rank: 2, totalStudents: 118 },
+                { semester: 3, rank: 2, totalStudents: 115 },
+                { semester: 4, rank: 3, totalStudents: 115 },
+                { semester: 5, rank: 1, totalStudents: 112 }
+            ],
             semesters: {
                 1: {
                     gpa: 9.0,
@@ -93,7 +180,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                 "Presentation": { marks: 18, total: 20 }
                             },
                             facultyResponse: {
-
                                 comments: "Alexandra shows remarkable aptitude for programming. Her solutions are elegant and well-structured. With her analytical mind, she has great potential in the field of computer science.",
                                 lastUpdated: "February 12, 2024"
                             }
@@ -118,7 +204,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                 "Class Participation": { marks: 24, total: 25 }
                             },
                             facultyResponse: {
-
                                 comments: "Alexandra demonstrates a solid understanding of mathematical concepts. Her approach to problem-solving is methodical and precise. She could benefit from challenging herself with more advanced problems.",
                                 lastUpdated: "February 15, 2024"
                             }
@@ -143,7 +228,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                 "Quizzes": { marks: 18, total: 20 }
                             },
                             facultyResponse: {
-
                                 comments: "Alexandra has a natural talent for understanding physical concepts and applying them to real-world problems. Her lab work is exemplary, showing careful observation and analysis.",
                                 lastUpdated: "February 18, 2024"
                             }
@@ -174,7 +258,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                 "Project": { marks: 19, total: 20 }
                             },
                             facultyResponse: {
-
                                 comments: "Alexandra shows exceptional talent in implementing efficient data structures. Her project on optimized graph algorithms was particularly impressive and demonstrated deep understanding of the subject matter.",
                                 lastUpdated: "June 10, 2024"
                             }
@@ -189,21 +272,24 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 title: "Dean's List",
                 date: "December 2023",
                 description: "Recognized for academic excellence with placement on the Dean's List for Fall 2023",
-                category: "academic"
+                category: "academic",
+                semester: 5
             },
             {
                 id: "ACH002",
                 title: "Hackathon Winner",
                 date: "March 2024",
                 description: "First place in the University Annual Hackathon for developing an AI-powered educational platform",
-                category: "co-curricular"
+                category: "co-curricular",
+                semester: 6
             },
             {
                 id: "ACH003",
                 title: "Research Publication",
                 date: "May 2024",
                 description: "Co-authored research paper 'Machine Learning Applications in Healthcare' published in IEEE journal",
-                category: "co-curricular"
+                category: "co-curricular",
+                semester: 6
             }
         ],
         coCurricular: [
@@ -213,7 +299,8 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 date: "January 2024",
                 description: "Presented research paper on 'AI in Healthcare' at IEEE International Conference",
                 achievement: "First Prize",
-                attachments: 2
+                attachments: 2,
+                semester: 5
             },
             {
                 id: "CC002",
@@ -221,7 +308,8 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 date: "March 2024",
                 description: "Conducted a workshop on ethical hacking and network security for junior students",
                 achievement: "Outstanding Facilitator Award",
-                attachments: 1
+                attachments: 1,
+                semester: 6
             },
             {
                 id: "CC003",
@@ -229,7 +317,8 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 date: "April 2024",
                 description: "Developed a sustainable energy monitoring solution using IoT devices",
                 achievement: "Second Place",
-                attachments: 3
+                attachments: 3,
+                semester: 6
             },
             {
                 id: "CC004",
@@ -237,7 +326,8 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 date: "Summer 2023",
                 description: "Worked with Dr. Alan Turing on neural network optimization techniques",
                 achievement: "Excellent Performance Certificate",
-                attachments: 2
+                attachments: 2,
+                semester: 4
             }
         ],
         extraCurricular: [
@@ -247,7 +337,8 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 date: "2021 - Present",
                 description: "Lead performer in the contemporary dance group representing the university at cultural events",
                 achievement: "Best Choreography Award (2023)",
-                attachments: 4
+                attachments: 4,
+                semester: 3
             },
             {
                 id: "EC002",
@@ -255,7 +346,8 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 date: "2022 - Present",
                 description: "Organized campus-wide sustainability initiatives including a plastic-free campus campaign",
                 achievement: "Green Ambassador Recognition",
-                attachments: 2
+                attachments: 2,
+                semester: 4
             },
             {
                 id: "EC003",
@@ -263,7 +355,8 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 date: "Weekends, 2023",
                 description: "Taught computer skills to underprivileged children at local community centers",
                 achievement: "Outstanding Volunteer Award",
-                attachments: 3
+                attachments: 3,
+                semester: 5
             }
         ]
     };
@@ -276,38 +369,37 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
             </div>
         );
     }
-
     const renderStudentOverview = () => (
-        <div className="student-overview">
-            <div className="overview-card">
-                <div className="overview-card-header">
+        <div className="student-overview-sdp">
+            <div className="overview-card-sdp">
+                <div className="overview-card-sdp-header">
                     <h3><User size={18} /> Personal Information</h3>
                 </div>
-                <div className="overview-card-content">
+                <div className="overview-card-sdp-content">
                     <div className="detail-grid">
-                        <div className="detail-item">
-                            <span className="detail-label"><Mail size={14} /> Email</span>
-                            <span className="detail-value">{student.personalInfo.email}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp"><Mail size={14} /> Email</span>
+                            <span className="detail-value-sdp">{student.personalInfo.email}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label"><Phone size={14} /> Contact</span>
-                            <span className="detail-value">{student.personalInfo.phone}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp"><Phone size={14} /> Contact</span>
+                            <span className="detail-value-sdp">{student.personalInfo.phone}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label"><MapPin size={14} /> Address</span>
-                            <span className="detail-value">{student.personalInfo.address}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp"><MapPin size={14} /> Address</span>
+                            <span className="detail-value-sdp">{student.personalInfo.address}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label"><Activity size={14} /> Blood Group</span>
-                            <span className="detail-value">{student.personalInfo.bloodGroup}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp"><Activity size={14} /> Blood Group</span>
+                            <span className="detail-value-sdp">{student.personalInfo.bloodGroup}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label"><Calendar size={14} /> Date of Birth</span>
-                            <span className="detail-value">{student.personalInfo.dateOfBirth}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp"><Calendar size={14} /> Date of Birth</span>
+                            <span className="detail-value-sdp">{student.personalInfo.dateOfBirth}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label"><User size={14} /> Parent Details</span>
-                            <span className="detail-value">
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp"><User size={14} /> Parent Details</span>
+                            <span className="detail-value-sdp">
                                 {student.personalInfo.parentName} ({student.personalInfo.parentContact})
                             </span>
                         </div>
@@ -315,35 +407,35 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 </div>
             </div>
 
-            <div className="overview-card">
-                <div className="overview-card-header">
+            <div className="overview-card-sdp">
+                <div className="overview-card-sdp-header">
                     <h3><Book size={18} /> Academic Information</h3>
                 </div>
-                <div className="overview-card-content">
+                <div className="overview-card-sdp-content">
                     <div className="detail-grid">
-                        <div className="detail-item">
-                            <span className="detail-label">Department</span>
-                            <span className="detail-value">{student.academics.department}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp">Department</span>
+                            <span className="detail-value-sdp">{student.academics.department}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label">Program</span>
-                            <span className="detail-value">{student.academics.program}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp">Program</span>
+                            <span className="detail-value-sdp">{student.academics.program}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label">Batch</span>
-                            <span className="detail-value">{student.batch}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp">Batch</span>
+                            <span className="detail-value-sdp">{student.batch}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label">Academic Advisor</span>
-                            <span className="detail-value">{student.academics.advisor}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp">Academic Advisor</span>
+                            <span className="detail-value-sdp">{student.academics.advisor}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label">Current Semester</span>
-                            <span className="detail-value">{student.semester}</span>
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp">Current Semester</span>
+                            <span className="detail-value-sdp">{student.semester}</span>
                         </div>
-                        <div className="detail-item">
-                            <span className="detail-label">Credits Completed</span>
-                            <span className="detail-value">
+                        <div className="detail-item-sdp">
+                            <span className="detail-label-sdp">Credits Completed</span>
+                            <span className="detail-value-sdp">
                                 {student.academics.creditsCompleted}/{student.academics.totalCredits}
                             </span>
                         </div>
@@ -351,11 +443,11 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 </div>
             </div>
 
-            <div className="overview-card">
-                <div className="overview-card-header">
+            <div className="overview-card-sdp">
+                <div className="overview-card-sdp-header">
                     <h3><Award size={18} /> Academic Performance</h3>
                 </div>
-                <div className="overview-card-content">
+                <div className="overview-card-sdp-content">
                     <div className="gpa-chart">
                         <h4 className="gpa-chart-title">GPA Progression</h4>
                         <div className="gpa-bar-container">
@@ -365,6 +457,21 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                         <span className="gpa-value">{semGpa.value}</span>
                                     </div>
                                     <div className="semester-label">Sem {semGpa.semester}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="rank-display">
+                        <h4 className="rank-title">Semester Ranks</h4>
+                        <div className="rank-grid">
+                            {student.academics.semesterRanks.map((rankData) => (
+                                <div key={rankData.semester} className="rank-item">
+                                    <div className="rank-semester">Sem {rankData.semester}</div>
+                                    <div className="rank-value">
+                                        <Trophy size={14} />
+                                        <span>{rankData.rank}</span>
+                                        <span className="rank-total">/{rankData.totalStudents}</span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -381,11 +488,11 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 </div>
             </div>
 
-            <div className="overview-card">
-                <div className="overview-card-header">
+            <div className="overview-card-sdp">
+                <div className="overview-card-sdp-header">
                     <h3><Trophy size={18} /> Recent Achievements</h3>
                 </div>
-                <div className="overview-card-content">
+                <div className="overview-card-sdp-content">
                     <ul className="achievements-list">
                         {student.achievements.map((achievement) => (
                             <li key={achievement.id} className="achievement-item">
@@ -471,45 +578,30 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                     </div>
                                 </div>
                             </div>
-                            <div className="metrics-item">
-                                <div className="metrics-label">Attendance</div>
-                                <div className="metrics-value">
-                                    <div className="attendance-value">{subject.attendance}%</div>
-                                    <div className="marks-progress attendance-progress">
-                                        <div
-                                            className="marks-progress-fill"
-                                            style={{ width: `${subject.attendance}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
                     <div className="faculty-feedback-sdp">
                         <h5 className="section-heading-sdp">Faculty Feedback</h5>
                         <div className="feedback-content-sdp">
-                            <div className="faculty-rating">
-                                <h6>Faculty Rating</h6>
-                                <div className="rating-stars">
-                                    {[...Array(10)].map((_, i) => (
-                                        <Star
-                                            key={i}
-                                            size={12}
-                                            className={i < Math.floor(subject.facultyRating) ? 'star-filled' : 'star-empty'}
-                                        />
-                                    ))}
-                                    <span className="rating-value">({subject.facultyRating}/10)</span>
+                            <div className="feedback-box">
+                                <div className="faculty-rating">
+                                    <div className="rating-stars">
+                                        {[...Array(10)].map((_, i) => (
+                                            <Star
+                                                key={i}
+                                                size={12}
+                                                className={i < Math.floor(subject.facultyRating) ? 'star-filled' : 'star-empty'}
+                                            />
+                                        ))}
+                                        <span className="rating-value">({subject.facultyRating}/10)</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="faculty-comments">
-                                <h6>Comments</h6>
-                                <div className="comments-box">
-                                    <MessageSquare size={16} className="comments-icon" />
+                                <div className="faculty-comments">
                                     <p>{subject.facultyResponse.comments}</p>
-                                </div>
-                                <div className="comments-date">
-                                    Last Updated: {subject.facultyResponse.lastUpdated}
+                                    <div className="comments-date">
+                                        Last Updated: {subject.facultyResponse.lastUpdated}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -518,11 +610,10 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
             </div>
         );
     };
-
-    const renderActivityCard = (activity) => (
+    const renderActivityCard = (activity, type) => (
         <div key={activity.id} className="activity-card">
             <div className="activity-icon">
-                {activity.id.startsWith('CC') ? <FileText size={18} /> : <Activity size={18} />}
+                {type === 'co' ? <FileText size={18} /> : <Activity size={18} />}
             </div>
             <div className="activity-details">
                 <h4 className="activity-title">{activity.title}</h4>
@@ -532,6 +623,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                     {activity.achievement && (
                         <span className="activity-achievement"><Trophy size={14} /> {activity.achievement}</span>
                     )}
+                    <span className="activity-semester">Semester: {activity.semester || 'N/A'}</span>
                 </div>
                 {activity.attachments && (
                     <div className="activity-attachments">
@@ -539,8 +631,121 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                     </div>
                 )}
             </div>
+            <div className="activity-actions">
+                <button className="action-button edit-button" onClick={() => handleEditActivity(activity, type)}>
+                    +
+                </button>
+                <button className="action-button delete-button">
+                    -
+                </button>
+            </div>
         </div>
     );
+
+    const renderActivityForm = () => {
+        const isEditMode = showEditForm;
+        const formTitle = isEditMode
+            ? `Edit ${currentActivityType === 'co' ? 'Co-Curricular' : 'Extra-Curricular'} Activity`
+            : `Add New ${currentActivityType === 'co' ? 'Co-Curricular' : 'Extra-Curricular'} Activity`;
+
+        return (
+            <div className="activity-form-overlay">
+                <div className="activity-form-container">
+                    <div className="form-header">
+                        <h3>{formTitle}</h3>
+                        <button className="close-form-button" onClick={() => {
+                            setShowAddForm(false);
+                            setShowEditForm(false);
+                        }}>×</button>
+                    </div>
+
+                    <form onSubmit={handleFormSubmit} className="activity-form">
+                        <div className="form-group">
+                            <label htmlFor="title">Activity Title</label>
+                            <input
+                                type="text"
+                                id="title"
+                                name="title"
+                                value={newActivity.title}
+                                onChange={handleFormChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="date">Date/Duration</label>
+                            <input
+                                type="text"
+                                id="date"
+                                name="date"
+                                value={newActivity.date}
+                                onChange={handleFormChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="description">Description</label>
+                            <textarea
+                                id="description"
+                                name="description"
+                                value={newActivity.description}
+                                onChange={handleFormChange}
+                                required
+                            ></textarea>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="achievement">Achievement/Recognition (if any)</label>
+                            <input
+                                type="text"
+                                id="achievement"
+                                name="achievement"
+                                value={newActivity.achievement}
+                                onChange={handleFormChange}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="semester">Related Semester</label>
+                            <select
+                                id="semester"
+                                name="semester"
+                                value={newActivity.semester}
+                                onChange={handleFormChange}
+                            >
+                                {[...Array(student.semester)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>Semester {i + 1}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="attachments">Number of Attachments</label>
+                            <input
+                                type="number"
+                                id="attachments"
+                                name="attachments"
+                                min="0"
+                                value={newActivity.attachments}
+                                onChange={handleFormChange}
+                            />
+                        </div>
+
+                        <div className="form-actions">
+                            <button type="button" className="cancel-button" onClick={() => {
+                                setShowAddForm(false);
+                                setShowEditForm(false);
+                            }}>Cancel</button>
+                            <button type="submit" className="submit-button">
+                                {isEditMode ? 'Update Activity' : 'Add Activity'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="student-details-container">
@@ -618,7 +823,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 </button>
             </nav>
 
-            <main className="student-content">
+            <main className="student-content-sdp">
                 {activeTab === 'overview' && renderStudentOverview()}
 
                 {activeTab === 'curricular' && (
@@ -649,6 +854,13 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                     <span className="summary-label">Subjects</span>
                                     <span className="summary-value">{student.academics.semesters[selectedSemester].subjects.length}</span>
                                 </div>
+                                <div className="summary-item">
+                                    <span className="summary-label">Rank</span>
+                                    <span className="summary-value">
+                                        {student.academics.semesterRanks.find(r => r.semester === selectedSemester)?.rank || 'N/A'}/
+                                        {student.academics.semesterRanks.find(r => r.semester === selectedSemester)?.totalStudents || 'N/A'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -667,22 +879,135 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
 
                 {activeTab === 'co-curricular' && (
                     <div className="activities-section">
-                        <h3 className="section-title">Co-Curricular Activities</h3>
+                        <div className="activities-header">
+                            <h3 className="section-title">Co-Curricular Activities</h3>
+                            <div className="activities-actions">
+                                <div className="filter-container">
+                                    <button
+                                        className={`filter-button ${activityFilter === 'all' ? 'active' : ''}`}
+                                        onClick={() => setActivityFilter('all')}
+                                    >
+                                        <Filter size={14} /> All Semesters
+                                    </button>
+                                    <button
+                                        className={`filter-button ${activityFilter === 'semester' ? 'active' : ''}`}
+                                        onClick={() => setActivityFilter('semester')}
+                                    >
+                                        <Filter size={14} /> Current Semester ({selectedSemester})
+                                    </button>
+                                </div>
+                                <button className="add-activity-button" onClick={() => handleAddActivity('co')}>
+                                    <Plus size={14} /> Add Activity
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="activities-summary">
+                            <div className="summary-card">
+                                <h4>Total Activities</h4>
+                                <div className="summary-value">{student.coCurricular.length}</div>
+                            </div>
+                            <div className="summary-card">
+                                <h4>Current Semester</h4>
+                                <div className="summary-value">
+                                    {student.coCurricular.filter(a => a.semester === selectedSemester).length}
+                                </div>
+                            </div>
+                            <div className="summary-card">
+                                <h4>Total Points</h4>
+                                <div className="summary-value">{calculateActivityPoints(student.coCurricular)}</div>
+                            </div>
+                            <div className="summary-card">
+                                <h4>Semester Points</h4>
+                                <div className="summary-value">
+                                    {calculateActivityPoints(student.coCurricular.filter(a => a.semester === selectedSemester))}
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="activities-list">
-                            {student.coCurricular.map(activity => renderActivityCard(activity))}
+                            {filterActivitiesBySemester(student.coCurricular, selectedSemester).map(activity =>
+                                renderActivityCard(activity, 'co')
+                            )}
+
+                            {filterActivitiesBySemester(student.coCurricular, selectedSemester).length === 0 && (
+                                <div className="no-activities-message">
+                                    <p>No co-curricular activities found for {activityFilter === 'all' ? 'any semester' : `semester ${selectedSemester}`}.</p>
+                                    <button className="add-activity-button small" onClick={() => handleAddActivity('co')}>
+                                        <Plus size={14} /> Add Activity
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
-
                 {activeTab === 'extra-curricular' && (
                     <div className="activities-section">
-                        <h3 className="section-title">Extra-Curricular Activities</h3>
+                        <div className="activities-header">
+                            <h3 className="section-title">Extra-Curricular Activities</h3>
+                            <div className="activities-actions">
+                                <div className="filter-container">
+                                    <button
+                                        className={`filter-button ${activityFilter === 'all' ? 'active' : ''}`}
+                                        onClick={() => setActivityFilter('all')}
+                                    >
+                                        <Filter size={14} /> All Semesters
+                                    </button>
+                                    <button
+                                        className={`filter-button ${activityFilter === 'semester' ? 'active' : ''}`}
+                                        onClick={() => setActivityFilter('semester')}
+                                    >
+                                        <Filter size={14} /> Current Semester ({selectedSemester})
+                                    </button>
+                                </div>
+                                <button className="add-activity-button" onClick={() => handleAddActivity('extra')}>
+                                    <Plus size={14} /> Add Activity
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="activities-summary">
+                            <div className="summary-card">
+                                <h4>Total Activities</h4>
+                                <div className="summary-value">{student.extraCurricular.length}</div>
+                            </div>
+                            <div className="summary-card">
+                                <h4>Current Semester</h4>
+                                <div className="summary-value">
+                                    {student.extraCurricular.filter(a => a.semester === selectedSemester).length}
+                                </div>
+                            </div>
+                            <div className="summary-card">
+                                <h4>Total Points</h4>
+                                <div className="summary-value">{calculateActivityPoints(student.extraCurricular)}</div>
+                            </div>
+                            <div className="summary-card">
+                                <h4>Semester Points</h4>
+                                <div className="summary-value">
+                                    {calculateActivityPoints(student.extraCurricular.filter(a => a.semester === selectedSemester))}
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="activities-list">
-                            {student.extraCurricular.map(activity => renderActivityCard(activity))}
+                            {filterActivitiesBySemester(student.extraCurricular, selectedSemester).map(activity =>
+                                renderActivityCard(activity, 'extra')
+                            )}
+
+                            {filterActivitiesBySemester(student.extraCurricular, selectedSemester).length === 0 && (
+                                <div className="no-activities-message">
+                                    <p>No extra-curricular activities found for {activityFilter === 'all' ? 'any semester' : `semester ${selectedSemester}`}.</p>
+                                    <button className="add-activity-button small" onClick={() => handleAddActivity('extra')}>
+                                        <Plus size={14} /> Add Activity
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
             </main>
+
+            {(showAddForm || showEditForm) && renderActivityForm()}
         </div>
     );
 };
