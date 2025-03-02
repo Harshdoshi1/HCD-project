@@ -610,16 +610,17 @@
 
 .subject-main-info h4 {
     margin: 0 0 0.5rem 0;
-    font-size: 1.1rem;
+    /* font-size: 0.7rem; */
     font-weight: 600;
     color: #343a40;
 }
 
 .subject-code {
-    font-size: 0.8rem;
-    font-weight: normal;
-    color: #6c757d;
+
+    /* font-weight: normal; */
+    color: #545659;
     margin-left: 0.5rem;
+    font-size: 20px;
 }
 
 .subject-quick-info {

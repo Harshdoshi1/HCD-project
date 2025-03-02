@@ -215,12 +215,7 @@ const StudentsList = ({ onStudentSelect }) => {
 
             <div className="students-data-container">
                 {
-                    // isLoading ? (
-                    //     <div className="loading-container">
-                    //         <div className="loading-spinner"></div>
-                    //         <p>Loading students data...</p>
-                    //     </div>
-                    // ) : 
+
                     filteredStudents.length > 0 ? (
                         <div className="students-table-wrapper">
                             <table className="students-table">
