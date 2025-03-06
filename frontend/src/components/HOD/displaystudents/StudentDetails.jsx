@@ -119,21 +119,20 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
 
     const student = {
         id: studentId,
-        name: "Alexandra Richardson",
-        enrollmentNo: "EN2023085",
-        department: "Computer Science & Engineering",
+        name: "Krish Mamtora",
+        enrollmentNo: "92200133022",
+        department: "ICT",
         semester: 6,
         image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoguHACZpXrj5llOZZySnZ4OAxMg4z64julw&s",
-        batch: "2021-2025",
+        batch: "2022-2026",
         cgpa: 9.2,
         personalInfo: {
-            email: "alex.richardson@college.edu",
-            phone: "+91 9876543210",
-            address: "425 University Ave, Westwood Campus",
+            email: "krish@marwadiuniversity.ac.in",
+            phone: "+91 1234567890",
             bloodGroup: "O+",
-            dateOfBirth: "15 March 2003",
-            parentName: "Robert Richardson",
-            parentContact: "+91 9876543211"
+            dateOfBirth: "15 March 1993",
+            parentName: "kirtibhai mamtora",
+            parentContact: "+91 1234567890"
         },
         academics: {
             department: "Computer Science & Engineering",
@@ -385,10 +384,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             <span className="detail-label-sdp"><Phone size={14} /> Contact</span>
                             <span className="detail-value-sdp">{student.personalInfo.phone}</span>
                         </div>
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp"><MapPin size={14} /> Address</span>
-                            <span className="detail-value-sdp">{student.personalInfo.address}</span>
-                        </div>
+
                         <div className="detail-item-sdp">
                             <span className="detail-label-sdp"><Activity size={14} /> Blood Group</span>
                             <span className="detail-value-sdp">{student.personalInfo.bloodGroup}</span>
@@ -666,6 +662,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                 type="text"
                                 id="title"
                                 name="title"
+                                className='add-activity-model-input'
                                 value={newActivity.title}
                                 onChange={handleFormChange}
                                 required
@@ -678,6 +675,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                 type="text"
                                 id="date"
                                 name="date"
+                                className='add-activity-model-input'
                                 value={newActivity.date}
                                 onChange={handleFormChange}
                                 required
@@ -689,6 +687,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             <textarea
                                 id="description"
                                 name="description"
+                                className='add-activity-model-input'
                                 value={newActivity.description}
                                 onChange={handleFormChange}
                                 required
@@ -701,6 +700,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                 type="text"
                                 id="achievement"
                                 name="achievement"
+                                className='add-activity-model-input'
                                 value={newActivity.achievement}
                                 onChange={handleFormChange}
                             />
@@ -720,17 +720,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             </select>
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="attachments">Number of Attachments</label>
-                            <input
-                                type="number"
-                                id="attachments"
-                                name="attachments"
-                                min="0"
-                                value={newActivity.attachments}
-                                onChange={handleFormChange}
-                            />
-                        </div>
+
 
                         <div className="form-actions">
                             <button type="button" className="cancel-button" onClick={() => {

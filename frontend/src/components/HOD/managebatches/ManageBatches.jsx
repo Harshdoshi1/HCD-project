@@ -296,7 +296,7 @@ const ManageBatches = () => {
                             <div key={batch.batchName} className="batch-card">
                                 <div className="batch-card-header">
                                     <h3 className="batch-title">{batch.batchName}</h3>
-                                    <p className="batch-subtitle">{batch.courseType}</p>
+                                    {/* <p className="batch-subtitle">{batch.courseType}</p> */}
                                 </div>
                                 <div className="batch-card-content">
                                     <p><strong>Duration:</strong> {formatDate(batch.batchStart)} - {formatDate(batch.batchEnd)}</p>

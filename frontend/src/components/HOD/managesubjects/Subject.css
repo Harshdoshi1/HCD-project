@@ -7,6 +7,7 @@
     position: relative;
     overflow-y: auto;
     overflow-x: hidden;
+    padding: 0;
 }
 
 .subject-header {
@@ -48,8 +49,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.8rem 1.2rem;
-    border: 2px solid #578FCA;
+    padding: 0.5rem 1rem;
+    border: 0px;
     border-radius: 8px;
     background: white;
     color: #3674B5;
@@ -60,14 +61,15 @@
 }
 
 .subject-action-btn.active {
-    background: #3674B5;
-    color: white;
-    border-color: #3674B5;
+    /* background: #3674B5; */
+    /* color: white; */
+    color: #3674B5;
+    /* border-color: #3674B5; */
 }
 
 .subject-action-btn:hover {
-    background: #A1E3F9;
-    border-color: #3674B5;
+    /* background: #A1E3F9; */
+    /* border-color: #3674B5; */
     transform: translateY(-2px);
 }
 

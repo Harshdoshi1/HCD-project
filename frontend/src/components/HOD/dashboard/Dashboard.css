@@ -1,14 +1,9 @@
 .dashboard-container {
     display: flex;
     min-height: 100vh;
-    background-color: rgb(245, 248, 255);
-    margin-left: 18vw;
     transition: margin-left 0.3s ease-in-out;
 }
 
-.dashboard-container.collapsed {
-    margin-left: 5vw;
-}
 
 .main-content {
     flex: 1;
@@ -19,7 +14,6 @@
 }
 
 .dashboard-content {
-    padding: 1rem;
     flex: 1;
     width: 100%;
     max-width: 100%;
@@ -39,23 +33,25 @@
     overflow-x: hidden;
 }
 
-.dashboard-wrapper.collapsed .dashboard-container {
-    margin-left: 5vw;
+.dashboard-wrapper.collapsed {
+    margin-left: 2vw;
 }
 
 .dashboard-container {
     flex: 1;
     min-height: 100vh;
-    background-color: hwb(222 96% 0%);
-    margin-left: 17vw;
+    margin-left: 16vw;
     transition: margin-left 0.3s ease-in-out;
     width: calc(100% - 17vw);
 }
 
+
 .dashboard-container.collapsed {
     margin-left: 5vw;
-    width: calc(100% - 5vw);
+    width: calc(100% - 3vw);
+    max-width: 93%;
 }
+
 
 .main-content {
     flex: 1;
@@ -66,12 +62,15 @@
 }
 
 .dashboard-content {
-    padding: 2rem;
+    /* padding: 1rem; */
     padding-top: 0;
     flex: 1;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+    background-color: #ffffff;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .filter-select {

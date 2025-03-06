@@ -1,13 +1,13 @@
 .manage-batches-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+    max-width: 100%;
+    /* margin: 0; */
+    padding: 1rem;
     font-family: Arial, sans-serif;
 }
 
 .header-section {
-    margin-bottom: 2rem;
-    text-align: center;
+    margin-bottom: 1rem;
+    text-align: left;
 }
 
 .page-title {
@@ -178,7 +178,7 @@
 }
 
 .batches-list-container {
-    margin-top: 3rem;
+    margin-top: 1rem;
 }
 
 .section-title {
@@ -271,7 +271,8 @@
     font-size: 0.875rem;
 }
 
-/* Responsive adjustments */
+
+
 @media (max-width: 768px) {
     .manage-batches-container {
         padding: 1rem;
