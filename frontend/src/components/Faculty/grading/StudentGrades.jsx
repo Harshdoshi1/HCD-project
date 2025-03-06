@@ -233,6 +233,7 @@ const StudentGrades = () => {
                 <div className="search-container-sgp">
                     <Search className="search-icon" size={16} />
                     <input
+                        id="search-sgp"
                         type="text"
                         placeholder="Search by name or enrollment number..."
                         value={searchQuery}

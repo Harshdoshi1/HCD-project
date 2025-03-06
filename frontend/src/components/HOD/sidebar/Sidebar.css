@@ -1,5 +1,5 @@
 .sidebar {
-    width: 17vw;
+    width: 14vw;
     background-color: #3674B5;
     height: 100vh;
     padding: 1rem;
@@ -13,6 +13,8 @@
     transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
     align-items: flex-start;
     box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .sidebar.collapsed {

@@ -5,15 +5,14 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
+    background: #f8f8f8;
+
 }
 
 .faculty-header {
     background-color: white;
-    padding: 1.2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(54, 116, 181, 0.1);
+    padding: 0.7rem;
+    box-shadow: 0 5px 6px rgba(54, 116, 181, 0.1);
     width: 100%;
     box-sizing: border-box;
     position: sticky;
@@ -23,14 +22,14 @@
 }
 
 .header-top {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.3rem;
 }
 
 .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
     flex-wrap: nowrap;
 }
 
@@ -77,7 +76,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.8rem 1.2rem;
-    border: 2px solid #578FCA;
+    border: 0px;
     border-radius: 8px;
     background: white;
     color: #3674B5;
@@ -88,20 +87,14 @@
 }
 
 .faculty-action-btn:hover {
-    background: #A1E3F9;
-    border-color: #3674B5;
+
     transform: translateY(-2px);
 }
 
 .faculty-action-btn.active {
-    background: #3674B5;
-    color: white;
-    border-color: #3674B5;
+    color: #246ebc;
 }
 
-.faculty-action-btn.active:hover {
-    background: #578FCA;
-}
 
 .faculty-content {
     flex: 1;
@@ -118,13 +111,13 @@
 }
 
 .faculty-filters {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .faculty-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
+    gap: 1.2rem;
     width: 100%;
     box-sizing: border-box;
     animation: fadeIn 0.5s ease-out;
@@ -133,11 +126,15 @@
 .faculty-card {
     background: white;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.2rem;
+
     box-shadow: 0 4px 6px rgba(54, 116, 181, 0.1);
+    /* box-shadow: 0 6px 7px rgba(0, 0, 0, 0.4); */
+
     cursor: pointer;
     transition: all 0.3s ease;
     border: 2px solid transparent;
+
 }
 
 .faculty-card:hover {
