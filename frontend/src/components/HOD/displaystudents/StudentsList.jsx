@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
+import { UserRoundPlus } from "lucide-react";
 import { FaPlus, FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp, FaUserGraduate } from 'react-icons/fa';
 import Select from 'react-select';
 import StudentModal from './StudentModal';
@@ -146,16 +147,21 @@ const StudentsList = ({ onStudentSelect }) => {
         <div className="students-list-container">
             <div className="students-list-header">
                 <div className="header-left">
-                    <div className="header-icon">
-                        <FaUserGraduate />
-                    </div>
-                    <div className="header-text">
-                        <h1>Students Directory</h1>
-                        <p>Manage and view all students</p>
-                    </div>
+
+                    <button className="add-student-btn" onClick={handleOpenModal}>
+                        <UserRoundPlus />
+                        <span>Add Student</span>
+                    </button>
                 </div>
 
                 <div className="header-actions">
+                    <button
+                        className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
+                        onClick={toggleFilters}
+                    >
+                        <FaFilter />
+                        <span>Filters</span>
+                    </button>
                     <div className="search-container">
                         <FaSearch className="search-icon" />
                         <input
@@ -167,18 +173,8 @@ const StudentsList = ({ onStudentSelect }) => {
                         />
                     </div>
 
-                    <button
-                        className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
-                        onClick={toggleFilters}
-                    >
-                        <FaFilter />
-                        <span>Filters</span>
-                    </button>
 
-                    <button className="add-student-btn" onClick={handleOpenModal}>
-                        <FaPlus />
-                        <span>Add Student</span>
-                    </button>
+
                 </div>
             </div>
 
