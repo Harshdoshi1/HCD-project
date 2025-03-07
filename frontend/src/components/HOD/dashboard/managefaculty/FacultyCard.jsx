@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, BookOpen, GraduationCap, Building } from 'lucide-react';
+import { Mail, BookOpen, GraduationCap, Building, UserPen } from 'lucide-react';
 
 const FacultyCard = ({ faculty, onClick }) => {
     if (!faculty || !faculty.name) {
@@ -14,16 +14,16 @@ const FacultyCard = ({ faculty, onClick }) => {
                 </div>
                 <div className="faculty-main-info">
                     <h3>{faculty.name || "Unknown"}</h3>
-                    <p className="department">
+                    {/* <p className="department">
                         <Building size={16} className="info-icon" />
                         {faculty.department || "No Department"}
-                    </p>
+                    </p> */}
                 </div>
             </div>
             <div className="faculty-card-content">
-                <p className="specialization">
-                    <GraduationCap size={16} className="info-icon" />
-                    <span>{faculty.specialization || "N/A"}</span>
+                <p className="designation">
+                    <UserPen size={16} className="info-icon" />
+                    <span>{faculty.designation || "N/A"}</span>
                 </p>
                 <p className="email">
                     <Mail size={16} className="info-icon" />
