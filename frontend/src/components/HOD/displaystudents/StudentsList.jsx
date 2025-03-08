@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { UserRoundPlus } from "lucide-react";
 import { FaPlus, FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp, FaUserGraduate } from 'react-icons/fa';
