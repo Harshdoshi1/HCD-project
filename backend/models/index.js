@@ -13,10 +13,16 @@ const Student = require('./students');
 
 const syncDB = async () => {
     try {
-        await sequelize.sync({ alter: true });
-        console.log('All tables synchronized.');
+        // First try to authenticate
+        await sequelize.authenticate();
+        console.log('✅ Database connection established.');
+        
+        // Then sync the tables
+        await sequelize.sync({ alter: false }); // Changed to false to prevent automatic alterations
+        console.log('✅ All tables synchronized.');
     } catch (error) {
-        console.error('Error syncing database:', error);
+        console.error('❌ Error with database:', error);
+        throw error; // Propagate the error
     }
 };
 

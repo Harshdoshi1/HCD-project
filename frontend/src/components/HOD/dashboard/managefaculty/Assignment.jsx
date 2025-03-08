@@ -64,8 +64,21 @@ const FacultyAssignment = ({ selectedFaculty }) => {
             try {
                 const response = await fetch(`http://localhost:5001/api/users/getSubjects/${assignment.batch.value}/${assignment.semester.value}`);
                 if (!response.ok) throw new Error("Failed to fetch subjects");
+
                 const data = await response.json();
-                setSubjects(data.map(subject => ({ value: subject.subjectName, label: subject.subjectName })));
+                console.log("Subjects API response:", data);
+
+                if (!data || (!Array.isArray(data.subjects) && !Array.isArray(data.uniqueSubjects))) {
+                    throw new Error("Invalid subjects data format");
+                }
+
+                const subjectsArray = Array.isArray(data.subjects) ? data.subjects : data.uniqueSubjects;
+
+                setSubjects(subjectsArray.map(subject => ({
+                    value: subject.subjectName || subject.sub_name,
+                    label: subject.subjectName || subject.sub_name,
+                })));
+
             } catch (error) {
                 console.error("Error fetching subjects:", error);
             }
@@ -105,10 +118,10 @@ const FacultyAssignment = ({ selectedFaculty }) => {
 
             // Reset form after successful submission
             setAssignment({
-                batch: "",
-                semester: "",
-                subject: "",
-                faculty: selectedFaculty?.id || "",
+                batch: null,
+                semester: null,
+                subject: null,
+                faculty: selectedFaculty ? { value: selectedFaculty.id, label: selectedFaculty.name } : null,
             });
 
         } catch (error) {

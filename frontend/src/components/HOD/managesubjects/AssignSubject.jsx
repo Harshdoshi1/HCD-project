@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./AssignSubject.css";
+
 const AssignSubject = () => {
     const [filters, setFilters] = useState({
         program: "all",
@@ -11,10 +12,12 @@ const AssignSubject = () => {
     const [selectedSubjects, setSelectedSubjects] = useState([]);
     const [batches, setBatches] = useState([]);
     const [semesters, setSemesters] = useState([]);
+    const [assignSemesters, setAssignSemesters] = useState([]); 
     const [assignFilters, setAssignFilters] = useState({
         batch: "all",
         semester: "all",
     });
+    const [isFiltering, setIsFiltering] = useState(false);
 
     // Fetch batches from the database
     useEffect(() => {
@@ -31,6 +34,66 @@ const AssignSubject = () => {
 
         fetchBatches();
     }, []);
+
+    // Fetch all subjects initially and when program changes
+    useEffect(() => {
+        const fetchAllSubjects = async () => {
+            if (isFiltering) return; // Don't fetch all subjects when filtering
+
+            try {
+                const response = await fetch("http://localhost:5001/api/subjects/getAllSubjects");
+                if (!response.ok) throw new Error("Failed to fetch subjects");
+                const data = await response.json();
+                
+                // Filter by program if needed
+                const filteredData = filters.program === "all" 
+                    ? data 
+                    : data.filter(subject => subject.courseType === filters.program);
+                
+                setAvailableSubjects(filteredData);
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+            }
+        };
+
+        fetchAllSubjects();
+    }, [filters.program, isFiltering]);
+
+    // Fetch filtered subjects when applying filter
+    useEffect(() => {
+        const fetchFilteredSubjects = async () => {
+            if (!isFiltering) return; // Only fetch when filtering is active
+
+            try {
+                const response = await fetch(
+                    `http://localhost:5001/api/users/getSubjectsByBatchAndSemester/${filters.batch}/${filters.semester}`
+                );
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        setAvailableSubjects([]); // No subjects found for this combination
+                        return;
+                    }
+                    throw new Error("Failed to fetch filtered subjects");
+                }
+
+                const data = await response.json();
+                const subjects = data.uniqueSubjects || [];
+                
+                // Filter by program if needed
+                const filteredData = filters.program === "all" 
+                    ? subjects 
+                    : subjects.filter(subject => subject.courseType === filters.program);
+                
+                setAvailableSubjects(filteredData);
+            } catch (error) {
+                console.error("Error fetching filtered subjects:", error);
+                setAvailableSubjects([]); // Reset on error
+            }
+        };
+
+        fetchFilteredSubjects();
+    }, [isFiltering, filters]);
 
     // Fetch semesters based on selected batch
     useEffect(() => {
@@ -53,14 +116,55 @@ const AssignSubject = () => {
         fetchSemesters();
     }, [filters.batch]);
 
+    // Fetch semesters for assigned subjects section
+    useEffect(() => {
+        const fetchAssignSemesters = async () => {
+            try {
+                if (!assignFilters.batch || assignFilters.batch === "all") {
+                    setAssignSemesters([]);
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:5001/api/users/getSemestersByBatch/${assignFilters.batch}`);
+                if (!response.ok) throw new Error("Failed to fetch semesters");
+                const data = await response.json();
+                setAssignSemesters(data);
+            } catch (error) {
+                console.error("Error fetching semesters:", error);
+            }
+        };
+
+        fetchAssignSemesters();
+    }, [assignFilters.batch]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-
         setFilters((prev) => ({
             ...prev,
             [name]: value,
             ...(name === "batch" ? { semester: "all" } : {}), // Reset semester when batch changes
         }));
+        if (name !== "program") {
+            setIsFiltering(false); // Reset filtering state when changing batch or semester
+        }
+    };
+
+    const handleFilter = () => {
+        if (filters.batch === "all" || filters.semester === "all") {
+            alert("Please select both batch and semester to apply filter");
+            return;
+        }
+        setIsFiltering(true);
+    };
+
+    const clearFilter = () => {
+        setIsFiltering(false);
+        setFilters(prev => ({
+            ...prev,
+            batch: "all",
+            semester: "all"
+        }));
+        setSemesters([]);
     };
 
     // Handle filters for selected subjects section
@@ -74,28 +178,6 @@ const AssignSubject = () => {
             ...(name === "batch-to-assign" ? { semester: "all" } : {}), // Reset semester when batch changes
         }));
     };
-
-    // Fetch subjects based on selected program
-    useEffect(() => {
-        const fetchSubjects = async () => {
-            try {
-                if (filters.batch === "all" || filters.semester === "all") {
-                    setAvailableSubjects([]);
-                    return;
-                }
-                const response = await fetch(
-                    `http://localhost:5001/api/users/getSubjects/${filters.batch}/${filters.semester}`
-                );
-                if (!response.ok) throw new Error("Failed to fetch subjects");
-                const data = await response.json();
-                setAvailableSubjects(data.uniqueSubjects);
-            } catch (error) {
-                console.error("Error fetching subjects:", error);
-            }
-        };
-
-        fetchSubjects();
-    }, [filters.batch, filters.semester]); // Added batch & semester as dependencies
 
     // Handle subject selection
     const handleSubjectSelect = (subject) => {
@@ -189,7 +271,7 @@ const AssignSubject = () => {
                                 required
                             >
                                 <option value="all">Semester</option>
-                                {semesters.map((sem, index) => (
+                                {assignSemesters.map((sem, index) => (
                                     <option key={sem._id || index} value={sem.semesterNumber}>
                                         Semester {sem.semesterNumber}
                                     </option>
@@ -222,18 +304,22 @@ const AssignSubject = () => {
                         <div className="filter-group-assign-subject-two">
                             <select
                                 className="professional-filter"
-
+                                name="program"
                                 value={filters.program}
                                 onChange={handleChange}
-                                name="program"
                             >
                                 <option value="all">All Programs</option>
                                 <option value="degree">Degree</option>
                                 <option value="diploma">Diploma</option>
                             </select>
 
-                            <select className="professional-filter" name="batch" value={filters.batch} onChange={handleChange} required>
-                                <option value="all">Batch</option>
+                            <select 
+                                className="professional-filter" 
+                                name="batch" 
+                                value={filters.batch} 
+                                onChange={handleChange}
+                            >
+                                <option value="all">All Batches</option>
                                 {batches.map((batch, index) => (
                                     <option key={batch._id || index} value={batch.batchName}>
                                         {batch.batchName}
@@ -241,14 +327,35 @@ const AssignSubject = () => {
                                 ))}
                             </select>
 
-                            <select className="professional-filter" name="semester" value={filters.semester} onChange={handleChange} required>
-                                <option value="all">Semester</option>
+                            <select 
+                                className="professional-filter" 
+                                name="semester" 
+                                value={filters.semester} 
+                                onChange={handleChange}
+                            >
+                                <option value="all">All Semesters</option>
                                 {semesters.map((sem, index) => (
                                     <option key={sem._id || index} value={sem.semesterNumber}>
                                         Semester {sem.semesterNumber}
                                     </option>
                                 ))}
                             </select>
+
+                            <button 
+                                className="filter-button" 
+                                onClick={handleFilter}
+                                disabled={filters.batch === "all" || filters.semester === "all"}
+                            >
+                                Apply Filter
+                            </button>
+                            {isFiltering && (
+                                <button 
+                                    className="clear-filter-button" 
+                                    onClick={clearFilter}
+                                >
+                                    Clear Filter
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -265,7 +372,7 @@ const AssignSubject = () => {
                                 </div>
                             ))
                         ) : (
-                            <p>No subjects available for the selected program.</p>
+                            <p>No subjects available for the selected batch and semester.</p>
                         )}
                     </div>
                 </div>

@@ -9,21 +9,21 @@ exports.createStudent = async (req, res) => {
         // Input validation
         if (!name || !email || !batchID || !enrollment) {
             console.error("Missing required fields:", { name, email, batchID, enrollment });
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: "All fields are required",
                 received: { name, email, batchID, enrollment }
             });
         }
 
         // Validate batch ID
-        const batch = await Batch.findOne({ 
+        const batch = await Batch.findOne({
             where: { batchName: batchID },
-            attributes: ['id', 'batchName'] 
+            attributes: ['id', 'batchName']
         });
 
         if (!batch) {
             console.error("Batch not found:", batchID);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: "Batch not found",
                 receivedBatchName: batchID
             });
@@ -43,7 +43,7 @@ exports.createStudent = async (req, res) => {
         res.status(201).json(student);
     } catch (error) {
         console.error("Error creating student:", error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: error.message,
             type: error.name,
             details: error.errors?.map(e => e.message) || []

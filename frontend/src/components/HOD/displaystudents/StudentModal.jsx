@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './StudentModal.css';
 
-const StudentModal = ({ isOpen, onClose, onSuccess = () => {} }) => {
+const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
     const [studentData, setStudentData] = useState({
         name: '',
         email: '',
@@ -91,7 +91,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => {} }) => {
 
             if (response.ok) {
                 console.log('Student added successfully:', data);
-                
+
                 if (typeof onSuccess === "function") {
                     onSuccess();
                 } else {

@@ -121,52 +121,6 @@ const addUniqueSubDiploma = async (req, res) => {
     }
 };
 
-module.exports = { addUniqueSubDegree, addUniqueSubDiploma };
-
-const getSubjectsByBatchAndSemester = async (req, res) => {
-    try {
-        const { batchName, semesterNumber } = req.params;
-
-        // Find batch ID from batchName
-        const batch = await Batch.findOne({ where: { batchName } });
-        if (!batch) {
-            return res.status(404).json({ message: "Batch not found" });
-        }
-
-        // Find semester where batchId matches
-        const semester = await Semester.findOne({ where: { semesterNumber, batchId: batch.id } });
-        if (!semester) {
-            return res.status(404).json({ message: "Semester not found for this batch" });
-        }
-
-        // Fetch subjects for the given batch and semester
-        const subjects = await Subject.findAll({ where: { semesterId: semester.id, batchId: batch.id } });
-
-        if (subjects.length === 0) {
-            return res.status(404).json({ message: "No subjects found for this semester and batch" });
-        }
-
-        // Get subject names from subjects
-        const subjectNames = subjects.map(s => s.subjectName);
-
-        // Fetch sub_code and sub_level from UniqueSubDegree using sub_name
-        const uniqueSubs = await UniqueSubDegree.findAll({
-            where: { sub_name: { [Op.in]: subjectNames } },
-            attributes: ["sub_name", "sub_code", "sub_level"], // Fetch only required attributes
-        });
-
-        // Send the response properly formatted
-        res.status(200).json({
-            subjects,
-            uniqueSubjects: uniqueSubs
-        });
-    } catch (error) {
-        console.error("Error fetching subjects:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-};
-
-
 // @desc    Get all batches
 // @route   GET /api/batches
 // @access  Admin (HOD)
@@ -208,8 +162,6 @@ const addSubject = async (req, res) => {
     }
 };
 
-
-module.exports = { addSubject };
 
 // @desc    Add a new batch
 // @route   POST /api/batches
@@ -445,20 +397,64 @@ const getSemestersByBatch = async (req, res) => {
 
 
 
+const getSubjectsByBatchAndSemester = async (req, res) => {
+    try {
+        const { batchName, semesterNumber } = req.params;
+
+        // Find batch ID from batchName
+        const batch = await Batch.findOne({ where: { batchName } });
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found" });
+        }
+
+        // Find semester where batchId matches
+        const semester = await Semester.findOne({ where: { semesterNumber, batchId: batch.id } });
+        if (!semester) {
+            return res.status(404).json({ message: "Semester not found for this batch" });
+        }
+
+        // Fetch subjects for the given batch and semester
+        const subjects = await Subject.findAll({ where: { semesterId: semester.id, batchId: batch.id } });
+
+        if (subjects.length === 0) {
+            return res.status(404).json({ message: "No subjects found for this semester and batch" });
+        }
+
+        // Get subject names from subjects
+        const subjectNames = subjects.map(s => s.subjectName);
+
+        // Fetch sub_code and sub_level from UniqueSubDegree using sub_name
+        const uniqueSubs = await UniqueSubDegree.findAll({
+            where: { sub_name: { [Op.in]: subjectNames } },
+            attributes: ["sub_name", "sub_code", "sub_level"], // Fetch only required attributes
+        });
+
+        // Send the response properly formatted
+        res.status(200).json({
+            subjects,
+            uniqueSubjects: uniqueSubs
+        });
+    } catch (error) {
+        console.error("Error fetching subjects:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
 module.exports = {
     registerUser,
     loginUser,
-    getSemestersByBatch,
     getAllUsers,
     addFaculty,
     addBatch,
     getAllBatches,
     addSemester,
-    addSubject,
+    getSemestersByBatch,
     getSubjectsByBatchAndSemester,
     addUniqueSubDegree,
     addUniqueSubDiploma,
     getSubjects,
     getDropdownData,
-    assignSubject
+    assignSubject,
+    addSubject
 };
