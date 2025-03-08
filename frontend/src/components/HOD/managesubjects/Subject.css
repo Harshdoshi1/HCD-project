@@ -8,6 +8,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: 0;
+    background: #f8f8f8;
 }
 
 .subject-header {
@@ -51,9 +52,8 @@
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     border: 0px;
-    border-radius: 8px;
     background: white;
-    color: #3674B5;
+    color: #246ebc;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -61,15 +61,13 @@
 }
 
 .subject-action-btn.active {
-    /* background: #3674B5; */
-    /* color: white; */
-    color: #3674B5;
-    /* border-color: #3674B5; */
+
+    color: #246ebc;
+    border-bottom: 1px solid #246ebc;
 }
 
 .subject-action-btn:hover {
-    /* background: #A1E3F9; */
-    /* border-color: #3674B5; */
+
     transform: translateY(-2px);
 }
 
