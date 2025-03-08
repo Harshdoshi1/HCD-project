@@ -5,7 +5,7 @@ const {
     getAllStudents,
     updateStudent,
     deleteStudent
-  
+
 } = require('../controller/studentController'); // Ensure correct path
 
 const router = express.Router();
@@ -16,6 +16,7 @@ router.get('/getStudentById', getStudentById);
 router.get('/getAllStudents', getAllStudents);
 router.put('/updateStudent', updateStudent);
 router.delete('/deleteStudent', deleteStudent);
+// router.post('/createStudent', studentController.createStudent);
 
 
 module.exports = router; // ✅ Ensure this line exports the router correctly
