@@ -67,18 +67,18 @@ const getDropdownData = async (req, res) => {
 
 const getSubjects = async (req, res) => {
     try {
-        const { program } = req.body;
+        // const { program } = req.body;
 
-        if (!program || (program !== 'degree' && program !== 'diploma')) {
-            return res.status(400).json({ message: "Invalid or missing program parameter" });
-        }
+        // if (!program || (program !== 'degree' && program !== 'diploma')) {
+        //     return res.status(400).json({ message: "Invalid or missing program parameter" });
+        // }
 
-        let subjects;
-        if (program === 'degree') {
+        // let subjects;
+        // if (program === 'degree') {
             subjects = await UniqueSubDegree.findAll();
-        } else if (program === 'diploma') {
-            subjects = await UniqueSubDiploma.findAll();
-        }
+        // } else if (program === 'diploma') {
+        //     subjects = await UniqueSubDiploma.findAll();
+        // }
 
         return res.status(200).json({ subjects });
     } catch (error) {
