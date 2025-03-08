@@ -299,7 +299,7 @@ const AssignSubject = () => {
 
             <div className="Seconddiv-availabe-sub-for-assign">
                 <div className="top-things-for-selected-sub-asssign">
-                    <span>All</span>&nbsp; <span> Subjects</span>
+                    {/* <span>All</span>&nbsp; <span> Subjects</span> */}
                     <div className="filters-container-assign-subject-two">
                         <div className="filter-group-assign-subject-two">
                             <select
