@@ -65,6 +65,7 @@
     border-radius: 4px;
     transition: border-color 0.3s;
     font-size: 16px;
+    margin-bottom: 5px;
 }
 
 .form-group input:focus {
@@ -80,7 +81,7 @@
 }
 
 .submit-btn-add-faculty {
-    background-color: #4CAF50;
+    background-color: #007bff;
     color: white;
     border: none;
     padding: 10px 15px;
@@ -91,7 +92,7 @@
 }
 
 .submit-btn-add-faculty:hover {
-    background-color: #45a049;
+    background-color: #007bff;
 }
 
 .cancel-btn {

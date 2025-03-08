@@ -15,10 +15,10 @@ const SubjectCard = ({ subject }) => {
             </div>
 
             <div className="card-content-asff">
-                <div className="content-row-asff">
+                {/* <div className="content-row-asff">
                     <span className="content-label-asff">Department:</span>
                     <span className="content-value-asff">{subject.department}</span>
-                </div>
+                </div> */}
                 <div className="content-row-asff">
                     <span className="content-label-asff">Semester:</span>
                     <span className="content-value-asff">{subject.semester}</span>

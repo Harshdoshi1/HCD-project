@@ -1,9 +1,10 @@
 .manage-weightage-container {
-    background: #fff;
+    background: #f8f8f8;
     display: flex;
     flex-direction: column;
     gap: 15px;
     padding: 15px;
+    height: 100vh;
 }
 
 .filters-container-manage-component {

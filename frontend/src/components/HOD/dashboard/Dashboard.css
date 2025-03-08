@@ -62,13 +62,12 @@
 }
 
 .dashboard-content {
-    /* padding: 1rem; */
     padding-top: 0;
     flex: 1;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    background-color: #ffffff;
+    background-color: #f8f8f8;
     overflow-x: hidden;
     overflow-y: auto;
 }

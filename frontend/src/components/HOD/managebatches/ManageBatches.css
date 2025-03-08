@@ -9,6 +9,12 @@
     text-align: left;
 }
 
+.tab-button active {
+    border: 0px;
+    background-color: #ffffff;
+    color: #246ebc;
+}
+
 .manage-batch-header {
     display: flex;
     gap: 1rem;
@@ -44,8 +50,8 @@
 
 .tab-list {
     display: flex;
-    background-color: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
+    /* background-color: #f9fafb; */
+    /* border-bottom: 1px solid #e5e7eb; */
 }
 
 .tab-button {
@@ -63,14 +69,14 @@
     white-space: nowrap;
 }
 
-.tab-button:hover {
+/* .tab-button:hover {
     background-color: #f3f4f6;
 }
 
 .tab-button.active {
     color: #246ebc;
     background-color: white;
-}
+} */
 
 .tab-content {
     padding: 1.1rem;

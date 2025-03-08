@@ -75,11 +75,7 @@ const SubjectList = ({ onSelectSubject }) => {
     return (
         <div className="subject-list">
             <div className="filters-container-display-subject-list">
-                <select className="professional-filter ds" name="program" value={filters.program} onChange={handleChange} required>
-                    <option value="all">All Programs</option>
-                    <option value="degree">Degree</option>
-                    <option value="diploma">Diploma</option>
-                </select>
+
                 <select className="professional-filter ds" name="batch" value={filters.batch} onChange={handleChange} required>
                     <option value="all">Batch</option>
                     {batches.map((batch, index) => (
