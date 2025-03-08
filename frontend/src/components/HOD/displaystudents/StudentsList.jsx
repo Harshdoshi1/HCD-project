@@ -29,11 +29,11 @@ const StudentsList = ({ onStudentSelect }) => {
             const data = await response.json();
             setStudents(data);
             console.log(data);
-            
+
             // Extract unique batches from students data
             const uniqueBatches = [...new Set(data.map(student => student.Batch.batchName))];
             setBatches(uniqueBatches);
-            
+            setSelectedBatch(uniqueBatches[0]); // Set the first batch as default
             setIsLoading(false);
         } catch (error) {
             console.error('Error fetching students:', error);
@@ -63,7 +63,7 @@ const StudentsList = ({ onStudentSelect }) => {
     });
 
     const filteredStudents = sortedStudents.filter(student => {
-        const batchMatch = !selectedBatch || student.Batch.batchName === selectedBatch;
+        const batchMatch = selectedBatch ? student.Batch.batchName === selectedBatch : true;
         const searchMatch = !searchQuery ||
             student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             student.enrollmentNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -168,7 +168,7 @@ const StudentsList = ({ onStudentSelect }) => {
                     </div>
                 </div>
             )}
- <div className="students-data-container">
+            <div className="students-data-container">
                 {
 
                     filteredStudents.length > 0 ? (
@@ -204,13 +204,11 @@ const StudentsList = ({ onStudentSelect }) => {
                                 </thead>
                                 <tbody>
                                     {filteredStudents.map(student => (
-                                        <tr key={student.id} className="student-row">
-                                            <td className="student-name-list">{student.name}</td>
+                                        <tr key={student.enrollmentNumber}>
+                                            <td>{student.name}</td>
                                             <td>{student.enrollmentNumber}</td>
-                                            <td className="batch-cell">
-                                                <span className="batch-badge">{student.batch}</span>
-                                            </td>
-                                            <td className="email-cell">{student.email}</td>
+                                            <td>{student.Batch.batchName}</td>
+                                            <td>{student.email}</td>
                                             <td>
                                                 <button
                                                     className="view-details-btn"

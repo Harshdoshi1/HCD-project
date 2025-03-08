@@ -95,7 +95,7 @@
 
 .faculty-action-btn.active {
     color: #246ebc;
-    border-bottom: 1px groove #246ebc;
+    /* border-bottom: 1px groove #246ebc; */
 }
 
 

@@ -63,7 +63,7 @@
 .subject-action-btn.active {
 
     color: #246ebc;
-    border-bottom: 1px solid #246ebc;
+    /* border-bottom: 1px solid #246ebc; */
 }
 
 .subject-action-btn:hover {

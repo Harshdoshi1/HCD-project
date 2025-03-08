@@ -21,6 +21,10 @@
     text-align: left;
 }
 
+.dashboard-content {
+    background-color: #cbd5e1;
+}
+
 .filter-section-sgp {
     display: flex;
     flex-wrap: wrap;
