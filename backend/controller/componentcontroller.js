@@ -7,24 +7,16 @@ const UniqueSubDegree = require("../models/uniqueSubDegree");
 exports.createComponentWeightage = async (req, res) => {
   try {
     console.log("Received request body:", req.body);
-    const { batch, semester, subject, ese, cse, ia, tw, viva } = req.body;
+    const { subject, ese, cse, ia, tw, viva } = req.body;
 
-    // Fetch Batch ID
-    const batchRecord = await Batch.findOne({ where: { batchName: batch } });
-    if (!batchRecord) return res.status(400).json({ error: "Batch not found" });
-
-    // Fetch Semester ID
-    const semesterRecord = await Semester.findOne({ where: { semesterNumber: semester, batchId: batchRecord.id } });
-    if (!semesterRecord) return res.status(400).json({ error: "Semester not found" });
 
     // Fetch Subject ID
-    const subjectRecord = await UniqueSubDegree.findOne({ where: { sub_name: subject } });
+    const subjectRecord = await UniqueSubDegree.findOne({ where: { sub_code: subject } });
     if (!subjectRecord) return res.status(400).json({ error: "Subject not found" });
 
     // Create Component Weightage
     const newWeightage = await ComponentWeightage.create({
-      batchId: batchRecord.id,
-      semesterId: semesterRecord.id,
+   
       subjectId: subjectRecord.sub_code,
       ese,
       cse,
