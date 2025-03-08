@@ -1,5 +1,5 @@
 const UniqueSubDegree = require('../models/uniqueSubDegree');
-const UniqueSubDiploma = require('../models/uniqueDubDiploma');
+const UniqueSubDiploma = require('../models/uniqueSubDiploma');
 const { Batch } = require('../models/batch');
 const { Semester } = require('../models/semester');
 const express = require('express');

@@ -122,8 +122,6 @@
     cursor: pointer;
     border-radius: 5px;
     margin-top: 10px;
-
-
 }
 
 .save-weightage-btn:hover {
@@ -133,4 +131,18 @@
 .save-weightage-btn:disabled {
     background: #ccc;
     cursor: not-allowed;
+}
+
+.weightage-summary {
+    margin-top: 15px;
+    font-weight: bold;
+    text-align: right;
+}
+
+.weightage-ok {
+    color: #4CAF50;
+}
+
+.weightage-error {
+    color: #f44336;
 }
