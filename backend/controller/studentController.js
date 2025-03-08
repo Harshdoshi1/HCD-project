@@ -19,10 +19,13 @@ exports.createStudent = async (req, res) => {
 
         console.log("Received batchID:", batchID);
         console.log("Received name:", name);
+        console.log("Received enrollmentNumber:", enrollmentNumber);
+        console.log("Received email:", email);
 
 
         // Validate batch ID
         const batch = await Batch.findOne({ where: { batchName: batchID } });
+
         if (!batch) {
             return res.status(400).json({ error: "Batch not found" });
         }

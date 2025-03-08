@@ -48,13 +48,12 @@ const StudentModal = ({ isOpen, onClose, onSuccess }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        console.log("Submitting Student Data:", studentData); // Debugging
-
         const formData = new FormData();
         formData.append('name', studentData.name);
         formData.append('email', studentData.email);
         formData.append('enrollmentNumber', studentData.enrollment);
-        formData.append('batchID', studentData.batchID); // Ensure correct batch ID is sent
+        formData.append('batchID', studentData.batchID);
+
         if (file) {
             formData.append('file', file);
         }
@@ -66,17 +65,14 @@ const StudentModal = ({ isOpen, onClose, onSuccess }) => {
             });
 
             const data = await response.json();
-            // console.log("Server Response:", data); // Debugging
-
             if (response.ok) {
-                console.log('Student added successfully:', data);
+                console.log('Student added:', data);
                 onSuccess();
                 onClose();
             } else {
-                alert(data.message);
+                alert(data.error);
             }
         } catch (error) {
-            console.error('Failed to add student:', error);
             alert('Failed to add student. Try again.');
         }
     };
@@ -113,20 +109,16 @@ const StudentModal = ({ isOpen, onClose, onSuccess }) => {
                         required
                     />
 
-                    <select
-                        name="batchID"
-                        className="batch-dropdown"
-                        value={studentData.batchID}
-                        onChange={handleChange}
-                        required
-                    >
+                    <select name="batchID" className="batch-dropdown" value={studentData.batchID} onChange={handleChange} required>
                         <option value="">Select Batch</option>
-                        {batches.map((batch, index) => (
-                            <option key={batch._id || index} value={batch._id}>
+                        {batches.map((batch) => (
+                            <option key={batch.batchName} value={batch.batchName}>
                                 {batch.batchName}
                             </option>
                         ))}
                     </select>
+
+
 
                     <input type="file" onChange={handleFileChange} />
 
