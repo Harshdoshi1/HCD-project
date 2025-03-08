@@ -40,8 +40,8 @@
     flex-grow: 1;
     flex-direction: row;
     justify-content: end;
-    margin-top: -11px;
-    width: 20%;
+    /* margin-top: -11px; */
+    width: 60%;
 }
 
 .assign-subject-container {
@@ -100,7 +100,7 @@
 .filter-group-assign-subject-one,
 .filter-group-assign-subject-two {
     display: flex;
-    gap: 10px;
+    gap: 5px;
 }
 
 .professional-filter {
