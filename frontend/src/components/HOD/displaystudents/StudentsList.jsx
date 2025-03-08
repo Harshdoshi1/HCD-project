@@ -7,65 +7,41 @@ import './StudentsList.css';
 
 const StudentsList = ({ onStudentSelect }) => {
     const [selectedBatch, setSelectedBatch] = useState('');
-    const [selectedSemester, setSelectedSemester] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [sortField, setSortField] = useState('name');
     const [sortDirection, setSortDirection] = useState('asc');
     const [isLoading, setIsLoading] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
-
-    const batches = ['2022-2026', '2023-2027', '2024-2028'];
-    const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
-    const students = [
-        {
-            id: 1,
-            name: 'Ritesh Scanchla',
-            enrollmentNo: '92200133001',
-            batch: '2022-2026',
-            email: 'ritesh.sanchala@marwadiuniversity.ac.in'
-        },
-        {
-            id: 2,
-            name: 'Harsh Doshi',
-            enrollmentNo: '92200133002',
-            batch: '2022-2026',
-            email: 'harsh.doshi@marwadiuniversity.ac.in'
-        },
-        {
-            id: 3,
-            name: 'Prashant Sarvaiya',
-            enrollmentNo: '92200133003',
-            batch: '2022-2026',
-            email: 'prashant.sarvaiya@marwadiuniversity.ac.in'
-        },
-        {
-            id: 5,
-            name: 'Shyama Vagashia',
-            enrollmentNo: '92200133005',
-            batch: '2022-2026',
-            email: 'shyama.vagashia@marwadiuniversity.ac.in'
-        },
-        {
-            id: 6,
-            name: 'Rishit Rathod',
-            enrollmentNo: '92100133027',
-            batch: '2021-2025',
-            email: 'rishit.rathod@marwadiuniversity.ac.in'
-        },
-    ];
+    const [students, setStudents] = useState([]);
+    const [batches, setBatches] = useState([]);
 
     useEffect(() => {
-        // Simulate loading data
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1200);
-
-        return () => clearTimeout(timer);
+        fetchStudents();
     }, []);
 
+    const fetchStudents = async () => {
+        try {
+            const response = await fetch('http://localhost:5001/api/students/getAllStudents');
+            if (!response.ok) {
+                throw new Error('Failed to fetch students');
+            }
+            const data = await response.json();
+            setStudents(data);
+            console.log(data);
+            
+            // Extract unique batches from students data
+            const uniqueBatches = [...new Set(data.map(student => student.Batch.batchName))];
+            setBatches(uniqueBatches);
+            
+            setIsLoading(false);
+        } catch (error) {
+            console.error('Error fetching students:', error);
+            setIsLoading(false);
+        }
+    };
+
     const batchesOptions = batches.map(batch => ({ value: batch, label: batch }));
-    const semestersOptions = semesters.map(sem => ({ value: sem, label: `Semester ${sem}` }));
 
     const toggleSort = (field) => {
         if (sortField === field) {
@@ -87,14 +63,13 @@ const StudentsList = ({ onStudentSelect }) => {
     });
 
     const filteredStudents = sortedStudents.filter(student => {
-        const batchMatch = !selectedBatch || student.batch === selectedBatch;
-        const semesterMatch = !selectedSemester || student.semester === parseInt(selectedSemester);
+        const batchMatch = !selectedBatch || student.Batch.batchName === selectedBatch;
         const searchMatch = !searchQuery ||
             student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            student.enrollmentNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            student.enrollmentNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
             student.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-        return batchMatch && semesterMatch && searchMatch;
+        return batchMatch && searchMatch;
     });
 
     const handleOpenModal = () => {
@@ -103,13 +78,13 @@ const StudentsList = ({ onStudentSelect }) => {
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
+        fetchStudents(); // Refresh the list after adding a new student
     };
 
     const toggleFilters = () => {
         setShowFilters(!showFilters);
     };
 
-    // Custom styles for react-select
     const customSelectStyles = {
         control: (provided) => ({
             ...provided,
@@ -141,11 +116,14 @@ const StudentsList = ({ onStudentSelect }) => {
         </button>
     );
 
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <div className="students-list-container">
             <div className="students-list-header">
                 <div className="header-left">
-
                     <button className="add-student-btn" onClick={handleOpenModal}>
                         <UserRoundPlus />
                         <span>Add Student</span>
@@ -170,9 +148,6 @@ const StudentsList = ({ onStudentSelect }) => {
                             className="search-input"
                         />
                     </div>
-
-
-
                 </div>
             </div>
 
@@ -190,24 +165,10 @@ const StudentsList = ({ onStudentSelect }) => {
                                 styles={customSelectStyles}
                             />
                         </div>
-
-                        <div className="filter-item">
-                            <label>Semester</label>
-                            <Select
-                                value={selectedSemester ? { value: selectedSemester, label: `Semester ${selectedSemester}` } : null}
-                                onChange={option => setSelectedSemester(option ? option.value : '')}
-                                options={semestersOptions}
-                                placeholder="Select Semester"
-                                isClearable
-                                isDisabled={!selectedBatch}
-                                styles={customSelectStyles}
-                            />
-                        </div>
                     </div>
                 </div>
             )}
-
-            <div className="students-data-container">
+ <div className="students-data-container">
                 {
 
                     filteredStudents.length > 0 ? (
@@ -245,7 +206,7 @@ const StudentsList = ({ onStudentSelect }) => {
                                     {filteredStudents.map(student => (
                                         <tr key={student.id} className="student-row">
                                             <td className="student-name-list">{student.name}</td>
-                                            <td>{student.enrollmentNo}</td>
+                                            <td>{student.enrollmentNumber}</td>
                                             <td className="batch-cell">
                                                 <span className="batch-badge">{student.batch}</span>
                                             </td>

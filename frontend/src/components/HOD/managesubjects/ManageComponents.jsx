@@ -57,19 +57,44 @@ const ManageComponents = ({ selectedSubject }) => {
             return;
         }
 
+        // Prepare the data to be sent to the API
+        const componentsData = {};
+        Object.entries(weightages).forEach(([component, data]) => {
+            if (data.enabled) {
+                componentsData[component] = {
+                    enabled: data.enabled,
+                    weightage: data.weightage,
+                    totalMarks: data.totalMarks
+                };
+            }
+        });
+
         try {
-            const response = await fetch('http://localhost:5001/api/users/addSubject', {
+            console.log('Sending data:', {
+                ...newSubject,
+                components: componentsData
+            });
+
+            // Call the new API endpoint to add subject with components
+            const response = await fetch('http://localhost:5001/api/components/addSubjectWithComponents', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...newSubject,
-                    components: weightages
+                    code: newSubject.code,
+                    name: newSubject.name,
+                    credits: newSubject.credits,
+                    type: newSubject.type,
+                    components: componentsData
                 })
             });
 
-            if (response.ok) {
-                alert('Subject added successfully!');
+            const data = await response.json();
+            console.log('API Response:', data);
 
+            if (response.ok) {
+                alert('Subject and components added successfully!');
+
+                // Reset form
                 setNewSubject({
                     code: '',
                     name: '',
@@ -85,11 +110,11 @@ const ManageComponents = ({ selectedSubject }) => {
                 });
                 setTotalWeightage(0);
             } else {
-                alert('Failed to add subject');
+                alert(`Failed to add subject: ${data.error || 'Unknown error'}`);
             }
         } catch (error) {
             console.error('Error adding subject:', error);
-            alert('Error adding subject');
+            alert(`Error adding subject: ${error.message}`);
         }
     };
 
@@ -182,10 +207,14 @@ const ManageComponents = ({ selectedSubject }) => {
                         ))}
                     </tbody>
                 </table>
+                <div className="weightage-summary">
+                    <p className={totalWeightage === 100 ? "weightage-ok" : "weightage-error"}>
+                        Total Weightage: {totalWeightage}% {totalWeightage !== 100 && "(Must be 100%)"}
+                    </p>
+                </div>
                 <button
                     className="save-weightage-btn"
                     onClick={handleSave}
-                    disabled={totalWeightage !== 100}
                 >
                     Add Subject
                 </button>
