@@ -1,0 +1,58 @@
+.navbar {
+    position: fixed;
+    top: 0px;
+    max-width: 78vw;
+    left: 20vw;
+    width: calc(100% - 220px);
+    background-color: white;
+    padding: 0.7rem;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin-bottom: 3px;
+    height: 5.5vh;
+    z-index: 1000;
+    margin-left: -5px;
+}
+
+.nav-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.nav-button {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: #33C3F0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-button:hover {
+    background-color: #D3E4FD;
+}
+
+
+.profile-img {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.profile-img {
+    width: 38px;
+    height: auto;
+    border-radius: 50%;
+}
+
+.profile-img:hover {
+    transform: scale(1.1);
+
+}

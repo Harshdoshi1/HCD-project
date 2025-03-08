@@ -1,0 +1,65 @@
+.update-grades-container {
+    padding: 2rem;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.update-grades-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    color: #33C3F0;
+}
+
+.update-grades-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    text-align: left;
+
+}
+
+.update-grades-form {
+    display: grid;
+    gap: 1.5rem;
+    max-width: 500px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #666;
+}
+
+.form-group select {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.form-group select:focus {
+    outline: none;
+    border-color: #33C3F0;
+}
+
+.submit-button {
+    padding: 1rem;
+    background-color: #33C3F0;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+    background-color: #0FA0CE;
+}

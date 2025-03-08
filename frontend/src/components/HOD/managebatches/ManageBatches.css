@@ -1,0 +1,325 @@
+.manage-batches-container {
+    max-width: 100%;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    background-color: #f8f8f8;
+}
+
+.header-section {
+    text-align: left;
+}
+
+.tab-button active {
+    border: 0px;
+    background-color: #ffffff;
+    color: #246ebc;
+}
+
+.manage-batch-header {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    margin-bottom: -1rem;
+    background-color: white;
+    padding: 0.7rem;
+    box-shadow: 0 5px 6px rgba(54, 116, 181, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+
+}
+
+
+.page-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+
+}
+
+.tab-container {
+    /* margin-bottom: 2rem; */
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tab-list {
+    display: flex;
+    /* background-color: #f9fafb; */
+    /* border-bottom: 1px solid #e5e7eb; */
+}
+
+.tab-button {
+
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.2rem;
+    border: 0px;
+    background: white;
+    color: #246ebc;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+/* .tab-button:hover {
+    background-color: #f3f4f6;
+}
+
+.tab-button.active {
+    color: #246ebc;
+    background-color: white;
+} */
+
+.tab-content {
+    padding: 1.1rem;
+}
+
+.card {
+    border-radius: 0.375rem;
+}
+
+.card-content {
+    background-color: white;
+    padding: 1rem;
+    box-shadow: 0 4px 6px rgba(54, 116, 181, 0.1);
+}
+
+.card-header {
+    margin-bottom: 1.1rem;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.card-description {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+.form-group label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #246ebc;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-input-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.date-input {
+    padding-right: 2.5rem;
+}
+
+.card-footer {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.button {
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.primary-button {
+    background-color: #246ebc;
+    color: white;
+}
+
+.primary-button:hover:not(:disabled) {
+    background-color: #246ebc;
+}
+
+.selected-batch-info {
+    background-color: #f9fafb;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-left: 4px solid #3b82f6;
+}
+
+.selected-batch-info p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+.error-message {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+}
+
+.batches-list-container {
+    padding: 1rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.batches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 1.1rem;
+}
+
+.batch-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(54, 116, 181, 0.1);
+
+}
+
+.batch-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.batch-card-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+}
+
+.batch-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+}
+
+.batch-subtitle {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.batch-card-content {
+    padding: 1.25rem;
+}
+
+.semester-list {
+    margin-top: 1rem;
+}
+
+.semester-list h4 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.semester-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.semester-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.85rem;
+}
+
+.semester-item:last-child {
+    border-bottom: none;
+}
+
+.semester-number {
+    font-weight: 500;
+}
+
+.semester-dates {
+    color: #6b7280;
+}
+
+.no-semesters {
+    color: #9ca3af;
+    font-style: italic;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+
+
+@media (max-width: 768px) {
+    .manage-batches-container {
+        padding: 1rem;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .batches-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tab-button {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+    }
+}
