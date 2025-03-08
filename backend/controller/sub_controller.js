@@ -1,7 +1,8 @@
 const UniqueSubDegree = require('../models/uniqueSubDegree');
 const UniqueSubDiploma = require('../models/uniqueSubDiploma');
-const { Batch } = require('../models/batch');
-const { Semester } = require('../models/semester');
+const Batch = require('../models/batch');
+const Semester = require('../models/semester');
+const AssignSubject = require('../models/assignSubject');
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
@@ -103,7 +104,75 @@ const getSubjects = async (req, res) => {
     }
 };
 
-module.exports = { addSubject, getSubjectByCode, deleteSubject, getSubjects };
+// Get all subjects from both degree and diploma
+const getAllSubjects = async (req, res) => {
+    try {
+        const { batch, semester } = req.query;
+        
+        // Get all unique subjects
+        const degreeSubjects = await UniqueSubDegree.findAll();
+        const diplomaSubjects = await UniqueSubDiploma.findAll();
+        
+        let allSubjects = [
+            ...degreeSubjects.map(subject => ({
+                ...subject.toJSON(),
+                courseType: 'degree'
+            })),
+            ...diplomaSubjects.map(subject => ({
+                ...subject.toJSON(),
+                courseType: 'diploma'
+            }))
+        ];
 
+        // If batch and semester are specified, filter out assigned subjects
+        if (batch !== 'all' && semester !== 'all') {
+            try {
+                // First get the batch ID
+                const batchRecord = await Batch.findOne({
+                    where: { batchName: batch }
+                });
 
-module.exports = router;
+                if (!batchRecord) {
+                    console.log('Batch not found:', batch);
+                    return res.json(allSubjects); // Return all subjects if batch not found
+                }
+
+                // Then get the semester ID
+                const semesterRecord = await Semester.findOne({
+                    where: { 
+                        batchId: batchRecord.id,
+                        semesterNumber: parseInt(semester)
+                    }
+                });
+
+                if (!semesterRecord) {
+                    console.log('Semester not found:', semester, 'for batch:', batch);
+                    return res.json(allSubjects); // Return all subjects if semester not found
+                }
+
+                // Get assigned subjects for this batch and semester
+                const assignedSubjects = await AssignSubject.findAll({
+                    where: {
+                        batchId: batchRecord.id,
+                        semesterId: semesterRecord.id
+                    },
+                    attributes: ['subjectCode']
+                });
+
+                // Filter out already assigned subjects
+                const assignedSubjectCodes = assignedSubjects.map(s => s.subjectCode);
+                allSubjects = allSubjects.filter(subject => !assignedSubjectCodes.includes(subject.sub_code));
+            } catch (error) {
+                console.error('Error filtering subjects:', error);
+                return res.json(allSubjects); // Return all subjects in case of error
+            }
+        }
+
+        res.json(allSubjects);
+    } catch (error) {
+        console.error('Error in getAllSubjects:', error);
+        res.status(500).json({ error: 'Failed to fetch subjects', details: error.message });
+    }
+};
+
+module.exports = { addSubject, getSubjectByCode, deleteSubject, getSubjects, getAllSubjects };

@@ -226,4 +226,39 @@
     background: #45a049;
 }
 
+.filter-button,
+.clear-filter-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+}
+
+.filter-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+}
+
+.filter-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.filter-button:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+.clear-filter-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+}
+
+.clear-filter-button:hover {
+    background-color: #da190b;
+}
+
 /* uihreref */
