@@ -1,14 +1,39 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
+const Batch = require('./batch');
 
-const StudentSchema = new mongoose.Schema({
-    student_id: { type: Number, required: true, unique: true },
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    phone: { type: String },
-    batchId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Batch, key: 'id' } },
-    parent_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Parent' }
-}, { timestamps: true });
 
-const Student = mongoose.model('Student', StudentSchema);
+const Student =  sequelize.define('Student', {
+    id: { 
+        type: DataTypes.INTEGER, 
+        autoIncrement: true, 
+        primaryKey: true 
+    },
+    name: { 
+        type: DataTypes.STRING, 
+        allowNull: false 
+    },
+    email: { 
+        type: DataTypes.STRING, 
+        allowNull: false 
+    },
+    batchId: { 
+        type: DataTypes.INTEGER, 
+        allowNull: false,
+        references: { model: 'Batches', key: 'id' }
+    },
+    enrollmentNumber: { 
+        type: DataTypes.STRING, 
+        allowNull: false 
+    }
+}, {   
+    tableName: 'Students',
+    timestamps: true  
+});
+
+//associations
+
+Student.belongsTo(Batch, { foreignKey: 'batchId' });
+
 
 module.exports = Student;
