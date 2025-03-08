@@ -10,6 +10,9 @@ const Batch = sequelize.define('Batch', {
         type: DataTypes.ENUM('Degree', 'Diploma'),
         allowNull: false
     }
-}, { timestamps: false });
+}, { 
+    tableName: 'Batches',
+    timestamps: false 
+});
 
 module.exports = Batch;
