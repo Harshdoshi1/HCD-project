@@ -19,7 +19,7 @@
 .students-list-container {
     max-width: 100%;
     margin: 0 auto;
-    padding: 0.7rem;
+    /* padding: 0.7rem; */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     color: var(--text-dark);
     border-radius: 12px;
@@ -32,11 +32,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+    padding: 1rem;
+    box-shadow: 0 5px 6px rgba(54, 116, 181, 0.1);
     flex-wrap: wrap;
     gap: 1rem;
+    margin-top: -0.5rem;
+    height: 3rem;
+
 }
 
 .header-left {
@@ -79,18 +82,26 @@
 
 .search-container {
     position: relative;
+    width: 250px;
+    flex-shrink: 0;
 }
 
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3674B5;
+}
 
 .search-input {
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid var(--border-color);
+    width: 80%;
+    padding: 12px 12px 12px 40px;
+    border: 2px solid #578FCA;
     border-radius: 8px;
-    font-size: 0.95rem;
-    width: 250px;
-    color: var(--text-dark);
-    background-color: var(--background-white);
-    transition: var(--transition);
+    font-size: 1rem;
+    background-color: white;
+    transition: all 0.3s ease;
 }
 
 .search-input:focus {
@@ -107,13 +118,16 @@
 .add-student-btn {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1.25rem;
+    gap: 0.5rem;
+    padding: 0.8rem 1.2rem;
+    border: 0px;
     border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.95rem;
+    background: white;
+    color: #3674B5;
+    font-weight: 600;
     cursor: pointer;
-    transition: var(--transition);
-    border: none;
+    transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
 .filter-toggle-btn {
@@ -138,9 +152,10 @@
     color: #3674B5;
 }
 
+/* 
 .add-student-btn:hover {
     background-color: var(--accent-color);
-}
+} */
 
 .filter-toggle-btn svg,
 .add-student-btn svg {

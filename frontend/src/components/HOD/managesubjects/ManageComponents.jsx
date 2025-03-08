@@ -6,7 +6,7 @@ const ManageComponents = ({ selectedSubject }) => {
         code: '',
         name: '',
         credits: '',
-        type: 'central' // central or departmental
+        type: 'central'
     });
 
     const [totalWeightage, setTotalWeightage] = useState(0);
@@ -69,7 +69,7 @@ const ManageComponents = ({ selectedSubject }) => {
 
             if (response.ok) {
                 alert('Subject added successfully!');
-                // Reset form
+
                 setNewSubject({
                     code: '',
                     name: '',

@@ -19,9 +19,9 @@
 
 .assigned-subjects-container-asff {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    max-width: 1280px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 40px 24px;
+    /* padding: 40px 24px; */
     color: var(--primary-text);
 }
 

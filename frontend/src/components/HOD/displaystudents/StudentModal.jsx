@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
+
+
+import React, { useState, useEffect } from 'react';
 import './StudentModal.css';
 
 const StudentModal = ({ isOpen, onClose }) => {
     const [studentName, setStudentName] = useState('');
-    const [studentAge, setStudentAge] = useState('');
     const [studentEmail, setStudentEmail] = useState('');
-    const [studentAddress, setStudentAddress] = useState('');
-    const [studentPhone, setStudentPhone] = useState('');
+    const [studentEnrollment, setStudentEnrollment] = useState('');
+    const [studentBatchID, setStudentBatchID] = useState('');
     const [file, setFile] = useState(null);
-    const [studentUsername, setStudentUsername] = useState('');
-    const [studentPassword, setStudentPassword] = useState('');
-    const [studentDepartment, setStudentDepartment] = useState('');
-    const [studentSemester, setStudentSemester] = useState('');
+    const [batches, setBatches] = useState([]);
+
+    useEffect(() => {
+        const fetchBatches = async () => {
+            try {
+                const response = await fetch("http://localhost:5001/api/users/getAllBatches");
+                if (!response.ok) throw new Error("Failed to fetch batches");
+                const data = await response.json();
+                setBatches(data);
+            } catch (error) {
+                console.error("Error fetching batches:", error);
+            }
+        };
+
+        fetchBatches();
+    }, []);
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -20,14 +33,9 @@ const StudentModal = ({ isOpen, onClose }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Student Name:', studentName);
-        console.log('Student Age:', studentAge);
         console.log('Student Email:', studentEmail);
-        console.log('Student Address:', studentAddress);
-        console.log('Student Phone:', studentPhone);
-        console.log('Student Username:', studentUsername);
-        console.log('Student Password:', studentPassword);
-        console.log('Student Department:', studentDepartment);
-        console.log('Student Semester:', studentSemester);
+        console.log('Student Enrollment number:', studentEnrollment);
+        console.log('Student Batch ID:', studentBatchID);
         console.log('File:', file);
         onClose();
     };
@@ -40,17 +48,30 @@ const StudentModal = ({ isOpen, onClose }) => {
                 <h2>Add Student</h2>
                 <form onSubmit={handleSubmit}>
                     <input type="text" placeholder="Student Name" value={studentName} onChange={(e) => setStudentName(e.target.value)} required />
-                    <input type="number" placeholder="Student Age" value={studentAge} onChange={(e) => setStudentAge(e.target.value)} required />
                     <input type="email" placeholder="Student Email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} required />
-                    <input type="text" placeholder="Student Address" value={studentAddress} onChange={(e) => setStudentAddress(e.target.value)} required />
-                    <input type="tel" placeholder="Student Phone" value={studentPhone} onChange={(e) => setStudentPhone(e.target.value)} required />
-                    <input type="text" placeholder="Student Username" value={studentUsername} onChange={(e) => setStudentUsername(e.target.value)} required />
-                    <input type="password" placeholder="Student Password" value={studentPassword} onChange={(e) => setStudentPassword(e.target.value)} required />
-                    <input type="text" placeholder="Student Department" value={studentDepartment} onChange={(e) => setStudentDepartment(e.target.value)} required />
-                    <input type="number" placeholder="Student Semester" value={studentSemester} onChange={(e) => setStudentSemester(e.target.value)} required />
+                    <input type="number" placeholder="Enrollment Number" value={studentEnrollment} onChange={(e) => setStudentEnrollment(e.target.value)} required />
+
+                    {/* Batch ID Dropdown */}
+                    <select
+                        className="batch-dropdown"
+                        value={studentBatchID}
+                        onChange={(e) => setStudentBatchID(e.target.value)}
+                        required
+                    >
+                        <option value="">Select Batch</option>
+                        {batches.map((batch, index) => (
+                            <option key={batch._id || index} value={batch.batchName}>
+                                {batch.batchName}
+                            </option>
+                        ))}
+                    </select>
+
                     <input type="file" onChange={handleFileChange} />
-                    <button type="submit">Add Student</button>
-                    <button type="button" onClick={onClose}>Close</button>
+                    <div className="actions-add-student-model">
+                        <button type="button" onClick={onClose}>Close</button>
+                        <button type="submit">Add Student</button>
+
+                    </div>
                 </form>
             </div>
         </div>

@@ -110,26 +110,26 @@ const ManageBatches = () => {
     };
 
     return (
+
         <div className="manage-batches-container">
-            <div className="header-section">
-                <h4 className="page-title">Batch Management</h4>
+
+
+            <div className="manage-batch-header">
+                <button
+                    className={`tab-button ${activeTab === 'batch' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('batch')}
+                >
+                    Add New Batch
+                </button>
+                <button
+                    className={`tab-button ${activeTab === 'semester' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('semester')}
+                >
+                    Add Semester
+                </button>
             </div>
 
             <div className="tab-container">
-                <div className="tab-list">
-                    <button
-                        className={`tab-button ${activeTab === 'batch' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('batch')}
-                    >
-                        Add New Batch
-                    </button>
-                    <button
-                        className={`tab-button ${activeTab === 'semester' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('semester')}
-                    >
-                        Add Semester
-                    </button>
-                </div>
 
                 <div className="tab-content">
                     {activeTab === 'batch' && (
@@ -296,7 +296,6 @@ const ManageBatches = () => {
                             <div key={batch.batchName} className="batch-card">
                                 <div className="batch-card-header">
                                     <h3 className="batch-title">{batch.batchName}</h3>
-                                    {/* <p className="batch-subtitle">{batch.courseType}</p> */}
                                 </div>
                                 <div className="batch-card-content">
                                     <p><strong>Duration:</strong> {formatDate(batch.batchStart)} - {formatDate(batch.batchEnd)}</p>
