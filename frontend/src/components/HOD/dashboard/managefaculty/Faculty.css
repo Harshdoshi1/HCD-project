@@ -79,7 +79,7 @@
     gap: 0.5rem;
     padding: 0.8rem 1.2rem;
     border: 0px;
-    border-radius: 8px;
+    /* border-radius: 8px; */
     background: white;
     color: #3674B5;
     font-weight: 600;
@@ -95,6 +95,7 @@
 
 .faculty-action-btn.active {
     color: #246ebc;
+    border-bottom: 1px groove #246ebc;
 }
 
 
