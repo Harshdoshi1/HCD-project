@@ -2,49 +2,55 @@ const Student = require('../models/students');
 const Batch = require('../models/batch');
 
 // Create a new student
-// exports.createStudent = async (req, res) => {
-//     try {
-//         const { name, email, batchID, enrollmentNumber } = req.body;
-//         //fetch batch id from batch name 
-//         const originalbatchId = await Batch.findOne({ where: { batchName: batchID } });
-//         const student = await Student.create({ name, email, originalbatchId, enrollmentNumber });
-//         res.status(201).json(student);
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
 exports.createStudent = async (req, res) => {
     try {
-        const { name, email, batchID, enrollmentNumber } = req.body;
+        const { name, email, batchID, enrollment } = req.body;
 
-        console.log("Received batchID:", batchID);
-        console.log("Received name:", name);
-        console.log("Received enrollmentNumber:", enrollmentNumber);
-        console.log("Received email:", email);
-
+        // Input validation
+        if (!name || !email || !batchID || !enrollment) {
+            console.error("Missing required fields:", { name, email, batchID, enrollment });
+            return res.status(400).json({
+                error: "All fields are required",
+                received: { name, email, batchID, enrollment }
+            });
+        }
 
         // Validate batch ID
-        const batch = await Batch.findOne({ where: { batchName: batchID } });
+        const batch = await Batch.findOne({
+            where: { batchName: batchID },
+            attributes: ['id', 'batchName']
+        });
 
         if (!batch) {
-            return res.status(400).json({ error: "Batch not found" });
+            console.error("Batch not found:", batchID);
+            return res.status(400).json({
+                error: "Batch not found",
+                receivedBatchName: batchID
+            });
         }
-        const batchId = batch.id; // ✅ Extract batch ID
-        console.log("Extracted batch ID:", batchId);
+
+        console.log("Found batch:", batch.toJSON());
+
         // Create student
         const student = await Student.create({
             name,
             email,
-            batchId, // Store the correct batch ID
-            enrollmentNumber
+            batchId: batch.id,
+            enrollmentNumber: enrollment
         });
 
+        console.log("Created student:", student.toJSON());
         res.status(201).json(student);
     } catch (error) {
         console.error("Error creating student:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            type: error.name,
+            details: error.errors?.map(e => e.message) || []
+        });
     }
 };
+
 // Get all students
 exports.getAllStudents = async (req, res) => {
     try {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import './ManageBatches.css';
 
@@ -139,19 +138,19 @@ const ManageBatches = () => {
                                 <p className="card-description">Add a new batch for your academic program</p>
                             </div>
                             <div className="card-content form-container">
-                                <div className="form-group">
-                                    <label htmlFor="batchName">Batch Name</label>
-                                    <input
-                                        id="batchName"
-                                        className="input"
-                                        placeholder="e.g., BTech 2023-27"
-                                        value={newBatch.batchName}
-                                        onChange={(e) => setNewBatch({ ...newBatch, batchName: e.target.value })}
-                                    />
-                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                    <div className="form-group" style={{ flex: '1' }}>
+                                        <label htmlFor="batchName">Batch Name</label>
+                                        <input
+                                            id="batchName"
+                                            className="input"
+                                            placeholder="e.g., BTech 2023-27"
+                                            value={newBatch.batchName}
+                                            onChange={(e) => setNewBatch({ ...newBatch, batchName: e.target.value })}
+                                        />
+                                    </div>
 
-                                <div className="form-row">
-                                    <div className="form-group">
+                                    <div className="form-group" style={{ flex: '1' }}>
                                         <label htmlFor="batchStart">Start Date</label>
                                         <div className="date-input-wrapper">
                                             <input
@@ -164,7 +163,7 @@ const ManageBatches = () => {
                                         </div>
                                     </div>
 
-                                    <div className="form-group">
+                                    <div className="form-group" style={{ flex: '1' }}>
                                         <label htmlFor="batchEnd">End Date</label>
                                         <div className="date-input-wrapper">
                                             <input
@@ -176,28 +175,30 @@ const ManageBatches = () => {
                                             />
                                         </div>
                                     </div>
+
+                                    <div className="form-group" style={{ flex: '1' }}>
+                                        <label htmlFor="courseType">Course Type</label>
+                                        <input
+                                            id="courseType"
+                                            className="input"
+                                            placeholder="e.g., BTech, MTech, PhD"
+                                            value={newBatch.courseType}
+                                            onChange={(e) => setNewBatch({ ...newBatch, courseType: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="card-footer">
+                                        <button
+                                            onClick={handleAddBatch}
+                                            disabled={isLoading}
+                                            className="button primary-button"
+                                        >
+                                            Add Batch
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="form-group">
-                                    <label htmlFor="courseType">Course Type</label>
-                                    <input
-                                        id="courseType"
-                                        className="input"
-                                        placeholder="e.g., BTech, MTech, PhD"
-                                        value={newBatch.courseType}
-                                        onChange={(e) => setNewBatch({ ...newBatch, courseType: e.target.value })}
-                                    />
-                                </div>
                             </div>
-                            <div className="card-footer">
-                                <button
-                                    onClick={handleAddBatch}
-                                    disabled={isLoading}
-                                    className="button primary-button"
-                                >
-                                    Add Batch
-                                </button>
-                            </div>
+
                         </div>
                     )}
 
@@ -208,44 +209,20 @@ const ManageBatches = () => {
                                 <p className="card-description">Create a new semester for an existing batch</p>
                             </div>
                             <div className="card-content form-container">
-                                <div className="form-group">
-                                    <label htmlFor="batchSelect">Select Batch</label>
-                                    <select
-                                        id="batchSelect"
-                                        className="select"
-                                        onChange={(e) => setSelectedBatch(batches.find(batch => batch.batchName === e.target.value) || null)}
-                                    >
-                                        <option value="">Select a batch</option>
-                                        {batches.map(batch => (
-                                            <option key={batch.batchName} value={batch.batchName}>
-                                                {batch.batchName} ({batch.courseType})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {selectedBatch && (
-                                    <div className="selected-batch-info">
-                                        <p><strong>Selected Batch:</strong> {selectedBatch.batchName}</p>
-                                        <p><strong>Course:</strong> {selectedBatch.courseType}</p>
-                                        <p><strong>Duration:</strong> {formatDate(selectedBatch.batchStart)} to {formatDate(selectedBatch.batchEnd)}</p>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                    <div className="form-group" style={{ flex: '1' }}>
+                                        <label htmlFor="semesterNumber">Semester Number</label>
+                                        <input
+                                            id="semesterNumber"
+                                            className="input"
+                                            type="number"
+                                            placeholder="e.g., 1, 2, 3"
+                                            value={semesterToAdd.semesterNumber}
+                                            onChange={(e) => setSemesterToAdd({ ...semesterToAdd, semesterNumber: e.target.value })}
+                                        />
                                     </div>
-                                )}
 
-                                <div className="form-group">
-                                    <label htmlFor="semesterNumber">Semester Number</label>
-                                    <input
-                                        id="semesterNumber"
-                                        className="input"
-                                        type="number"
-                                        placeholder="e.g., 1, 2, 3"
-                                        value={semesterToAdd.semesterNumber}
-                                        onChange={(e) => setSemesterToAdd({ ...semesterToAdd, semesterNumber: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group">
+                                    <div className="form-group" style={{ flex: '1' }}>
                                         <label htmlFor="semesterStart">Start Date</label>
                                         <div className="date-input-wrapper">
                                             <input
@@ -258,7 +235,7 @@ const ManageBatches = () => {
                                         </div>
                                     </div>
 
-                                    <div className="form-group">
+                                    <div className="form-group" style={{ flex: '1' }}>
                                         <label htmlFor="semesterEnd">End Date</label>
                                         <div className="date-input-wrapper">
                                             <input
@@ -270,16 +247,33 @@ const ManageBatches = () => {
                                             />
                                         </div>
                                     </div>
+
+                                    <div className="form-group" style={{ flex: '1' }}>
+                                        <label htmlFor="batchSelect">Select Batch</label>
+                                        <select
+                                            id="batchSelect"
+                                            className="select"
+                                            onChange={(e) => setSelectedBatch(batches.find(batch => batch.batchName === e.target.value) || null)}
+                                        >
+                                            <option value="">Select a batch</option>
+                                            {batches.map(batch => (
+                                                <option key={batch.batchName} value={batch.batchName}>
+                                                    {batch.batchName} ({batch.courseType})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="card-footer">
+                                        <button
+                                            onClick={handleAddSemester}
+                                            disabled={isLoading}
+                                            style={{ flex: '0 0 auto' }}
+                                            className="button primary-button"
+                                        >
+                                            Add Semester
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="card-footer">
-                                <button
-                                    onClick={handleAddSemester}
-                                    disabled={isLoading}
-                                    className="button primary-button"
-                                >
-                                    Add Semester
-                                </button>
                             </div>
                         </div>
                     )}
