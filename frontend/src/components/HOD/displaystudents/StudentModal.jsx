@@ -1,4 +1,7 @@
+
+
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import './StudentModal.css';
 
 const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
@@ -6,12 +9,11 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
         name: '',
         email: '',
         enrollment: '',
-        batchID: '', // Should store batch _id, not batchName
+        batchID: '',
     });
-
     const [batches, setBatches] = useState([]);
+    const [selectedFile, setSelectedFile] = useState(null);
 
-    // Fetch batches only when the modal opens
     useEffect(() => {
         if (isOpen) {
             const fetchBatches = async () => {
@@ -19,23 +21,18 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                     const response = await fetch("http://localhost:5001/api/users/getAllBatches");
                     if (!response.ok) throw new Error("Failed to fetch batches");
                     const data = await response.json();
-                    console.log("Fetched Batches:", data);
 
                     if (!Array.isArray(data)) {
                         console.error("Expected array of batches, got:", typeof data);
                         return;
                     }
 
-                    // Map the batches to a consistent format
-                    const formattedBatches = data.map(batch => ({
+                    setBatches(data.map(batch => ({
                         id: batch.id,
                         batchName: batch.batchName,
                         batchStart: batch.batchStart,
                         batchEnd: batch.batchEnd
-                    }));
-
-                    console.log("Formatted batches:", formattedBatches);
-                    setBatches(formattedBatches);
+                    })));
                 } catch (error) {
                     console.error("Error fetching batches:", error);
                 }
@@ -45,29 +42,36 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
         }
     }, [isOpen]);
 
-    // Handle form field changes
     const handleChange = (e) => {
         const { name, value } = e.target;
-        console.log(`Updated ${name}:`, value);
         setStudentData((prev) => ({
             ...prev,
             [name]: value,
         }));
     };
 
-    // Handle form submission
+    const handleFile = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setSelectedFile(file);
+
+        const reader = new FileReader();
+        reader.readAsBinaryString(file);
+        reader.onload = (event) => {
+            const binaryString = event.target.result;
+            const workbook = XLSX.read(binaryString, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const parsedData = XLSX.utils.sheet_to_json(sheet);
+            console.log("Excel Data:", parsedData);
+        };
+        reader.onerror = (error) => console.error("Error reading file:", error);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        console.log("Current batches:", batches);
-        console.log("Submitting Student Data:", studentData);
-
-        // Find the selected batch using id
         const selectedBatch = batches.find(b => b.id === parseInt(studentData.batchID));
-        console.log("Selected Batch:", selectedBatch);
-
         if (!selectedBatch) {
-            console.error("No batch found with ID:", studentData.batchID);
             alert('Please select a valid batch');
             return;
         }
@@ -79,7 +83,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                     name: studentData.name,
                     email: studentData.email,
                     enrollment: studentData.enrollment,
-                    batchID: selectedBatch.batchName // Send batchName since backend expects it
+                    batchID: selectedBatch.batchName
                 }),
                 headers: {
                     'Content-Type': 'application/json'
@@ -87,17 +91,8 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
             });
 
             const data = await response.json();
-            console.log("Server Response:", data);
-
             if (response.ok) {
-                console.log('Student added successfully:', data);
-
-                if (typeof onSuccess === "function") {
-                    onSuccess();
-                } else {
-                    console.error("onSuccess is not a function:", onSuccess);
-                }
-
+                onSuccess();
                 onClose();
             } else {
                 alert(data.message);
@@ -139,7 +134,6 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                         onChange={handleChange}
                         required
                     />
-
                     <select
                         name="batchID"
                         className="batch-dropdown"
@@ -154,6 +148,9 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                             </option>
                         ))}
                     </select>
+
+                    <input type="file" accept=".xls,.xlsx" onChange={handleFile} />
+                    {selectedFile && <p>Selected file: {selectedFile.name}</p>}
 
                     <div className="actions-add-student-model">
                         <button type="button" onClick={onClose}>Cancel</button>

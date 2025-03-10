@@ -51,6 +51,56 @@ exports.createStudent = async (req, res) => {
     }
 };
 
+// Create multiple students
+exports.createStudents = async (req, res) => {
+    try {
+        const students = req.body.students; // Expecting an array of student objects
+
+        if (!Array.isArray(students) || students.length === 0) {
+            return res.status(400).json({ error: "Invalid or empty students array" });
+        }
+
+        // Get unique batch names from input
+        const batchNames = [...new Set(students.map(s => s.batchID))];
+
+        // Fetch batch IDs for provided batch names
+        const batches = await Batch.findAll({
+            where: { batchName: batchNames },
+            attributes: ['id', 'batchName']
+        });
+
+        const batchMap = batches.reduce((acc, batch) => {
+            acc[batch.batchName] = batch.id;
+            return acc;
+        }, {});
+
+        // Check if all batch names exist
+        const invalidBatches = batchNames.filter(name => !batchMap[name]);
+        if (invalidBatches.length > 0) {
+            return res.status(400).json({ error: "Invalid batch names", invalidBatches });
+        }
+
+        // Prepare student data with correct batch IDs
+        const studentData = students.map(({ name, email, batchID, enrollment }) => ({
+            name,
+            email,
+            batchId: batchMap[batchID], // Replace batch name with batch ID
+            enrollmentNumber: enrollment
+        }));
+
+        // Bulk insert students
+        const createdStudents = await Student.bulkCreate(studentData);
+
+        res.status(201).json({ message: "Students added successfully", students: createdStudents });
+    } catch (error) {
+        console.error("Error creating students:", error);
+        res.status(500).json({
+            error: error.message,
+            type: error.name,
+            details: error.errors?.map(e => e.message) || []
+        });
+    }
+};
 // Get all students
 exports.getAllStudents = async (req, res) => {
     try {
