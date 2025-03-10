@@ -13,13 +13,13 @@ const router = express.Router();
 
 // User Routes
 router.post('/createStudent', createStudent);
-router.post('/createStudents', createStudents);
+// router.post('/createStudents', createStudents);
 
 router.get('/getStudentById', getStudentById);
 router.get('/getAllStudents', getAllStudents);
 router.put('/updateStudent', updateStudent);
 router.delete('/deleteStudent', deleteStudent);
-
+router.post('/bulkUpload', createStudents);
 // router.post('/createStudent', studentController.createStudent);
 
 
