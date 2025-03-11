@@ -34,6 +34,11 @@
     margin-top: 10px;
 }
 
+.file-upload-add-student {
+    display: flex;
+    justify-content: end;
+}
+
 .toggle-buttons {
     margin-bottom: 10px;
 
