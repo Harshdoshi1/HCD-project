@@ -8,15 +8,14 @@ const facultyRoutes = require('./routes/faculty_routes');
 const componentRoutes = require('./routes/component_routes');
 const studentRoutes = require('./routes/student_routes');
 const subRoutes = require('./routes/sub_routes');
-// const batchRoutes = require('./routes/batchRoutes');
-// const semesterRoutes = require('./routes/semesterRoutes');
-// const facultyRoutes = require('./routes/facultyRoutes');
+
+const gettedmarksController = require("./controller/gettedmarksController");
 
 const app = express();
 
 // ✅ Enable CORS
 app.use(cors({
-    origin: 'http://localhost:5173', // Adjust based on frontend URL
+    origin: 'http://localhost:5173', // Updated to match Vite's default port
     methods: 'GET,POST,PUT,DELETE',
     credentials: true
 }));
@@ -30,13 +29,10 @@ app.use('/api/faculties', facultyRoutes);
 app.use('/api/components', componentRoutes);
 app.use('/api/students', studentRoutes)
 app.use('/api/subjects', subRoutes);
-// app.use('/api/semesters', semesterRoutes);
-// app.use('/api/faculties', facultyRoutes);
 
-// ✅ Sync Database and Start Server
+app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
+app.post("/api/marks/update/:studentId/:subjectId", gettedmarksController.updateStudentMarks);
+
+// ✅ Start Server without DB sync for testing
 const PORT = process.env.PORT || 5001;
-syncDB().then(() => {
-    app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-}).catch(err => {
-    console.error("❌ Database sync error:", err);
-});
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
