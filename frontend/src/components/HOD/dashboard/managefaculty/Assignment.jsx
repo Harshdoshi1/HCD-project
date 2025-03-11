@@ -62,12 +62,35 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         if (!assignment.batch || !assignment.semester) return;
         const fetchSubjects = async () => {
             try {
+                console.log('Fetching subjects with:', { 
+                    batch: assignment.batch.value, 
+                    semester: assignment.semester.value 
+                });
                 const response = await fetch(`http://localhost:5001/api/users/getSubjects/${assignment.batch.value}/${assignment.semester.value}`);
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
-                setSubjects(data.map(subject => ({ value: subject.subjectName, label: subject.subjectName })));
+                console.log('Subject API Response:', data);
+
+                // Extract subjects from the response
+                const subjectList = data.subjects || [];
+                const uniqueSubjects = data.uniqueSubjects || [];
+
+                // Map subjects with additional info from uniqueSubjects
+                const mappedSubjects = subjectList.map(subject => {
+                    const uniqueInfo = uniqueSubjects.find(u => u.sub_name === subject.subjectName);
+                    return {
+                        value: subject.subjectName,
+                        label: uniqueInfo ? 
+                            `${subject.subjectName} (${uniqueInfo.sub_code})` : 
+                            subject.subjectName
+                    };
+                });
+
+                console.log('Mapped subjects:', mappedSubjects);
+                setSubjects(mappedSubjects);
             } catch (error) {
                 console.error("Error fetching subjects:", error);
+                setSubjects([]);
             }
         };
         fetchSubjects();
