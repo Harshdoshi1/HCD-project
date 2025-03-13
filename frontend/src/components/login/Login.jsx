@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import './Login.css';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { PulseLoader } from 'react-spinners';
-
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -17,7 +15,7 @@ function Login() {
         e.preventDefault();
         setError('');
         setIsLoading(true);
-
+    
         try {
             const response = await fetch('http://localhost:5001/api/users/login', {
                 method: 'POST',
@@ -26,25 +24,52 @@ function Login() {
                 },
                 body: JSON.stringify({ email, password }),
             });
-
+    
             const data = await response.json();
-
+            console.log("data",data);
+    
             if (!response.ok) {
                 throw new Error(data.message || 'Login failed');
             }
-
-            // Store the token and user data in local storage
+    
+            // Explicitly remove old local storage items before storing new ones
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('email'); 
+    
+            // Store new values
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('email', data.user.email);
+    
+            // Redirect based on role
+            console.log("fdfvxvdfdgfd");
 
-            // Redirect to the dashboard
-            window.location.href = '/dashboardHOD';
+            console.log("fdfdfd",data.user.role);
+            console.log("fdfvxvdfdgfd");
+
+            // if (data.user.role === 'HOD') {
+            //     window.location.href = '/dashboardHOD';
+            //     console.log("fdfvxvdfdgfd");
+
+            //     console.log("fdfdfd",data.user.role);
+            //     console.log("fdfvxvdfdgfd");
+    
+            // } else if (data.user.role === 'Faculty') {
+            //     window.location.href = '/dashboardFaculty';
+            //     console.log("fdfvxvdfdgfd");
+
+            //     console.log("fdfdfd",data.user.role);
+            //     console.log("fdfvxvdfdgfd");
+    
+            // }
         } catch (error) {
             setError(error.message);
         } finally {
             setIsLoading(false);
         }
     };
+    
 
     return (
         <div className="login-container">
