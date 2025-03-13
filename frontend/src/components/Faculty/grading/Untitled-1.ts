@@ -1,204 +1,126 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { Users, BookOpen, Edit2, MessageCircle, ChevronDown, ChevronUp, Save, Search, Star, BookCopy, Loader2 } from "lucide-react";
 import './StudentGrades.css';
 
 const StudentGrades = () => {
-    const [batches, setBatches] = useState([]);
-    const [semesters, setSemesters] = useState([]);
-    const [subjects, setSubjects] = useState([]);
-    const [selectedBatch, setSelectedBatch] = useState(null);
-    const [selectedSemester, setSelectedSemester] = useState(null);
-    const [selectedSubject, setSelectedSubject] = useState(null);
+    const [batch, setBatch] = useState("");
+    const [type, setType] = useState("");
+    const [semester, setSemester] = useState("");
+    const [selectedSubject, setSelectedSubject] = useState("");
     const [expandedStudent, setExpandedStudent] = useState(null);
     const [editingGrades, setEditingGrades] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [studentsData, setStudentsData] = useState([]);
     const [ratings, setRatings] = useState({});
-    const [error, setError] = useState(null);
 
-    // Fetch batches on component mount
+    // Mock subjects data
+    const subjects = [
+        { id: "CS201", name: "Data Structures" },
+        { id: "CS301", name: "Database Systems" },
+        { id: "CS401", name: "Computer Networks" },
+        { id: "CS501", name: "Operating Systems" },
+        { id: "CS601", name: "Machine Learning" }
+    ];
+
+    // Initialize with empty grades
+    const emptyGrades = {
+        ESE: "",
+        TW: "",
+        CSE: "",
+        IA: "",
+        Viva: ""
+    };
+
+    // Simulating API call to fetch students
     useEffect(() => {
-        const fetchBatches = async () => {
+        if (selectedSubject) {
             setLoading(true);
-            try {
-                const response = await fetch("http://localhost:5001/api/users/getAllBatches");
-                if (!response.ok) throw new Error("Failed to fetch batches");
-                const data = await response.json();
-                setBatches(data.map(batch => ({
-                    id: batch.id,
-                    batchName: batch.batchName
-                })));
-            } catch (error) {
-                console.error("Error fetching batches:", error);
-                setError("Failed to fetch batches");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchBatches();
-    }, []);
 
-    // Fetch semesters when batch changes
-    useEffect(() => {
-        if (!selectedBatch) return;
-        const fetchSemesters = async () => {
-            setLoading(true);
-            try {
-                const response = await fetch(`http://localhost:5001/api/users/getSemestersByBatch/${selectedBatch.batchName}`);
-                if (!response.ok) throw new Error("Failed to fetch semesters");
-                const data = await response.json();
-                setSemesters(data.map(semester => ({
-                    id: semester.id,
-                    semesterNumber: semester.semesterNumber
-                })));
-            } catch (error) {
-                console.error("Error fetching semesters:", error);
-                setError("Failed to fetch semesters");
-                setSemesters([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchSemesters();
-    }, [selectedBatch]);
-
-    // Fetch subjects when semester changes
-    useEffect(() => {
-        if (!selectedBatch || !selectedSemester) return;
-        const fetchSubjects = async () => {
-            setLoading(true);
-            try {
-                const response = await fetch(`http://localhost:5001/api/users/getSubjects/${selectedBatch.batchName}/${selectedSemester.semesterNumber}`);
-                if (!response.ok) throw new Error("Failed to fetch subjects");
-                const data = await response.json();
-                console.log('Subject API Response:', data);
-                
-                // Extract subjects from the response
-                const subjectList = data.subjects || [];
-                const uniqueSubjects = data.uniqueSubjects || [];
-                
-                // Map subjects with additional info from uniqueSubjects if available
-                const mappedSubjects = subjectList.map(subject => {
-                    const uniqueInfo = uniqueSubjects.find(u => u.sub_name === subject.subjectName);
-                    return {
-                        id: subject.id,
-                        subjectName: subject.subjectName,
-                        subCode: uniqueInfo?.sub_code,
-                        subLevel: uniqueInfo?.sub_level
-                    };
-                });
-
-                setSubjects(mappedSubjects);
-            } catch (error) {
-                console.error("Error fetching subjects:", error);
-                setError("Failed to fetch subjects");
-                setSubjects([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchSubjects();
-    }, [selectedBatch, selectedSemester]);
-
-    // Fetch students when subject changes
-    useEffect(() => {
-        if (!selectedBatch || !selectedSubject) return;
-        
-        const fetchStudents = async () => {
-            setLoading(true);
-            try {
-                const response = await fetch(`http://localhost:5001/api/marks/students/${selectedBatch.batchName}`);
-                if (!response.ok) throw new Error("Failed to fetch students");
-                const data = await response.json();
-                
-                const studentsWithGrades = data.map(student => ({
-                    id: student.id,
-                    name: student.name,
-                    enrollmentNo: student.enrollmentNo,
-                    image: student.profileImage || `https://i.pravatar.cc/150?img=${student.id}`,
-                    grades: student.Gettedmarks?.[0] || {
-                        ESE: 0,
-                        TW: 0,
-                        CSE: 0,
-                        IA: 0,
-                        Viva: 0
+            // Simulate API delay
+            setTimeout(() => {
+                // Mock students data
+                const mockStudents = [
+                    {
+                        id: 1,
+                        name: "John Doe",
+                        enrollmentNo: "2023CS001",
+                        image: "https://i.pravatar.cc/150?img=1",
+                        grades: JSON.parse(JSON.stringify(emptyGrades)),
+                        response: ""
                     },
-                    response: ""
-                }));
+                    {
+                        id: 2,
+                        name: "Jane Smith",
+                        enrollmentNo: "2023CS002",
+                        image: "https://i.pravatar.cc/150?img=2",
+                        grades: JSON.parse(JSON.stringify(emptyGrades)),
+                        response: ""
+                    },
+                    {
+                        id: 3,
+                        name: "Krish Patel",
+                        enrollmentNo: "2023CS003",
+                        image: "https://i.pravatar.cc/150?img=3",
+                        grades: JSON.parse(JSON.stringify(emptyGrades)),
+                        response: ""
+                    },
+                    {
+                        id: 4,
+                        name: "Emily Johnson",
+                        enrollmentNo: "2023CS004",
+                        image: "https://i.pravatar.cc/150?img=4",
+                        grades: JSON.parse(JSON.stringify(emptyGrades)),
+                        response: ""
+                    },
+                    {
+                        id: 5,
+                        name: "Michael Wilson",
+                        enrollmentNo: "2023CS005",
+                        image: "https://i.pravatar.cc/150?img=5",
+                        grades: JSON.parse(JSON.stringify(emptyGrades)),
+                        response: ""
+                    },
+                    {
+                        id: 6,
+                        name: "Sophia Chen",
+                        enrollmentNo: "2023CS006",
+                        image: "https://i.pravatar.cc/150?img=6",
+                        grades: JSON.parse(JSON.stringify(emptyGrades)),
+                        response: ""
+                    }
+                ];
 
-                setStudentsData(studentsWithGrades);
-                
-                // Initialize ratings
+                setStudentsData(mockStudents);
+
+                // Initialize empty ratings for each student
                 const initialRatings = {};
-                studentsWithGrades.forEach(student => {
+                mockStudents.forEach(student => {
                     initialRatings[student.id] = 0;
                 });
                 setRatings(initialRatings);
-            } catch (error) {
-                console.error("Error fetching students:", error);
-                setError("Failed to fetch students");
-            } finally {
+
                 setLoading(false);
-            }
-        };
-
-        fetchStudents();
-    }, [selectedBatch, selectedSubject]);
-
-    const handleGradeChange = async (studentId, component, value) => {
-        try {
-            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subjectName}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    [component.toLowerCase()]: value,
-                    facultyId: localStorage.getItem('userId')
-                })
-            });
-
-            if (!response.ok) throw new Error("Failed to update grades");
-
-            setStudentsData(students =>
-                students.map(student =>
-                    student.id === studentId
-                        ? {
-                            ...student,
-                            grades: {
-                                ...student.grades,
-                                [component]: value
-                            }
-                        }
-                        : student
-                )
-            );
-        } catch (error) {
-            console.error("Error updating grades:", error);
-            setError("Failed to update grades");
+            }, 800);
         }
-    };
+    }, [selectedSubject]);
 
-    const handleBatchChange = (e) => {
-        const batch = batches.find(b => b.batchName === e.target.value);
-        setSelectedBatch(batch);
-        setSelectedSemester(null);
-        setSelectedSubject(null);
-    };
-
-    const handleSemesterChange = (e) => {
-        const semester = semesters.find(s => s.semesterNumber === parseInt(e.target.value));
-        setSelectedSemester(semester);
-        setSelectedSubject(null);
-    };
-
-    const handleSubjectChange = (e) => {
-        console.log('Selected subject value:', e.target.value); // Debug log
-        console.log('Available subjects:', subjects); // Debug log
-        const subject = subjects.find(s => s.subjectName === e.target.value);
-        console.log('Found subject:', subject); // Debug log
-        setSelectedSubject(subject);
+    const handleGradeChange = (studentId, component, value) => {
+        setStudentsData(students =>
+            students.map(student =>
+                student.id === studentId
+                    ? {
+                        ...student,
+                        grades: {
+                            ...student.grades,
+                            [component]: value
+                        }
+                    }
+                    : student
+            )
+        );
     };
 
     const handleResponseChange = (studentId, response) => {
@@ -218,6 +140,14 @@ const StudentGrades = () => {
         }));
     };
 
+    const handleSubmitResponse = (studentId) => {
+        console.log("Submitted response for student", studentId, {
+            response: studentsData.find(s => s.id === studentId)?.response,
+            rating: ratings[studentId]
+        });
+        // Here you would typically send the data to your backend
+    };
+
     const toggleGradeEdit = (studentId) => {
         setEditingGrades(editingGrades === studentId ? null : studentId);
     };
@@ -232,6 +162,7 @@ const StudentGrades = () => {
 
     const renderRatingStars = (studentId) => {
         const currentRating = ratings[studentId] || 0;
+
         return (
             <div className="rating-stars">
                 {[...Array(10)].map((_, index) => (
@@ -254,99 +185,92 @@ const StudentGrades = () => {
                 <h1>Faculty Grade Management</h1>
             </div>
 
-            {error && (
-                <div className="error-message">
-                    <span>{error}</span>
-                </div>
-            )}
-
             <div className="filter-section-sgp">
                 <div className="filter-group-sgp">
                     <label>Batch</label>
-                    <select 
-                        value={selectedBatch?.batchName || ''} 
-                        onChange={handleBatchChange}
-                    >
+                    <select value={batch} onChange={(e) => setBatch(e.target.value)}>
                         <option value="">Select Batch</option>
-                        {batches.map(batch => (
-                            <option key={batch.id} value={batch.batchName}>
-                                {batch.batchName}
-                            </option>
-                        ))}
+                        <option value="2022-2026">2022-2026</option>
+                        <option value="2021-2025">2021-2025</option>
+                        <option value="2020-2024">2020-2024</option>
+                    </select>
+                </div>
+
+                <div className="filter-group-sgp">
+                    <label>Type</label>
+                    <select value={type} onChange={(e) => setType(e.target.value)}>
+                        <option value="">Select Type</option>
+                        <option value="degree">Degree</option>
+                        <option value="diploma">Diploma</option>
                     </select>
                 </div>
 
                 <div className="filter-group-sgp">
                     <label>Semester</label>
-                    <select 
-                        value={selectedSemester?.semesterNumber || ''} 
-                        onChange={handleSemesterChange}
-                        disabled={!selectedBatch}
-                    >
+                    <select value={semester} onChange={(e) => setSemester(e.target.value)}>
                         <option value="">Select Semester</option>
-                        {semesters.map(semester => (
-                            <option key={semester.id} value={semester.semesterNumber}>
-                                Semester {semester.semesterNumber}
-                            </option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+                            <option key={sem} value={sem}>Semester {sem}</option>
                         ))}
                     </select>
                 </div>
 
                 <div className="filter-group-sgp">
                     <label>Subject</label>
-                    <select 
-                        value={selectedSubject?.subjectName || ''} 
-                        onChange={(e) => {
-                            const subject = subjects.find(s => s.subjectName === e.target.value);
-                            setSelectedSubject(subject);
-                        }}
-                        disabled={!selectedSemester}
+                    <select
+                        value={selectedSubject}
+                        onChange={(e) => setSelectedSubject(e.target.value)}
                     >
                         <option value="">Select Subject</option>
                         {subjects.map(subject => (
-                            <option key={subject.id} value={subject.subjectName}>
-                                {subject.subjectName} ({subject.subCode})
+                            <option key={subject.id} value={subject.id}>
+                                {subject.name}
                             </option>
                         ))}
                     </select>
                 </div>
 
                 <div className="search-container-sgp">
-                    <Search className="search-sgp" size={20} />
+                    <Search className="search-icon" size={16} />
                     <input
+                        id="search-sgp"
                         type="text"
-                        placeholder="Search students..."
+                        placeholder="Search by name or enrollment number..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
             </div>
 
-            {loading ? (
-                <div className="loading-overlay">
-                    <Loader2 className="loading-spinner" size={40} />
-                    <span className="loading-text">Loading...</span>
+            {!selectedSubject && (
+                <div className="empty-state">
+                    <BookCopy size={48} />
+                    <h3>Select a subject to begin grading</h3>
+                    <p>Choose a subject from the dropdown menu above to view and grade students</p>
                 </div>
-            ) : (
-                <>
-                    {filteredStudents.length > 0 ? (
-                        <div className="student-count-sgp">
-                            {filteredStudents.length} Student{filteredStudents.length !== 1 ? 's' : ''} Found
-                        </div>
-                    ) : (
-                        <div className="no-results">
-                            <BookCopy size={40} />
-                            <p>No students found</p>
-                        </div>
-                    )}
+            )}
 
-                    <div className="students-list">
+            {selectedSubject && loading && (
+                <div className="empty-state">
+                    <Loader2 size={48} className="animate-spin" />
+                    <h3>Loading students...</h3>
+                    <p>Please wait while we fetch the student data</p>
+                </div>
+            )}
+
+            {selectedSubject && !loading && (
+                <>
+                    <div className="student-count-sgp-sgp">
+                        <div className="chip">Total Students: {filteredStudents.length}</div>
+                    </div>
+
+                    <div className="student-count-sgp">
                         {filteredStudents.map(student => (
                             <div key={student.id} className="student-card">
                                 <div className="student-basic-info-sgp">
-                                    <img 
-                                        src={student.image} 
-                                        alt={student.name} 
+                                    <img
+                                        src={student.image}
+                                        alt={student.name}
                                         className="student-image"
                                     />
                                     <div className="student-info-container-sgp">
@@ -382,26 +306,9 @@ const StudentGrades = () => {
                                     </div>
                                 </div>
 
-                                {(expandedStudent === student.id || editingGrades === student.id) && (
+                                {expandedStudent === student.id && (
                                     <div className="grade-details-sgp">
-                                        {/* <div className="grade-components">
-                                            <h3>Grade Components</h3>
-                                            <div className="grade-grid">
-                                                {Object.entries(student.grades).map(([component, value]) => (
-                                                    <div key={component} className="grade-item">
-                                                        <label>{component}</label>
-                                                        <input
-                                                            type="number"
-                                                            value={value}
-                                                            onChange={(e) => handleGradeChange(student.id, component, e.target.value)}
-                                                            disabled={editingGrades !== student.id}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div> */}
-
-<div className="grade-components">
+                                        <div className="grade-components">
                                             <h4>Grade Components</h4>
                                             <table className="grade-table-sgp">
                                                 <thead>
@@ -466,17 +373,20 @@ const StudentGrades = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="faculty-response">
-                                            <h3>Faculty Response</h3>
+                                            <h4>Faculty Response</h4>
+                                            <div className="rating-container">
+                                                <label>Performance Rating (1-10)</label>
+                                                {renderRatingStars(student.id)}
+                                            </div>
                                             <textarea
-                                                placeholder="Add your response..."
+                                                placeholder="Add your comments or feedback here..."
                                                 value={student.response}
                                                 onChange={(e) => handleResponseChange(student.id, e.target.value)}
                                             />
-                                            {renderRatingStars(student.id)}
-                                            <button 
-                                                className="submit-button"
+                                            <button
+                                                className="submit-response-button"
                                                 onClick={() => handleSubmitResponse(student.id)}
                                             >
                                                 Submit Response
