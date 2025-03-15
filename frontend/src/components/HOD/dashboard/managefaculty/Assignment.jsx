@@ -35,13 +35,17 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                 const response = await fetch("http://localhost:5001/api/users/getAllUsers");
                 if (!response.ok) throw new Error("Failed to fetch faculty members");
                 const data = await response.json();
-                setFaculties(data.filter(user => user.role === "Faculty").map(f => ({ value: f._id, label: f.name })));
+                console.log("Fetched Users:", data);
+                
+                // Remove role-based filtering
+                setFaculties(data.map(user => ({ value: user.id, label: user.name })));
             } catch (error) {
                 console.error("Error fetching faculty members:", error);
             }
         };
         fetchFaculties();
     }, []);
+    
 
     useEffect(() => {
         if (!assignment.batch) return;

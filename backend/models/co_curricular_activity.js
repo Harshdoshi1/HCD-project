@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const students = require("./students");  // Correct reference
-const batches = require("./batch");      // Correct reference
-const semesters = require("./semester"); // Correct reference
+const Student = require("./students");  // Correct reference
+const Batch = require("./batch");      // Correct reference
+const Semester = require("./semester");
 
 const CoCurricularActivity = sequelize.define(
     "CoCurricularActivity",
@@ -16,15 +16,15 @@ const CoCurricularActivity = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: students,  // Correct reference
+                model: Student,  // Correct reference
                 key: "id",
             },
         },
         batchId: {
-            type: DataTypes.STRING,
+            type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: batches,  // Correct reference
+                model: Batch,  // Correct reference
                 key: "id",
             },
         },
@@ -32,7 +32,7 @@ const CoCurricularActivity = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: semesters,  // Correct reference
+                model: Semester,  // Correct reference
                 key: "id",
             },
         },
@@ -62,8 +62,8 @@ const CoCurricularActivity = sequelize.define(
 );
 
 // Associations
-CoCurricularActivity.belongsTo(students, { foreignKey: "studentId" });
-CoCurricularActivity.belongsTo(batches, { foreignKey: "batchId" });
-CoCurricularActivity.belongsTo(semesters, { foreignKey: "semesterId" });
+CoCurricularActivity.belongsTo(Student, { foreignKey: "studentId" });
+CoCurricularActivity.belongsTo(Batch, { foreignKey: "batchId" });
+CoCurricularActivity.belongsTo(Semester, { foreignKey: "semesterId" });
 
 module.exports = CoCurricularActivity;
