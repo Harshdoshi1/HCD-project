@@ -116,7 +116,7 @@ const StudentGrades = () => {
                     id: student.id,
                     name: student.name,
                     enrollmentNo: student.enrollmentNo,
-                    image: student.profileImage || `https://i.pravatar.cc/150?img=${student.id}`,
+                    // image: student.profileImage || `https://i.pravatar.cc/150?img=${student.id}`,
                     grades: student.Gettedmarks?.[0] || {
                         ESE: 0,
                         TW: 0,
