@@ -30,6 +30,26 @@
     border-radius: 4px;
 }
 
+.file-entry-student-input {
+    margin-top: 10px;
+}
+
+.file-upload-add-student {
+    display: flex;
+    justify-content: end;
+}
+
+.toggle-buttons {
+    margin-bottom: 10px;
+
+}
+
+.file-action-student-input {
+    display: flex;
+    justify-content: end;
+    gap: 5px;
+}
+
 .batch-dropdown {
     width: 100%;
     padding: 10px;

@@ -3,6 +3,7 @@ import { Book, Users, CalendarDays, Filter, Grid, Award, Clock, MoreHorizontal, 
 import './AssignedSubjects.css';
 
 const SubjectCard = ({ subject }) => {
+    console.log("Subject data in card:", subject); // Add this for debugging
     return (
         <div className="subject-card-asff">
             <div className="card-header-asff">
@@ -15,28 +16,28 @@ const SubjectCard = ({ subject }) => {
             </div>
 
             <div className="card-content-asff">
-                {/* <div className="content-row-asff">
-                    <span className="content-label-asff">Department:</span>
-                    <span className="content-value-asff">{subject.department}</span>
-                </div> */}
                 <div className="content-row-asff">
                     <span className="content-label-asff">Semester:</span>
-                    <span className="content-value-asff">{subject.semester}</span>
+                    <span className="content-value-asff">{subject.semester || 'Not assigned'}</span>
                 </div>
                 <div className="content-row-asff">
                     <span className="content-label-asff">Batch:</span>
-                    <span className="content-value-asff">{subject.batch}</span>
+                    <span className="content-value-asff">{subject.batch || 'Not assigned'}</span>
+                </div>
+                <div className="content-row-asff">
+                    <span className="content-label-asff">Department:</span>
+                    <span className="content-value-asff">{subject.department || 'Not specified'}</span>
                 </div>
             </div>
 
             <div className="card-footer-asff">
                 <div className="footer-item-asff">
                     <Users className="footer-icon-asff" />
-                    <span>{subject.type}</span>
+                    <span>{subject.type || 'Not specified'}</span>
                 </div>
                 <div className="footer-item-asff">
                     <CalendarDays className="footer-icon-asff" />
-                    <span>{subject.credits} Credits</span>
+                    <span>{subject.credits || 0} Credits</span>
                 </div>
             </div>
 
@@ -56,11 +57,17 @@ const SubjectCard = ({ subject }) => {
 const EmptyState = () => (
     <div className="empty-state-asff">
         <Book size={48} strokeWidth={1} className="empty-state-icon-asff" />
+
         <h3>No subjects found</h3>
         <p>Try adjusting your filters or search criteria to find what you're looking for.</p>
         <button className="apply-btn-asff">Reset Filters</button>
     </div>
 );
+// fetch data from localstorage
+const faculty = JSON.parse(localStorage.getItem('user'));
+
+const facultyId = faculty.id;
+console.log("sfefsew", facultyId);
 
 const AssignedSubjects = () => {
     const [batch, setBatch] = useState("");
@@ -70,100 +77,120 @@ const AssignedSubjects = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
-    const [filteredSubjects, setFilteredSubjects] = useState([]);
+    const [subjects, setSubjects] = useState([]); // Store original subjects
+    const [filteredSubjects, setFilteredSubjects] = useState([]); // Filtered subjects
+    const [batchOptions, setBatchOptions] = useState([]);
+    const [semesterOptions, setSemesterOptions] = useState([]);
+    const [batchToSemesters, setBatchToSemesters] = useState({}); // Map to store semesters for each batch
     const itemsPerPage = 6;
 
-    // Sample data - replace with your actual data
-    const subjects = [
-        {
-            id: 1,
-            name: "Data Structures",
-            code: "CS201",
-            credits: 4,
-            type: "Theory",
-            description: "Fundamental data structures and algorithms",
-            department: "Computer Science",
-            semester: "3rd Semester",
-            batch: "2022-2026"
-        },
-        {
-            id: 2,
-            name: "Database Systems",
-            code: "CS301",
-            credits: 3,
-            type: "Theory + Lab",
-            description: "Introduction to database management systems",
-            department: "Computer Science",
-            semester: "4th Semester",
-            batch: "2021-2025"
-        },
-        {
-            id: 3,
-            name: "Computer Networks",
-            code: "CS401",
-            credits: 4,
-            type: "Theory",
-            description: "Fundamentals of computer networking",
-            department: "Computer Science",
-            semester: "5th Semester",
-            batch: "2021-2025"
-        },
-        {
-            id: 4,
-            name: "Operating Systems",
-            code: "CS302",
-            credits: 4,
-            type: "Theory + Lab",
-            description: "Operating system concepts and design",
-            department: "Computer Science",
-            semester: "4th Semester",
-            batch: "2022-2026"
-        },
-        {
-            id: 5,
-            name: "Software Engineering",
-            code: "CS501",
-            credits: 3,
-            type: "Theory",
-            description: "Software development lifecycle and methodologies",
-            department: "Computer Science",
-            semester: "6th Semester",
-            batch: "2020-2024"
-        },
-        {
-            id: 6,
-            name: "Web Development",
-            code: "CS601",
-            credits: 4,
-            type: "Theory + Lab",
-            description: "Modern web development technologies",
-            department: "Computer Science",
-            semester: "7th Semester",
-            batch: "2020-2024"
-        },
-        {
-            id: 7,
-            name: "Machine Learning",
-            code: "CS602",
-            credits: 4,
-            type: "Theory + Lab",
-            description: "Introduction to machine learning algorithms",
-            department: "Computer Science",
-            semester: "7th Semester",
-            batch: "2020-2024"
-        },
-        {
-            id: 8,
-            name: "Artificial Intelligence",
-            code: "CS502",
-            credits: 3,
-            type: "Theory",
-            description: "Fundamentals of artificial intelligence",
-            department: "Computer Science",
-            semester: "6th Semester",
-            batch: "2020-2024"
+    // Update semester options when batch changes
+    useEffect(() => {
+        if (batch) {
+            setSemesterOptions(batchToSemesters[batch] || []);
+            setSemester(''); // Reset semester when batch changes
+        } else {
+            // If no batch is selected, show all unique semesters
+            const allSemesters = [...new Set(subjects.map(subject => subject.semester).filter(Boolean))];
+            allSemesters.sort((a, b) => {
+                const numA = parseInt(a);
+                const numB = parseInt(b);
+                return numA - numB;
+            });
+            setSemesterOptions(allSemesters);
         }
-    ];
+    }, [batch, batchToSemesters]);
+
+    // Apply filters function
+    const applyFilters = () => {
+        let filtered = [...subjects];
+        
+        if (searchQuery) {
+            filtered = filtered.filter(subject => 
+                (subject.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (subject.code?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+            );
+        }
+        
+        if (batch) {
+            filtered = filtered.filter(subject => subject.batch === batch);
+        }
+        
+        if (semester) {
+            filtered = filtered.filter(subject => subject.semester === semester);
+        }
+        
+        setFilteredSubjects(filtered);
+        setCurrentPage(1); // Reset to first page when filters change
+    };
+
+    // Fetch subjects for the current faculty
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`http://localhost:5001/api/faculties/getSubjectsByFaculty/${facultyId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch subjects');
+                }
+                const data = await response.json();
+                console.log("API Response:", data);
+                
+                if (Array.isArray(data)) {
+                    // Create a map of batch to semesters
+                    const batchSemesterMap = {};
+                    data.forEach(subject => {
+                        if (subject.batch && subject.semester) {
+                            if (!batchSemesterMap[subject.batch]) {
+                                batchSemesterMap[subject.batch] = new Set();
+                            }
+                            batchSemesterMap[subject.batch].add(subject.semester);
+                        }
+                    });
+
+                    // Convert Sets to sorted arrays
+                    Object.keys(batchSemesterMap).forEach(batchKey => {
+                        const semesterArray = Array.from(batchSemesterMap[batchKey]);
+                        semesterArray.sort((a, b) => {
+                            const numA = parseInt(a);
+                            const numB = parseInt(b);
+                            return numA - numB;
+                        });
+                        batchSemesterMap[batchKey] = semesterArray;
+                    });
+
+                    // Extract unique batches
+                    const uniqueBatches = [...new Set(data.map(subject => subject.batch).filter(Boolean))];
+                    uniqueBatches.sort(); // Sort batches alphabetically
+
+                    // Store the batch-semester mapping
+                    setBatchToSemesters(batchSemesterMap);
+                    setBatchOptions(uniqueBatches);
+                    
+                    setSubjects(data);
+                    setFilteredSubjects(data);
+                } else {
+                    console.error("Unexpected API response format", data);
+                }
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+    
+        fetchSubjects();
+    }, [facultyId]);
+
+    const resetFilters = () => {
+        setBatch("");
+        setType("");
+        setSemester("");
+        setDepartment("");
+        setSearchQuery("");
+        setFilteredSubjects(subjects); // Reset to original subjects
+        setCurrentPage(1);
+    };
 
     // Statistics for dashboard
     const stats = [
@@ -181,47 +208,6 @@ const AssignedSubjects = () => {
 
         return () => clearTimeout(timer);
     }, []);
-
-    // Filter subjects based on search and filter criteria
-    useEffect(() => {
-        let results = [...subjects];
-
-        if (batch) {
-            results = results.filter(subject => subject.batch === batch);
-        }
-
-        if (department) {
-            results = results.filter(subject => subject.department === department);
-        }
-
-        if (type) {
-            results = results.filter(subject => subject.type.includes(type));
-        }
-
-        if (semester) {
-            results = results.filter(subject => subject.semester.startsWith(semester));
-        }
-
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            results = results.filter(subject =>
-                subject.name.toLowerCase().includes(query) ||
-                subject.code.toLowerCase().includes(query) ||
-                subject.description.toLowerCase().includes(query)
-            );
-        }
-
-        setFilteredSubjects(results);
-        setCurrentPage(1); // Reset to first page when filters change
-    }, [batch, department, type, semester, searchQuery, subjects]);
-
-    const resetFilters = () => {
-        setBatch("");
-        setType("");
-        setSemester("");
-        setDepartment("");
-        setSearchQuery("");
-    };
 
     // Pagination logic
     const totalPages = Math.ceil(filteredSubjects.length / itemsPerPage);
@@ -255,20 +241,6 @@ const AssignedSubjects = () => {
                 <h1>Assigned Subjects</h1>
             </div>
 
-            <div className="stats-bar-asff">
-                {stats.map(stat => (
-                    <div key={stat.id} className="stat-card-asff">
-                        <div className="stat-icon-asff">
-                            {stat.icon}
-                        </div>
-                        <div className="stat-content-asff">
-                            <h3>{stat.value}</h3>
-                            <p>{stat.label}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
             <div className="filters-section-asff">
                 <div className="filters-heading-asff">
                     <Filter size={20} className="filters-icon-asff" />
@@ -276,9 +248,9 @@ const AssignedSubjects = () => {
                 </div>
 
                 <div className="filters-container-asff">
-                    <div className="filter-group-asff">
-                        <label htmlFor="search">Search</label>
-                        <div className="search-input-asff">
+                    <div className="search-and-filters-asff">
+                        <div className="filter-group-asff">
+                            <label htmlFor="search">Search</label>
                             <input
                                 id="search"
                                 type="text"
@@ -287,74 +259,42 @@ const AssignedSubjects = () => {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                    </div>
 
-                    <div className="filter-group-asff">
-                        <label htmlFor="batch">Batch</label>
-                        <select
-                            id="batch"
-                            value={batch}
-                            onChange={(e) => setBatch(e.target.value)}
-                        >
-                            <option value="">All Batches</option>
-                            <option value="2022-2026">2022-2026</option>
-                            <option value="2021-2025">2021-2025</option>
-                            <option value="2020-2024">2020-2024</option>
-                        </select>
-                    </div>
+                        <div className="filter-group-asff">
+                            <label htmlFor="batch">Batch</label>
+                            <select id="batch" value={batch} onChange={(e) => setBatch(e.target.value)}>
+                                <option value="">All Batches</option>
+                                {batchOptions.map((batchOption) => (
+                                    <option key={batchOption} value={batchOption}>
+                                        {batchOption}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                    <div className="filter-group-asff">
-                        <label htmlFor="department">Department</label>
-                        <select
-                            id="department"
-                            value={department}
-                            onChange={(e) => setDepartment(e.target.value)}
-                        >
-                            <option value="">All Departments</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Information Technology">Information Technology</option>
-                            <option value="Electronics">Electronics</option>
-                        </select>
-                    </div>
+                        <div className="filter-group-asff">
+                            <label htmlFor="semester">Semester</label>
+                            <select id="semester" value={semester} onChange={(e) => setSemester(e.target.value)}>
+                                <option value="">All Semesters</option>
+                                {semesterOptions.map((semesterOption) => (
+                                    <option key={semesterOption} value={semesterOption}>
+                                        {semesterOption}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                    <div className="filter-group-asff">
-                        <label htmlFor="type">Course Type</label>
-                        <select
-                            id="type"
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
-                        >
-                            <option value="">All Types</option>
-                            <option value="Theory">Theory</option>
-                            <option value="Lab">Lab</option>
-                            <option value="Theory + Lab">Theory + Lab</option>
-                        </select>
+                        <div className="filter-actions-asff">
+                            <button className="reset-btn-asff" onClick={resetFilters}>
+                                <X size={16} className="action-icon-asff" />
+                                Reset Filters
+                            </button>
+                            <button className="apply-btn-asff" onClick={applyFilters}>
+                                <Filter size={16} className="action-icon-asff" />
+                                Apply Filters
+                            </button>
+                        </div>
                     </div>
-
-                    <div className="filter-group-asff">
-                        <label htmlFor="semester">Semester</label>
-                        <select
-                            id="semester"
-                            value={semester}
-                            onChange={(e) => setSemester(e.target.value)}
-                        >
-                            <option value="">All Semesters</option>
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                                <option key={sem} value={`${sem}`}>{sem}rd/th Semester</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <div className="filter-actions-asff">
-                    <button className="reset-btn-asff" onClick={resetFilters}>
-                        <X size={16} className="action-icon-asff" />
-                        Reset Filters
-                    </button>
-                    <button className="apply-btn-asff">
-                        <Filter size={16} className="action-icon-asff" />
-                        Apply Filters
-                    </button>
                 </div>
             </div>
 
@@ -366,20 +306,14 @@ const AssignedSubjects = () => {
                 </div>
             ) : (
                 <>
-                    {currentSubjects.length > 0 ? (
+                    {filteredSubjects.length > 0 ? (
                         <div className="subjects-grid-asff">
-                            {currentSubjects.map((subject) => (
+                            {filteredSubjects.map((subject) => (
                                 <SubjectCard key={subject.id} subject={subject} />
                             ))}
                         </div>
                     ) : (
                         <EmptyState />
-                    )}
-
-                    {totalPages > 1 && (
-                        <div className="pagination-asff">
-                            {renderPaginationButtons()}
-                        </div>
                     )}
                 </>
             )}

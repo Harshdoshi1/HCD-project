@@ -1,126 +1,381 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Users, BookOpen, Edit2, MessageCircle, ChevronDown, ChevronUp, Save, Search, Star, BookCopy, Loader2 } from "lucide-react";
 import './StudentGrades.css';
 
 const StudentGrades = () => {
-    const [batch, setBatch] = useState("");
-    const [type, setType] = useState("");
-    const [semester, setSemester] = useState("");
-    const [selectedSubject, setSelectedSubject] = useState("");
+    const [batches, setBatches] = useState([]);
+    const [semesters, setSemesters] = useState([]);
+    const [subjects, setSubjects] = useState([]);
+    const [selectedBatch, setSelectedBatch] = useState(null);
+    const [selectedSemester, setSelectedSemester] = useState(null);
+    const [selectedSubject, setSelectedSubject] = useState(null);
     const [expandedStudent, setExpandedStudent] = useState(null);
     const [editingGrades, setEditingGrades] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [studentsData, setStudentsData] = useState([]);
     const [ratings, setRatings] = useState({});
+    const [error, setError] = useState(null);
+    const [gradeUpdating, setGradeUpdating] = useState(false);
 
-    // Mock subjects data
-    const subjects = [
-        { id: "CS201", name: "Data Structures" },
-        { id: "CS301", name: "Database Systems" },
-        { id: "CS401", name: "Computer Networks" },
-        { id: "CS501", name: "Operating Systems" },
-        { id: "CS601", name: "Machine Learning" }
-    ];
-
-    // Initialize with empty grades
-    const emptyGrades = {
-        ESE: "",
-        TW: "",
-        CSE: "",
-        IA: "",
-        Viva: ""
+    // Function to validate grade value
+    const validateGrade = (value) => {
+        const numValue = parseInt(value);
+        if (isNaN(numValue)) return 0;
+        if (numValue < 0) return 0;
+        if (numValue > 100) return 100;
+        return numValue;
     };
 
-    // Simulating API call to fetch students
-    useEffect(() => {
-        if (selectedSubject) {
-            setLoading(true);
-
-            // Simulate API delay
-            setTimeout(() => {
-                // Mock students data
-                const mockStudents = [
-                    {
-                        id: 1,
-                        name: "John Doe",
-                        enrollmentNo: "2023CS001",
-                        image: "https://i.pravatar.cc/150?img=1",
-                        grades: JSON.parse(JSON.stringify(emptyGrades)),
-                        response: ""
-                    },
-                    {
-                        id: 2,
-                        name: "Jane Smith",
-                        enrollmentNo: "2023CS002",
-                        image: "https://i.pravatar.cc/150?img=2",
-                        grades: JSON.parse(JSON.stringify(emptyGrades)),
-                        response: ""
-                    },
-                    {
-                        id: 3,
-                        name: "Krish Patel",
-                        enrollmentNo: "2023CS003",
-                        image: "https://i.pravatar.cc/150?img=3",
-                        grades: JSON.parse(JSON.stringify(emptyGrades)),
-                        response: ""
-                    },
-                    {
-                        id: 4,
-                        name: "Emily Johnson",
-                        enrollmentNo: "2023CS004",
-                        image: "https://i.pravatar.cc/150?img=4",
-                        grades: JSON.parse(JSON.stringify(emptyGrades)),
-                        response: ""
-                    },
-                    {
-                        id: 5,
-                        name: "Michael Wilson",
-                        enrollmentNo: "2023CS005",
-                        image: "https://i.pravatar.cc/150?img=5",
-                        grades: JSON.parse(JSON.stringify(emptyGrades)),
-                        response: ""
-                    },
-                    {
-                        id: 6,
-                        name: "Sophia Chen",
-                        enrollmentNo: "2023CS006",
-                        image: "https://i.pravatar.cc/150?img=6",
-                        grades: JSON.parse(JSON.stringify(emptyGrades)),
-                        response: ""
-                    }
-                ];
-
-                setStudentsData(mockStudents);
-
-                // Initialize empty ratings for each student
-                const initialRatings = {};
-                mockStudents.forEach(student => {
-                    initialRatings[student.id] = 0;
-                });
-                setRatings(initialRatings);
-
-                setLoading(false);
-            }, 800);
-        }
-    }, [selectedSubject]);
-
-    const handleGradeChange = (studentId, component, value) => {
-        setStudentsData(students =>
-            students.map(student =>
-                student.id === studentId
+    // Handle grade input change
+    const handleGradeChange = async (studentId, component, value) => {
+        const validatedValue = validateGrade(value);
+        
+        setStudentsData(prevData => 
+            prevData.map(student => 
+                student.id === studentId 
                     ? {
                         ...student,
                         grades: {
                             ...student.grades,
-                            [component]: value
+                            [component.toLowerCase()]: validatedValue
                         }
                     }
                     : student
             )
         );
+    };
+
+    // Handle grade submission
+    const handleGradeSubmit = async (studentId) => {
+        if (!selectedSubject?.subCode || !studentId) {
+            setError("Please select a subject and student");
+            return;
+        }
+
+        setGradeUpdating(true);
+        try {
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) throw new Error("Student not found");
+
+            const faculty = JSON.parse(localStorage.getItem('user'));
+            if (!faculty) throw new Error("Faculty information not found");
+
+            console.log('Submitting grades:', {
+                studentId,
+                subjectId: selectedSubject.subCode,
+                grades: student.grades
+            });
+
+            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subCode}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    facultyId: faculty.id,
+                    ese: parseInt(student.grades?.ese) || 0,
+                    cse: parseInt(student.grades?.cse) || 0,
+                    ia: parseInt(student.grades?.ia) || 0,
+                    tw: parseInt(student.grades?.tw) || 0,
+                    viva: parseInt(student.grades?.viva) || 0,
+                    response: student.response || ''
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || errorData.error || "Failed to update grades");
+            }
+
+            const data = await response.json();
+            console.log("Grades updated successfully:", data);
+
+            // Refresh the student data after successful update
+            await fetchStudentData(selectedBatch?.id, selectedSubject?.subCode);
+            
+            // Update the UI to show success
+            setEditingGrades(null);
+            setError(null);
+        } catch (error) {
+            console.error("Error updating grades:", error);
+            setError("Failed to update grades: " + error.message);
+        } finally {
+            setGradeUpdating(false);
+        }
+    };
+
+    // Function to fetch student data
+    const fetchStudentData = async (batchId, subjectCode) => {
+        if (!batchId || !subjectCode) return;
+        
+        setLoading(true);
+        try {
+            console.log('vvvvv Fetching student data for batch:', batchId, 'and subject:', subjectCode);
+            const response = await fetch(`http://localhost:5001/api/marks/students/${batchId}`)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`Error: ${response.status} ${response.statusText}`);
+              }
+              return response.json();
+            })
+            .then(data => console.log("Student Data:", data))
+            .catch(error => console.error("Fetch error:", error));
+          
+            const data = await response.json();
+            console.log('Fetched student data:', data);
+            setStudentsData(data.map(student => ({
+                ...student,
+                grades: {
+                    ese: student.ese || 0,
+                    cse: student.cse || 0,
+                    ia: student.ia || 0,
+                    tw: student.tw || 0,
+                    viva: student.viva || 0
+                }
+            })));
+        } catch (error) {
+            console.error('Error fetching student data:', error);
+            setError('Failed to fetch student data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Custom grade input component
+    const GradeInput = ({ value, onChange, disabled }) => {
+        const [localValue, setLocalValue] = useState(value || '');
+
+        const handleChange = (e) => {
+            const newValue = e.target.value;
+            // Allow empty string or numbers only
+            if (newValue === '' || /^\d{0,3}$/.test(newValue)) {
+                setLocalValue(newValue);
+                if (newValue === '') {
+                    onChange('0');
+                } else {
+                    onChange(newValue);
+                }
+            }
+        };
+
+        const handleBlur = () => {
+            const validatedValue = validateGrade(localValue);
+            setLocalValue(validatedValue.toString());
+            onChange(validatedValue.toString());
+        };
+
+        // Update local value when prop value changes
+        useEffect(() => {
+            setLocalValue(value || '');
+        }, [value]);
+
+        return (
+            <input
+                type="text"
+                pattern="\\d*"
+                min="0"
+                max="100"
+                value={localValue}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                disabled={disabled}
+                className="grade-input-sgp"
+            />
+        );
+    };
+
+    // Fetch batches on component mount
+    useEffect(() => {
+        const fetchBatches = async () => {
+            setLoading(true);
+            try {
+                const response = await fetch("http://localhost:5001/api/users/getAllBatches");
+                if (!response.ok) throw new Error("Failed to fetch batches");
+                const data = await response.json();
+                setBatches(data.map(batch => ({
+                    id: batch.id,
+                    batchName: batch.batchName
+                })));
+            } catch (error) {
+                console.error("Error fetching batches:", error);
+                setError("Failed to fetch batches");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchBatches();
+    }, []);
+
+    // Fetch semesters when batch changes
+    useEffect(() => {
+        if (!selectedBatch) return;
+        const fetchSemesters = async () => {
+            setLoading(true);
+            try {
+                const response = await fetch(`http://localhost:5001/api/users/getSemestersByBatch/${selectedBatch.batchName}`);
+                if (!response.ok) throw new Error("Failed to fetch semesters");
+                const data = await response.json();
+                setSemesters(data.map(semester => ({
+                    id: semester.id,
+                    semesterNumber: semester.semesterNumber
+                })));
+            } catch (error) {
+                console.error("Error fetching semesters:", error);
+                setError("Failed to fetch semesters");
+                setSemesters([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSemesters();
+    }, [selectedBatch]);
+
+    // Fetch subjects when semester changes
+    useEffect(() => {
+        if (!selectedBatch || !selectedSemester) return;
+        const fetchSubjects = async () => {
+            setLoading(true);
+            try {
+                const response = await fetch(`http://localhost:5001/api/users/getSubjects/${selectedBatch.batchName}/${selectedSemester.semesterNumber}`);
+                if (!response.ok) throw new Error("Failed to fetch subjects");
+                const data = await response.json();
+                console.log('Subject API Response:', data);
+
+                // Extract subjects from the response
+                const subjectList = data.subjects || [];
+                const uniqueSubjects = data.uniqueSubjects || [];
+
+                // Map subjects with additional info from uniqueSubjects if available
+                const mappedSubjects = subjectList.map(subject => {
+                    const uniqueInfo = uniqueSubjects.find(u => u.sub_name === subject.subjectName);
+                    return {
+                        id: subject.id,
+                        subjectName: subject.subjectName,
+                        subCode: uniqueInfo?.sub_code,
+                        subLevel: uniqueInfo?.sub_level
+                    };
+                });
+
+                setSubjects(mappedSubjects);
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+                setError("Failed to fetch subjects");
+                setSubjects([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSubjects();
+    }, [selectedBatch, selectedSemester]);
+
+    // Fetch students when subject changes
+    useEffect(() => {
+        if (!selectedBatch || !selectedSubject) return;
+
+        const fetchStudents = async () => {
+            setLoading(true);
+            try {
+                const response = await fetch(`http://localhost:5001/api/marks/students/${selectedBatch.batchName}`);
+                if (!response.ok) throw new Error("Failed to fetch students");
+                const data = await response.json();
+                console.log('Students API Response:', data);
+                const studentsWithGrades = data.map(student => ({
+                    id: student.id,
+                    name: student.name,
+                    enrollmentNo: student.enrollmentNo,
+                    // image: student.profileImage || `https://i.pravatar.cc/150?img=${student.id}`,
+                    grades: student.Gettedmarks?.[0] || {
+                        ESE: 0,
+                        TW: 0,
+                        CSE: 0,
+                        IA: 0,
+                        Viva: 0
+                    },
+                    response: ""
+                }));
+
+                setStudentsData(studentsWithGrades);
+
+                // Initialize ratings
+                const initialRatings = {};
+                studentsWithGrades.forEach(student => {
+                    initialRatings[student.id] = 0;
+                });
+                setRatings(initialRatings);
+            } catch (error) {
+                console.error("Error fetching students:", error);
+                setError("Failed to fetch students");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStudents();
+    }, [selectedBatch, selectedSubject]);
+
+    const handleSubmitResponse = async (studentId) => {
+        if (!selectedSubject) {
+            setError("Please select a subject first");
+            return;
+        }
+
+        try {
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) throw new Error("Student not found");
+
+            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subCode}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    response: student.response,
+                    facultyId: JSON.parse(localStorage.getItem('user')).id
+                })
+            });
+
+            if (!response.ok) throw new Error("Failed to submit response");
+
+            const data = await response.json();
+            console.log("Response submitted successfully:", data);
+
+            // Update local state
+            setStudentsData(students =>
+                students.map(s =>
+                    s.id === studentId
+                        ? { ...s, response: data.data.facultyResponse }
+                        : s
+                )
+            );
+
+            alert("Response submitted successfully!");
+        } catch (error) {
+            console.error("Error submitting response:", error);
+            setError("Failed to submit response: " + error.message);
+        }
+    };
+    
+    const handleBatchChange = (e) => {
+        const batch = batches.find(b => b.batchName === e.target.value);
+        setSelectedBatch(batch);
+        setSelectedSemester(null);
+        setSelectedSubject(null);
+    };
+
+    const handleSemesterChange = (e) => {
+        const semester = semesters.find(s => s.semesterNumber === parseInt(e.target.value));
+        setSelectedSemester(semester);
+        setSelectedSubject(null);
+    };
+
+    const handleSubjectChange = (e) => {
+        console.log('Selected subject value:', e.target.value); // Debug log
+        console.log('Available subjects:', subjects); // Debug log
+        const subject = subjects.find(s => s.subCode === e.target.value);
+        console.log('Found subject:', subject); // Debug log
+        setSelectedSubject(subject);
+        fetchStudentData(selectedBatch?.id, subject?.subCode);
     };
 
     const handleResponseChange = (studentId, response) => {
@@ -140,14 +395,6 @@ const StudentGrades = () => {
         }));
     };
 
-    const handleSubmitResponse = (studentId) => {
-        console.log("Submitted response for student", studentId, {
-            response: studentsData.find(s => s.id === studentId)?.response,
-            rating: ratings[studentId]
-        });
-        // Here you would typically send the data to your backend
-    };
-
     const toggleGradeEdit = (studentId) => {
         setEditingGrades(editingGrades === studentId ? null : studentId);
     };
@@ -162,7 +409,6 @@ const StudentGrades = () => {
 
     const renderRatingStars = (studentId) => {
         const currentRating = ratings[studentId] || 0;
-
         return (
             <div className="rating-stars">
                 {[...Array(10)].map((_, index) => (
@@ -185,86 +431,90 @@ const StudentGrades = () => {
                 <h1>Faculty Grade Management</h1>
             </div>
 
+            {error && (
+                <div className="error-message">
+                    <span>{error}</span>
+                </div>
+            )}
+
             <div className="filter-section-sgp">
                 <div className="filter-group-sgp">
                     <label>Batch</label>
-                    <select value={batch} onChange={(e) => setBatch(e.target.value)}>
+                    <select
+                        value={selectedBatch?.batchName || ''}
+                        onChange={handleBatchChange}
+                    >
                         <option value="">Select Batch</option>
-                        <option value="2022-2026">2022-2026</option>
-                        <option value="2021-2025">2021-2025</option>
-                        <option value="2020-2024">2020-2024</option>
-                    </select>
-                </div>
-
-                <div className="filter-group-sgp">
-                    <label>Type</label>
-                    <select value={type} onChange={(e) => setType(e.target.value)}>
-                        <option value="">Select Type</option>
-                        <option value="degree">Degree</option>
-                        <option value="diploma">Diploma</option>
+                        {batches.map(batch => (
+                            <option key={batch.id} value={batch.batchName}>
+                                {batch.batchName}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
                 <div className="filter-group-sgp">
                     <label>Semester</label>
-                    <select value={semester} onChange={(e) => setSemester(e.target.value)}>
+                    <select
+                        value={selectedSemester?.semesterNumber || ''}
+                        onChange={handleSemesterChange}
+                        disabled={!selectedBatch}
+                    >
                         <option value="">Select Semester</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                            <option key={sem} value={sem}>Semester {sem}</option>
+                        {semesters.map(semester => (
+                            <option key={semester.id} value={semester.semesterNumber}>
+                                Semester {semester.semesterNumber}
+                            </option>
                         ))}
                     </select>
                 </div>
 
                 <div className="filter-group-sgp">
                     <label>Subject</label>
-                    <select
-                        value={selectedSubject}
-                        onChange={(e) => setSelectedSubject(e.target.value)}
+                    <select 
+                        value={selectedSubject?.subCode || ''} 
+                        onChange={handleSubjectChange}
+                        disabled={!selectedSemester}
                     >
                         <option value="">Select Subject</option>
                         {subjects.map(subject => (
-                            <option key={subject.id} value={subject.id}>
-                                {subject.name}
+                            <option key={subject.id} value={subject.subCode}>
+                                {subject.subjectName} ({subject.subCode})
                             </option>
                         ))}
                     </select>
                 </div>
 
                 <div className="search-container-sgp">
-                    <Search className="search-icon" size={16} />
+                    <Search className="search-sgp" size={20} />
                     <input
-                        id="search-sgp"
                         type="text"
-                        placeholder="Search by name or enrollment number..."
+                        placeholder="Search students..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
             </div>
 
-            {!selectedSubject && (
-                <div className="empty-state">
-                    <BookCopy size={48} />
-                    <h3>Select a subject to begin grading</h3>
-                    <p>Choose a subject from the dropdown menu above to view and grade students</p>
+            {loading ? (
+                <div className="loading-overlay">
+                    <Loader2 className="loading-spinner" size={40} />
+                    <span className="loading-text">Loading...</span>
                 </div>
-            )}
-
-            {selectedSubject && loading && (
-                <div className="empty-state">
-                    <Loader2 size={48} className="animate-spin" />
-                    <h3>Loading students...</h3>
-                    <p>Please wait while we fetch the student data</p>
-                </div>
-            )}
-
-            {selectedSubject && !loading && (
+            ) : (
                 <>
-                    <div className="student-count-sgp-sgp">
-                        <div className="chip">Total Students: {filteredStudents.length}</div>
-                    </div>
+                    {filteredStudents.length > 0 ? (
+                        <div className="student-count-sgp">
+                            {filteredStudents.length} Student{filteredStudents.length !== 1 ? 's' : ''} Found
+                        </div>
+                    ) : (
+                        <div className="no-results">
+                            <BookCopy size={40} />
+                            <p>No students found</p>
+                        </div>
+                    )}
 
-                    <div className="student-count-sgp">
+                    <div className="students-list">
                         {filteredStudents.map(student => (
                             <div key={student.id} className="student-card">
                                 <div className="student-basic-info-sgp">
@@ -306,87 +556,67 @@ const StudentGrades = () => {
                                     </div>
                                 </div>
 
-                                {expandedStudent === student.id && (
+                                {(expandedStudent === student.id || editingGrades === student.id) && (
                                     <div className="grade-details-sgp">
                                         <div className="grade-components">
                                             <h4>Grade Components</h4>
-                                            <table className="grade-table-sgp">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Component</th>
-                                                        <th>Marks</th>
-                                                        <th>Out of</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {Object.entries(student.grades).map(([component, grade]) => (
-                                                        <tr key={component}>
-                                                            <td>{component}</td>
-                                                            <td>
-                                                                {editingGrades === student.id ? (
-                                                                    <input
-                                                                        type="number"
-                                                                        value={grade}
-                                                                        onChange={(e) => handleGradeChange(
-                                                                            student.id,
-                                                                            component,
-                                                                            e.target.value
-                                                                        )}
-                                                                        min="0"
-                                                                        max="100"
-                                                                    />
-                                                                ) : (
-                                                                    grade || "-"
-                                                                )}
-                                                            </td>
-                                                            <td>100</td>
-                                                            <td className={
-                                                                grade
-                                                                    ? (parseInt(grade) >= 40 ? 'pass' : 'fail')
-                                                                    : ''
-                                                            }>
-                                                                {grade
-                                                                    ? (parseInt(grade) >= 40 ? 'Pass' : 'Fail')
-                                                                    : '-'}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
+                                            <div className="grade-inputs-container">
+                                                {['ESE', 'CSE', 'IA', 'TW', 'Viva'].map((component) => (
+                                                    <div key={component} className="grade-input-group">
+                                                        <label>{component}:</label>
+                                                        <GradeInput
+                                                            value={student.grades?.[component.toLowerCase()]}
+                                                            onChange={(value) => handleGradeChange(student.id, component, value)}
+                                                            disabled={editingGrades !== student.id}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
                                             <div className="grade-actions">
-                                                <button
-                                                    className="edit-grades-button"
-                                                    onClick={() => toggleGradeEdit(student.id)}
-                                                >
-                                                    {editingGrades === student.id ? (
-                                                        <>
-                                                            <Save size={16} />
+                                                {editingGrades === student.id ? (
+                                                    <>
+                                                        <button
+                                                            className="save-grades-button"
+                                                            onClick={() => handleGradeSubmit(student.id)}
+                                                            disabled={gradeUpdating}
+                                                        >
+                                                            {gradeUpdating ? (
+                                                                <Loader2 className="animate-spin" size={16} />
+                                                            ) : (
+                                                                <Save size={16} />
+                                                            )}
                                                             Save Grades
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Edit2 size={16} />
-                                                            Edit Grades
-                                                        </>
-                                                    )}
-                                                </button>
+                                                        </button>
+                                                        <button
+                                                            className="cancel-edit-button"
+                                                            onClick={() => setEditingGrades(null)}
+                                                            disabled={gradeUpdating}
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        className="edit-grades-button"
+                                                        onClick={() => setEditingGrades(student.id)}
+                                                    >
+                                                        <Edit2 size={16} />
+                                                        Edit Grades
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
 
                                         <div className="faculty-response">
-                                            <h4>Faculty Response</h4>
-                                            <div className="rating-container">
-                                                <label>Performance Rating (1-10)</label>
-                                                {renderRatingStars(student.id)}
-                                            </div>
+                                            <h3>Faculty Response</h3>
                                             <textarea
-                                                placeholder="Add your comments or feedback here..."
+                                                placeholder="Add your response..."
                                                 value={student.response}
                                                 onChange={(e) => handleResponseChange(student.id, e.target.value)}
                                             />
+                                            {renderRatingStars(student.id)}
                                             <button
-                                                className="submit-response-button"
+                                                className="submit-button"
                                                 onClick={() => handleSubmitResponse(student.id)}
                                             >
                                                 Submit Response

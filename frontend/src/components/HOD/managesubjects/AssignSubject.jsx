@@ -38,23 +38,27 @@ const AssignSubject = () => {
     // Fetch all subjects initially and when program changes
     useEffect(() => {
         const fetchAllSubjects = async () => {
-            if (isFiltering) return; // Don't fetch all subjects when filtering
-
             try {
-                const response = await fetch("http://localhost:5001/api/subjects/getAllSubjects");
-                if (!response.ok) throw new Error("Failed to fetch subjects");
+                const response = await fetch("http://localhost:5001/api/users/getSubjects"); // Replace with actual API URL
+        
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+        
                 const data = await response.json();
-
-                // Filter by program if needed
-                const filteredData = filters.program === "all"
-                    ? data
-                    : data.filter(subject => subject.courseType === filters.program);
-
-                setAvailableSubjects(filteredData);
+                console.log("Fetched subjects:", data); // Debugging log
+        
+                if (!data || !Array.isArray(data.subjects)) {
+                    throw new Error("Unexpected response format: Expected an array");
+                }
+        
+                setAvailableSubjects(data.subjects); // Update the state with fetched data
             } catch (error) {
                 console.error("Error fetching subjects:", error);
+                setAvailableSubjects([]); // Set empty array on error
             }
         };
+        
 
         fetchAllSubjects();
     }, [filters.program, isFiltering]);
@@ -66,7 +70,7 @@ const AssignSubject = () => {
 
             try {
                 const response = await fetch(
-                    `http://localhost:5001/api/users/getSubjectsByBatchAndSemester/${filters.batch}/${filters.semester}`
+                    `http://localhost:5001/api/users/getSubjects/${filters.batch}/${filters.semester}`
                 );
 
                 if (!response.ok) {
@@ -169,6 +173,7 @@ const AssignSubject = () => {
 
     // Handle filters for selected subjects section
     const handleAssignFiltersChange = (e) => {
+        alert("iuaerbiqerubiqrbirbyr");
         const { name, value } = e.target;
         const filterName = name.replace("-to-assign", "");
 
@@ -253,6 +258,7 @@ const AssignSubject = () => {
                                 name="batch-to-assign"
                                 value={assignFilters.batch}
                                 onChange={handleAssignFiltersChange}
+                            
                                 required
                             >
                                 <option value="all">Batch</option>
@@ -268,6 +274,7 @@ const AssignSubject = () => {
                                 name="semester-to-assign"
                                 value={assignFilters.semester}
                                 onChange={handleAssignFiltersChange}
+                                // onClick={alert("sndoisc")}
                                 required
                             >
                                 <option value="all">Semester</option>
@@ -299,7 +306,7 @@ const AssignSubject = () => {
 
             <div className="Seconddiv-availabe-sub-for-assign">
                 <div className="top-things-for-selected-sub-asssign">
-                    {/* <span>All</span>&nbsp; <span> Subjects</span> */}
+                    <span>All</span>&nbsp; <span> Subjects</span>
                     <div className="filters-container-assign-subject-two">
                         <div className="filter-group-assign-subject-two">
                             <select

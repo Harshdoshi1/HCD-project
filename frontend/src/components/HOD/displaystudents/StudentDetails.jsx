@@ -182,86 +182,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                 comments: "Alexandra shows remarkable aptitude for programming. Her solutions are elegant and well-structured. With her analytical mind, she has great potential in the field of computer science.",
                                 lastUpdated: "February 12, 2024"
                             }
-                        },
-                        {
-                            id: "MA101",
-                            name: "Calculus and Linear Algebra",
-                            code: "MA101",
-                            credits: 4,
-                            faculty: "Dr. Emily Johnson",
-                            grade: "A",
-                            totalMarks: 88,
-                            attendance: 92,
-                            classRank: 5,
-                            totalStudents: 120,
-                            facultyRating: 8.7,
-                            components: {
-                                "Mid-Term": { marks: 43, total: 50 },
-                                "End-Term": { marks: 70, total: 80 },
-                                "Quizzes": { marks: 18, total: 20 },
-                                "Assignments": { marks: 23, total: 25 },
-                                "Class Participation": { marks: 24, total: 25 }
-                            },
-                            facultyResponse: {
-                                comments: "Alexandra demonstrates a solid understanding of mathematical concepts. Her approach to problem-solving is methodical and precise. She could benefit from challenging herself with more advanced problems.",
-                                lastUpdated: "February 15, 2024"
-                            }
-                        },
-                        {
-                            id: "PH101",
-                            name: "Physics for Engineers",
-                            code: "PH101",
-                            credits: 4,
-                            faculty: "Dr. Richard Feynman",
-                            grade: "A+",
-                            totalMarks: 90,
-                            attendance: 94,
-                            classRank: 4,
-                            totalStudents: 120,
-                            facultyRating: 9.5,
-                            components: {
-                                "Mid-Term": { marks: 45, total: 50 },
-                                "End-Term": { marks: 72, total: 80 },
-                                "Lab Work": { marks: 28, total: 30 },
-                                "Assignments": { marks: 22, total: 25 },
-                                "Quizzes": { marks: 18, total: 20 }
-                            },
-                            facultyResponse: {
-                                comments: "Alexandra has a natural talent for understanding physical concepts and applying them to real-world problems. Her lab work is exemplary, showing careful observation and analysis.",
-                                lastUpdated: "February 18, 2024"
-                            }
-                        }
-                    ]
-                },
-                2: {
-                    gpa: 9.1,
-                    credits: 22,
-                    subjects: [
-                        {
-                            id: "CS102",
-                            name: "Data Structures",
-                            code: "CS102",
-                            credits: 4,
-                            faculty: "Dr. Linus Torres",
-                            grade: "A+",
-                            totalMarks: 94,
-                            attendance: 96,
-                            classRank: 2,
-                            totalStudents: 118,
-                            facultyRating: 9.0,
-                            components: {
-                                "Mid-Term": { marks: 48, total: 50 },
-                                "End-Term": { marks: 77, total: 80 },
-                                "Lab Work": { marks: 29, total: 30 },
-                                "Assignments": { marks: 24, total: 25 },
-                                "Project": { marks: 19, total: 20 }
-                            },
-                            facultyResponse: {
-                                comments: "Alexandra shows exceptional talent in implementing efficient data structures. Her project on optimized graph algorithms was particularly impressive and demonstrated deep understanding of the subject matter.",
-                                lastUpdated: "June 10, 2024"
-                            }
-                        }
-                    ]
+                        }]
                 }
             }
         },
@@ -273,22 +194,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 description: "Recognized for academic excellence with placement on the Dean's List for Fall 2023",
                 category: "academic",
                 semester: 5
-            },
-            {
-                id: "ACH002",
-                title: "Hackathon Winner",
-                date: "March 2024",
-                description: "First place in the University Annual Hackathon for developing an AI-powered educational platform",
-                category: "co-curricular",
-                semester: 6
-            },
-            {
-                id: "ACH003",
-                title: "Research Publication",
-                date: "May 2024",
-                description: "Co-authored research paper 'Machine Learning Applications in Healthcare' published in IEEE journal",
-                category: "co-curricular",
-                semester: 6
             }
         ],
         coCurricular: [
@@ -300,33 +205,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 achievement: "First Prize",
                 attachments: 2,
                 semester: 5
-            },
-            {
-                id: "CC002",
-                title: "Cybersecurity Workshop",
-                date: "March 2024",
-                description: "Conducted a workshop on ethical hacking and network security for junior students",
-                achievement: "Outstanding Facilitator Award",
-                attachments: 1,
-                semester: 6
-            },
-            {
-                id: "CC003",
-                title: "Code for Change Hackathon",
-                date: "April 2024",
-                description: "Developed a sustainable energy monitoring solution using IoT devices",
-                achievement: "Second Place",
-                attachments: 3,
-                semester: 6
-            },
-            {
-                id: "CC004",
-                title: "AI Research Internship",
-                date: "Summer 2023",
-                description: "Worked with Dr. Alan Turing on neural network optimization techniques",
-                achievement: "Excellent Performance Certificate",
-                attachments: 2,
-                semester: 4
             }
         ],
         extraCurricular: [
@@ -338,24 +216,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 achievement: "Best Choreography Award (2023)",
                 attachments: 4,
                 semester: 3
-            },
-            {
-                id: "EC002",
-                title: "Environmental Club",
-                date: "2022 - Present",
-                description: "Organized campus-wide sustainability initiatives including a plastic-free campus campaign",
-                achievement: "Green Ambassador Recognition",
-                attachments: 2,
-                semester: 4
-            },
-            {
-                id: "EC003",
-                title: "Volunteer - Teach For Tomorrow",
-                date: "Weekends, 2023",
-                description: "Taught computer skills to underprivileged children at local community centers",
-                achievement: "Outstanding Volunteer Award",
-                attachments: 3,
-                semester: 5
             }
         ]
     };
@@ -784,28 +644,28 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
 
             <nav className="student-tabs">
                 <button
-                    className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
+                    className={`tab-button-sd ${activeTab === 'overview' ? 'active' : ''}`}
                     onClick={() => setActiveTab('overview')}
                 >
                     <Home size={16} />
                     <span>Overview</span>
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'curricular' ? 'active' : ''}`}
+                    className={`tab-button-sd ${activeTab === 'curricular' ? 'active' : ''}`}
                     onClick={() => setActiveTab('curricular')}
                 >
                     <Book size={16} />
                     <span>Academic</span>
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'co-curricular' ? 'active' : ''}`}
+                    className={`tab-button-sd ${activeTab === 'co-curricular' ? 'active' : ''}`}
                     onClick={() => setActiveTab('co-curricular')}
                 >
                     <FileText size={16} />
                     <span>Co-Curricular</span>
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'extra-curricular' ? 'active' : ''}`}
+                    className={`tab-button-sd ${activeTab === 'extra-curricular' ? 'active' : ''}`}
                     onClick={() => setActiveTab('extra-curricular')}
                 >
                     <Activity size={16} />

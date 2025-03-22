@@ -10,6 +10,8 @@ const AssignSubject = require('./assignSubject');
 const ComponentWeightage = require('./component_weightage');
 const ComponentMarks = require('./component_marks');
 const Student = require('./students');
+const Gettedmarks = require('./gettedmarks');
+const CoCurricularActivity = require('./co_curricular_activity');
 
 const syncDB = async () => {
     try {
@@ -20,4 +22,4 @@ const syncDB = async () => {
     }
 };
 
-module.exports = { User, Batch, Semester, Faculty, Subject, UniqueSubDegree, UniqueSubDiploma, AssignSubject, ComponentWeightage, ComponentMarks, Student, syncDB };
+module.exports = { User, Batch, Semester, Faculty, Subject, UniqueSubDegree, UniqueSubDiploma, AssignSubject, ComponentWeightage, ComponentMarks, Student, Gettedmarks, CoCurricularActivity, syncDB };
