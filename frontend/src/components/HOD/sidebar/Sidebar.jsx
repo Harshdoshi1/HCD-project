@@ -1,8 +1,11 @@
 import React from 'react';
-import { LayoutDashboard, Users, GraduationCap, BookMarked, Settings, Menu, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, GraduationCap, BookMarked, Settings, Menu, User, LogOut, Moon, Sun } from 'lucide-react';
 import './Sidebar.css';
+import { useTheme } from '../../../context/ThemeContext';
 
 const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => {
+    const { darkMode, toggleDarkMode } = useTheme();
+    
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'students', label: 'Students', icon: Users },
@@ -14,11 +17,22 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
     ];
 
     return (
-        <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+        <div className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${darkMode ? 'dark-sidebar' : ''}`}>
             <div className="sidebar-header">
                 <button className="toggle-button" onClick={() => setIsCollapsed(!isCollapsed)}>
                     <Menu size={24} />
                 </button>
+                
+                {/* Dark theme toggle button */}
+                <div className="theme-toggle">
+                    <button 
+                        onClick={toggleDarkMode} 
+                        className="theme-toggle-btn"
+                        aria-label="Toggle dark mode"
+                    >
+                        {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                    </button>
+                </div>
             </div>
             <div className="sidebar-menu">
                 {menuItems.map((item) => (
