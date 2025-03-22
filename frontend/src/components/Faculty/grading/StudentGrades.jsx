@@ -111,7 +111,7 @@ const StudentGrades = () => {
                 const response = await fetch(`http://localhost:5001/api/marks/students/${selectedBatch.batchName}`);
                 if (!response.ok) throw new Error("Failed to fetch students");
                 const data = await response.json();
-                
+                console.log('Students API Response:', data);
                 const studentsWithGrades = data.map(student => ({
                     id: student.id,
                     name: student.name,
@@ -146,6 +146,28 @@ const StudentGrades = () => {
         fetchStudents();
     }, [selectedBatch, selectedSubject]);
 
+    const handleSubmitResponse = async (studentId) => {
+        try {
+            const response = await fetch(`http://localhost:5001/api/marks/update/${2}/${selectedSubject.subjectName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    response: studentsData.find(student => student.id === studentId).response,
+                    facultyId: 1 //localStorage.getItem('userId')
+                })
+            });
+    
+            if (!response.ok) throw new Error("Failed to submit response");
+    
+            alert("Response submitted successfully!");
+        } catch (error) {
+            console.error("Error submitting response:", error);
+            setError("Failed to submit response");
+        }
+    };
+    
     const handleGradeChange = async (studentId, component, value) => {
         try {
             const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subjectName}`, {
@@ -384,24 +406,9 @@ const StudentGrades = () => {
 
                                 {(expandedStudent === student.id || editingGrades === student.id) && (
                                     <div className="grade-details-sgp">
-                                        {/* <div className="grade-components">
-                                            <h3>Grade Components</h3>
-                                            <div className="grade-grid">
-                                                {Object.entries(student.grades).map(([component, value]) => (
-                                                    <div key={component} className="grade-item">
-                                                        <label>{component}</label>
-                                                        <input
-                                                            type="number"
-                                                            value={value}
-                                                            onChange={(e) => handleGradeChange(student.id, component, e.target.value)}
-                                                            disabled={editingGrades !== student.id}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div> */}
 
-<div className="grade-components">
+
+                                    <div className="grade-components">
                                             <h4>Grade Components</h4>
                                             <table className="grade-table-sgp">
                                                 <thead>
