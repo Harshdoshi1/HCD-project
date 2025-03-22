@@ -61,6 +61,11 @@ const EmptyState = () => (
         <button className="apply-btn-asff">Reset Filters</button>
     </div>
 );
+// fetch data from localstorage
+    const faculty = JSON.parse(localStorage.getItem('user'));
+
+    const facultyId = faculty.id;
+    console.log("sfefsew",facultyId);
 
 const AssignedSubjects = () => {
     const [batch, setBatch] = useState("");
@@ -73,6 +78,7 @@ const AssignedSubjects = () => {
     const [filteredSubjects, setFilteredSubjects] = useState([]);
     const itemsPerPage = 6;
 
+    
     // Sample data - replace with your actual data
     const subjects = [
         {
