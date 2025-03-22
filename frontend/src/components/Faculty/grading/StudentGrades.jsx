@@ -16,6 +16,174 @@ const StudentGrades = () => {
     const [studentsData, setStudentsData] = useState([]);
     const [ratings, setRatings] = useState({});
     const [error, setError] = useState(null);
+    const [gradeUpdating, setGradeUpdating] = useState(false);
+
+    // Function to validate grade value
+    const validateGrade = (value) => {
+        const numValue = parseInt(value);
+        if (isNaN(numValue)) return 0;
+        if (numValue < 0) return 0;
+        if (numValue > 100) return 100;
+        return numValue;
+    };
+
+    // Handle grade input change
+    const handleGradeChange = async (studentId, component, value) => {
+        const validatedValue = validateGrade(value);
+        
+        setStudentsData(prevData => 
+            prevData.map(student => 
+                student.id === studentId 
+                    ? {
+                        ...student,
+                        grades: {
+                            ...student.grades,
+                            [component.toLowerCase()]: validatedValue
+                        }
+                    }
+                    : student
+            )
+        );
+    };
+
+    // Handle grade submission
+    const handleGradeSubmit = async (studentId) => {
+        if (!selectedSubject?.subCode || !studentId) {
+            setError("Please select a subject and student");
+            return;
+        }
+
+        setGradeUpdating(true);
+        try {
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) throw new Error("Student not found");
+
+            const faculty = JSON.parse(localStorage.getItem('user'));
+            if (!faculty) throw new Error("Faculty information not found");
+
+            console.log('Submitting grades:', {
+                studentId,
+                subjectId: selectedSubject.subCode,
+                grades: student.grades
+            });
+
+            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subCode}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    facultyId: faculty.id,
+                    ese: parseInt(student.grades?.ese) || 0,
+                    cse: parseInt(student.grades?.cse) || 0,
+                    ia: parseInt(student.grades?.ia) || 0,
+                    tw: parseInt(student.grades?.tw) || 0,
+                    viva: parseInt(student.grades?.viva) || 0,
+                    response: student.response || ''
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || errorData.error || "Failed to update grades");
+            }
+
+            const data = await response.json();
+            console.log("Grades updated successfully:", data);
+
+            // Refresh the student data after successful update
+            await fetchStudentData(selectedBatch?.id, selectedSubject?.subCode);
+            
+            // Update the UI to show success
+            setEditingGrades(null);
+            setError(null);
+        } catch (error) {
+            console.error("Error updating grades:", error);
+            setError("Failed to update grades: " + error.message);
+        } finally {
+            setGradeUpdating(false);
+        }
+    };
+
+    // Function to fetch student data
+    const fetchStudentData = async (batchId, subjectCode) => {
+        if (!batchId || !subjectCode) return;
+        
+        setLoading(true);
+        try {
+            console.log('vvvvv Fetching student data for batch:', batchId, 'and subject:', subjectCode);
+            const response = await fetch(`http://localhost:5001/api/marks/students/${batchId}`)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`Error: ${response.status} ${response.statusText}`);
+              }
+              return response.json();
+            })
+            .then(data => console.log("Student Data:", data))
+            .catch(error => console.error("Fetch error:", error));
+          
+            const data = await response.json();
+            console.log('Fetched student data:', data);
+            setStudentsData(data.map(student => ({
+                ...student,
+                grades: {
+                    ese: student.ese || 0,
+                    cse: student.cse || 0,
+                    ia: student.ia || 0,
+                    tw: student.tw || 0,
+                    viva: student.viva || 0
+                }
+            })));
+        } catch (error) {
+            console.error('Error fetching student data:', error);
+            setError('Failed to fetch student data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Custom grade input component
+    const GradeInput = ({ value, onChange, disabled }) => {
+        const [localValue, setLocalValue] = useState(value || '');
+
+        const handleChange = (e) => {
+            const newValue = e.target.value;
+            // Allow empty string or numbers only
+            if (newValue === '' || /^\d{0,3}$/.test(newValue)) {
+                setLocalValue(newValue);
+                if (newValue === '') {
+                    onChange('0');
+                } else {
+                    onChange(newValue);
+                }
+            }
+        };
+
+        const handleBlur = () => {
+            const validatedValue = validateGrade(localValue);
+            setLocalValue(validatedValue.toString());
+            onChange(validatedValue.toString());
+        };
+
+        // Update local value when prop value changes
+        useEffect(() => {
+            setLocalValue(value || '');
+        }, [value]);
+
+        return (
+            <input
+                type="text"
+                pattern="\\d*"
+                min="0"
+                max="100"
+                value={localValue}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                disabled={disabled}
+                className="grade-input-sgp"
+            />
+        );
+    };
 
     // Fetch batches on component mount
     useEffect(() => {
@@ -156,7 +324,7 @@ const StudentGrades = () => {
             const student = studentsData.find(s => s.id === studentId);
             if (!student) throw new Error("Student not found");
 
-            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.id}`, {
+            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subCode}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -188,56 +356,6 @@ const StudentGrades = () => {
         }
     };
     
-    const handleGradeChange = async (studentId, component, value) => {
-        if (!selectedSubject) {
-            setError("Please select a subject first");
-            return;
-        }
-
-        try {
-            const numericValue = parseFloat(value) || 0;
-            const faculty = JSON.parse(localStorage.getItem('user'));
-            
-            // Use subCode as subjectId since it references uniquesubdegrees.sub_code
-            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subCode}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    [component.toLowerCase()]: numericValue,
-                    facultyId: faculty.id
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to update grades");
-            }
-            
-            const data = await response.json();
-            console.log("Grades updated successfully:", data);
-
-            // Update local state with the response from server
-            setStudentsData(students =>
-                students.map(student =>
-                    student.id === studentId
-                        ? {
-                            ...student,
-                            grades: {
-                                ...student.grades,
-                                [component]: numericValue
-                            }
-                        }
-                        : student
-                )
-            );
-        } catch (error) {
-            console.error("Error updating grades:", error);
-            setError("Failed to update grades: " + error.message);
-        }
-    };
-
     const handleBatchChange = (e) => {
         const batch = batches.find(b => b.batchName === e.target.value);
         setSelectedBatch(batch);
@@ -254,9 +372,10 @@ const StudentGrades = () => {
     const handleSubjectChange = (e) => {
         console.log('Selected subject value:', e.target.value); // Debug log
         console.log('Available subjects:', subjects); // Debug log
-        const subject = subjects.find(s => s.subjectName === e.target.value);
+        const subject = subjects.find(s => s.subCode === e.target.value);
         console.log('Found subject:', subject); // Debug log
         setSelectedSubject(subject);
+        fetchStudentData(selectedBatch?.id, subject?.subCode);
     };
 
     const handleResponseChange = (studentId, response) => {
@@ -306,18 +425,6 @@ const StudentGrades = () => {
         );
     };
 
-    const GradeInput = ({ value, onChange, disabled }) => (
-        <input
-            type="number"
-            min="0"
-            max="100"
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            className="grade-input-asff"
-        />
-    );
-
     return (
         <div className="grades-container-sgp">
             <div className="grades-header-sgp">
@@ -365,16 +472,13 @@ const StudentGrades = () => {
                 <div className="filter-group-sgp">
                     <label>Subject</label>
                     <select 
-                        value={selectedSubject?.subjectName || ''} 
-                        onChange={(e) => {
-                            const subject = subjects.find(s => s.subjectName === e.target.value);
-                            setSelectedSubject(subject);
-                        }}
+                        value={selectedSubject?.subCode || ''} 
+                        onChange={handleSubjectChange}
                         disabled={!selectedSemester}
                     >
                         <option value="">Select Subject</option>
                         {subjects.map(subject => (
-                            <option key={subject.id} value={subject.subjectName}>
+                            <option key={subject.id} value={subject.subCode}>
                                 {subject.subjectName} ({subject.subCode})
                             </option>
                         ))}
@@ -454,69 +558,52 @@ const StudentGrades = () => {
 
                                 {(expandedStudent === student.id || editingGrades === student.id) && (
                                     <div className="grade-details-sgp">
-
-
-                                    <div className="grade-components">
+                                        <div className="grade-components">
                                             <h4>Grade Components</h4>
                                             <div className="grade-inputs-container">
-                                                <div className="grade-input-group">
-                                                    <label>ESE:</label>
-                                                    <GradeInput
-                                                        value={student.grades?.ese}
-                                                        onChange={(value) => handleGradeChange(student.id, 'ese', value)}
-                                                        disabled={!editingGrades === student.id}
-                                                    />
-                                                </div>
-                                                <div className="grade-input-group">
-                                                    <label>CSE:</label>
-                                                    <GradeInput
-                                                        value={student.grades?.cse}
-                                                        onChange={(value) => handleGradeChange(student.id, 'cse', value)}
-                                                        disabled={!editingGrades === student.id}
-                                                    />
-                                                </div>
-                                                <div className="grade-input-group">
-                                                    <label>IA:</label>
-                                                    <GradeInput
-                                                        value={student.grades?.ia}
-                                                        onChange={(value) => handleGradeChange(student.id, 'ia', value)}
-                                                        disabled={!editingGrades === student.id}
-                                                    />
-                                                </div>
-                                                <div className="grade-input-group">
-                                                    <label>TW:</label>
-                                                    <GradeInput
-                                                        value={student.grades?.tw}
-                                                        onChange={(value) => handleGradeChange(student.id, 'tw', value)}
-                                                        disabled={!editingGrades === student.id}
-                                                    />
-                                                </div>
-                                                <div className="grade-input-group">
-                                                    <label>Viva:</label>
-                                                    <GradeInput
-                                                        value={student.grades?.viva}
-                                                        onChange={(value) => handleGradeChange(student.id, 'viva', value)}
-                                                        disabled={!editingGrades === student.id}
-                                                    />
-                                                </div>
+                                                {['ESE', 'CSE', 'IA', 'TW', 'Viva'].map((component) => (
+                                                    <div key={component} className="grade-input-group">
+                                                        <label>{component}:</label>
+                                                        <GradeInput
+                                                            value={student.grades?.[component.toLowerCase()]}
+                                                            onChange={(value) => handleGradeChange(student.id, component, value)}
+                                                            disabled={editingGrades !== student.id}
+                                                        />
+                                                    </div>
+                                                ))}
                                             </div>
                                             <div className="grade-actions">
-                                                <button
-                                                    className="edit-grades-button"
-                                                    onClick={() => toggleGradeEdit(student.id)}
-                                                >
-                                                    {editingGrades === student.id ? (
-                                                        <>
-                                                            <Save size={16} />
+                                                {editingGrades === student.id ? (
+                                                    <>
+                                                        <button
+                                                            className="save-grades-button"
+                                                            onClick={() => handleGradeSubmit(student.id)}
+                                                            disabled={gradeUpdating}
+                                                        >
+                                                            {gradeUpdating ? (
+                                                                <Loader2 className="animate-spin" size={16} />
+                                                            ) : (
+                                                                <Save size={16} />
+                                                            )}
                                                             Save Grades
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Edit2 size={16} />
-                                                            Edit Grades
-                                                        </>
-                                                    )}
-                                                </button>
+                                                        </button>
+                                                        <button
+                                                            className="cancel-edit-button"
+                                                            onClick={() => setEditingGrades(null)}
+                                                            disabled={gradeUpdating}
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        className="edit-grades-button"
+                                                        onClick={() => setEditingGrades(student.id)}
+                                                    >
+                                                        <Edit2 size={16} />
+                                                        Edit Grades
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                         
