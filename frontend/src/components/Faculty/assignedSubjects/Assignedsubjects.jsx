@@ -65,65 +65,6 @@ const faculty = JSON.parse(localStorage.getItem('user'));
 const facultyId = faculty.id;
 console.log("sfefsew", facultyId);
 
-// Sample data - replace with your actual data
-const sampleSubjects = [
-    {
-        id: 1,
-        name: "Data Structures",
-        code: "CS201",
-        credits: 4,
-        type: "Theory",
-        description: "Fundamental data structures and algorithms",
-        department: "Computer Science",
-        semester: "3rd Semester",
-        batch: "2022-2026"
-    },
-    {
-        id: 2,
-        name: "Database Systems",
-        code: "CS301",
-        credits: 3,
-        type: "Theory + Lab",
-        description: "Introduction to database management systems",
-        department: "Computer Science",
-        semester: "4th Semester",
-        batch: "2021-2025"
-    },
-    {
-        id: 3,
-        name: "Computer Networks",
-        code: "CS401",
-        credits: 4,
-        type: "Theory",
-        description: "Fundamentals of computer networking",
-        department: "Computer Science",
-        semester: "5th Semester",
-        batch: "2021-2025"
-    },
-    {
-        id: 4,
-        name: "Operating Systems",
-        code: "CS302",
-        credits: 4,
-        type: "Theory + Lab",
-        description: "Operating system concepts and design",
-        department: "Computer Science",
-        semester: "4th Semester",
-        batch: "2022-2026"
-    },
-    {
-        id: 5,
-        name: "Software Engineering",
-        code: "CS501",
-        credits: 3,
-        type: "Theory",
-        description: "Software development lifecycle and methodologies",
-        department: "Computer Science",
-        semester: "6th Semester",
-        batch: "2020-2024"
-    }
-];
-
 const AssignedSubjects = () => {
     const [batch, setBatch] = useState("");
     const [type, setType] = useState("");
@@ -132,9 +73,66 @@ const AssignedSubjects = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
-    const [filteredSubjects, setFilteredSubjects] = useState(sampleSubjects);
+    const [subjects, setSubjects] = useState([]); // Store original subjects
+    const [filteredSubjects, setFilteredSubjects] = useState([]); // Filtered subjects
     const itemsPerPage = 6;
 
+    // Apply filters function
+    const applyFilters = () => {
+        let filtered = [...subjects];
+        
+        if (searchQuery) {
+            filtered = filtered.filter(subject => 
+                subject.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                subject.code.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+        
+        if (batch) {
+            filtered = filtered.filter(subject => subject.batch === batch);
+        }
+        
+        if (semester) {
+            filtered = filtered.filter(subject => subject.semester.includes(semester));
+        }
+        
+        setFilteredSubjects(filtered);
+        setCurrentPage(1); // Reset to first page when filters change
+    };
+
+    const resetFilters = () => {
+        setBatch("");
+        setType("");
+        setSemester("");
+        setDepartment("");
+        setSearchQuery("");
+        setFilteredSubjects(subjects); // Reset to original subjects
+        setCurrentPage(1);
+    };
+
+    // Fetch subjects for the current faculty
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            try {
+                const response = await fetch(`http://localhost:5001/api/faculties/getSubjectsByFaculty/${facultyId}`);
+                const data = await response.json();
+                console.log("API Response:", data);
+                
+                if (Array.isArray(data)) {
+                    setSubjects(data);
+                    setFilteredSubjects(data); // Ensure it has the data
+                } else {
+                    console.error("Unexpected API response format", data);
+                }
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+    
+        fetchSubjects();
+    }, [facultyId]);
 
     // Statistics for dashboard
     const stats = [
@@ -152,47 +150,6 @@ const AssignedSubjects = () => {
 
         return () => clearTimeout(timer);
     }, []);
-
-    // Filter subjects based on search and filter criteria
-    useEffect(() => {
-        let results = [...sampleSubjects];
-
-        if (batch) {
-            results = results.filter(subject => subject.batch === batch);
-        }
-
-        if (department) {
-            results = results.filter(subject => subject.department === department);
-        }
-
-        if (type) {
-            results = results.filter(subject => subject.type.includes(type));
-        }
-
-        if (semester) {
-            results = results.filter(subject => subject.semester.startsWith(semester));
-        }
-
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            results = results.filter(subject =>
-                subject.name.toLowerCase().includes(query) ||
-                subject.code.toLowerCase().includes(query) ||
-                subject.description.toLowerCase().includes(query)
-            );
-        }
-
-        setFilteredSubjects(results);
-        setCurrentPage(1); // Reset to first page when filters change
-    }, [batch, department, type, semester, searchQuery]);
-
-    const resetFilters = () => {
-        setBatch("");
-        setType("");
-        setSemester("");
-        setDepartment("");
-        setSearchQuery("");
-    };
 
     // Pagination logic
     const totalPages = Math.ceil(filteredSubjects.length / itemsPerPage);
@@ -226,20 +183,6 @@ const AssignedSubjects = () => {
                 <h1>Assigned Subjects</h1>
             </div>
 
-            <div className="stats-bar-asff">
-                {stats.map(stat => (
-                    <div key={stat.id} className="stat-card-asff">
-                        <div className="stat-icon-asff">
-                            {stat.icon}
-                        </div>
-                        <div className="stat-content-asff">
-                            <h3>{stat.value}</h3>
-                            <p>{stat.label}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
             <div className="filters-section-asff">
                 <div className="filters-heading-asff">
                     <Filter size={20} className="filters-icon-asff" />
@@ -247,9 +190,9 @@ const AssignedSubjects = () => {
                 </div>
 
                 <div className="filters-container-asff">
-                    <div className="filter-group-asff">
-                        <label htmlFor="search">Search</label>
-                        <div className="search-input-asff">
+                    <div className="search-and-filters-asff">
+                        <div className="filter-group-asff">
+                            <label htmlFor="search">Search</label>
                             <input
                                 id="search"
                                 type="text"
@@ -258,61 +201,36 @@ const AssignedSubjects = () => {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
+
+                        <div className="filter-group-asff">
+                            <label htmlFor="batch">Batch</label>
+                            <select id="batch" value={batch} onChange={(e) => setBatch(e.target.value)}>
+                                <option value="">All Batches</option>
+                                <option value="Degree 22-26">Degree 22-26</option>
+                            </select>
+                        </div>
+
+                        <div className="filter-group-asff">
+                            <label htmlFor="semester">Semester</label>
+                            <select id="semester" value={semester} onChange={(e) => setSemester(e.target.value)}>
+                                <option value="">All Semesters</option>
+                                {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                                    <option key={sem} value={sem}>{sem} Semester</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="filter-actions-asff">
+                            <button className="reset-btn-asff" onClick={resetFilters}>
+                                <X size={16} className="action-icon-asff" />
+                                Reset Filters
+                            </button>
+                            <button className="apply-btn-asff" onClick={applyFilters}>
+                                <Filter size={16} className="action-icon-asff" />
+                                Apply Filters
+                            </button>
+                        </div>
                     </div>
-
-                    <div className="filter-group-asff">
-                        <label htmlFor="batch">Batch</label>
-                        <select
-                            id="batch"
-                            value={batch}
-                            onChange={(e) => setBatch(e.target.value)}
-                        >
-                            <option value="">All Batches</option>
-                            <option value="2022-2026">2022-2026</option>
-                            <option value="2021-2025">2021-2025</option>
-                            <option value="2020-2024">2020-2024</option>
-                        </select>
-                    </div>
-
-
-                    <div className="filter-group-asff">
-                        <label htmlFor="type">Course Type</label>
-                        <select
-                            id="type"
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
-                        >
-                            <option value="">All Types</option>
-                            <option value="Theory">Theory</option>
-                            <option value="Lab">Lab</option>
-                            <option value="Theory + Lab">Theory + Lab</option>
-                        </select>
-                    </div>
-
-                    <div className="filter-group-asff">
-                        <label htmlFor="semester">Semester</label>
-                        <select
-                            id="semester"
-                            value={semester}
-                            onChange={(e) => setSemester(e.target.value)}
-                        >
-                            <option value="">All Semesters</option>
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                                <option key={sem} value={`${sem}`}>{sem}rd/th Semester</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <div className="filter-actions-asff">
-                    <button className="reset-btn-asff" onClick={resetFilters}>
-                        <X size={16} className="action-icon-asff" />
-                        Reset Filters
-                    </button>
-                    <button className="apply-btn-asff">
-                        <Filter size={16} className="action-icon-asff" />
-                        Apply Filters
-                    </button>
                 </div>
             </div>
 
@@ -324,20 +242,14 @@ const AssignedSubjects = () => {
                 </div>
             ) : (
                 <>
-                    {currentSubjects.length > 0 ? (
+                    {filteredSubjects.length > 0 ? (
                         <div className="subjects-grid-asff">
-                            {currentSubjects.map((subject) => (
+                            {filteredSubjects.map((subject) => (
                                 <SubjectCard key={subject.id} subject={subject} />
                             ))}
                         </div>
                     ) : (
                         <EmptyState />
-                    )}
-
-                    {totalPages > 1 && (
-                        <div className="pagination-asff">
-                            {renderPaginationButtons()}
-                        </div>
                     )}
                 </>
             )}
