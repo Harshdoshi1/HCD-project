@@ -123,6 +123,80 @@ const addUniqueSubDiploma = async (req, res) => {
 
 module.exports = { addUniqueSubDegree, addUniqueSubDiploma };
 
+
+const getSubjectsByBatchSemesterandFaculty = async (req, res) => {
+    try {
+        const { batchName, semesterNumber, facultyId } = req.body; // Read from request body
+        console.log("Received:", batchName, semesterNumber, facultyId);
+
+        if (!batchName || !semesterNumber || !facultyId) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        // Find faculty name from Users table using facultyId
+        const faculty = await User.findOne({ where: { id: facultyId }, attributes: ["name"] });
+        if (!faculty) {
+            return res.status(404).json({ message: "Faculty not found" });
+        }
+        console.log("Faculty Name:", faculty.name);
+
+        // Fetch all subject codes assigned to the faculty from AssignSubjects table
+        const assignedSubjects = await AssignSubjects.findAll({
+            where: { facultyId },
+            attributes: ["subjectCode"], // Fetch only subject codes
+        });
+
+        if (!assignedSubjects.length) {
+            console.log("No assigned subjects found for this faculty.");
+        } else {
+            const subjectCodes = assignedSubjects.map(sub => sub.subjectCode);
+            console.log("Assigned Subject Codes:", subjectCodes);
+        }
+
+        // Find batch ID from batchName
+        const batch = await Batch.findOne({ where: { batchName } });
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found" });
+        }
+
+        // Find semester where batchId matches
+        const semester = await Semester.findOne({ where: { semesterNumber, batchId: batch.id } });
+        if (!semester) {
+            return res.status(404).json({ message: "Semester not found for this batch" });
+        }
+
+        // Fetch subjects where facultyName matches the fetched faculty's name
+        const subjects = await Subject.findAll({
+            where: { semesterId: semester.id, batchId: batch.id, facultyName: faculty.name }
+        });
+
+        if (!subjects.length) {
+            return res.status(404).json({ message: "No subjects found for this semester, batch, and faculty" });
+        }
+
+        // Get subject names from subjects
+        const subjectNames = subjects.map(s => s.subjectName);
+
+        // Fetch sub_code and sub_level from UniqueSubDegree using sub_name
+        const uniqueSubs = await UniqueSubDegree.findAll({
+            where: { sub_name: { [Op.in]: subjectNames } },
+            attributes: ["sub_name", "sub_code", "sub_level"], // Fetch only required attributes
+        });
+
+        // Send the response properly formatted
+        res.status(200).json({
+            facultyName: faculty.name,
+            assignedSubjects,
+            subjects,
+            uniqueSubjects: uniqueSubs
+        });
+    } catch (error) {
+        console.error("Error fetching subjects:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
 const getSubjectsByBatchAndSemester = async (req, res) => {
     try {
         const { batchName, semesterNumber } = req.params;
@@ -460,5 +534,6 @@ module.exports = {
     addUniqueSubDiploma,
     getSubjects,
     getDropdownData,
-    assignSubject
+    assignSubject,
+    getSubjectsByBatchSemesterandFaculty
 };
