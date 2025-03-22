@@ -241,11 +241,11 @@ const StudentGrades = () => {
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 console.log('Subject API Response:', data);
-                
+
                 // Extract subjects from the response
                 const subjectList = data.subjects || [];
                 const uniqueSubjects = data.uniqueSubjects || [];
-                
+
                 // Map subjects with additional info from uniqueSubjects if available
                 const mappedSubjects = subjectList.map(subject => {
                     const uniqueInfo = uniqueSubjects.find(u => u.sub_name === subject.subjectName);
@@ -272,7 +272,7 @@ const StudentGrades = () => {
     // Fetch students when subject changes
     useEffect(() => {
         if (!selectedBatch || !selectedSubject) return;
-        
+
         const fetchStudents = async () => {
             setLoading(true);
             try {
@@ -296,7 +296,7 @@ const StudentGrades = () => {
                 }));
 
                 setStudentsData(studentsWithGrades);
-                
+
                 // Initialize ratings
                 const initialRatings = {};
                 studentsWithGrades.forEach(student => {
@@ -334,9 +334,9 @@ const StudentGrades = () => {
                     facultyId: JSON.parse(localStorage.getItem('user')).id
                 })
             });
-    
+
             if (!response.ok) throw new Error("Failed to submit response");
-            
+
             const data = await response.json();
             console.log("Response submitted successfully:", data);
 
@@ -348,7 +348,7 @@ const StudentGrades = () => {
                         : s
                 )
             );
-    
+
             alert("Response submitted successfully!");
         } catch (error) {
             console.error("Error submitting response:", error);
@@ -440,8 +440,8 @@ const StudentGrades = () => {
             <div className="filter-section-sgp">
                 <div className="filter-group-sgp">
                     <label>Batch</label>
-                    <select 
-                        value={selectedBatch?.batchName || ''} 
+                    <select
+                        value={selectedBatch?.batchName || ''}
                         onChange={handleBatchChange}
                     >
                         <option value="">Select Batch</option>
@@ -455,8 +455,8 @@ const StudentGrades = () => {
 
                 <div className="filter-group-sgp">
                     <label>Semester</label>
-                    <select 
-                        value={selectedSemester?.semesterNumber || ''} 
+                    <select
+                        value={selectedSemester?.semesterNumber || ''}
                         onChange={handleSemesterChange}
                         disabled={!selectedBatch}
                     >
@@ -518,9 +518,9 @@ const StudentGrades = () => {
                         {filteredStudents.map(student => (
                             <div key={student.id} className="student-card">
                                 <div className="student-basic-info-sgp">
-                                    <img 
-                                        src={student.image} 
-                                        alt={student.name} 
+                                    <img
+                                        src={student.image}
+                                        alt={student.name}
                                         className="student-image"
                                     />
                                     <div className="student-info-container-sgp">
@@ -606,7 +606,7 @@ const StudentGrades = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        
+
                                         <div className="faculty-response">
                                             <h3>Faculty Response</h3>
                                             <textarea
@@ -615,7 +615,7 @@ const StudentGrades = () => {
                                                 onChange={(e) => handleResponseChange(student.id, e.target.value)}
                                             />
                                             {renderRatingStars(student.id)}
-                                            <button 
+                                            <button
                                                 className="submit-button"
                                                 onClick={() => handleSubmitResponse(student.id)}
                                             >
