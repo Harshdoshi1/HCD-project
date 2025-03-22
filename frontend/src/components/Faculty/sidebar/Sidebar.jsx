@@ -37,18 +37,28 @@
 
 // export default Sidebar;
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { LayoutDashboard, BookMarked, GraduationCap, Settings, User, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import ProfileModal from "./ProfileModal";
 import Logout from "./Logout";
 import "./Sidebar.css";
 
 const Sidebar = ({ activeItem, setActiveItem, isExpanded, setIsExpanded }) => {
+    const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
     const handleLogout = () => {
-        console.log("User logged out"); // Replace with actual logout logic
+        // Clear all authentication data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('email');
+        
+        // Close the logout modal
         setIsLogoutOpen(false);
+        
+        // Redirect to login page
+        navigate('/');
     };
 
     const menuItems = [
