@@ -60,10 +60,69 @@ const EmptyState = () => (
     </div>
 );
 // fetch data from localstorage
-    const faculty = JSON.parse(localStorage.getItem('user'));
+const faculty = JSON.parse(localStorage.getItem('user'));
 
-    const facultyId = faculty.id;
-    console.log("sfefsew",facultyId);
+const facultyId = faculty.id;
+console.log("sfefsew", facultyId);
+
+// Sample data - replace with your actual data
+const sampleSubjects = [
+    {
+        id: 1,
+        name: "Data Structures",
+        code: "CS201",
+        credits: 4,
+        type: "Theory",
+        description: "Fundamental data structures and algorithms",
+        department: "Computer Science",
+        semester: "3rd Semester",
+        batch: "2022-2026"
+    },
+    {
+        id: 2,
+        name: "Database Systems",
+        code: "CS301",
+        credits: 3,
+        type: "Theory + Lab",
+        description: "Introduction to database management systems",
+        department: "Computer Science",
+        semester: "4th Semester",
+        batch: "2021-2025"
+    },
+    {
+        id: 3,
+        name: "Computer Networks",
+        code: "CS401",
+        credits: 4,
+        type: "Theory",
+        description: "Fundamentals of computer networking",
+        department: "Computer Science",
+        semester: "5th Semester",
+        batch: "2021-2025"
+    },
+    {
+        id: 4,
+        name: "Operating Systems",
+        code: "CS302",
+        credits: 4,
+        type: "Theory + Lab",
+        description: "Operating system concepts and design",
+        department: "Computer Science",
+        semester: "4th Semester",
+        batch: "2022-2026"
+    },
+    {
+        id: 5,
+        name: "Software Engineering",
+        code: "CS501",
+        credits: 3,
+        type: "Theory",
+        description: "Software development lifecycle and methodologies",
+        department: "Computer Science",
+        semester: "6th Semester",
+        batch: "2020-2024"
+    }
+];
 
 const AssignedSubjects = () => {
     const [batch, setBatch] = useState("");
@@ -73,101 +132,9 @@ const AssignedSubjects = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
-    const [filteredSubjects, setFilteredSubjects] = useState([]);
+    const [filteredSubjects, setFilteredSubjects] = useState(sampleSubjects);
     const itemsPerPage = 6;
 
-    
-    // Sample data - replace with your actual data
-    const subjects = [
-        {
-            id: 1,
-            name: "Data Structures",
-            code: "CS201",
-            credits: 4,
-            type: "Theory",
-            description: "Fundamental data structures and algorithms",
-            department: "Computer Science",
-            semester: "3rd Semester",
-            batch: "2022-2026"
-        },
-        {
-            id: 2,
-            name: "Database Systems",
-            code: "CS301",
-            credits: 3,
-            type: "Theory + Lab",
-            description: "Introduction to database management systems",
-            department: "Computer Science",
-            semester: "4th Semester",
-            batch: "2021-2025"
-        },
-        {
-            id: 3,
-            name: "Computer Networks",
-            code: "CS401",
-            credits: 4,
-            type: "Theory",
-            description: "Fundamentals of computer networking",
-            department: "Computer Science",
-            semester: "5th Semester",
-            batch: "2021-2025"
-        },
-        {
-            id: 4,
-            name: "Operating Systems",
-            code: "CS302",
-            credits: 4,
-            type: "Theory + Lab",
-            description: "Operating system concepts and design",
-            department: "Computer Science",
-            semester: "4th Semester",
-            batch: "2022-2026"
-        },
-        {
-            id: 5,
-            name: "Software Engineering",
-            code: "CS501",
-            credits: 3,
-            type: "Theory",
-            description: "Software development lifecycle and methodologies",
-            department: "Computer Science",
-            semester: "6th Semester",
-            batch: "2020-2024"
-        },
-        {
-            id: 6,
-            name: "Web Development",
-            code: "CS601",
-            credits: 4,
-            type: "Theory + Lab",
-            description: "Modern web development technologies",
-            department: "Computer Science",
-            semester: "7th Semester",
-            batch: "2020-2024"
-        },
-        {
-            id: 7,
-            name: "Machine Learning",
-            code: "CS602",
-            credits: 4,
-            type: "Theory + Lab",
-            description: "Introduction to machine learning algorithms",
-            department: "Computer Science",
-            semester: "7th Semester",
-            batch: "2020-2024"
-        },
-        {
-            id: 8,
-            name: "Artificial Intelligence",
-            code: "CS502",
-            credits: 3,
-            type: "Theory",
-            description: "Fundamentals of artificial intelligence",
-            department: "Computer Science",
-            semester: "6th Semester",
-            batch: "2020-2024"
-        }
-    ];
 
     // Statistics for dashboard
     const stats = [
@@ -188,7 +155,7 @@ const AssignedSubjects = () => {
 
     // Filter subjects based on search and filter criteria
     useEffect(() => {
-        let results = [...subjects];
+        let results = [...sampleSubjects];
 
         if (batch) {
             results = results.filter(subject => subject.batch === batch);
@@ -217,7 +184,7 @@ const AssignedSubjects = () => {
 
         setFilteredSubjects(results);
         setCurrentPage(1); // Reset to first page when filters change
-    }, [batch, department, type, semester, searchQuery, subjects]);
+    }, [batch, department, type, semester, searchQuery]);
 
     const resetFilters = () => {
         setBatch("");
