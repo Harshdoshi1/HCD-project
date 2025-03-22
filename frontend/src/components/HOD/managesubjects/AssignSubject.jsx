@@ -173,6 +173,7 @@ const AssignSubject = () => {
 
     // Handle filters for selected subjects section
     const handleAssignFiltersChange = (e) => {
+        alert("iuaerbiqerubiqrbirbyr");
         const { name, value } = e.target;
         const filterName = name.replace("-to-assign", "");
 
@@ -257,6 +258,7 @@ const AssignSubject = () => {
                                 name="batch-to-assign"
                                 value={assignFilters.batch}
                                 onChange={handleAssignFiltersChange}
+                            
                                 required
                             >
                                 <option value="all">Batch</option>
@@ -272,6 +274,7 @@ const AssignSubject = () => {
                                 name="semester-to-assign"
                                 value={assignFilters.semester}
                                 onChange={handleAssignFiltersChange}
+                                // onClick={alert("sndoisc")}
                                 required
                             >
                                 <option value="all">Semester</option>
