@@ -111,8 +111,6 @@ const ManageBatches = () => {
     return (
 
         <div className="manage-batches-container">
-
-
             <div className="manage-batch-header">
                 <button
                     className={`tab-button ${activeTab === 'batch' ? 'active' : ''}`}
