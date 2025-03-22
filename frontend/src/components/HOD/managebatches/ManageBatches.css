@@ -9,10 +9,23 @@
     text-align: left;
 }
 
-.tab-button active {
+.tab-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.2rem;
     border: 0px;
-    background-color: #ffffff;
-    color: #246ebc;
+    background: white;
+    color: #3674B5;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.tab-button {
+    transform: scale(1.05);
+
 }
 
 .manage-batch-header {
@@ -43,40 +56,16 @@
 }
 
 .tab-container {
-    /* margin-bottom: 2rem; */
     border-radius: 8px;
     overflow: hidden;
 }
 
 .tab-list {
     display: flex;
-    /* background-color: #f9fafb; */
-    /* border-bottom: 1px solid #e5e7eb; */
+
 }
 
-.tab-button {
 
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.8rem 1.2rem;
-    border: 0px;
-    background: white;
-    color: #246ebc;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
-
-/* .tab-button:hover {
-    background-color: #f3f4f6;
-}
-
-.tab-button.active {
-    color: #246ebc;
-    background-color: white;
-} */
 
 .tab-content {
     padding: 1.1rem;
