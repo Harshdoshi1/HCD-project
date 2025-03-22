@@ -60,10 +60,19 @@ const EmptyState = () => (
     </div>
 );
 // fetch data from localstorage
+// const faculty = JSON.parse(localStorage.getItem('user'));
+
+// const facultyId = faculty.id;
+// console.log("sfefsew", facultyId);
 const faculty = JSON.parse(localStorage.getItem('user'));
 
-const facultyId = faculty.id;
-console.log("sfefsew", facultyId);
+if (faculty && faculty.id) {
+    const facultyId = faculty.id;
+    console.log("Faculty ID:", facultyId);
+} else {
+    console.log("No faculty data found in localStorage.");
+}
+
 
 const AssignedSubjects = () => {
     const [batch, setBatch] = useState("");
@@ -80,22 +89,22 @@ const AssignedSubjects = () => {
     // Apply filters function
     const applyFilters = () => {
         let filtered = [...subjects];
-        
+
         if (searchQuery) {
-            filtered = filtered.filter(subject => 
+            filtered = filtered.filter(subject =>
                 subject.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 subject.code.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
-        
+
         if (batch) {
             filtered = filtered.filter(subject => subject.batch === batch);
         }
-        
+
         if (semester) {
             filtered = filtered.filter(subject => subject.semester.includes(semester));
         }
-        
+
         setFilteredSubjects(filtered);
         setCurrentPage(1); // Reset to first page when filters change
     };
@@ -117,7 +126,7 @@ const AssignedSubjects = () => {
                 const response = await fetch(`http://localhost:5001/api/faculties/getSubjectsByFaculty/${facultyId}`);
                 const data = await response.json();
                 console.log("API Response:", data);
-                
+
                 if (Array.isArray(data)) {
                     setSubjects(data);
                     setFilteredSubjects(data); // Ensure it has the data
@@ -130,9 +139,9 @@ const AssignedSubjects = () => {
                 setIsLoading(false);
             }
         };
-    
+
         fetchSubjects();
-    }, [facultyId]);
+    }, [faculty]);
 
     // Statistics for dashboard
     const stats = [
@@ -191,33 +200,32 @@ const AssignedSubjects = () => {
 
                 <div className="filters-container-asff">
                     <div className="search-and-filters-asff">
-                        <div className="filter-group-asff">
-                            <label htmlFor="search">Search</label>
-                            <input
-                                id="search"
-                                type="text"
-                                placeholder="Search subjects..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
+                        <div className="filter-action-left">
+                            <div className="filter-group-asff">
+                                <input
+                                    id="search"
+                                    type="text"
+                                    placeholder="Search subjects..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
 
-                        <div className="filter-group-asff">
-                            <label htmlFor="batch">Batch</label>
-                            <select id="batch" value={batch} onChange={(e) => setBatch(e.target.value)}>
-                                <option value="">All Batches</option>
-                                <option value="Degree 22-26">Degree 22-26</option>
-                            </select>
-                        </div>
+                            <div className="filter-group-asff">
+                                <select id="batch" value={batch} onChange={(e) => setBatch(e.target.value)}>
+                                    <option value="">All Batches</option>
+                                    <option value="Degree 22-26">Degree 22-26</option>
+                                </select>
+                            </div>
 
-                        <div className="filter-group-asff">
-                            <label htmlFor="semester">Semester</label>
-                            <select id="semester" value={semester} onChange={(e) => setSemester(e.target.value)}>
-                                <option value="">All Semesters</option>
-                                {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                                    <option key={sem} value={sem}>{sem} Semester</option>
-                                ))}
-                            </select>
+                            <div className="filter-group-asff">
+                                <select id="semester" value={semester} onChange={(e) => setSemester(e.target.value)}>
+                                    <option value="">All Semesters</option>
+                                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                                        <option key={sem} value={sem}>{sem} Semester</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         <div className="filter-actions-asff">
