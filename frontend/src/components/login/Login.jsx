@@ -48,21 +48,21 @@ function Login() {
             console.log("fdfdfd",data.user.role);
             console.log("fdfvxvdfdgfd");
 
-            // if (data.user.role === 'HOD') {
-            //     window.location.href = '/dashboardHOD';
-            //     console.log("fdfvxvdfdgfd");
+            if (data.user.role === 'HOD') {
+                window.location.href = '/dashboardHOD';
+                console.log("fdfvxvdfdgfd");
 
-            //     console.log("fdfdfd",data.user.role);
-            //     console.log("fdfvxvdfdgfd");
+                console.log("fdfdfd",data.user.role);
+                console.log("fdfvxvdfdgfd");
     
-            // } else if (data.user.role === 'Faculty') {
-            //     window.location.href = '/dashboardFaculty';
-            //     console.log("fdfvxvdfdgfd");
+            } else if (data.user.role === 'Faculty') {
+                window.location.href = '/dashboardFaculty';
+                console.log("fdfvxvdfdgfd");
 
-            //     console.log("fdfdfd",data.user.role);
-            //     console.log("fdfvxvdfdgfd");
+                console.log("fdfdfd",data.user.role);
+                console.log("fdfvxvdfdgfd");
     
-            // }
+            }
         } catch (error) {
             setError(error.message);
         } finally {

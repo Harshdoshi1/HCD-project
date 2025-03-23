@@ -165,7 +165,7 @@
     padding-bottom: 0.5rem;
 }
 
-.tab-button {
+.tab-button-sd {
     display: flex;
     align-items: center;
     background: transparent;
@@ -178,16 +178,16 @@
     transition: all 0.3s ease;
 }
 
-.tab-button span {
+.tab-button-sd span {
     margin-left: 0.5rem;
 }
 
-.tab-button:hover {
+.tab-button-sd:hover {
     color: #007aff;
     background-color: rgba(0, 122, 255, 0.05);
 }
 
-.tab-button.active {
+.tab-button-sd.active {
     color: #007aff;
     background-color: rgba(0, 122, 255, 0.1);
     border-bottom: 2px solid #007aff;
@@ -1245,7 +1245,7 @@
         flex-wrap: wrap;
     }
 
-    .tab-button {
+    .tab-button-sd {
         flex: 1;
         min-width: 120px;
     }

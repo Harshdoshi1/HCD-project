@@ -644,28 +644,28 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
 
             <nav className="student-tabs">
                 <button
-                    className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
+                    className={`tab-button-sd ${activeTab === 'overview' ? 'active' : ''}`}
                     onClick={() => setActiveTab('overview')}
                 >
                     <Home size={16} />
                     <span>Overview</span>
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'curricular' ? 'active' : ''}`}
+                    className={`tab-button-sd ${activeTab === 'curricular' ? 'active' : ''}`}
                     onClick={() => setActiveTab('curricular')}
                 >
                     <Book size={16} />
                     <span>Academic</span>
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'co-curricular' ? 'active' : ''}`}
+                    className={`tab-button-sd ${activeTab === 'co-curricular' ? 'active' : ''}`}
                     onClick={() => setActiveTab('co-curricular')}
                 >
                     <FileText size={16} />
                     <span>Co-Curricular</span>
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'extra-curricular' ? 'active' : ''}`}
+                    className={`tab-button-sd ${activeTab === 'extra-curricular' ? 'active' : ''}`}
                     onClick={() => setActiveTab('extra-curricular')}
                 >
                     <Activity size={16} />

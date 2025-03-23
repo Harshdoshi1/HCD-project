@@ -5,6 +5,7 @@ import StudentsList from '../../HOD/displaystudents/StudentsList';
 import StudentDetail from '../../HOD/displaystudents/StudentDetails';
 import Subject from '../../HOD/managesubjects/Subject';
 import ManageBatches from '../managebatches/ManageBatches';
+import Upgradegrade from '../../HOD/dashboard/upgradegrade/Upgradegrade';
 import './Dashboard.css';
 
 const DashboardHOD = () => {
@@ -57,7 +58,7 @@ const DashboardHOD = () => {
                                     )}
                                 </>
                             )}
-
+                            {activeItem === 'grades' && <Upgradegrade />}
                             {activeItem === 'faculty' && <Faculty />}
                             {activeItem === 'subjects' && <Subject />}
                             {activeItem === 'batches' && <ManageBatches />}
