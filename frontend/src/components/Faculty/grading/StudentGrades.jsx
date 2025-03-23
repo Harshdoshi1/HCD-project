@@ -73,11 +73,11 @@ const StudentGrades = () => {
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 console.log('Subject API Response:', data);
-                
+
                 // Extract subjects from the response
                 const subjectList = data.subjects || [];
                 const uniqueSubjects = data.uniqueSubjects || [];
-                
+
                 // Map subjects with additional info from uniqueSubjects if available
                 const mappedSubjects = subjectList.map(subject => {
                     const uniqueInfo = uniqueSubjects.find(u => u.sub_name === subject.subjectName);
@@ -104,7 +104,7 @@ const StudentGrades = () => {
     // Fetch students when subject changes
     useEffect(() => {
         if (!selectedBatch || !selectedSubject) return;
-        
+
         const fetchStudents = async () => {
             setLoading(true);
             try {
@@ -128,7 +128,7 @@ const StudentGrades = () => {
                 }));
 
                 setStudentsData(studentsWithGrades);
-                
+
                 // Initialize ratings
                 const initialRatings = {};
                 studentsWithGrades.forEach(student => {
@@ -147,42 +147,78 @@ const StudentGrades = () => {
     }, [selectedBatch, selectedSubject]);
 
     const handleSubmitResponse = async (studentId) => {
+        if (!selectedSubject) {
+            setError("Please select a subject first");
+            return;
+        }
+
         try {
-            const response = await fetch(`http://localhost:5001/api/marks/update/${2}/${selectedSubject.subjectName}`, {
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) throw new Error("Student not found");
+
+            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    response: studentsData.find(student => student.id === studentId).response,
-                    facultyId: 1 //localStorage.getItem('userId')
+                    response: student.response,
+                    facultyId: JSON.parse(localStorage.getItem('user')).id
                 })
             });
-    
+
             if (!response.ok) throw new Error("Failed to submit response");
-    
+
+            const data = await response.json();
+            console.log("Response submitted successfully:", data);
+
+            // Update local state
+            setStudentsData(students =>
+                students.map(s =>
+                    s.id === studentId
+                        ? { ...s, response: data.data.facultyResponse }
+                        : s
+                )
+            );
+
             alert("Response submitted successfully!");
         } catch (error) {
             console.error("Error submitting response:", error);
-            setError("Failed to submit response");
+            setError("Failed to submit response: " + error.message);
         }
     };
-    
+
     const handleGradeChange = async (studentId, component, value) => {
+        if (!selectedSubject) {
+            setError("Please select a subject first");
+            return;
+        }
+
         try {
-            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subjectName}`, {
+            const numericValue = parseFloat(value) || 0;
+            const faculty = JSON.parse(localStorage.getItem('user'));
+
+            // Use subCode as subjectId since it references uniquesubdegrees.sub_code
+            const response = await fetch(`http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subCode}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    [component.toLowerCase()]: value,
-                    facultyId: localStorage.getItem('userId')
+                    [component.toLowerCase()]: numericValue,
+                    facultyId: faculty.id
                 })
             });
 
-            if (!response.ok) throw new Error("Failed to update grades");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to update grades");
+            }
 
+            const data = await response.json();
+            console.log("Grades updated successfully:", data);
+
+            // Update local state with the response from server
             setStudentsData(students =>
                 students.map(student =>
                     student.id === studentId
@@ -190,7 +226,7 @@ const StudentGrades = () => {
                             ...student,
                             grades: {
                                 ...student.grades,
-                                [component]: value
+                                [component]: numericValue
                             }
                         }
                         : student
@@ -198,7 +234,7 @@ const StudentGrades = () => {
             );
         } catch (error) {
             console.error("Error updating grades:", error);
-            setError("Failed to update grades");
+            setError("Failed to update grades: " + error.message);
         }
     };
 
@@ -270,6 +306,18 @@ const StudentGrades = () => {
         );
     };
 
+    const GradeInput = ({ value, onChange, disabled }) => (
+        <input
+            type="number"
+            min="0"
+            max="100"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={disabled}
+            className="grade-input-asff"
+        />
+    );
+
     return (
         <div className="grades-container-sgp">
             <div className="grades-header-sgp">
@@ -285,8 +333,8 @@ const StudentGrades = () => {
             <div className="filter-section-sgp">
                 <div className="filter-group-sgp">
                     <label>Batch</label>
-                    <select 
-                        value={selectedBatch?.batchName || ''} 
+                    <select
+                        value={selectedBatch?.batchName || ''}
                         onChange={handleBatchChange}
                     >
                         <option value="">Select Batch</option>
@@ -300,8 +348,8 @@ const StudentGrades = () => {
 
                 <div className="filter-group-sgp">
                     <label>Semester</label>
-                    <select 
-                        value={selectedSemester?.semesterNumber || ''} 
+                    <select
+                        value={selectedSemester?.semesterNumber || ''}
                         onChange={handleSemesterChange}
                         disabled={!selectedBatch}
                     >
@@ -316,8 +364,8 @@ const StudentGrades = () => {
 
                 <div className="filter-group-sgp">
                     <label>Subject</label>
-                    <select 
-                        value={selectedSubject?.subjectName || ''} 
+                    <select
+                        value={selectedSubject?.subjectName || ''}
                         onChange={(e) => {
                             const subject = subjects.find(s => s.subjectName === e.target.value);
                             setSelectedSubject(subject);
@@ -366,9 +414,9 @@ const StudentGrades = () => {
                         {filteredStudents.map(student => (
                             <div key={student.id} className="student-card">
                                 <div className="student-basic-info-sgp">
-                                    <img 
-                                        src={student.image} 
-                                        alt={student.name} 
+                                    <img
+                                        src={student.image}
+                                        alt={student.name}
                                         className="student-image"
                                     />
                                     <div className="student-info-container-sgp">
@@ -408,52 +456,50 @@ const StudentGrades = () => {
                                     <div className="grade-details-sgp">
 
 
-                                    <div className="grade-components">
+                                        <div className="grade-components">
                                             <h4>Grade Components</h4>
-                                            <table className="grade-table-sgp">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Component</th>
-                                                        <th>Marks</th>
-                                                        <th>Out of</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {Object.entries(student.grades).map(([component, grade]) => (
-                                                        <tr key={component}>
-                                                            <td>{component}</td>
-                                                            <td>
-                                                                {editingGrades === student.id ? (
-                                                                    <input
-                                                                        type="number"
-                                                                        value={grade}
-                                                                        onChange={(e) => handleGradeChange(
-                                                                            student.id,
-                                                                            component,
-                                                                            e.target.value
-                                                                        )}
-                                                                        min="0"
-                                                                        max="100"
-                                                                    />
-                                                                ) : (
-                                                                    grade || "-"
-                                                                )}
-                                                            </td>
-                                                            <td>100</td>
-                                                            <td className={
-                                                                grade
-                                                                    ? (parseInt(grade) >= 40 ? 'pass' : 'fail')
-                                                                    : ''
-                                                            }>
-                                                                {grade
-                                                                    ? (parseInt(grade) >= 40 ? 'Pass' : 'Fail')
-                                                                    : '-'}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
+                                            <div className="grade-inputs-container">
+                                                <div className="grade-input-group">
+                                                    <label>ESE:</label>
+                                                    <GradeInput
+                                                        value={student.grades?.ese}
+                                                        onChange={(value) => handleGradeChange(student.id, 'ese', value)}
+                                                        disabled={!editingGrades === student.id}
+                                                    />
+                                                </div>
+                                                <div className="grade-input-group">
+                                                    <label>CSE:</label>
+                                                    <GradeInput
+                                                        value={student.grades?.cse}
+                                                        onChange={(value) => handleGradeChange(student.id, 'cse', value)}
+                                                        disabled={!editingGrades === student.id}
+                                                    />
+                                                </div>
+                                                <div className="grade-input-group">
+                                                    <label>IA:</label>
+                                                    <GradeInput
+                                                        value={student.grades?.ia}
+                                                        onChange={(value) => handleGradeChange(student.id, 'ia', value)}
+                                                        disabled={!editingGrades === student.id}
+                                                    />
+                                                </div>
+                                                <div className="grade-input-group">
+                                                    <label>TW:</label>
+                                                    <GradeInput
+                                                        value={student.grades?.tw}
+                                                        onChange={(value) => handleGradeChange(student.id, 'tw', value)}
+                                                        disabled={!editingGrades === student.id}
+                                                    />
+                                                </div>
+                                                <div className="grade-input-group">
+                                                    <label>Viva:</label>
+                                                    <GradeInput
+                                                        value={student.grades?.viva}
+                                                        onChange={(value) => handleGradeChange(student.id, 'viva', value)}
+                                                        disabled={!editingGrades === student.id}
+                                                    />
+                                                </div>
+                                            </div>
                                             <div className="grade-actions">
                                                 <button
                                                     className="edit-grades-button"
@@ -473,7 +519,7 @@ const StudentGrades = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="faculty-response">
                                             <h3>Faculty Response</h3>
                                             <textarea
@@ -482,7 +528,7 @@ const StudentGrades = () => {
                                                 onChange={(e) => handleResponseChange(student.id, e.target.value)}
                                             />
                                             {renderRatingStars(student.id)}
-                                            <button 
+                                            <button
                                                 className="submit-button"
                                                 onClick={() => handleSubmitResponse(student.id)}
                                             >

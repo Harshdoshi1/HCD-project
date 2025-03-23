@@ -1,15 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { PulseLoader } from 'react-spinners';
 
 function Login() {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        // Check if user is already logged in
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+        
+        if (token && user) {
+            // Redirect based on role
+            if (user.role === 'HOD') {
+                navigate('/dashboardHOD');
+            } else if (user.role === 'Faculty') {
+                navigate('/dashboardFaculty');
+            }
+        }
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -43,25 +60,12 @@ function Login() {
             localStorage.setItem('email', data.user.email);
     
             // Redirect based on role
-            console.log("fdfvxvdfdgfd");
-
-            console.log("fdfdfd",data.user.role);
-            console.log("fdfvxvdfdgfd");
-
             if (data.user.role === 'HOD') {
-                window.location.href = '/dashboardHOD';
-                console.log("fdfvxvdfdgfd");
-
-                console.log("fdfdfd",data.user.role);
-                console.log("fdfvxvdfdgfd");
-    
+                navigate('/dashboardHOD');
             } else if (data.user.role === 'Faculty') {
-                window.location.href = '/dashboardFaculty';
-                console.log("fdfvxvdfdgfd");
-
-                console.log("fdfdfd",data.user.role);
-                console.log("fdfvxvdfdgfd");
-    
+                navigate('/dashboardFaculty');
+            } else {
+                throw new Error('Invalid user role');
             }
         } catch (error) {
             setError(error.message);
