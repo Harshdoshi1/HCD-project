@@ -50,16 +50,13 @@ const AddFacultyModal = ({ onClose, onSuccess }) => {
                 <h2>Add Faculty</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Full Name</label>
-                        <input type="text" name="name" value={facultyData.name} onChange={handleChange} required />
+                        <input type="text" name="name" placeholder='Full Name' value={facultyData.name} onChange={handleChange} required />
                     </div>
                     <div className="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" value={facultyData.email} onChange={handleChange} required />
+                        <input type="email" name="email" placeholder='Email' value={facultyData.email} onChange={handleChange} required />
                     </div>
                     <div className="form-group">
-                        <label>Password</label>
-                        <input type="password" name="password" value={facultyData.password} onChange={handleChange} required />
+                        <input type="password" name="password" placeholder='Password' value={facultyData.password} onChange={handleChange} required />
                     </div>
                     <div className="form-actions">
                         <button type="button" className="cancel-btn" onClick={onClose}>Cancel</button>

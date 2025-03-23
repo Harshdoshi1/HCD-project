@@ -4,19 +4,21 @@ const Semester = require("../models/semester");
 const Faculty = require("../models/faculty");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 const UniqueSubDiploma = require("../models/uniqueSubDiploma");
-
 exports.createAssignSubject = async (req, res) => {
     try {
         console.log("Received request body:", req.body);
 
-        const { batch, semester, subject, faculty } = req.body;
+        const batch = req.body.batch.value;  
+        const semester = req.body.semester.value;  
+        const subject = req.body.subject.value;  
+        const faculty = req.body.faculty.label;  
 
         // Find Batch ID & Course Type (Degree/Diploma)
         const batchRecord = await Batch.findOne({ where: { batchName: batch } });
         if (!batchRecord) return res.status(400).json({ error: "Batch not found" });
         console.log("Batch Found:", batchRecord);
 
-        const courseType = batchRecord.courseType; // Assumes Batch model has 'courseType' field
+        const courseType = batchRecord.courseType; 
 
         // Find Semester ID
         const semesterRecord = await Semester.findOne({ where: { semesterNumber: semester, batchId: batchRecord.id } });
@@ -39,7 +41,7 @@ exports.createAssignSubject = async (req, res) => {
             batchId: batchRecord.id,
             semesterId: semesterRecord.id,
             facultyName: faculty,
-            subjectCode: subjectRecord.sub_code, // Ensure correct column name
+            subjectCode: subjectRecord.sub_code, 
         });
 
         console.log("Assigned Subject:", assignSubject);
@@ -49,8 +51,6 @@ exports.createAssignSubject = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-
 
 
 // Get all AssignSubject entries

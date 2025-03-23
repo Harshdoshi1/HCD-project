@@ -15,10 +15,7 @@ const SubjectCard = ({ subject }) => {
             </div>
 
             <div className="card-content-asff">
-                {/* <div className="content-row-asff">
-                    <span className="content-label-asff">Department:</span>
-                    <span className="content-value-asff">{subject.department}</span>
-                </div> */}
+
                 <div className="content-row-asff">
                     <span className="content-label-asff">Semester:</span>
                     <span className="content-value-asff">{subject.semester}</span>
@@ -56,11 +53,17 @@ const SubjectCard = ({ subject }) => {
 const EmptyState = () => (
     <div className="empty-state-asff">
         <Book size={48} strokeWidth={1} className="empty-state-icon-asff" />
+
         <h3>No subjects found</h3>
         <p>Try adjusting your filters or search criteria to find what you're looking for.</p>
         <button className="apply-btn-asff">Reset Filters</button>
     </div>
 );
+// fetch data from localstorage
+    const faculty = JSON.parse(localStorage.getItem('user'));
+
+    const facultyId = faculty.id;
+    console.log("sfefsew",facultyId);
 
 const AssignedSubjects = () => {
     const [batch, setBatch] = useState("");
@@ -73,6 +76,7 @@ const AssignedSubjects = () => {
     const [filteredSubjects, setFilteredSubjects] = useState([]);
     const itemsPerPage = 6;
 
+    
     // Sample data - replace with your actual data
     const subjects = [
         {
@@ -303,19 +307,6 @@ const AssignedSubjects = () => {
                         </select>
                     </div>
 
-                    <div className="filter-group-asff">
-                        <label htmlFor="department">Department</label>
-                        <select
-                            id="department"
-                            value={department}
-                            onChange={(e) => setDepartment(e.target.value)}
-                        >
-                            <option value="">All Departments</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Information Technology">Information Technology</option>
-                            <option value="Electronics">Electronics</option>
-                        </select>
-                    </div>
 
                     <div className="filter-group-asff">
                         <label htmlFor="type">Course Type</label>
