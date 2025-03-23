@@ -4,6 +4,7 @@ const Semester = require("../models/semester");
 const Faculty = require("../models/faculty");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 const UniqueSubDiploma = require("../models/uniqueSubDiploma");
+const User = require("../models/users");
 exports.createAssignSubject = async (req, res) => {
     try {
         console.log("Received request body:", req.body);
@@ -57,7 +58,7 @@ exports.createAssignSubject = async (req, res) => {
 exports.getAllAssignSubjects = async (req, res) => {
     try {
         const assignSubjects = await AssignSubject.findAll({
-            include: [Batch, Semester, Faculty, Subject]
+            include: [Batch, Semester, Faculty, UniqueSubDegree, UniqueSubDiploma]
         });
         res.status(200).json(assignSubjects);
     } catch (error) {
@@ -69,7 +70,7 @@ exports.getAllAssignSubjects = async (req, res) => {
 exports.getAssignSubjectById = async (req, res) => {
     try {
         const assignSubject = await AssignSubject.findByPk(req.params.id, {
-            include: [Batch, Semester, Faculty, Subject]
+            include: [Batch, Semester, Faculty, UniqueSubDegree, UniqueSubDiploma]
         });
         if (!assignSubject) {
             return res.status(404).json({ message: 'AssignSubject not found' });
@@ -104,6 +105,60 @@ exports.deleteAssignSubject = async (req, res) => {
         }
         await assignSubject.destroy();
         res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Get subjects assigned to a specific faculty
+exports.getSubjectsByFaculty = async (req, res) => {
+    try {
+        const { facultyId } = req.params;
+        console.log("getted facultyId", facultyId);
+
+        const facultyName = await User.findOne({ where: { id: facultyId } });
+        console.log("getted facultyName", facultyName.name);
+        const assignSubjects = await AssignSubject.findAll({
+            where: { facultyName: facultyName.name },
+            include: [
+                {
+                    model: Batch,
+                    attributes: ['batchName', 'courseType']
+                },
+                {
+                    model: Semester,
+                    attributes: ['semesterNumber']
+                },
+                {
+                    model: UniqueSubDegree,
+                    attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level'],
+                    required: false
+                },
+                {
+                    model: UniqueSubDiploma,
+                    attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level'],
+                    required: false
+                }
+            ]
+        });
+        console.log("getted assignSubjects", assignSubjects);
+        // Transform the data to match the frontend's expected format
+        const formattedSubjects = assignSubjects.map(assignSubject => {
+            const subject = assignSubject.UniqueSubDegree || assignSubject.UniqueSubDiploma;
+            return {
+                id: assignSubject.id,
+                name: subject.sub_name,
+                code: subject.sub_code,
+                credits: subject.sub_credit,
+                type: subject.sub_level,
+                description: subject.sub_name,
+                department: assignSubject.Batch.courseType,
+                semester: `${assignSubject.Semester.semesterNumber}th Semester`,
+                batch: assignSubject.Batch.batchName
+            };
+        });
+
+        res.status(200).json(formattedSubjects);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
