@@ -37,7 +37,7 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
         { id: "batches", label: "Batches", icon: Users },
         { id: "subjects", label: "Subjects", icon: BookMarked },
         { id: "grades", label: "Grades", icon: GraduationCap },
-        { id: "settings", label: "Settings", icon: Settings },
+        // { id: "settings", label: "Settings", icon: Settings },
     ];
 
     return (

@@ -136,7 +136,7 @@ const StudentGrades = () => {
             })));
         } catch (error) {
             console.error('Error fetching student data:', error);
-            setError('Failed to fetch student data');
+            // setError('Failed to fetch student data');
         } finally {
             setLoading(false);
         }
