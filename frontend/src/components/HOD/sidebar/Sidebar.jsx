@@ -1,5 +1,3 @@
-
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LayoutDashboard, Users, GraduationCap, BookMarked, Settings, Menu, User, LogOut } from "lucide-react";
@@ -12,17 +10,24 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
-    const handleLogout = () => {
-        // Clear all authentication data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('email');
-        
-        // Close the logout modal
-        setIsLogoutOpen(false);
-        
-        // Redirect to login page
-        navigate('/');
+    const handleLogout = async () => {
+        try {
+            // First close the modal
+            setIsLogoutOpen(false);
+            
+            // Clear all authentication data
+            localStorage.clear(); // This will clear all localStorage items
+            
+            // Small delay to ensure state is cleared before navigation
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Redirect to login page
+            window.location.href = '/';  // Using window.location for a full page refresh
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Fallback redirect
+            window.location.href = '/';
+        }
     };
 
     const menuItems = [
@@ -32,7 +37,7 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
         { id: "batches", label: "Batches", icon: Users },
         { id: "subjects", label: "Subjects", icon: BookMarked },
         { id: "grades", label: "Grades", icon: GraduationCap },
-        { id: "settings", label: "Settings", icon: Settings },
+        // { id: "settings", label: "Settings", icon: Settings },
     ];
 
     return (

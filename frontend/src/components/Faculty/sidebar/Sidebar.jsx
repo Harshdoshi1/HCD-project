@@ -65,7 +65,7 @@ const Sidebar = ({ activeItem, setActiveItem, isExpanded, setIsExpanded }) => {
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "subjects", label: "Subjects", icon: BookMarked },
         { id: "grades", label: "Grades", icon: GraduationCap },
-        { id: "settings", label: "Settings", icon: Settings },
+        // { id: "settings", label: "Settings", icon: Settings },
     ];
 
     return (

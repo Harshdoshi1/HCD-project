@@ -153,7 +153,7 @@ exports.getSubjectsByFaculty = async (req, res) => {
                 type: subject.sub_level,
                 description: subject.sub_name,
                 department: assignSubject.Batch.courseType,
-                semester: `${assignSubject.Semester.semesterNumber}th Semester`,
+                semester: `${assignSubject.Semester.semesterNumber} Semester`,
                 batch: assignSubject.Batch.batchName
             };
         });

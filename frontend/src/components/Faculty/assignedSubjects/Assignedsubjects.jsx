@@ -3,6 +3,7 @@ import { Book, Users, CalendarDays, Filter, Grid, Award, Clock, MoreHorizontal, 
 import './AssignedSubjects.css';
 
 const SubjectCard = ({ subject }) => {
+    console.log("Subject data in card:", subject); // Add this for debugging
     return (
         <div className="subject-card-asff">
             <div className="card-header-asff">
@@ -15,25 +16,28 @@ const SubjectCard = ({ subject }) => {
             </div>
 
             <div className="card-content-asff">
-
                 <div className="content-row-asff">
                     <span className="content-label-asff">Semester:</span>
-                    <span className="content-value-asff">{subject.semester}</span>
+                    <span className="content-value-asff">{subject.semester || 'Not assigned'}</span>
                 </div>
                 <div className="content-row-asff">
                     <span className="content-label-asff">Batch:</span>
-                    <span className="content-value-asff">{subject.batch}</span>
+                    <span className="content-value-asff">{subject.batch || 'Not assigned'}</span>
+                </div>
+                <div className="content-row-asff">
+                    <span className="content-label-asff">Department:</span>
+                    <span className="content-value-asff">{subject.department || 'Not specified'}</span>
                 </div>
             </div>
 
             <div className="card-footer-asff">
                 <div className="footer-item-asff">
                     <Users className="footer-icon-asff" />
-                    <span>{subject.type}</span>
+                    <span>{subject.type || 'Not specified'}</span>
                 </div>
                 <div className="footer-item-asff">
                     <CalendarDays className="footer-icon-asff" />
-                    <span>{subject.credits} Credits</span>
+                    <span>{subject.credits || 0} Credits</span>
                 </div>
             </div>
 
@@ -59,20 +63,6 @@ const EmptyState = () => (
         <button className="apply-btn-asff">Reset Filters</button>
     </div>
 );
-// fetch data from localstorage
-// const faculty = JSON.parse(localStorage.getItem('user'));
-
-// const facultyId = faculty.id;
-// console.log("sfefsew", facultyId);
-const faculty = JSON.parse(localStorage.getItem('user'));
-
-if (faculty && faculty.id) {
-    const facultyId = faculty.id;
-    console.log("Faculty ID:", facultyId);
-} else {
-    console.log("No faculty data found in localStorage.");
-}
-
 
 const AssignedSubjects = () => {
     const [batch, setBatch] = useState("");
@@ -84,27 +74,113 @@ const AssignedSubjects = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [subjects, setSubjects] = useState([]); // Store original subjects
     const [filteredSubjects, setFilteredSubjects] = useState([]); // Filtered subjects
+    const [batchOptions, setBatchOptions] = useState([]);
+    const [semesterOptions, setSemesterOptions] = useState([]);
+    const [batchToSemesters, setBatchToSemesters] = useState({}); // Map to store semesters for each batch
     const itemsPerPage = 6;
+
+    useEffect(() => {
+        const faculty = JSON.parse(localStorage.getItem('user'));
+        const facultyId = faculty?.id;
+        
+        if (!facultyId) {
+            // Redirect to login if faculty data is not found
+            window.location.href = '/';
+            return;
+        }
+
+        const fetchSubjects = async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`http://localhost:5001/api/faculties/getSubjectsByFaculty/${facultyId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch subjects');
+                }
+                const data = await response.json();
+                console.log("API Response:", data);
+                
+                if (Array.isArray(data)) {
+                    // Create a map of batch to semesters
+                    const batchSemesterMap = {};
+                    data.forEach(subject => {
+                        if (subject.batch && subject.semester) {
+                            if (!batchSemesterMap[subject.batch]) {
+                                batchSemesterMap[subject.batch] = new Set();
+                            }
+                            batchSemesterMap[subject.batch].add(subject.semester);
+                        }
+                    });
+
+                    // Convert Sets to sorted arrays
+                    Object.keys(batchSemesterMap).forEach(batchKey => {
+                        const semesterArray = Array.from(batchSemesterMap[batchKey]);
+                        semesterArray.sort((a, b) => {
+                            const numA = parseInt(a);
+                            const numB = parseInt(b);
+                            return numA - numB;
+                        });
+                        batchSemesterMap[batchKey] = semesterArray;
+                    });
+
+                    // Extract unique batches
+                    const uniqueBatches = [...new Set(data.map(subject => subject.batch).filter(Boolean))];
+                    uniqueBatches.sort(); // Sort batches alphabetically
+
+                    // Store the batch-semester mapping
+                    setBatchToSemesters(batchSemesterMap);
+                    setBatchOptions(uniqueBatches);
+                    
+                    setSubjects(data);
+                    setFilteredSubjects(data);
+                } else {
+                    console.error("Unexpected API response format", data);
+                }
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+    
+        fetchSubjects();
+    }, []);
+
+    // Update semester options when batch changes
+    useEffect(() => {
+        if (batch) {
+            setSemesterOptions(batchToSemesters[batch] || []);
+            setSemester(''); // Reset semester when batch changes
+        } else {
+            // If no batch is selected, show all unique semesters
+            const allSemesters = [...new Set(subjects.map(subject => subject.semester).filter(Boolean))];
+            allSemesters.sort((a, b) => {
+                const numA = parseInt(a);
+                const numB = parseInt(b);
+                return numA - numB;
+            });
+            setSemesterOptions(allSemesters);
+        }
+    }, [batch, batchToSemesters]);
 
     // Apply filters function
     const applyFilters = () => {
         let filtered = [...subjects];
-
+        
         if (searchQuery) {
-            filtered = filtered.filter(subject =>
-                subject.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                subject.code.toLowerCase().includes(searchQuery.toLowerCase())
+            filtered = filtered.filter(subject => 
+                (subject.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (subject.code?.toLowerCase() || '').includes(searchQuery.toLowerCase())
             );
         }
-
+        
         if (batch) {
             filtered = filtered.filter(subject => subject.batch === batch);
         }
-
+        
         if (semester) {
-            filtered = filtered.filter(subject => subject.semester.includes(semester));
+            filtered = filtered.filter(subject => subject.semester === semester);
         }
-
+        
         setFilteredSubjects(filtered);
         setCurrentPage(1); // Reset to first page when filters change
     };
@@ -118,30 +194,6 @@ const AssignedSubjects = () => {
         setFilteredSubjects(subjects); // Reset to original subjects
         setCurrentPage(1);
     };
-
-    // Fetch subjects for the current faculty
-    useEffect(() => {
-        const fetchSubjects = async () => {
-            try {
-                const response = await fetch(`http://localhost:5001/api/faculties/getSubjectsByFaculty/${facultyId}`);
-                const data = await response.json();
-                console.log("API Response:", data);
-
-                if (Array.isArray(data)) {
-                    setSubjects(data);
-                    setFilteredSubjects(data); // Ensure it has the data
-                } else {
-                    console.error("Unexpected API response format", data);
-                }
-            } catch (error) {
-                console.error("Error fetching subjects:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchSubjects();
-    }, [faculty]);
 
     // Statistics for dashboard
     const stats = [
@@ -200,32 +252,39 @@ const AssignedSubjects = () => {
 
                 <div className="filters-container-asff">
                     <div className="search-and-filters-asff">
-                        <div className="filter-action-left">
-                            <div className="filter-group-asff">
-                                <input
-                                    id="search"
-                                    type="text"
-                                    placeholder="Search subjects..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
+                        <div className="filter-group-asff">
+                            <label htmlFor="search">Search</label>
+                            <input
+                                id="search"
+                                type="text"
+                                placeholder="Search subjects..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
 
-                            <div className="filter-group-asff">
-                                <select id="batch" value={batch} onChange={(e) => setBatch(e.target.value)}>
-                                    <option value="">All Batches</option>
-                                    <option value="Degree 22-26">Degree 22-26</option>
-                                </select>
-                            </div>
+                        <div className="filter-group-asff">
+                            <label htmlFor="batch">Batch</label>
+                            <select id="batch" value={batch} onChange={(e) => setBatch(e.target.value)}>
+                                <option value="">All Batches</option>
+                                {batchOptions.map((batchOption) => (
+                                    <option key={batchOption} value={batchOption}>
+                                        {batchOption}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                            <div className="filter-group-asff">
-                                <select id="semester" value={semester} onChange={(e) => setSemester(e.target.value)}>
-                                    <option value="">All Semesters</option>
-                                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                                        <option key={sem} value={sem}>{sem} Semester</option>
-                                    ))}
-                                </select>
-                            </div>
+                        <div className="filter-group-asff">
+                            <label htmlFor="semester">Semester</label>
+                            <select id="semester" value={semester} onChange={(e) => setSemester(e.target.value)}>
+                                <option value="">All Semesters</option>
+                                {semesterOptions.map((semesterOption) => (
+                                    <option key={semesterOption} value={semesterOption}>
+                                        {semesterOption}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="filter-actions-asff">
