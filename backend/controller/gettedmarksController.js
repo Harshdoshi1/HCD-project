@@ -2,6 +2,7 @@ const Gettedmarks = require("../models/gettedmarks");
 const Student = require("../models/students");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 const Batch = require("../models/batch");
+
 exports.getStudentMarksByBatchAndSubject = async (req, res) => {
     try {
         const { batchId } = req.params;
