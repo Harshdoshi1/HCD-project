@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, GraduationCap, BookMarked, Settings, Menu, User, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, GraduationCap, BookMarked, Settings, Menu, User, LogOut, BarChart2 } from "lucide-react";
 import ProfileModal from "./ProfileModal";
 import Logout from "./Logout";
 import "./Sidebar.css";
@@ -12,20 +12,12 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
 
     const handleLogout = async () => {
         try {
-            // First close the modal
             setIsLogoutOpen(false);
-            
-            // Clear all authentication data
-            localStorage.clear(); // This will clear all localStorage items
-            
-            // Small delay to ensure state is cleared before navigation
+            localStorage.clear();
             await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Redirect to login page
-            window.location.href = '/';  // Using window.location for a full page refresh
+            window.location.href = '/';
         } catch (error) {
             console.error('Logout error:', error);
-            // Fallback redirect
             window.location.href = '/';
         }
     };
@@ -37,7 +29,7 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
         { id: "batches", label: "Batches", icon: Users },
         { id: "subjects", label: "Subjects", icon: BookMarked },
         { id: "grades", label: "Grades", icon: GraduationCap },
-        // { id: "settings", label: "Settings", icon: Settings },
+        { id: "studentAnalysis", label: "Student Analysis", icon: BarChart2 },
     ];
 
     return (
@@ -73,7 +65,6 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
             </div>
 
             <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
-
             <Logout isOpen={isLogoutOpen} onClose={() => setIsLogoutOpen(false)} onConfirm={handleLogout} />
         </>
     );
