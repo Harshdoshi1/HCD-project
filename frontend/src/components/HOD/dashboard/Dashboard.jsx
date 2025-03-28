@@ -6,6 +6,7 @@ import StudentDetail from '../../HOD/displaystudents/StudentDetails';
 import Subject from '../../HOD/managesubjects/Subject';
 import ManageBatches from '../managebatches/ManageBatches';
 import Upgradegrade from '../../HOD/dashboard/upgradegrade/Upgradegrade';
+import StudentAnalysis from './StudentAnalysis/StudentAnalysis';
 import './Dashboard.css';
 
 const DashboardHOD = () => {
@@ -65,7 +66,10 @@ const DashboardHOD = () => {
                             {activeItem === 'faculty' && <Faculty />}
                             {activeItem === 'subjects' && <Subject />}
                             {activeItem === 'batches' && <ManageBatches />}
-                            {!(activeItem === 'dashboard' || activeItem === 'students' || activeItem === 'grades' || activeItem === 'faculty' || activeItem === 'subjects' || activeItem === 'batches') && (
+                            {activeItem === 'studentAnalysis' && <StudentAnalysis />}
+                            {!(activeItem === 'dashboard' || activeItem === 'students' || activeItem === 'grades' || 
+                               activeItem === 'faculty' || activeItem === 'subjects' || activeItem === 'batches' || 
+                               activeItem === 'studentAnalysis') && (
                                 <div className="stats-grid">
                                     <div className="stat-card">
                                         <h3>No content available for this section.</h3>

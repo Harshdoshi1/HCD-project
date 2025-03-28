@@ -9,13 +9,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
-    const [location, setLocation] = useState("");
     const [mobile, setMobile] = useState("");
-    const [password, setPassword] = useState("");
     const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
     const handleSave = () => {
-        console.log("Profile Updated:", { username, email, location, mobile, password });
+        console.log("Profile Updated:", { username, email, mobile });
         onClose();
     };
 
@@ -36,20 +34,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="input-group-hod">
-                        <FiMapPin className="icon" />
-                        <input type="text" className="fpm" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
-                    </div>
-
-                    <div className="input-group-hod">
                         <FiPhone className="icon" />
                         <input type="tel" className="fpm" placeholder="Mobile Number" value={mobile} onChange={(e) => setMobile(e.target.value)} />
                     </div>
 
-                    <div className="input-group-hod">
-                        <FiLock className="icon" />
-                        <input type="password" className="fpm" placeholder="New Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                    </div>
-
+          
                     <button className="save-button-pm" onClick={handleSave}>Save</button>
                     <button className="close-button-pm" onClick={onClose}>Close</button>
 
