@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Book, Clock, Mail, Phone, MapPin, ChevronDown, User, Award, ChevronRight, Calendar, Trophy, FileText, MessageSquare, Activity, Home, Plus, Edit, Trash, Filter } from 'lucide-react';
 import './StudentDetail.css';
@@ -19,7 +17,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         date: '',
         description: '',
         achievement: '',
-        attachments: 0,
         semester: 1
     });
 
@@ -57,7 +54,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
             date: '',
             description: '',
             achievement: '',
-            attachments: 0,
             semester: selectedSemester
         });
     };
@@ -123,16 +119,14 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         enrollmentNo: "92200133022",
         department: "ICT",
         semester: 6,
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoguHACZpXrj5llOZZySnZ4OAxMg4z64julw&s",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH4dcYWVFHFsz8M3Rsjpy2Hg6gQAmgbCIwWA&s",
         batch: "2022-2026",
         cgpa: 9.2,
         personalInfo: {
             email: "krish@marwadiuniversity.ac.in",
             phone: "+91 1234567890",
-            bloodGroup: "O+",
             dateOfBirth: "15 March 1993",
-            parentName: "kirtibhai mamtora",
-            parentContact: "+91 1234567890"
+
         },
         academics: {
             department: "Computer Science & Engineering",
@@ -203,7 +197,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 date: "January 2024",
                 description: "Presented research paper on 'AI in Healthcare' at IEEE International Conference",
                 achievement: "First Prize",
-                attachments: 2,
                 semester: 5
             }
         ],
@@ -214,7 +207,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 date: "2021 - Present",
                 description: "Lead performer in the contemporary dance group representing the university at cultural events",
                 achievement: "Best Choreography Award (2023)",
-                attachments: 4,
                 semester: 3
             }
         ]
@@ -230,38 +222,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
     }
     const renderStudentOverview = () => (
         <div className="student-overview-sdp">
-            <div className="overview-card-sdp">
-                <div className="overview-card-sdp-header">
-                    <h3><User size={18} /> Personal Information</h3>
-                </div>
-                <div className="overview-card-sdp-content">
-                    <div className="detail-grid">
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp"><Mail size={14} /> Email</span>
-                            <span className="detail-value-sdp">{student.personalInfo.email}</span>
-                        </div>
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp"><Phone size={14} /> Contact</span>
-                            <span className="detail-value-sdp">{student.personalInfo.phone}</span>
-                        </div>
-
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp"><Activity size={14} /> Blood Group</span>
-                            <span className="detail-value-sdp">{student.personalInfo.bloodGroup}</span>
-                        </div>
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp"><Calendar size={14} /> Date of Birth</span>
-                            <span className="detail-value-sdp">{student.personalInfo.dateOfBirth}</span>
-                        </div>
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp"><User size={14} /> Parent Details</span>
-                            <span className="detail-value-sdp">
-                                {student.personalInfo.parentName} ({student.personalInfo.parentContact})
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <div className="overview-card-sdp">
                 <div className="overview-card-sdp-header">
@@ -467,7 +427,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         );
     };
     const renderActivityCard = (activity, type) => (
-        <div key={activity.id} className="activity-card">
+        <div key={activity.id} className="activity-card improved-activity-card">
             <div className="activity-icon">
                 {type === 'co' ? <FileText size={18} /> : <Activity size={18} />}
             </div>
@@ -481,11 +441,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                     )}
                     <span className="activity-semester">Semester: {activity.semester || 'N/A'}</span>
                 </div>
-                {activity.attachments && (
-                    <div className="activity-attachments">
-                        <span className="attachments-label">{activity.attachments} document{activity.attachments !== 1 ? 's' : ''} attached</span>
-                    </div>
-                )}
             </div>
             <div className="activity-actions">
                 <button className="action-button edit-button" onClick={() => handleEditActivity(activity, type)}>
@@ -614,7 +569,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             className="profile-image"
                             onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = "https://via.placeholder.com/150";
+                                e.target.src = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH4dcYWVFHFsz8M3Rsjpy2Hg6gQAmgbCIwWA&s";
                             }}
                         />
                         <div className="profile-status"></div>
@@ -636,6 +591,17 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             <div className="highlight-item">
                                 <span className="highlight-label">Batch</span>
                                 <span className="highlight-value">{student.batch}</span>
+                            </div>
+                        </div>
+                        <div className="personal-info-quick">
+                            <div className="personal-info-item">
+                                <Mail size={14} /> {student.personalInfo.email}
+                            </div>
+                            <div className="personal-info-item">
+                                <Phone size={14} /> {student.personalInfo.phone}
+                            </div>
+                            <div className="personal-info-item">
+                                <Calendar size={14} /> {student.personalInfo.dateOfBirth}
                             </div>
                         </div>
                     </div>
@@ -726,7 +692,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                         </div>
                     </div>
                 )}
-
                 {activeTab === 'co-curricular' && (
                     <div className="activities-section">
                         <div className="activities-header">
@@ -739,12 +704,19 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                     >
                                         <Filter size={14} /> All Semesters
                                     </button>
-                                    <button
-                                        className={`filter-button ${activityFilter === 'semester' ? 'active' : ''}`}
-                                        onClick={() => setActivityFilter('semester')}
-                                    >
-                                        <Filter size={14} /> Current Semester ({selectedSemester})
-                                    </button>
+                                    {[...Array(8)].map((_, i) => (
+                                        <button
+                                            key={i + 1}
+                                            className={`filter-button ${activityFilter === 'semester' && selectedSemester === i + 1 ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setSelectedSemester(i + 1);
+                                                setActivityFilter('semester');
+                                            }}
+                                            disabled={i + 1 > student.semester}
+                                        >
+                                            <Filter size={14} /> Sem {i + 1}
+                                        </button>
+                                    ))}
                                 </div>
                                 <button className="add-activity-button" onClick={() => handleAddActivity('co')}>
                                     <Plus size={14} /> Add Activity
@@ -775,7 +747,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             </div>
                         </div>
 
-                        <div className="activities-list">
+                        <div className="activities-list improved-activities-list">
                             {filterActivitiesBySemester(student.coCurricular, selectedSemester).map(activity =>
                                 renderActivityCard(activity, 'co')
                             )}
@@ -803,12 +775,19 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                     >
                                         <Filter size={14} /> All Semesters
                                     </button>
-                                    <button
-                                        className={`filter-button ${activityFilter === 'semester' ? 'active' : ''}`}
-                                        onClick={() => setActivityFilter('semester')}
-                                    >
-                                        <Filter size={14} /> Current Semester ({selectedSemester})
-                                    </button>
+                                    {[...Array(8)].map((_, i) => (
+                                        <button
+                                            key={i + 1}
+                                            className={`filter-button ${activityFilter === 'semester' && selectedSemester === i + 1 ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setSelectedSemester(i + 1);
+                                                setActivityFilter('semester');
+                                            }}
+                                            disabled={i + 1 > student.semester}
+                                        >
+                                            <Filter size={14} /> Sem {i + 1}
+                                        </button>
+                                    ))}
                                 </div>
                                 <button className="add-activity-button" onClick={() => handleAddActivity('extra')}>
                                     <Plus size={14} /> Add Activity
@@ -839,7 +818,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             </div>
                         </div>
 
-                        <div className="activities-list">
+                        <div className="activities-list improved-activities-list">
                             {filterActivitiesBySemester(student.extraCurricular, selectedSemester).map(activity =>
                                 renderActivityCard(activity, 'extra')
                             )}

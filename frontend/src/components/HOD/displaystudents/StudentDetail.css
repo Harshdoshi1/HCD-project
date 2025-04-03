@@ -129,6 +129,7 @@
 .student-highlight {
     display: flex;
     gap: 1.5rem;
+    margin-bottom: 0.8rem;
 }
 
 .highlight-item {
@@ -155,6 +156,30 @@
     font-size: 1.25rem;
     font-weight: 600;
     color: #007aff;
+}
+
+.personal-info-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.personal-info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background-color: #f0f7ff;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.personal-info-item:hover {
+    background-color: #e0f0ff;
+    transform: translateY(-2px);
 }
 
 .student-tabs {
@@ -857,27 +882,26 @@
 .filter-container {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
 }
 
 .filter-button {
     display: flex;
     align-items: center;
-    background-color: #f8f9fa;
+    background-color: #d8e5f3;
     border: 1px solid #e9ecef;
     border-radius: 6px;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.8rem;
     cursor: pointer;
     font-size: 0.85rem;
     color: #6c757d;
     transition: all 0.3s ease;
-}
-
-.filter-button svg {
-    margin-right: 0.3rem;
+    margin-bottom: 0.5rem;
 }
 
 .filter-button:hover {
-    background-color: #e9ecef;
+    background-color: #c5d9f0;
     color: #343a40;
 }
 
@@ -885,6 +909,10 @@
     background-color: #007aff;
     color: white;
     border-color: #007aff;
+}
+
+.filter-button svg {
+    margin-right: 0.3rem;
 }
 
 .add-activity-button {
@@ -953,10 +981,16 @@
 }
 
 .activities-list {
-
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+}
+
+.improved-activities-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .activity-card {
@@ -968,6 +1002,53 @@
     border: 1px solid #f0f0f0;
     transition: all 0.3s ease;
     position: relative;
+}
+
+.improved-activity-card {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.3s ease;
+    border-left: 4px solid #007aff;
+    height: 100%;
+}
+
+.improved-activity-card .activity-icon {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 122, 255, 0.1);
+    color: #007aff;
+    border-radius: 50%;
+    margin-right: 0;
+}
+
+.improved-activity-card .activity-details {
+    margin-left: 0;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.improved-activity-card .activity-actions {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.improved-activity-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .activity-card:hover {
