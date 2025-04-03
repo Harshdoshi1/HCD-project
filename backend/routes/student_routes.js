@@ -39,7 +39,7 @@ const {
     getActivitiesByStudentAndSemester,
     addOrUpdateActivity,
     deleteActivity
-} = require('../controller/student_extra_activity'); // Import Co-curricular controller
+} = require('../controller/student_cocurricular_controller'); // Import Co-curricular controller
 
 const router = express.Router();
 

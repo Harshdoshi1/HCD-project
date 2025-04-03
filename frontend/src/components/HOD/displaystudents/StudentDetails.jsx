@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Book, Clock, Mail, Phone, MapPin, ChevronDown, User, Award, ChevronRight, Calendar, Trophy, FileText, MessageSquare, Activity, Home, Plus, Edit, Trash, Filter } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, User } from 'lucide-react';
 import './StudentDetail.css';
+
+// Import the new components
+import Overview from './components/Overview';
+import AcademicDetails from './components/AcademicDetails';
+import CoCurricularActivities from './components/CoCurricularActivities';
+import ExtraCurricularActivities from './components/ExtraCurricularActivities';
+import ActivityForm from './components/ActivityForm';
 
 const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.history.back() }) => {
     const [activeTab, setActiveTab] = useState('overview');
@@ -12,13 +19,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
     const [showEditForm, setShowEditForm] = useState(false);
     const [currentActivityType, setCurrentActivityType] = useState(''); // 'co', 'extra'
     const [currentActivity, setCurrentActivity] = useState(null);
-    const [newActivity, setNewActivity] = useState({
-        title: '',
-        date: '',
-        description: '',
-        achievement: '',
-        semester: 1
-    });
 
     useEffect(() => {
         setTimeout(() => {
@@ -49,13 +49,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         setCurrentActivityType(type);
         setShowAddForm(true);
         setShowEditForm(false);
-        setNewActivity({
-            title: '',
-            date: '',
-            description: '',
-            achievement: '',
-            semester: selectedSemester
-        });
+        setCurrentActivity(null);
     };
 
     const handleEditActivity = (activity, type) => {
@@ -63,27 +57,22 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         setCurrentActivity(activity);
         setShowAddForm(false);
         setShowEditForm(true);
-        setNewActivity({
-            ...activity,
-            semester: activity.semester || selectedSemester
-        });
+    };
+    
+    const handleDeleteActivity = (activityId, type) => {
+        // In a real app, you would delete from a backend
+        // For now, we'll just show an alert
+        alert(`Activity ${activityId} would be deleted from ${type} activities`);
     };
 
-    const handleFormChange = (e) => {
-        const { name, value } = e.target;
-        setNewActivity(prev => ({
-            ...prev,
-            [name]: name === 'attachments' ? parseInt(value) || 0 : value
-        }));
-    };
-
-    const handleFormSubmit = (e) => {
-        e.preventDefault();
-
+    const handleSubmitActivity = (activityData) => {
         // In a real app, you would save to a backend
-        // For now, we'll just close the form
+        console.log("New activity data:", activityData);
+        
+        // Close the form
         setShowAddForm(false);
         setShowEditForm(false);
+        setCurrentActivity(null);
 
         // Show success message
         alert(showAddForm ? 'Activity added successfully!' : 'Activity updated successfully!');
@@ -113,6 +102,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         return activities.filter(activity => activity.semester === semester);
     };
 
+    // Mock student data (in a real app, this would come from an API)
     const student = {
         id: studentId,
         name: "Krish Mamtora",
@@ -126,7 +116,6 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
             email: "krish@marwadiuniversity.ac.in",
             phone: "+91 1234567890",
             dateOfBirth: "15 March 1993",
-
         },
         academics: {
             department: "Computer Science & Engineering",
@@ -176,7 +165,8 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                                 comments: "Alexandra shows remarkable aptitude for programming. Her solutions are elegant and well-structured. With her analytical mind, she has great potential in the field of computer science.",
                                 lastUpdated: "February 12, 2024"
                             }
-                        }]
+                        }
+                    ]
                 }
             }
         },
@@ -203,640 +193,154 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         extraCurricular: [
             {
                 id: "EC001",
-                title: "University Dance Troupe",
-                date: "2021 - Present",
-                description: "Lead performer in the contemporary dance group representing the university at cultural events",
-                achievement: "Best Choreography Award (2023)",
-                semester: 3
+                title: "University Basketball Team",
+                date: "2023-2024",
+                description: "Member of the university basketball team, participated in inter-university tournament",
+                achievement: "Runner-up in Regional Championship",
+                semester: 5
             }
         ]
     };
 
     if (isLoading) {
         return (
-            <div className="student-loading">
+            <div className="student-details-container-sdp loading">
                 <div className="loading-spinner"></div>
-                <p>Loading student profile...</p>
+                <p>Loading student details...</p>
             </div>
         );
     }
-    const renderStudentOverview = () => (
-        <div className="student-overview-sdp">
-
-            <div className="overview-card-sdp">
-                <div className="overview-card-sdp-header">
-                    <h3><Book size={18} /> Academic Information</h3>
-                </div>
-                <div className="overview-card-sdp-content">
-                    <div className="detail-grid">
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp">Department</span>
-                            <span className="detail-value-sdp">{student.academics.department}</span>
-                        </div>
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp">Program</span>
-                            <span className="detail-value-sdp">{student.academics.program}</span>
-                        </div>
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp">Batch</span>
-                            <span className="detail-value-sdp">{student.batch}</span>
-                        </div>
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp">Academic Advisor</span>
-                            <span className="detail-value-sdp">{student.academics.advisor}</span>
-                        </div>
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp">Current Semester</span>
-                            <span className="detail-value-sdp">{student.semester}</span>
-                        </div>
-                        <div className="detail-item-sdp">
-                            <span className="detail-label-sdp">Credits Completed</span>
-                            <span className="detail-value-sdp">
-                                {student.academics.creditsCompleted}/{student.academics.totalCredits}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="overview-card-sdp">
-                <div className="overview-card-sdp-header">
-                    <h3><Award size={18} /> Academic Performance</h3>
-                </div>
-                <div className="overview-card-sdp-content">
-                    <div className="gpa-chart">
-                        <h4 className="gpa-chart-title">GPA Progression</h4>
-                        <div className="gpa-bar-container">
-                            {student.academics.gpa.map((semGpa) => (
-                                <div key={semGpa.semester} className="gpa-bar-item">
-                                    <div className="gpa-bar" style={{ height: `${(semGpa.value / 10) * 100}%` }}>
-                                        <span className="gpa-value">{semGpa.value}</span>
-                                    </div>
-                                    <div className="semester-label">Sem {semGpa.semester}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="rank-display">
-                        <h4 className="rank-title">Semester Ranks</h4>
-                        <div className="rank-grid">
-                            {student.academics.semesterRanks.map((rankData) => (
-                                <div key={rankData.semester} className="rank-item">
-                                    <div className="rank-semester">Sem {rankData.semester}</div>
-                                    <div className="rank-value">
-                                        <Trophy size={14} />
-                                        <span>{rankData.rank}</span>
-                                        <span className="rank-total">/{rankData.totalStudents}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="cumulative-gpa">
-                        <div className="cumulative-value">
-                            <span className="cumulative-label">Current CGPA</span>
-                            <span className="cumulative-number">{student.cgpa}</span>
-                            <div className="cgpa-progress">
-                                <div className="cgpa-fill" style={{ width: `${(student.cgpa / 10) * 100}%` }}></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="overview-card-sdp">
-                <div className="overview-card-sdp-header">
-                    <h3><Trophy size={18} /> Recent Achievements</h3>
-                </div>
-                <div className="overview-card-sdp-content">
-                    <ul className="achievements-list">
-                        {student.achievements.map((achievement) => (
-                            <li key={achievement.id} className="achievement-item">
-                                <div className="achievement-icon">
-                                    <Trophy size={16} />
-                                </div>
-                                <div className="achievement-details">
-                                    <h4>{achievement.title}</h4>
-                                    <p>{achievement.description}</p>
-                                    <span className="achievement-date">{achievement.date}</span>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderSubjectCard = (subject) => {
-        const isExpanded = expandedSubjects.has(subject.id);
-
-        return (
-            <div key={subject.id} className="subject-card-sdp">
-                <div className="subject-header-sdp" onClick={() => toggleSubject(subject.id)}>
-                    <div className="subject-main-info">
-                        <h4>{subject.name} <span className="subject-code">{subject.code}</span></h4>
-                        <div className="subject-quick-info">
-                            <span className="quick-info-item">
-                                <User size={14} />
-                                {subject.faculty}
-                            </span>
-                            <span className="quick-info-item">
-                                <Award size={14} />
-                                Grade: {subject.grade}
-                            </span>
-                            <span className="quick-info-item">
-                                <Trophy size={14} />
-                                Rank: {subject.classRank}/{subject.totalStudents}
-                            </span>
-                        </div>
-                    </div>
-                    <div className={`subject-expand-icon ${isExpanded ? 'expanded' : ''}`}>
-                        <ChevronDown size={16} />
-                    </div>
-                </div>
-
-                <div className={`subject-content-sdp ${isExpanded ? 'expanded' : ''}`}>
-                    <div className="performance-section-sdp">
-                        <h5 className="section-heading-sdp">Performance Components</h5>
-                        <div className="performance-grid-sdp">
-                            {Object.entries(subject.components).map(([name, data]) => (
-                                <div key={name} className="performance-item">
-                                    <div className="performance-label">{name}</div>
-                                    <div className="performance-value">
-                                        <div className="marks-display">
-                                            <span className="marks-value">{data.marks}/{data.total}</span>
-                                            <div className="marks-percentage">
-                                                {Math.round((data.marks / data.total) * 100)}%
-                                            </div>
-                                        </div>
-                                        <div className="marks-progress">
-                                            <div
-                                                className="marks-progress-fill"
-                                                style={{ width: `${(data.marks / data.total) * 100}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="additional-metrics">
-                            <div className="metrics-item">
-                                <div className="metrics-label">Total Marks</div>
-                                <div className="metrics-value">
-                                    <div className="total-marks">{subject.totalMarks}%</div>
-                                    <div className="marks-progress total-progress">
-                                        <div
-                                            className="marks-progress-fill"
-                                            style={{ width: `${subject.totalMarks}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="faculty-feedback-sdp">
-                        <h5 className="section-heading-sdp">Faculty Feedback</h5>
-                        <div className="feedback-content-sdp">
-                            <div className="feedback-box">
-                                <div className="faculty-rating">
-                                    <div className="rating-stars">
-                                        {[...Array(10)].map((_, i) => (
-                                            <Star
-                                                key={i}
-                                                size={12}
-                                                className={i < Math.floor(subject.facultyRating) ? 'star-filled' : 'star-empty'}
-                                            />
-                                        ))}
-                                        <span className="rating-value">({subject.facultyRating}/10)</span>
-                                    </div>
-                                </div>
-                                <div className="faculty-comments">
-                                    <p>{subject.facultyResponse.comments}</p>
-                                    <div className="comments-date">
-                                        Last Updated: {subject.facultyResponse.lastUpdated}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-    const renderActivityCard = (activity, type) => (
-        <div key={activity.id} className="activity-card improved-activity-card">
-            <div className="activity-icon">
-                {type === 'co' ? <FileText size={18} /> : <Activity size={18} />}
-            </div>
-            <div className="activity-details">
-                <h4 className="activity-title">{activity.title}</h4>
-                <p className="activity-description">{activity.description}</p>
-                <div className="activity-footer">
-                    <span className="activity-date"><Calendar size={14} /> {activity.date}</span>
-                    {activity.achievement && (
-                        <span className="activity-achievement"><Trophy size={14} /> {activity.achievement}</span>
-                    )}
-                    <span className="activity-semester">Semester: {activity.semester || 'N/A'}</span>
-                </div>
-            </div>
-            <div className="activity-actions">
-                <button className="action-button edit-button" onClick={() => handleEditActivity(activity, type)}>
-                    +
-                </button>
-                <button className="action-button delete-button">
-                    -
-                </button>
-            </div>
-        </div>
-    );
-
-    const renderActivityForm = () => {
-        const isEditMode = showEditForm;
-        const formTitle = isEditMode
-            ? `Edit ${currentActivityType === 'co' ? 'Co-Curricular' : 'Extra-Curricular'} Activity`
-            : `Add New ${currentActivityType === 'co' ? 'Co-Curricular' : 'Extra-Curricular'} Activity`;
-
-        return (
-            <div className="activity-form-overlay">
-                <div className="activity-form-container">
-                    <div className="form-header">
-                        <h3>{formTitle}</h3>
-                        <button className="close-form-button" onClick={() => {
-                            setShowAddForm(false);
-                            setShowEditForm(false);
-                        }}>×</button>
-                    </div>
-
-                    <form onSubmit={handleFormSubmit} className="activity-form">
-                        <div className="form-group">
-                            <label htmlFor="title">Activity Title</label>
-                            <input
-                                type="text"
-                                id="title"
-                                name="title"
-                                className='add-activity-model-input'
-                                value={newActivity.title}
-                                onChange={handleFormChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="date">Date/Duration</label>
-                            <input
-                                type="text"
-                                id="date"
-                                name="date"
-                                className='add-activity-model-input'
-                                value={newActivity.date}
-                                onChange={handleFormChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="description">Description</label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                className='add-activity-model-input'
-                                value={newActivity.description}
-                                onChange={handleFormChange}
-                                required
-                            ></textarea>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="achievement">Achievement/Recognition (if any)</label>
-                            <input
-                                type="text"
-                                id="achievement"
-                                name="achievement"
-                                className='add-activity-model-input'
-                                value={newActivity.achievement}
-                                onChange={handleFormChange}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="semester">Related Semester</label>
-                            <select
-                                id="semester"
-                                name="semester"
-                                value={newActivity.semester}
-                                onChange={handleFormChange}
-                            >
-                                {[...Array(student.semester)].map((_, i) => (
-                                    <option key={i + 1} value={i + 1}>Semester {i + 1}</option>
-                                ))}
-                            </select>
-                        </div>
-
-
-
-                        <div className="form-actions">
-                            <button type="button" className="cancel-button" onClick={() => {
-                                setShowAddForm(false);
-                                setShowEditForm(false);
-                            }}>Cancel</button>
-                            <button type="submit" className="submit-button">
-                                {isEditMode ? 'Update Activity' : 'Add Activity'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        );
-    };
 
     return (
-        <div className="student-details-container">
-            <header className="student-header-sdp">
-                <div className="header-back">
-                    <button className="back-button" onClick={handleBackToList}>
-                        <ArrowLeft size={20} />
-                        <span>Back</span>
+        <div className="student-details-container-sdp">
+            <div className="student-header-sdp">
+                <button className="back-button-sdp" onClick={handleBackToList}>
+                    <ArrowLeft size={16} /> Back to List
+                </button>
+                <div className="student-profile-sdp">
+                    <div className="profile-image-container-sdp">
+                        <img src={student.image} alt={student.name} className="profile-image-sdp" />
+                    </div>
+                    <div className="profile-details-sdp">
+                        <h2 className="student-name-sdp">{student.name}</h2>
+                        <div className="student-meta-sdp">
+                            <span className="enrollment-sdp">{student.enrollmentNo}</span>
+                            <span className="department-sdp">{student.department}</span>
+                            <span className="semester-sdp">Semester {student.semester}</span>
+                        </div>
+                        <div className="contact-info-sdp">
+                            <div className="contact-item-sdp">
+                                <Mail size={14} />
+                                <span>{student.personalInfo.email}</span>
+                            </div>
+                            <div className="contact-item-sdp">
+                                <Phone size={14} />
+                                <span>{student.personalInfo.phone}</span>
+                            </div>
+                            <div className="contact-item-sdp">
+                                <Calendar size={14} />
+                                <span>{student.personalInfo.dateOfBirth}</span>
+                            </div>
+                            <div className="contact-item-sdp">
+                                <User size={14} />
+                                <span>{student.batch}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="tabs-container-sdp">
+                <div className="tabs-sdp">
+                    <button 
+                        className={`tab-sdp ${activeTab === 'overview' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('overview')}
+                    >
+                        Overview
+                    </button>
+                    <button 
+                        className={`tab-sdp ${activeTab === 'curricular' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('curricular')}
+                    >
+                        Academic Details
+                    </button>
+                    <button 
+                        className={`tab-sdp ${activeTab === 'co-curricular' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('co-curricular')}
+                    >
+                        Co-Curricular
+                    </button>
+                    <button 
+                        className={`tab-sdp ${activeTab === 'extra-curricular' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('extra-curricular')}
+                    >
+                        Extra-Curricular
                     </button>
                 </div>
-                <div className="student-profile-sdp">
-                    <div className="profile-image-container">
-                        <img
-                            src={student.image}
-                            alt={student.name}
-                            className="profile-image"
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH4dcYWVFHFsz8M3Rsjpy2Hg6gQAmgbCIwWA&s";
-                            }}
+
+                <div className="tab-content-sdp">
+                    {activeTab === 'overview' && (
+                        <Overview student={student} />
+                    )}
+                    
+                    {activeTab === 'curricular' && (
+                        <AcademicDetails 
+                            student={student}
+                            selectedSemester={selectedSemester}
+                            expandedSubjects={expandedSubjects}
+                            toggleSubject={toggleSubject}
+                            expandAllSubjects={expandAllSubjects}
+                            collapseAllSubjects={collapseAllSubjects}
+                            onSemesterChange={setSelectedSemester}
                         />
-                        <div className="profile-status"></div>
-                    </div>
-                    <div className="profile-info-sdp">
-                        <h2 className="student-name-detials-sdp">{student.name}</h2>
-                        <div className="student-meta">
-                            <span className="enrollment-no">{student.enrollmentNo}</span>
-                            <span className="separator">•</span>
-                            <span className="department">{student.department}</span>
-                            <span className="separator">•</span>
-                            <span className="semester">Semester {student.semester}</span>
-                        </div>
-                        <div className="student-highlight">
-                            <div className="highlight-item">
-                                <span className="highlight-label">CGPA</span>
-                                <span className="highlight-value">{student.cgpa}</span>
-                            </div>
-                            <div className="highlight-item">
-                                <span className="highlight-label">Batch</span>
-                                <span className="highlight-value">{student.batch}</span>
-                            </div>
-                        </div>
-                        <div className="personal-info-quick">
-                            <div className="personal-info-item">
-                                <Mail size={14} /> {student.personalInfo.email}
-                            </div>
-                            <div className="personal-info-item">
-                                <Phone size={14} /> {student.personalInfo.phone}
-                            </div>
-                            <div className="personal-info-item">
-                                <Calendar size={14} /> {student.personalInfo.dateOfBirth}
-                            </div>
-                        </div>
-                    </div>
+                    )}
+                    
+                    {activeTab === 'co-curricular' && (
+                        <CoCurricularActivities 
+                            student={student}
+                            selectedSemester={selectedSemester}
+                            activityFilter={activityFilter}
+                            setActivityFilter={setActivityFilter}
+                            setSelectedSemester={setSelectedSemester}
+                            handleAddActivity={handleAddActivity}
+                            handleEditActivity={handleEditActivity}
+                            filterActivitiesBySemester={filterActivitiesBySemester}
+                            calculateActivityPoints={calculateActivityPoints}
+                        />
+                    )}
+                    
+                    {activeTab === 'extra-curricular' && (
+                        <ExtraCurricularActivities 
+                            student={student}
+                            selectedSemester={selectedSemester}
+                            activityFilter={activityFilter}
+                            setActivityFilter={setActivityFilter}
+                            setSelectedSemester={setSelectedSemester}
+                            handleAddActivity={handleAddActivity}
+                            handleEditActivity={handleEditActivity}
+                            handleDeleteActivity={handleDeleteActivity}
+                            filterActivitiesBySemester={filterActivitiesBySemester}
+                            calculateActivityPoints={calculateActivityPoints}
+                        />
+                    )}
                 </div>
-            </header>
+            </div>
 
-            <nav className="student-tabs">
-                <button
-                    className={`tab-button-sd ${activeTab === 'overview' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('overview')}
-                >
-                    <Home size={16} />
-                    <span>Overview</span>
-                </button>
-                <button
-                    className={`tab-button-sd ${activeTab === 'curricular' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('curricular')}
-                >
-                    <Book size={16} />
-                    <span>Academic</span>
-                </button>
-                <button
-                    className={`tab-button-sd ${activeTab === 'co-curricular' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('co-curricular')}
-                >
-                    <FileText size={16} />
-                    <span>Co-Curricular</span>
-                </button>
-                <button
-                    className={`tab-button-sd ${activeTab === 'extra-curricular' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('extra-curricular')}
-                >
-                    <Activity size={16} />
-                    <span>Extra-Curricular</span>
-                </button>
-            </nav>
-
-            <main className="student-content-sdp">
-                {activeTab === 'overview' && renderStudentOverview()}
-
-                {activeTab === 'curricular' && (
-                    <div className="academic-section">
-                        <div className="semester-navigation-sdp">
-                            <h3 className="section-title">Academic Performance</h3>
-                            <div className="semester-selectors">
-                                {Object.keys(student.academics.semesters).map(sem => (
-                                    <button
-                                        key={sem}
-                                        className={`semester-button ${selectedSemester === parseInt(sem) ? 'active' : ''}`}
-                                        onClick={() => setSelectedSemester(parseInt(sem))}
-                                    >
-                                        Semester {sem}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="semester-summary">
-                                <div className="summary-item">
-                                    <span className="summary-label">Semester GPA</span>
-                                    <span className="summary-value">{student.academics.semesters[selectedSemester].gpa}</span>
-                                </div>
-                                <div className="summary-item">
-                                    <span className="summary-label">Credits</span>
-                                    <span className="summary-value">{student.academics.semesters[selectedSemester].credits}</span>
-                                </div>
-                                <div className="summary-item">
-                                    <span className="summary-label">Subjects</span>
-                                    <span className="summary-value">{student.academics.semesters[selectedSemester].subjects.length}</span>
-                                </div>
-                                <div className="summary-item">
-                                    <span className="summary-label">Rank</span>
-                                    <span className="summary-value">
-                                        {student.academics.semesterRanks.find(r => r.semester === selectedSemester)?.rank || 'N/A'}/
-                                        {student.academics.semesterRanks.find(r => r.semester === selectedSemester)?.totalStudents || 'N/A'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="subject-actions-sdp">
-                            <button className="expand-all-button" onClick={expandAllSubjects}>Expand All</button>
-                            <button className="collapse-all-button" onClick={collapseAllSubjects}>Collapse All</button>
-                        </div>
-
-                        <div className="subjects-list-sdp">
-                            {student.academics.semesters[selectedSemester]?.subjects.map(subject =>
-                                renderSubjectCard(subject)
-                            )}
-                        </div>
-                    </div>
-                )}
-                {activeTab === 'co-curricular' && (
-                    <div className="activities-section">
-                        <div className="activities-header">
-                            <h3 className="section-title">Co-Curricular Activities</h3>
-                            <div className="activities-actions">
-                                <div className="filter-container">
-                                    <button
-                                        className={`filter-button ${activityFilter === 'all' ? 'active' : ''}`}
-                                        onClick={() => setActivityFilter('all')}
-                                    >
-                                        <Filter size={14} /> All Semesters
-                                    </button>
-                                    {[...Array(8)].map((_, i) => (
-                                        <button
-                                            key={i + 1}
-                                            className={`filter-button ${activityFilter === 'semester' && selectedSemester === i + 1 ? 'active' : ''}`}
-                                            onClick={() => {
-                                                setSelectedSemester(i + 1);
-                                                setActivityFilter('semester');
-                                            }}
-                                            disabled={i + 1 > student.semester}
-                                        >
-                                            <Filter size={14} /> Sem {i + 1}
-                                        </button>
-                                    ))}
-                                </div>
-                                <button className="add-activity-button" onClick={() => handleAddActivity('co')}>
-                                    <Plus size={14} /> Add Activity
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="activities-summary">
-                            <div className="summary-card">
-                                <h4>Total Activities</h4>
-                                <div className="summary-value">{student.coCurricular.length}</div>
-                            </div>
-                            <div className="summary-card">
-                                <h4>Current Semester</h4>
-                                <div className="summary-value">
-                                    {student.coCurricular.filter(a => a.semester === selectedSemester).length}
-                                </div>
-                            </div>
-                            <div className="summary-card">
-                                <h4>Total Points</h4>
-                                <div className="summary-value">{calculateActivityPoints(student.coCurricular)}</div>
-                            </div>
-                            <div className="summary-card">
-                                <h4>Semester Points</h4>
-                                <div className="summary-value">
-                                    {calculateActivityPoints(student.coCurricular.filter(a => a.semester === selectedSemester))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="activities-list improved-activities-list">
-                            {filterActivitiesBySemester(student.coCurricular, selectedSemester).map(activity =>
-                                renderActivityCard(activity, 'co')
-                            )}
-
-                            {filterActivitiesBySemester(student.coCurricular, selectedSemester).length === 0 && (
-                                <div className="no-activities-message">
-                                    <p>No co-curricular activities found for {activityFilter === 'all' ? 'any semester' : `semester ${selectedSemester}`}.</p>
-                                    <button className="add-activity-button small" onClick={() => handleAddActivity('co')}>
-                                        <Plus size={14} /> Add Activity
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-                {activeTab === 'extra-curricular' && (
-                    <div className="activities-section">
-                        <div className="activities-header">
-                            <h3 className="section-title">Extra-Curricular Activities</h3>
-                            <div className="activities-actions">
-                                <div className="filter-container">
-                                    <button
-                                        className={`filter-button ${activityFilter === 'all' ? 'active' : ''}`}
-                                        onClick={() => setActivityFilter('all')}
-                                    >
-                                        <Filter size={14} /> All Semesters
-                                    </button>
-                                    {[...Array(8)].map((_, i) => (
-                                        <button
-                                            key={i + 1}
-                                            className={`filter-button ${activityFilter === 'semester' && selectedSemester === i + 1 ? 'active' : ''}`}
-                                            onClick={() => {
-                                                setSelectedSemester(i + 1);
-                                                setActivityFilter('semester');
-                                            }}
-                                            disabled={i + 1 > student.semester}
-                                        >
-                                            <Filter size={14} /> Sem {i + 1}
-                                        </button>
-                                    ))}
-                                </div>
-                                <button className="add-activity-button" onClick={() => handleAddActivity('extra')}>
-                                    <Plus size={14} /> Add Activity
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="activities-summary">
-                            <div className="summary-card">
-                                <h4>Total Activities</h4>
-                                <div className="summary-value">{student.extraCurricular.length}</div>
-                            </div>
-                            <div className="summary-card">
-                                <h4>Current Semester</h4>
-                                <div className="summary-value">
-                                    {student.extraCurricular.filter(a => a.semester === selectedSemester).length}
-                                </div>
-                            </div>
-                            <div className="summary-card">
-                                <h4>Total Points</h4>
-                                <div className="summary-value">{calculateActivityPoints(student.extraCurricular)}</div>
-                            </div>
-                            <div className="summary-card">
-                                <h4>Semester Points</h4>
-                                <div className="summary-value">
-                                    {calculateActivityPoints(student.extraCurricular.filter(a => a.semester === selectedSemester))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="activities-list improved-activities-list">
-                            {filterActivitiesBySemester(student.extraCurricular, selectedSemester).map(activity =>
-                                renderActivityCard(activity, 'extra')
-                            )}
-
-                            {filterActivitiesBySemester(student.extraCurricular, selectedSemester).length === 0 && (
-                                <div className="no-activities-message">
-                                    <p>No extra-curricular activities found for {activityFilter === 'all' ? 'any semester' : `semester ${selectedSemester}`}.</p>
-                                    <button className="add-activity-button small" onClick={() => handleAddActivity('extra')}>
-                                        <Plus size={14} /> Add Activity
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </main>
-
-            {(showAddForm || showEditForm) && renderActivityForm()}
+            {/* Activity Form Modal */}
+            {(showAddForm || showEditForm) && (
+                <ActivityForm
+                    activity={currentActivity}
+                    onSubmit={handleSubmitActivity}
+                    onClose={() => {
+                        setShowAddForm(false);
+                        setShowEditForm(false);
+                        setCurrentActivity(null);
+                    }}
+                    isEdit={showEditForm}
+                    currentSemester={selectedSemester}
+                    activityType={currentActivityType}
+                />
+            )}
         </div>
     );
 };

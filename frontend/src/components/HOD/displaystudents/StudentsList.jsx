@@ -27,11 +27,15 @@ const StudentsList = ({ onStudentSelect }) => {
                 throw new Error('Failed to fetch students');
             }
             const data = await response.json();
-            setStudents(data);
-            console.log(data);
-
+            // Add a unique ID to each student record
+            const studentsWithIds = data.map((student, index) => ({
+                ...student,
+                uniqueId: `${student.enrollmentNumber}-${index}`
+            }));
+            setStudents(studentsWithIds);
+            
             // Extract unique batches from students data
-            const uniqueBatches = [...new Set(data.map(student => student.Batch.batchName))];
+            const uniqueBatches = [...new Set(studentsWithIds.map(student => student.Batch.batchName))];
             setBatches(uniqueBatches);
             setSelectedBatch(uniqueBatches[0]); // Set the first batch as default
             setIsLoading(false);
@@ -204,7 +208,7 @@ const StudentsList = ({ onStudentSelect }) => {
                                 </thead>
                                 <tbody>
                                     {filteredStudents.map(student => (
-                                        <tr key={student.enrollmentNumber}>
+                                        <tr key={student.uniqueId}>
                                             <td>{student.name}</td>
                                             <td>{student.enrollmentNumber}</td>
                                             <td>{student.Batch.batchName}</td>
