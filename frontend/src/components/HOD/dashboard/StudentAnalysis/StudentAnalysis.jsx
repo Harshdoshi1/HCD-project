@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import Filters from './Filters';
 import StudentTable from './StudentTable';
 import StudentDetails from './StudentDetails';
+import StudentPerformance from './StudentPerformance';
 import { dummyStudents } from './dummyData';
 import './studentAnalysis.css';
+import './StudentPerformance.css';
 
 const StudentAnalysis = () => {
   const [selectedBatch, setSelectedBatch] = useState('2022-26');
@@ -14,97 +15,94 @@ const StudentAnalysis = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'totalScore', direction: 'desc' });
+  const [showDetails, setShowDetails] = useState(false);
 
   // Fetch students data based on filters
   useEffect(() => {
-    // In a real app, this would be an API call
     const filteredStudents = dummyStudents.filter(
       student => 
         student.batch === selectedBatch && 
         student.semester === selectedSemester
     );
-    
     setStudents(filteredStudents);
-    setSelectedStudent(null); // Reset selected student when filters change
+    setSelectedStudent(null);
   }, [selectedBatch, selectedSemester, selectedCategory]);
-
-  // Handle sort
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  // Sort students
-  const sortedStudents = React.useMemo(() => {
-    let sortableStudents = [...students];
-    if (sortConfig.key) {
-      sortableStudents.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return sortableStudents;
-  }, [students, sortConfig]);
-
-  // Filter students by search query
-  const filteredStudents = React.useMemo(() => {
-    return sortedStudents.filter(student => 
-      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.rollNumber.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [sortedStudents, searchQuery]);
 
   const handleViewDetails = (student) => {
     setSelectedStudent(student);
-    // Scroll to the student details section
-    setTimeout(() => {
-      document.getElementById('student-details-section')?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    setShowDetails(true);
   };
 
   const handleCloseDetails = () => {
     setSelectedStudent(null);
+    setShowDetails(false);
   };
 
   return (
     <div className="student-analysis-container">
-      <h1 className="page-title">Student Analysis Dashboard</h1>
-      
-      <Filters
-        selectedBatch={selectedBatch}
-        setSelectedBatch={setSelectedBatch}
-        selectedSemester={selectedSemester}
-        setSelectedSemester={setSelectedSemester}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-      />
-      
-      <StudentTable
-        students={filteredStudents}
-        onViewDetails={handleViewDetails}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        sortConfig={sortConfig}
-        onSort={handleSort}
-      />
-      
-      {selectedStudent && (
-        <div id="student-details-section">
-          <StudentDetails 
-            student={selectedStudent} 
-            onClose={handleCloseDetails}
-            category={selectedCategory}
-          />
+      <div className="main-content">
+        <div className="filters-section">
+          <div className="filters-row">
+            <div className="filter-item">
+              <select
+                value={selectedBatch}
+                onChange={(e) => setSelectedBatch(e.target.value)}
+                style={{ width: '100px' }}
+              >
+                <option value="2022-26">2022-26</option>
+                <option value="2023-27">2023-27</option>
+              </select>
+            </div>
+            <div className="filter-item">
+              <select
+                value={selectedSemester}
+                onChange={(e) => setSelectedSemester(e.target.value)}
+                style={{ width: '100px' }}
+              >
+                <option value="Semester 1">Semester 1</option>
+                <option value="Semester 2">Semester 2</option>
+              </select>
+            </div>
+            <div className="filter-item">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                style={{ width: '150px' }}
+              >
+                <option value="Curricular Activity">Curricular Activity</option>
+                <option value="Co-Curricular Activity">Co-Curricular Activity</option>
+              </select>
+            </div>
+          </div>
         </div>
-      )}
+
+        <div className="table-container">
+          {showDetails ? (
+            <div className="student-details-wrapper">
+              <div className="back-button" onClick={handleCloseDetails}>
+                <i className="fas fa-arrow-left"></i> Back to Student List
+              </div>
+              <StudentDetails 
+                key={selectedStudent?.id} 
+                student={selectedStudent} 
+                onClose={handleCloseDetails}
+                category={selectedCategory}
+              />
+              <StudentPerformance key={selectedStudent?.id} student={selectedStudent} />
+            </div>
+          ) : (
+            <StudentTable
+              key={selectedBatch + selectedSemester + searchQuery}
+              students={students}
+              onViewDetails={handleViewDetails}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              sortConfig={sortConfig}
+              onSort={() => {}}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 };

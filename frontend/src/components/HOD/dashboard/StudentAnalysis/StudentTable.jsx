@@ -42,32 +42,32 @@ const StudentTable = ({
                   onClick={() => onSort('name')}
                   data-sort={sortConfig.key === 'name' ? sortConfig.direction : null}
                 >
-                  Student Name
+                  Student Name {getSortIcon('name')}
                 </th>
                 <th 
                   onClick={() => onSort('rollNumber')}
                   data-sort={sortConfig.key === 'rollNumber' ? sortConfig.direction : null}
                 >
-                  Roll Number
+                  Roll Number {getSortIcon('rollNumber')}
                 </th>
                 <th 
                   onClick={() => onSort('totalScore')}
                   data-sort={sortConfig.key === 'totalScore' ? sortConfig.direction : null}
                 >
-                  Total Score
+                  Total Score {getSortIcon('totalScore')}
                 </th>
                 <th 
                   onClick={() => onSort('ranking')}
                   data-sort={sortConfig.key === 'ranking' ? sortConfig.direction : null}
                 >
-                  Ranking
+                  Ranking {getSortIcon('ranking')}
                 </th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
-                <tr key={student.id}>
+              {students.map((student, index) => (
+                <tr key={`${student.id}-${index}`}>
                   <td>{student.name}</td>
                   <td>{student.rollNumber}</td>
                   <td>{student.totalScore}%</td>
