@@ -56,4 +56,13 @@ app.use((req, res) => {
 
 // Start Server
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Synchronize database before starting the server
+syncDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}).catch(error => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+});

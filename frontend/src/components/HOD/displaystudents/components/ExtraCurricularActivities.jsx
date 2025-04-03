@@ -76,19 +76,19 @@ const ExtraCurricularActivities = ({
               <FileText size={18} />
             </div>
             <div className="activity-details">
-              <h4 className="activity-title">{activity.title}</h4>
+              <h4 className="activity-title">{activity.activityName}</h4>
               <p className="activity-description">{activity.description}</p>
               <div className="activity-footer">
                 <span className="activity-date"><Calendar size={14} /> {activity.date}</span>
-                {activity.achievement && (
-                  <span className="activity-achievement"><Trophy size={14} /> {activity.achievement}</span>
+                {activity.achievementLevel && (
+                  <span className="activity-achievement"><Trophy size={14} /> {activity.achievementLevel}</span>
                 )}
                 <span className="activity-semester">Semester: {activity.semester || 'N/A'}</span>
               </div>
             </div>
             <div className="activity-actions">
               <button className="action-button edit-button" onClick={() => handleEditActivity(activity, 'extra')}>
-                Edit
+                <Plus size={14} />
               </button>
               <button className="action-button delete-button" onClick={() => handleDeleteActivity(activity.id, 'extra')}>
                 Delete

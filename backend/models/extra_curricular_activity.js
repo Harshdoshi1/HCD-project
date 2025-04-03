@@ -1,7 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Student = require("./students");
-const Batch = require("./batch");
 const Semester = require("./semester");
 
 const ExtraCurricularActivity = sequelize.define(
@@ -12,21 +11,9 @@ const ExtraCurricularActivity = sequelize.define(
             autoIncrement: true,
             primaryKey: true,
         },
-        studentId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: Student,
-                key: "id",
-            },
-        },
-        batchId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: Batch,
-                key: "id",
-            },
+        enrollmentNumber: {
+            type: DataTypes.STRING,
+            allowNull: false
         },
         semesterId: {
             type: DataTypes.INTEGER,
@@ -42,7 +29,7 @@ const ExtraCurricularActivity = sequelize.define(
         },
         achievementLevel: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         date: {
             type: DataTypes.DATE,
@@ -50,15 +37,11 @@ const ExtraCurricularActivity = sequelize.define(
         },
         description: {
             type: DataTypes.TEXT,
-            allowNull: true,
+            allowNull: false,
         },
         certificateUrl: {
             type: DataTypes.STRING,
             allowNull: true,
-        },
-        isVerified: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false,
         },
     },
     {
@@ -68,8 +51,11 @@ const ExtraCurricularActivity = sequelize.define(
 );
 
 // Associations
-ExtraCurricularActivity.belongsTo(Student, { foreignKey: "studentId" });
-ExtraCurricularActivity.belongsTo(Batch, { foreignKey: "batchId" });
+ExtraCurricularActivity.belongsTo(Student, {
+    foreignKey: "enrollmentNumber",
+    targetKey: "enrollmentNumber",
+    constraints: false // Disable foreign key constraint
+});
 ExtraCurricularActivity.belongsTo(Semester, { foreignKey: "semesterId" });
 
 module.exports = ExtraCurricularActivity;

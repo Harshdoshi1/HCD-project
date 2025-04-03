@@ -19,6 +19,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
     const [showEditForm, setShowEditForm] = useState(false);
     const [currentActivityType, setCurrentActivityType] = useState(''); // 'co', 'extra'
     const [currentActivity, setCurrentActivity] = useState(null);
+    const [successMessage, setSuccessMessage] = useState('');
 
     useEffect(() => {
         setTimeout(() => {
@@ -50,6 +51,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         setShowAddForm(true);
         setShowEditForm(false);
         setCurrentActivity(null);
+        setSuccessMessage('');
     };
 
     const handleEditActivity = (activity, type) => {
@@ -57,25 +59,58 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
         setCurrentActivity(activity);
         setShowAddForm(false);
         setShowEditForm(true);
+        setSuccessMessage('');
     };
-    
+
     const handleDeleteActivity = (activityId, type) => {
         // In a real app, you would delete from a backend
         // For now, we'll just show an alert
         alert(`Activity ${activityId} would be deleted from ${type} activities`);
     };
 
-    const handleSubmitActivity = (activityData) => {
-        // In a real app, you would save to a backend
-        console.log("New activity data:", activityData);
-        
-        // Close the form
-        setShowAddForm(false);
-        setShowEditForm(false);
-        setCurrentActivity(null);
+    const handleSubmitActivity = async (activityData) => {
+        try {
+            // Prepare the data for API call
+            const data = {
+                enrollmentNumber: activityData.enrollmentNumber,
+                semesterId: activityData.semester,
+                activityName: activityData.activityName,
+                achievementLevel: activityData.achievementLevel,
+                date: new Date(activityData.date).toISOString(),
+                description: activityData.description,
+                certificateUrl: activityData.certificateUrl,
+                type: 'extra'
+            };
 
-        // Show success message
-        alert(showAddForm ? 'Activity added successfully!' : 'Activity updated successfully!');
+            // Make API call to add activity
+            const response = await fetch('http://localhost:5001/api/students/extracurricular/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to add activity');
+            }
+
+            // Close the form
+            setShowAddForm(false);
+            setShowEditForm(false);
+            setCurrentActivity(null);
+
+            // Show success message
+            setSuccessMessage('Activity added successfully!');
+            setTimeout(() => setSuccessMessage(''), 3000);
+
+            // Refresh the student data
+            // In a real app, you would fetch the updated student data here
+        } catch (error) {
+            console.error('Error submitting activity:', error);
+            alert(error.message);
+        }
     };
 
     const calculateActivityPoints = (activityList) => {
@@ -252,26 +287,26 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
 
             <div className="tabs-container-sdp">
                 <div className="tabs-sdp">
-                    <button 
-                        className={`tab-sdp ${activeTab === 'overview' ? 'active' : ''}`} 
+                    <button
+                        className={`tab-sdp ${activeTab === 'overview' ? 'active' : ''}`}
                         onClick={() => setActiveTab('overview')}
                     >
                         Overview
                     </button>
-                    <button 
-                        className={`tab-sdp ${activeTab === 'curricular' ? 'active' : ''}`} 
+                    <button
+                        className={`tab-sdp ${activeTab === 'curricular' ? 'active' : ''}`}
                         onClick={() => setActiveTab('curricular')}
                     >
                         Academic Details
                     </button>
-                    <button 
-                        className={`tab-sdp ${activeTab === 'co-curricular' ? 'active' : ''}`} 
+                    <button
+                        className={`tab-sdp ${activeTab === 'co-curricular' ? 'active' : ''}`}
                         onClick={() => setActiveTab('co-curricular')}
                     >
                         Co-Curricular
                     </button>
-                    <button 
-                        className={`tab-sdp ${activeTab === 'extra-curricular' ? 'active' : ''}`} 
+                    <button
+                        className={`tab-sdp ${activeTab === 'extra-curricular' ? 'active' : ''}`}
                         onClick={() => setActiveTab('extra-curricular')}
                     >
                         Extra-Curricular
@@ -282,9 +317,9 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                     {activeTab === 'overview' && (
                         <Overview student={student} />
                     )}
-                    
+
                     {activeTab === 'curricular' && (
-                        <AcademicDetails 
+                        <AcademicDetails
                             student={student}
                             selectedSemester={selectedSemester}
                             expandedSubjects={expandedSubjects}
@@ -294,9 +329,9 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             onSemesterChange={setSelectedSemester}
                         />
                     )}
-                    
+
                     {activeTab === 'co-curricular' && (
-                        <CoCurricularActivities 
+                        <CoCurricularActivities
                             student={student}
                             selectedSemester={selectedSemester}
                             activityFilter={activityFilter}
@@ -308,9 +343,9 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             calculateActivityPoints={calculateActivityPoints}
                         />
                     )}
-                    
+
                     {activeTab === 'extra-curricular' && (
-                        <ExtraCurricularActivities 
+                        <ExtraCurricularActivities
                             student={student}
                             selectedSemester={selectedSemester}
                             activityFilter={activityFilter}
@@ -326,6 +361,12 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 </div>
             </div>
 
+            {successMessage && (
+                <div className="success-alert">
+                    {successMessage}
+                </div>
+            )}
+
             {/* Activity Form Modal */}
             {(showAddForm || showEditForm) && (
                 <ActivityForm
@@ -335,6 +376,7 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                         setShowAddForm(false);
                         setShowEditForm(false);
                         setCurrentActivity(null);
+                        setSuccessMessage('');
                     }}
                     isEdit={showEditForm}
                     currentSemester={selectedSemester}

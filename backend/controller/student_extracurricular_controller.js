@@ -1,17 +1,18 @@
 const ExtraCurricularActivity = require("../models/extra_curricular_activity");
 const Student = require("../models/students");
 
-// Get activities by student and semester
-exports.getActivitiesByStudentAndSemester = async (req, res) => {
+// Get activities by enrollment number and semester
+exports.getActivitiesByEnrollmentAndSemester = async (req, res) => {
     try {
-        const { studentId, semesterId } = req.params;
+        const { enrollmentNumber, semesterId } = req.params;
 
         const activities = await ExtraCurricularActivity.findAll({
-            where: { studentId, semesterId },
+            where: { enrollmentNumber, semesterId },
             include: [
                 {
                     model: Student,
-                    attributes: ["name", "rollNumber"]
+                    attributes: ["name", "rollNumber"],
+                    where: { enrollmentNumber }
                 }
             ]
         });
@@ -23,38 +24,121 @@ exports.getActivitiesByStudentAndSemester = async (req, res) => {
     }
 };
 
-// Add or update extracurricular activity
-exports.addOrUpdateActivity = async (req, res) => {
+// Add new extracurricular activity
+exports.addActivity = async (req, res) => {
     try {
-        const { id, ...activityData } = req.body;
+        const {
+            enrollmentNumber,
+            semesterId,
+            activityName,
+            achievementLevel,
+            date,
+            description,
+            certificateUrl
+        } = req.body;
 
-        if (id) {
-            // Update existing activity
-            const [updated] = await ExtraCurricularActivity.update(activityData, {
-                where: { id }
+        // Validate required fields
+        if (!enrollmentNumber || !semesterId || !activityName || !date || !description) {
+            return res.status(400).json({
+                message: "Missing required fields",
+                required: ["enrollmentNumber", "semesterId", "activityName", "date", "description"]
             });
+        }
 
-            if (updated) {
-                const updatedActivity = await ExtraCurricularActivity.findByPk(id, {
-                    include: [
-                        {
-                            model: Student,
-                            attributes: ["name", "rollNumber"]
-                        }
-                    ]
-                });
-                res.status(200).json(updatedActivity);
-            } else {
-                res.status(404).json({ message: 'Activity not found' });
-            }
+        // Check if student exists
+        const student = await Student.findOne({
+            where: { enrollmentNumber }
+        });
+
+        if (!student) {
+            return res.status(404).json({
+                message: "Student not found",
+                enrollmentNumber
+            });
+        }
+
+        // Create new activity
+        const newActivity = await ExtraCurricularActivity.create({
+            enrollmentNumber,
+            semesterId,
+            activityName,
+            achievementLevel,
+            date: new Date(date),
+            description,
+            certificateUrl
+        });
+
+        res.status(201).json(newActivity);
+    } catch (error) {
+        console.error("Error creating extracurricular activity:", error);
+        res.status(500).json({ message: "Error creating activity", error: error.message });
+    }
+};
+
+// Update existing extracurricular activity
+exports.updateActivity = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            enrollmentNumber,
+            semesterId,
+            activityName,
+            achievementLevel,
+            date,
+            description,
+            certificateUrl
+        } = req.body;
+
+        // Validate required fields
+        if (!enrollmentNumber || !semesterId || !activityName || !date || !description) {
+            return res.status(400).json({
+                message: "Missing required fields",
+                required: ["enrollmentNumber", "semesterId", "activityName", "date", "description"]
+            });
+        }
+
+        // Check if student exists
+        const student = await Student.findOne({
+            where: { enrollmentNumber }
+        });
+
+        if (!student) {
+            return res.status(404).json({
+                message: "Student not found",
+                enrollmentNumber
+            });
+        }
+
+        // Update existing activity
+        const [updated] = await ExtraCurricularActivity.update({
+            enrollmentNumber,
+            semesterId,
+            activityName,
+            achievementLevel,
+            date: new Date(date),
+            description,
+            certificateUrl
+        }, {
+            where: { id }
+        });
+
+        if (updated) {
+            const updatedActivity = await ExtraCurricularActivity.findByPk(id, {
+                include: [
+                    {
+                        model: Student,
+                        attributes: ["name", "rollNumber"],
+                        where: { enrollmentNumber }
+                    }
+                ]
+            });
+            res.status(200).json(updatedActivity);
         } else {
-            // Create new activity
-            const newActivity = await ExtraCurricularActivity.create(activityData);
-            res.status(201).json(newActivity);
+            res.status(404).json({ message: 'Activity not found' });
         }
     } catch (error) {
-        console.error("Error creating/updating extracurricular activity:", error);
-        res.status(500).json({ message: "Error creating/updating activity", error: error.message });
+        console.error("Error updating extracurricular activity:", error);
+        res.status(500).json({ message: "Error updating activity", error: error.message });
     }
 };
 
@@ -77,17 +161,18 @@ exports.deleteActivity = async (req, res) => {
     }
 };
 
-// Get all activities for a student
+// Get all activities for a student by enrollment number
 exports.getStudentExtraCurricularActivities = async (req, res) => {
     try {
-        const { studentId } = req.params;
+        const { enrollmentNumber } = req.params;
         const activities = await ExtraCurricularActivity.findAll({
-            where: { studentId },
+            where: { enrollmentNumber },
             order: [['date', 'DESC']],
             include: [
                 {
                     model: Student,
-                    attributes: ["name", "rollNumber"]
+                    attributes: ["name", "rollNumber"],
+                    where: { enrollmentNumber }
                 }
             ]
         });

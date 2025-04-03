@@ -1,22 +1,26 @@
 const express = require("express");
 const router = express.Router();
 const { 
-    getActivitiesByStudentAndSemester, 
-    addOrUpdateActivity, 
+    getActivitiesByEnrollmentAndSemester,
+    addActivity,
+    updateActivity,
     deleteActivity,
-    getStudentExtraCurricularActivities 
+    getStudentExtraCurricularActivities
 } = require("../controller/student_extracurricular_controller");
 
-// Get activities by student and semester
-router.get("/:studentId/:semesterId", getActivitiesByStudentAndSemester);
+// Get activities by enrollment number and semester
+router.get("/:enrollmentNumber/:semesterId", getActivitiesByEnrollmentAndSemester);
 
-// Add or update extracurricular activity
-router.post("/add", addOrUpdateActivity);
+// Add new activity
+router.post("/", addActivity);
 
-// Delete extracurricular activity
+// Update existing activity
+router.put("/:id", updateActivity);
+
+// Delete activity
 router.delete("/:activityId", deleteActivity);
 
-// Get all activities for a student
-router.get("/student/:studentId", getStudentExtraCurricularActivities);
+// Get all activities for a student by enrollment number
+router.get("/student/:enrollmentNumber", getStudentExtraCurricularActivities);
 
 module.exports = router;
