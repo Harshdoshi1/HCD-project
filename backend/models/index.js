@@ -15,8 +15,12 @@ const CoCurricularActivity = require('./co_curricular_activity');
 
 const syncDB = async () => {
     try {
+        // Drop all tables first
+        await sequelize.drop();
+        
+        // Recreate all tables
         await sequelize.sync({ alter: true });
-        console.log('All tables synchronized.');
+        console.log('All tables synchronized successfully.');
     } catch (error) {
         console.error('Error syncing database:', error);
     }
