@@ -64,98 +64,82 @@
 .student-profile-sdp {
     display: flex;
     align-items: center;
-    padding: 1.5rem;
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    gap: 20px;
+    padding: 1rem 2rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 2rem;
 }
 
-.student-profile-sdp:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-}
-
-.profile-image-container {
+.profile-image-container-sdp {
     position: relative;
-    margin-right: 1.5rem;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.profile-image {
-    width: 100px;
-    height: 100px;
+.profile-image-sdp {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     border-radius: 50%;
-    border: 3px solid white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.profile-status {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    background-color: #4cd964;
-    border-radius: 50%;
-    bottom: 5px;
-    right: 5px;
-    border: 2px solid #fff;
-}
-
-.profile-info-sdp {
+.profile-details-sdp {
     flex: 1;
-}
-
-.student-name-detials-sdp {
-    font-size: 1.75rem;
-    font-weight: 600;
-    margin: 0 0 0.5rem 0;
-    color: #333;
-    text-align: justify;
-}
-
-.student-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    color: #6c757d;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-}
-
-.separator {
-    margin: 0 0.5rem;
-}
-
-.student-highlight {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 0.8rem;
-}
-
-.highlight-item {
     display: flex;
     flex-direction: column;
-    padding: 0.75rem 1.25rem;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    gap: 8px;
 }
 
-.highlight-item:hover {
-    background-color: #e9ecef;
-    transform: translateY(-2px);
-}
-
-.highlight-label {
-    font-size: 0.8rem;
-    color: #6c757d;
-    margin-bottom: 0.25rem;
-}
-
-.highlight-value {
-    font-size: 1.25rem;
+.student-name-sdp {
+    font-size: 1.5rem;
     font-weight: 600;
-    color: #007aff;
+    color: #212529;
+    margin: 0;
+}
+
+.student-meta-sdp {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 0;
+}
+
+.student-meta-sdp span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9rem;
+    color: #6c757d;
+    background: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.contact-info-sdp {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.contact-item-sdp {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.contact-item-sdp svg {
+    color: #007bff;
+    width: 16px;
+    height: 16px;
 }
 
 .personal-info-quick {
@@ -182,40 +166,66 @@
     transform: translateY(-2px);
 }
 
-.student-tabs {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #dee2e6;
-    padding-bottom: 0.5rem;
+.tabs-container-sdp {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: white;
+    margin: 2rem 0;
 }
 
-.tab-button-sd {
+.tabs-sdp {
     display: flex;
-    align-items: center;
-    background: transparent;
-    border: none;
-    padding: 0.75rem 1.25rem;
-    cursor: pointer;
+    gap: 1px;
+    border-bottom: 2px solid #e0e0e0;
+    background: #f8f9fa;
+}
+
+.tab-sdp {
+    flex: 1;
+    padding: 12px 20px;
+    font-size: 14px;
     font-weight: 500;
     color: #6c757d;
-    border-radius: 8px 8px 0 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
+    text-transform: capitalize;
 }
 
-.tab-button-sd span {
-    margin-left: 0.5rem;
+.tab-sdp:hover {
+    color: #007bff;
 }
 
-.tab-button-sd:hover {
-    color: #007aff;
-    background-color: rgba(0, 122, 255, 0.05);
+.tab-sdp.active {
+    color: #007bff;
+    background: white;
+    border-bottom: 2px solid #007bff;
+    margin-bottom: -2px;
 }
 
-.tab-button-sd.active {
-    color: #007aff;
-    background-color: rgba(0, 122, 255, 0.1);
-    border-bottom: 2px solid #007aff;
+.tab-sdp.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #007bff;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.3s ease;
+}
+
+.tab-sdp.active:hover::after {
+    transform: scaleX(1);
+}
+
+.tab-content-sdp {
+    padding: 1rem;
+    background: white;
 }
 
 .student-content-sdp {
@@ -1316,7 +1326,7 @@
         text-align: center;
     }
 
-    .profile-image-container {
+    .profile-image-container-sdp {
         margin-right: 0;
         margin-bottom: 1rem;
     }

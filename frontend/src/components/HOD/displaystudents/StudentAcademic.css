@@ -1,0 +1,293 @@
+.academic-section {
+    padding: 1.5rem;
+}
+
+.semester-navigation-sdp {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    margin: 0 0 1.5rem;
+    color: #1e3a8a;
+}
+
+.semester-selectors {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.semester-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: white;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.semester-button.active {
+    background: #4361ee;
+    color: white;
+    border-color: #4361ee;
+}
+
+.semester-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.summary-item {
+    text-align: center;
+}
+
+.summary-label {
+    display: block;
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+.subject-actions-sdp {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.expand-all-button,
+.collapse-all-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.expand-all-button {
+    background: #4361ee;
+    color: white;
+}
+
+.collapse-all-button {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.subjects-list-sdp {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.subject-card-sdp {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subject-header-sdp {
+    padding: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.subject-main-info {
+    flex: 1;
+}
+
+.subject-main-info h4 {
+    margin: 0 0 0.5rem;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.subject-code {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: normal;
+}
+
+.subject-quick-info {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.quick-info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.subject-expand-icon {
+    transition: transform 0.3s ease;
+}
+
+.subject-expand-icon.expanded {
+    transform: rotate(180deg);
+}
+
+.subject-content-sdp {
+    display: none;
+    padding: 0 1.5rem 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.subject-content-sdp.expanded {
+    display: block;
+}
+
+.performance-section-sdp {
+    margin-bottom: 2rem;
+}
+
+.section-heading-sdp {
+    margin: 1.5rem 0 1rem;
+    color: #1e3a8a;
+}
+
+.performance-grid-sdp {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.performance-item {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.performance-label {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.marks-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.marks-value {
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+.marks-percentage {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.marks-progress {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.marks-progress-fill {
+    height: 100%;
+    background: #4361ee;
+    transition: width 0.3s ease;
+}
+
+.additional-metrics {
+    margin-top: 1.5rem;
+}
+
+.metrics-item {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.metrics-label {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.total-marks {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e3a8a;
+    margin-bottom: 0.5rem;
+}
+
+.total-progress {
+    height: 8px;
+}
+
+.faculty-feedback-sdp {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.feedback-box {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.faculty-rating {
+    margin-bottom: 1rem;
+}
+
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.star-filled {
+    color: #fbbf24;
+    fill: #fbbf24;
+}
+
+.star-empty {
+    color: #e2e8f0;
+}
+
+.rating-value {
+    margin-left: 0.5rem;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.faculty-comments p {
+    margin: 0 0 1rem;
+    color: #1e293b;
+    line-height: 1.6;
+}
+
+.comments-date {
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
