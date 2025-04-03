@@ -6,11 +6,11 @@ const Charts = ({ student, category }) => {
 
   // Prepare data for strength distribution pie chart
   const strengthData = [
-    { name: 'Writing', value: student.subjects.find(sub => sub.type === 'writing')?.score || 0 },
-    { name: 'Analytical', value: student.subjects.find(sub => sub.type === 'analytical')?.score || 0 },
-    { name: 'Calculation', value: student.subjects.find(sub => sub.type === 'calculation')?.score || 0 },
-    { name: 'Memory', value: student.subjects.find(sub => sub.type === 'memory')?.score || 0 },
-    { name: 'Critical', value: student.subjects.find(sub => sub.type === 'critical')?.score || 0 }
+    { name: 'Writing', value: student.subjects?.find(sub => sub.type === 'writing')?.score || 0 },
+    { name: 'Analytical', value: student.subjects?.find(sub => sub.type === 'analytical')?.score || 0 },
+    { name: 'Calculation', value: student.subjects?.find(sub => sub.type === 'calculation')?.score || 0 },
+    { name: 'Memory', value: student.subjects?.find(sub => sub.type === 'memory')?.score || 0 },
+    { name: 'Critical', value: student.subjects?.find(sub => sub.type === 'critical')?.score || 0 }
   ];
 
   // Prepare data for activity distribution
@@ -26,7 +26,7 @@ const Charts = ({ student, category }) => {
   return (
     <div className="charts-section">
       <h3>Performance Analytics</h3>
-      
+
       <div className="chart-row">
         {/* Strength Distribution Pie Chart */}
         <div className="chart-container">
@@ -38,7 +38,10 @@ const Charts = ({ student, category }) => {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => {
+                  if (percent === 0) return null;
+                  return `${name}: ${(percent * 100).toFixed(0)}%`;
+                }}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
@@ -53,51 +56,20 @@ const Charts = ({ student, category }) => {
           </ResponsiveContainer>
         </div>
 
-        {/* Activity Distribution Pie Chart */}
+        {/* Activity Distribution Bar Chart */}
         <div className="chart-container">
           <h4>Activity Distribution</h4>
           <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={activityData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {activityData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
+            <BarChart data={activityData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
               <Tooltip />
               <Legend />
-            </PieChart>
+              <Bar dataKey="value" fill="#4361ee" />
+            </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
-
-      {/* Progress Bar Chart */}
-      <div className="chart-container">
-        <h4>Overall Performance</h4>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={[
-            { name: 'Total Score', score: student.totalScore },
-            { name: 'Attendance', score: student.attendance },
-            { name: 'Curricular', score: student.curricular },
-            { name: 'Co-Curricular', score: student.coCurricular },
-            { name: 'Extra-Curricular', score: student.extraCurricular }
-          ]}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip formatter={(value) => `${value}%`} />
-            <Legend />
-            <Bar dataKey="score" fill="#8884d8" />
-          </BarChart>
-        </ResponsiveContainer>
       </div>
     </div>
   );

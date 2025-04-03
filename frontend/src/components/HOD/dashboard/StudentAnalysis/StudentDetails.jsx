@@ -1,4 +1,13 @@
 import React from 'react';
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ResponsiveContainer,
+  Tooltip
+} from 'recharts';
 import Charts from './Charts';
 
 const StudentDetails = ({ student, onClose, category }) => {
@@ -16,9 +25,17 @@ const StudentDetails = ({ student, onClose, category }) => {
     
     return strengths;
   };
-  
+
   const strengths = getStrengthAreas();
-  
+
+  const radarData = [
+    { subject: 'Writing-based', value: strengths.writing },
+    { subject: 'Analytical', value: strengths.analytical },
+    { subject: 'Calculation', value: strengths.calculation },
+    { subject: 'Memory-based', value: strengths.memory },
+    { subject: 'Critical Thinking', value: strengths.critical }
+  ];
+
   // Get the highest strength area
   const getTopStrength = () => {
     if (!Object.keys(strengths).length) return 'No data available';
@@ -31,15 +48,13 @@ const StudentDetails = ({ student, onClose, category }) => {
     const mapping = {
       writing: 'Writing-based subjects',
       analytical: 'Analytical subjects',
-      calculation: 'Calculation-based subjects',
+      calculation: 'Calculation subjects',
       memory: 'Memory-based subjects',
       critical: 'Critical thinking subjects'
     };
     
-    return mapping[top.key];
+    return mapping[top.key] || 'No data available';
   };
-
-  if (!student) return null;
 
   return (
     <div className="student-details">
@@ -47,85 +62,104 @@ const StudentDetails = ({ student, onClose, category }) => {
         <h2>Student Performance Analysis</h2>
         <button className="close-btn" onClick={onClose}>×</button>
       </div>
-      
-      <div className="student-info">
+
+      <div className="student-info-vertical">
         <div className="info-card">
-          <h3>{student.name}</h3>
-          <p><strong>Roll Number:</strong> {student.rollNumber}</p>
-          <p><strong>Batch:</strong> {student.batch}</p>
-          <p><strong>Semester:</strong> {student.semester}</p>
-          <p><strong>Overall Ranking:</strong> {student.ranking}</p>
-          <p><strong>Total Score:</strong> {student.totalScore}</p>
+          <h3>{student?.name || 'N/A'}</h3>
+          <p><strong>Roll Number:</strong> {student?.rollNumber || 'N/A'}</p>
+          <p><strong>Batch:</strong> {student?.batch || 'N/A'}</p>
+          <p><strong>Semester:</strong> {student?.semester || 'N/A'}</p>
+          <p><strong>Overall Ranking:</strong> {student?.ranking || 'N/A'}</p>
+          <p><strong>Total Score:</strong> {student?.totalScore || 'N/A'}</p>
         </div>
-        
+
         <div className="strength-analysis">
           <h3>Academic Strength Analysis</h3>
           <p>This student performs best in: <strong>{getTopStrength()}</strong></p>
-          
-          <div className="strength-bars">
-            <div className="strength-item">
-              <label>Writing-based:</label>
-              <div className="progress-container">
-                <div className="progress-bar" style={{ width: `${strengths.writing}%` }}></div>
-                <span>{Math.round(strengths.writing)}%</span>
-              </div>
+
+          <div className="radar-chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart data={radarData}>
+                <PolarGrid gridType="polygon" stroke="#e2e8f0" strokeDasharray="3 3" />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  stroke="#4b5563"
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#4b5563' }}
+                />
+                <PolarRadiusAxis
+                  angle={30}
+                  domain={[0, 100]}
+                  stroke="#4b5563"
+                  tick={{ fontSize: 12, fill: '#4b5563' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '4px',
+                    padding: '8px 12px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
+                  labelStyle={{
+                    fontWeight: 'bold',
+                    color: '#1e3a8a'
+                  }}
+                  itemStyle={{
+                    color: '#4b5563'
+                  }}
+                />
+                <Radar
+                  name="Academic Strengths"
+                  dataKey="value"
+                  stroke="#4361ee"
+                  fill="#6d8eff"
+                  fillOpacity={0.6}
+                  strokeWidth={2}
+                  animationBegin={0}
+                  animationDuration={1000}
+                  animationEasing="ease"
+                  dot={{
+                    fill: '#4361ee',
+                    stroke: '#fff',
+                    strokeWidth: 2,
+                    r: 4
+                  }}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="performance-details">
+          <h3>Performance Details</h3>
+          <div className="performance-metrics">
+            <div className="metric-item">
+              <span className="metric-label">Attendance</span>
+              <span className="metric-value">{student?.attendance || 'N/A'}%</span>
             </div>
-            
-            <div className="strength-item">
-              <label>Analytical:</label>
-              <div className="progress-container">
-                <div className="progress-bar" style={{ width: `${strengths.analytical}%` }}></div>
-                <span>{Math.round(strengths.analytical)}%</span>
-              </div>
+            <div className="metric-item">
+              <span className="metric-label">Curricular</span>
+              <span className="metric-value">{student?.curricular || 'N/A'}%</span>
             </div>
-            
-            <div className="strength-item">
-              <label>Calculation:</label>
-              <div className="progress-container">
-                <div className="progress-bar" style={{ width: `${strengths.calculation}%` }}></div>
-                <span>{Math.round(strengths.calculation)}%</span>
-              </div>
+            <div className="metric-item">
+              <span className="metric-label">Co-Curricular</span>
+              <span className="metric-value">{student?.coCurricular || 'N/A'}%</span>
             </div>
-            
-            <div className="strength-item">
-              <label>Memory-based:</label>
-              <div className="progress-container">
-                <div className="progress-bar" style={{ width: `${strengths.memory}%` }}></div>
-                <span>{Math.round(strengths.memory)}%</span>
-              </div>
-            </div>
-            
-            <div className="strength-item">
-              <label>Critical Thinking:</label>
-              <div className="progress-container">
-                <div className="progress-bar" style={{ width: `${strengths.critical}%` }}></div>
-                <span>{Math.round(strengths.critical)}%</span>
-              </div>
+            <div className="metric-item">
+              <span className="metric-label">Extra-Curricular</span>
+              <span className="metric-value">{student?.extraCurricular || 'N/A'}%</span>
             </div>
           </div>
         </div>
       </div>
-      
-      <div className="performance-comparison">
-        <h3>Performance Comparison with Class Average</h3>
-        <div className="comparison-container">
-          <div className="comparison-item">
-            <span className="label">Student Score</span>
-            <span className="score">{student.totalScore}%</span>
-            <div className="bar student-bar" style={{ width: `${student.totalScore}%` }}></div>
-          </div>
-          <div className="comparison-item">
-            <span className="label">Class Average</span>
-            <span className="score">{student.classAverage}%</span>
-            <div className="bar average-bar" style={{ width: `${student.classAverage}%` }}></div>
-          </div>
-        </div>
-      </div>
-      
-      <Charts 
-        student={student} 
-        category={category}
-      />
+
+      {student && (
+        <Charts
+          student={student}
+          category={category}
+        />
+      )}
     </div>
   );
 };

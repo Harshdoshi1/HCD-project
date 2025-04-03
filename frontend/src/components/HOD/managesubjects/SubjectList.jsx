@@ -107,6 +107,7 @@ const SubjectList = ({ onSelectSubject }) => {
                         </div>
                     ))
                 ) : (
+
                     <p className="no-subjects">No subjects found for the selected filters.</p>
                 )}
             </div>

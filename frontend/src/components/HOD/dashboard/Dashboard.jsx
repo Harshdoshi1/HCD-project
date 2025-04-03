@@ -36,7 +36,7 @@ const DashboardHOD = () => {
                                     <div className="stats-grid">
                                         <div className="stat-card">
                                             <h3>Welcome to the HOD Dashboard</h3>
-                                            <p>Manage your faculty, students, and subjects here.</p>
+                                            {/* <p>Manage your faculty, students, and subjects here.</p> */}
                                         </div>
                                     </div>
                                 </>
@@ -67,15 +67,15 @@ const DashboardHOD = () => {
                             {activeItem === 'subjects' && <Subject />}
                             {activeItem === 'batches' && <ManageBatches />}
                             {activeItem === 'studentAnalysis' && <StudentAnalysis />}
-                            {!(activeItem === 'dashboard' || activeItem === 'students' || activeItem === 'grades' || 
-                               activeItem === 'faculty' || activeItem === 'subjects' || activeItem === 'batches' || 
-                               activeItem === 'studentAnalysis') && (
-                                <div className="stats-grid">
-                                    <div className="stat-card">
-                                        <h3>No content available for this section.</h3>
+                            {!(activeItem === 'dashboard' || activeItem === 'students' || activeItem === 'grades' ||
+                                activeItem === 'faculty' || activeItem === 'subjects' || activeItem === 'batches' ||
+                                activeItem === 'studentAnalysis') && (
+                                    <div className="stats-grid">
+                                        <div className="stat-card">
+                                            <h3>No content available for this section.</h3>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
                         </>
                     </div>
                 </div>
