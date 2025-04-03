@@ -189,7 +189,7 @@ const StudentExtraActivity = ({ student, selectedSemester }) => {
                                 setShowAddForm(false);
                                 setShowEditForm(false);
                             }}>Cancel</button>
-                            <button type="submit" className="submit-button">
+                            <button type="submit" className="add-activity-btn-co">
                                 {isEditMode ? 'Update Activity' : 'Add Activity'}
                             </button>
                         </div>

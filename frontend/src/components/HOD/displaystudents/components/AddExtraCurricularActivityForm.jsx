@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Plus, Calendar, Trophy, FileText } from 'lucide-react';
 import './ActivityForm.css';
 
-const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, activityType }) => {
-    const [formData, setFormData] = useState({
+const AddExtraCurricularActivityForm = ({ onClose, onSubmit, formData: initialData }) => {
+    const [formData, setFormData] = useState(initialData || {
         enrollmentNumber: '',
-        semester: currentSemester || 1,
+        semester: '',
         activityName: '',
         achievementLevel: '',
         date: '',
@@ -12,50 +13,28 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
         certificateUrl: ''
     });
 
-    useEffect(() => {
-        if (activity && isEdit) {
-            setFormData({
-                enrollmentNumber: activity.enrollmentNumber || '',
-                semester: activity.semester || currentSemester || 1,
-                activityName: activity.activityName || '',
-                achievementLevel: activity.achievementLevel || '',
-                date: activity.date ? new Date(activity.date).toISOString().split('T')[0] : '',
-                description: activity.description || '',
-                certificateUrl: activity.certificateUrl || ''
-            });
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                semester: currentSemester || 1
-            }));
-        }
-    }, [activity, isEdit, currentSemester]);
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSubmit({
-            ...formData,
-            id: activity?.id || Date.now().toString(),
-            type: activityType || (activity?.type || '')
-        });
-    };
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'semester' ? parseInt(value) : value
+            [name]: value
         }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSubmit(formData);
     };
 
     return (
         <div className="activity-form-overlay">
             <div className="activity-form-container">
                 <div className="form-header">
-                    <h3>{isEdit ? 'Edit Extra-Curricular Activity' : 'Add Extra-Curricular Activity'}</h3>
-                    <button className="close-form-button" onClick={onClose}>×</button>
+                    <h3>{initialData ? 'Edit Extra-Curricular Activity' : 'Add Extra-Curricular Activity'}</h3>
+                    <button className="close-form-button" onClick={onClose}>
+                        ×
+                    </button>
                 </div>
-
                 <form onSubmit={handleSubmit} className="activity-form">
                     <div className="form-grid">
                         {/* First Column */}
@@ -68,7 +47,7 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
                                 onChange={handleChange}
                                 required
                                 placeholder="Enter student's enrollment number"
-                                disabled={isEdit}
+                                disabled={initialData}
                             />
                         </div>
                         <div className="form-group">
@@ -140,11 +119,11 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
                     </div>
 
                     <div className="form-actions">
-                        <button type="button" onClick={onClose} className="cancel-btn">
+                        <button type="button" className="cancel-btn" onClick={onClose}>
                             Cancel
                         </button>
                         <button type="submit" className="submit-btn">
-                            {isEdit ? 'Update Activity' : 'Add Activity'}
+                            {initialData ? 'Update Activity' : 'Add Activity'}
                         </button>
                     </div>
                 </form>
@@ -153,4 +132,4 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
     );
 };
 
-export default ActivityForm;
+export default AddExtraCurricularActivityForm;
