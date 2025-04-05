@@ -1,18 +1,41 @@
 const express = require('express');
 const {
+    getSubjects,
+    getDropdownData,
+    assignSubject,
+    getSubjectsByBatchSemesterandFaculty,
+    addUniqueSubDegree,
+    addUniqueSubDiploma,
+    addSubjectWithComponents,
+    getSubjectWithComponents,
     addSubject,
-    getSubjects
-} = require('../controller/sub_controller'); // Ensure correct path
+    getSubjectByCode,
+    deleteSubject,
+    getSubjectsByBatchAndSemester
+} = require('../controller/subController');
 
 const router = express.Router();
 
-// router.post('/addSubject', addSubject);
-// router.get('/getAllSubjects', getSubjects);
-// router.get('/getSubjectByCode/:code/:courseType', getSubjectByCode);
-// router.delete('/deleteSubject/:code/:courseType', deleteSubject);
-// router.get('/subjects/:program/:batchId/:semesterId', cascadingdropdownsub);
-// router.get('/getSubjects', getSubjects);
-// router.get('/getDropdownData', getDropdownData);
 
+router.post('/addSubject', addSubject);
+router.get('/getSubjectByCode', getSubjectByCode);
+router.get('/getSubjects', getSubjects);
+router.get('/getDropdownData', getDropdownData);
+router.post('/assignSubject', assignSubject);
+router.post('/getSubjectsByBatchSemesterandFaculty', getSubjectsByBatchSemesterandFaculty);
+
+
+router.post('/addUniqueSubDegree', addUniqueSubDegree);
+router.post('/addUniqueSubDiploma', addUniqueSubDiploma);
+
+
+router.post("/addSubjectWithComponents", addSubjectWithComponents);
+router.get("/subject/:subjectCode", getSubjectWithComponents);
+
+
+router.get("/getSubjects/:batchName/:semesterNumber", getSubjectsByBatchAndSemester);
+
+
+router.delete("/deleteSubjectbycode", deleteSubject);
 
 module.exports = router;

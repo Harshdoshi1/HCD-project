@@ -33,7 +33,7 @@ const StudentsList = ({ onStudentSelect }) => {
                 uniqueId: `${student.enrollmentNumber}-${index}`
             }));
             setStudents(studentsWithIds);
-            
+
             // Extract unique batches from students data
             const uniqueBatches = [...new Set(studentsWithIds.map(student => student.Batch.batchName))];
             setBatches(uniqueBatches);
@@ -216,7 +216,7 @@ const StudentsList = ({ onStudentSelect }) => {
                                             <td>
                                                 <button
                                                     className="view-details-btn"
-                                                    onClick={() => onStudentSelect && onStudentSelect(student.id)}
+                                                    onClick={() => onStudentSelect && onStudentSelect(student.enrollmentNumber)}
                                                 >
                                                     View Details
                                                 </button>

@@ -43,6 +43,10 @@ const ExtraCurricularActivity = sequelize.define(
             type: DataTypes.STRING,
             allowNull: true,
         },
+        score: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
     },
     {
         tableName: "extra_curricular_activities",

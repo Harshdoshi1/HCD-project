@@ -1,10 +1,10 @@
-const ComponentWeightage = require("../models/component_weightage");
+const ComponentWeightage = require("../models/componentWeightage");
 const Batch = require("../models/batch");
 const Semester = require("../models/semester");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 
 // ✅ Create Component Weightage
-exports.createComponentWeightage = async (req, res) => {
+const createComponentWeightage = async (req, res) => {
   try {
     console.log("Received request body:", req.body);
     const { batch, semester, subject, ese, cse, ia, tw, viva } = req.body;
@@ -42,7 +42,7 @@ exports.createComponentWeightage = async (req, res) => {
 };
 
 // ✅ Get All Component Weightages
-exports.getAllComponentWeightages = async (req, res) => {
+const getAllComponentWeightages = async (req, res) => {
   try {
     const weightages = await ComponentWeightage.findAll({
       include: [
@@ -60,7 +60,7 @@ exports.getAllComponentWeightages = async (req, res) => {
 };
 
 // ✅ Get Component Weightage by ID
-exports.getComponentWeightageById = async (req, res) => {
+const getComponentWeightageById = async (req, res) => {
   try {
     const { id } = req.params;
     const weightage = await ComponentWeightage.findByPk(id, {
@@ -81,7 +81,7 @@ exports.getComponentWeightageById = async (req, res) => {
 };
 
 // ✅ Update Component Weightage
-exports.updateComponentWeightage = async (req, res) => {
+const updateComponentWeightage = async (req, res) => {
   try {
     const { id } = req.params;
     const { ese, cse, ia, tw, viva } = req.body;
@@ -101,7 +101,7 @@ exports.updateComponentWeightage = async (req, res) => {
 };
 
 // ✅ Delete Component Weightage
-exports.deleteComponentWeightage = async (req, res) => {
+const deleteComponentWeightage = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -117,3 +117,13 @@ exports.deleteComponentWeightage = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+module.exports = {
+  updateComponentWeightage,
+  deleteComponentWeightage,
+  getComponentWeightageById,
+  getAllComponentWeightages,
+  createComponentWeightage
+};
+

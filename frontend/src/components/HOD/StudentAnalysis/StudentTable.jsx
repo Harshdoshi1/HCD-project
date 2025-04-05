@@ -1,9 +1,9 @@
 import React from 'react';
 
-const StudentTable = ({ 
-  students, 
-  onViewDetails, 
-  searchQuery, 
+const StudentTable = ({
+  students,
+  onViewDetails,
+  searchQuery,
   setSearchQuery,
   sortConfig,
   onSort
@@ -38,25 +38,25 @@ const StudentTable = ({
           <table className="student-table">
             <thead>
               <tr>
-                <th 
+                <th
                   onClick={() => onSort('name')}
                   data-sort={sortConfig.key === 'name' ? sortConfig.direction : null}
                 >
                   Student Name {getSortIcon('name')}
                 </th>
-                <th 
-                  onClick={() => onSort('rollNumber')}
-                  data-sort={sortConfig.key === 'rollNumber' ? sortConfig.direction : null}
+                <th
+                  onClick={() => onSort('enrollmentNumber')}
+                  data-sort={sortConfig.key === 'enrollmentNumber' ? sortConfig.direction : null}
                 >
-                  Roll Number {getSortIcon('rollNumber')}
+                  Roll Number {getSortIcon('enrollmentNumber')}
                 </th>
-                <th 
+                <th
                   onClick={() => onSort('totalScore')}
                   data-sort={sortConfig.key === 'totalScore' ? sortConfig.direction : null}
                 >
                   Total Score {getSortIcon('totalScore')}
                 </th>
-                <th 
+                <th
                   onClick={() => onSort('ranking')}
                   data-sort={sortConfig.key === 'ranking' ? sortConfig.direction : null}
                 >
@@ -69,11 +69,11 @@ const StudentTable = ({
               {students.map((student, index) => (
                 <tr key={`${student.id}-${index}`}>
                   <td>{student.name}</td>
-                  <td>{student.rollNumber}</td>
+                  <td>{student.enrollmentNumber}</td>
                   <td>{student.totalScore}%</td>
                   <td>{student.ranking}</td>
                   <td>
-                    <button 
+                    <button
                       className="view-details-btn"
                       onClick={() => onViewDetails(student)}
                       aria-label={`View details for ${student.name}`}

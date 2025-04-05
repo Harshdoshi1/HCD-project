@@ -1,53 +1,80 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { User, Award, Trophy, Star, ChevronDown } from 'lucide-react';
 import './AcademicDetails.css';
 
-const AcademicDetails = ({ 
-  student, 
-  selectedSemester, 
-  expandedSubjects, 
-  toggleSubject, 
-  expandAllSubjects, 
-  collapseAllSubjects, 
-  onSemesterChange 
-}) => {
+const AcademicDetails = () => {
+  const [expandedSubjects, setExpandedSubjects] = useState(new Set());
+
+  const toggleSubject = (id) => {
+    setExpandedSubjects((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const expandAllSubjects = () => {
+    setExpandedSubjects(new Set(dummyStudent.academics.subjects.map((subject) => subject.id)));
+  };
+
+  const collapseAllSubjects = () => {
+    setExpandedSubjects(new Set());
+  };
+
+  const dummyStudent = {
+    academics: {
+      subjects: [
+        {
+          id: 1,
+          name: 'Mathematics',
+          code: 'MATH101',
+          faculty: 'Dr. John Doe',
+          grade: 'A',
+          classRank: 1,
+          totalStudents: 30,
+          components: {
+            Assignment: { marks: 18, total: 20 },
+            Quiz: { marks: 9, total: 10 },
+            Exam: { marks: 45, total: 50 },
+          },
+          totalMarks: 90,
+          facultyRating: 8.5,
+          facultyResponse: {
+            comments: 'Excellent performance throughout the semester.',
+            lastUpdated: '2023-03-01',
+          },
+        },
+        {
+          id: 2,
+          name: 'Physics',
+          code: 'PHYS101',
+          faculty: 'Dr. Jane Smith',
+          grade: 'B+',
+          classRank: 5,
+          totalStudents: 30,
+          components: {
+            Assignment: { marks: 15, total: 20 },
+            Quiz: { marks: 8, total: 10 },
+            Exam: { marks: 40, total: 50 },
+          },
+          totalMarks: 85,
+          facultyRating: 7.8,
+          facultyResponse: {
+            comments: 'Good understanding of concepts but needs improvement in problem-solving.',
+            lastUpdated: '2023-03-02',
+          },
+        },
+      ],
+    },
+  };
+
   return (
     <div className="academic-section">
-      <div className="semester-navigation-sdp">
-        <h3 className="section-title">Academic Performance</h3>
-        <div className="semester-selectors">
-          {Object.keys(student.academics.semesters).map(sem => (
-            <button
-              key={sem}
-              className={`semester-button ${selectedSemester === parseInt(sem) ? 'active' : ''}`}
-              onClick={() => onSemesterChange(parseInt(sem))}
-            >
-              Semester {sem}
-            </button>
-          ))}
-        </div>
-        <div className="semester-summary">
-          <div className="summary-item">
-            <span className="summary-label">Semester GPA</span>
-            <span className="summary-value">{student.academics.semesters[selectedSemester]?.gpa || 'N/A'}</span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-label">Credits</span>
-            <span className="summary-value">{student.academics.semesters[selectedSemester]?.credits || 'N/A'}</span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-label">Subjects</span>
-            <span className="summary-value">{student.academics.semesters[selectedSemester]?.subjects?.length || 0}</span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-label">Rank</span>
-            <span className="summary-value">
-              {student.academics.semesterRanks.find(r => r.semester === selectedSemester)?.rank || 'N/A'}/
-              {student.academics.semesterRanks.find(r => r.semester === selectedSemester)?.totalStudents || 'N/A'}
-            </span>
-          </div>
-        </div>
-      </div>
+      <h3 className="section-title">Academic Performance</h3>
 
       <div className="subject-actions-sdp">
         <button className="expand-all-button" onClick={expandAllSubjects}>Expand All</button>
@@ -55,7 +82,7 @@ const AcademicDetails = ({
       </div>
 
       <div className="subjects-list-sdp">
-        {student.academics.semesters[selectedSemester]?.subjects.map(subject => (
+        {dummyStudent.academics.subjects.map((subject) => (
           <div key={subject.id} className="subject-card-sdp">
             <div className="subject-header-sdp" onClick={() => toggleSubject(subject.id)}>
               <div className="subject-main-info">

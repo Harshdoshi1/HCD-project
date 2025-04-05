@@ -1,9 +1,9 @@
-const ComponentMarks = require("../models/component_marks");
+const ComponentMarks = require("../models/componentMarks");
 
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 
 // ✅ Create Component Marks
-exports.createComponentMarks = async (req, res) => {
+const createComponentMarks = async (req, res) => {
   try {
     console.log("Received request body:", req.body);
     const { subject, ese, cse, ia, tw, viva } = req.body;
@@ -32,7 +32,7 @@ exports.createComponentMarks = async (req, res) => {
 };
 
 // ✅ Get All Component Marks
-exports.getAllComponentMarks = async (req, res) => {
+const getAllComponentMarks = async (req, res) => {
   try {
     const marks = await ComponentMarks.findAll({
       include: [
@@ -48,7 +48,7 @@ exports.getAllComponentMarks = async (req, res) => {
 };
 
 // ✅ Get Component Marks by ID
-exports.getComponentMarksById = async (req, res) => {
+const getComponentMarksById = async (req, res) => {
   try {
     const { id } = req.params;
     const marks = await ComponentMarks.findByPk(id, {
@@ -67,7 +67,7 @@ exports.getComponentMarksById = async (req, res) => {
 };
 
 // ✅ Update Component Marks
-exports.updateComponentMarks = async (req, res) => {
+const updateComponentMarks = async (req, res) => {
   try {
     const { id } = req.params;
     const { ese, cse, ia, tw, viva } = req.body;
@@ -87,7 +87,7 @@ exports.updateComponentMarks = async (req, res) => {
 };
 
 // ✅ Delete Component Marks
-exports.deleteComponentMarks = async (req, res) => {
+const deleteComponentMarks = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -103,3 +103,8 @@ exports.deleteComponentMarks = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+module.exports = {
+  deleteComponentMarks, updateComponentMarks, getComponentMarksById, getAllComponentMarks, createComponentMarks
+}

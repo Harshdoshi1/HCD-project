@@ -2,7 +2,7 @@ export const dummyStudents = [
     {
         id: 1,
         name: "John Doe",
-        rollNumber: "2022001",
+        enrollmentNumber: "2022001",
         batch: "2022-26",
         semester: "Semester 1",
         totalScore: 85,
@@ -21,7 +21,7 @@ export const dummyStudents = [
     {
         id: 2,
         name: "Jane Smith",
-        rollNumber: "2022002",
+        enrollmentNumber: "2022002",
         batch: "2022-26",
         semester: "Semester 1",
         totalScore: 92,

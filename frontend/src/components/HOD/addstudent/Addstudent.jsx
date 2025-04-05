@@ -7,7 +7,7 @@ const AddStudent = () => {
         firstName: '',
         lastName: '',
         email: '',
-        rollNumber: '',
+        enrollmentNumber: '',
         batch: '',
         semester: ''
     });
@@ -67,8 +67,8 @@ const AddStudent = () => {
                     <label>Roll Number</label>
                     <input
                         type="text"
-                        name="rollNumber"
-                        value={formData.rollNumber}
+                        name="enrollmentNumber"
+                        value={formData.enrollmentNumber}
                         onChange={handleChange}
                         required
                     />

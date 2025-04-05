@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { 
+const {
     getActivitiesByEnrollmentAndSemester,
     addActivity,
     updateActivity,
     deleteActivity,
     getStudentExtraCurricularActivities
-} = require("../controller/student_extracurricular_controller");
+} = require("../controller/studentExtracurricularController");
 
 // Get activities by enrollment number and semester
 router.get("/:enrollmentNumber/:semesterId", getActivitiesByEnrollmentAndSemester);

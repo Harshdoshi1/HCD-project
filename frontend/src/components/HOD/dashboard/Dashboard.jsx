@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import Sidebar from '../sidebar/Sidebar';
-import Faculty from "../dashboard/managefaculty/Faculty";
+import Faculty from "../managefaculty/Faculty";
 import StudentsList from '../../HOD/displaystudents/StudentsList';
 import StudentDetail from '../../HOD/displaystudents/StudentDetails';
 import Subject from '../../HOD/managesubjects/Subject';
 import ManageBatches from '../managebatches/ManageBatches';
-import Upgradegrade from '../../HOD/dashboard/upgradegrade/Upgradegrade';
-import StudentAnalysis from './StudentAnalysis/StudentAnalysis';
+import Upgradegrade from '../upgradegrade/Upgradegrade';
+import StudentAnalysis from '../StudentAnalysis/StudentAnalysis';
 import './Dashboard.css';
 
 const DashboardHOD = () => {
