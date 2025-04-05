@@ -23,7 +23,7 @@ const AssignSubject = () => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllBatches");
+                const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data);
@@ -40,25 +40,25 @@ const AssignSubject = () => {
         const fetchAllSubjects = async () => {
             try {
                 const response = await fetch("http://localhost:5001/api/users/getSubjects"); // Replace with actual API URL
-        
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-        
+
                 const data = await response.json();
                 console.log("Fetched subjects:", data); // Debugging log
-        
+
                 if (!data || !Array.isArray(data.subjects)) {
                     throw new Error("Unexpected response format: Expected an array");
                 }
-        
+
                 setAvailableSubjects(data.subjects); // Update the state with fetched data
             } catch (error) {
                 console.error("Error fetching subjects:", error);
                 setAvailableSubjects([]); // Set empty array on error
             }
         };
-        
+
 
         fetchAllSubjects();
     }, [filters.program, isFiltering]);
@@ -258,7 +258,7 @@ const AssignSubject = () => {
                                 name="batch-to-assign"
                                 value={assignFilters.batch}
                                 onChange={handleAssignFiltersChange}
-                            
+
                                 required
                             >
                                 <option value="all">Batch</option>

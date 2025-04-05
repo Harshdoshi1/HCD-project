@@ -5,13 +5,13 @@ const { syncDB } = require('./models');
 
 const userRoutes = require('./routes/auth_routes');
 const facultyRoutes = require('./routes/faculty_routes');
-const componentRoutes = require('./routes/component_routes');
+const componentRoutes = require('./routes/component_marks_routes');
 const studentRoutes = require('./routes/student_routes');
 const subRoutes = require('./routes/sub_routes');
 const studentCoCurricularRoutes = require('./routes/student_cocurricular_routes');
 const studentExtracurricularRoutes = require('./routes/student_extracurricular_routes');
-
-const gettedmarksController = require("./controller/gettedmarksController");
+const batchRoutes = require("./routes/batch_routes");
+const gettedmarksController = require("./controller/gettedMarksController");
 
 const app = express();
 
@@ -27,6 +27,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/batches', batchRoutes);
 app.use('/api/faculties', facultyRoutes);
 app.use('/api/components', componentRoutes);
 app.use('/api/students', studentRoutes);

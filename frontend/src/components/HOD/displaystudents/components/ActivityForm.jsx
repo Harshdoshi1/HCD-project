@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ActivityForm.css';
 
-const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, activityType }) => {
+const ActivityForm = ({ formType, activity, onSubmit, onClose, isEdit, currentSemester, activityType }) => {
     const [formData, setFormData] = useState({
         enrollmentNumber: '',
         semester: currentSemester || 1,
@@ -9,19 +9,23 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
         achievementLevel: '',
         date: '',
         description: '',
-        certificateUrl: ''
+        certificateUrl: '',
+        score: ''
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (activity && isEdit) {
             setFormData({
                 enrollmentNumber: activity.enrollmentNumber || '',
                 semester: activity.semester || currentSemester || 1,
-                activityName: activity.activityName || '',
-                achievementLevel: activity.achievementLevel || '',
+                activityName: activity.activityName || activity.title || '',
+                achievementLevel: activity.achievementLevel || activity.achievement || '',
                 date: activity.date ? new Date(activity.date).toISOString().split('T')[0] : '',
                 description: activity.description || '',
-                certificateUrl: activity.certificateUrl || ''
+                certificateUrl: activity.certificateUrl || '',
+                score: activity.score || ''
             });
         } else {
             setFormData(prev => ({
@@ -31,15 +35,6 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
         }
     }, [activity, isEdit, currentSemester]);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSubmit({
-            ...formData,
-            id: activity?.id || Date.now().toString(),
-            type: activityType || (activity?.type || '')
-        });
-    };
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -48,17 +43,86 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
         }));
     };
 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        try {
+            // Prepare the data for API call
+            const data = {
+                enrollmentNumber: formData.enrollmentNumber,
+                semesterId: formData.semester,
+                activityName: formData.activityName,
+                achievementLevel: formData.achievementLevel,
+                date: new Date(formData.date).toISOString(),
+                description: formData.description,
+                certificateUrl: formData.certificateUrl,
+                score: formData.score || 0
+            };
+
+            // Determine the API endpoint based on formType
+            let apiUrl = '';
+            if (formType === 'co-curricular') {
+                apiUrl = 'http://localhost:5001/api/students/cocurricular/';
+            } else if (formType === 'extra-curricular') {
+                apiUrl = 'http://localhost:5001/api/students/extracurricular/';
+            } else {
+                throw new Error('Invalid form type specified');
+            }
+
+            // Add ID if editing
+            if (isEdit && activity?.id) {
+                apiUrl += activity.id;
+            }
+
+            // Make API call
+            const response = await fetch(apiUrl, {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to ${isEdit ? 'update' : 'add'} activity`);
+            }
+
+            const responseData = await response.json();
+
+            // Call the onSubmit callback with the response data
+            onSubmit(responseData.data || responseData);
+        } catch (error) {
+            console.error(`Error ${isEdit ? 'updating' : 'adding'} activity:`, error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Determine form title based on formType and isEdit
+    const getFormTitle = () => {
+        if (formType === 'co-curricular') {
+            return isEdit ? 'Edit Co-Curricular Activity' : 'Add New Co-Curricular Activity';
+        } else if (formType === 'extra-curricular') {
+            return isEdit ? 'Edit Extra-Curricular Activity' : 'Add New Extra-Curricular Activity';
+        }
+        return isEdit ? 'Edit Activity' : 'Add New Activity';
+    };
+
     return (
         <div className="activity-form-overlay">
             <div className="activity-form-container">
                 <div className="form-header">
-                    <h3>{isEdit ? 'Edit Extra-Curricular Activity' : 'Add Extra-Curricular Activity'}</h3>
+                    <h3>{getFormTitle()}</h3>
                     <button className="close-form-button" onClick={onClose}>×</button>
                 </div>
+                {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="activity-form">
                     <div className="form-grid">
-                        {/* First Column */}
                         <div className="form-group">
                             <label>Enrollment Number</label>
                             <input
@@ -98,7 +162,6 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
                             />
                         </div>
 
-                        {/* Second Column */}
                         <div className="form-group">
                             <label>Achievement Level</label>
                             <input
@@ -116,6 +179,18 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
                                 value={formData.date}
                                 onChange={handleChange}
                                 required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Score</label>
+                            <input
+                                type="number"
+                                name="score"
+                                value={formData.score}
+                                onChange={handleChange}
+                                required
+                                min="0"
+                                max="100"
                             />
                         </div>
                         <div className="form-group">
@@ -140,11 +215,11 @@ const ActivityForm = ({ activity, onSubmit, onClose, isEdit, currentSemester, ac
                     </div>
 
                     <div className="form-actions">
-                        <button type="button" onClick={onClose} className="cancel-btn">
+                        <button type="button" onClick={onClose} className="cancel-btn" disabled={loading}>
                             Cancel
                         </button>
-                        <button type="submit" className="submit-btn">
-                            {isEdit ? 'Update Activity' : 'Add Activity'}
+                        <button type="submit" className="submit-btn" disabled={loading}>
+                            {loading ? 'Saving...' : (isEdit ? 'Update Activity' : 'Add Activity')}
                         </button>
                     </div>
                 </form>

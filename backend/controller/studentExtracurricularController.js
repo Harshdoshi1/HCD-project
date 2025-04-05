@@ -1,8 +1,8 @@
-const ExtraCurricularActivity = require("../models/extra_curricular_activity");
+const ExtraCurricularActivity = require("../models/extraCurricularActivity");
 const Student = require("../models/students");
 
 // Get activities by enrollment number and semester
-exports.getActivitiesByEnrollmentAndSemester = async (req, res) => {
+const getActivitiesByEnrollmentAndSemester = async (req, res) => {
     try {
         const { enrollmentNumber, semesterId } = req.params;
 
@@ -11,7 +11,7 @@ exports.getActivitiesByEnrollmentAndSemester = async (req, res) => {
             include: [
                 {
                     model: Student,
-                    attributes: ["name", "rollNumber"],
+                    attributes: ["name", "enrollmentNumber"],
                     where: { enrollmentNumber }
                 }
             ]
@@ -25,7 +25,7 @@ exports.getActivitiesByEnrollmentAndSemester = async (req, res) => {
 };
 
 // Add new extracurricular activity
-exports.addActivity = async (req, res) => {
+const addActivity = async (req, res) => {
     try {
         const {
             enrollmentNumber,
@@ -34,7 +34,8 @@ exports.addActivity = async (req, res) => {
             achievementLevel,
             date,
             description,
-            certificateUrl
+            certificateUrl,
+            score
         } = req.body;
 
         // Validate required fields
@@ -65,7 +66,8 @@ exports.addActivity = async (req, res) => {
             achievementLevel,
             date: new Date(date),
             description,
-            certificateUrl
+            certificateUrl,
+            score
         });
 
         res.status(201).json(newActivity);
@@ -76,7 +78,7 @@ exports.addActivity = async (req, res) => {
 };
 
 // Update existing extracurricular activity
-exports.updateActivity = async (req, res) => {
+const updateActivity = async (req, res) => {
     try {
         const { id } = req.params;
         const {
@@ -86,7 +88,8 @@ exports.updateActivity = async (req, res) => {
             achievementLevel,
             date,
             description,
-            certificateUrl
+            certificateUrl,
+            score
         } = req.body;
 
         // Validate required fields
@@ -127,7 +130,7 @@ exports.updateActivity = async (req, res) => {
                 include: [
                     {
                         model: Student,
-                        attributes: ["name", "rollNumber"],
+                        attributes: ["name", "enrollmentNumber"],
                         where: { enrollmentNumber }
                     }
                 ]
@@ -143,7 +146,7 @@ exports.updateActivity = async (req, res) => {
 };
 
 // Delete extracurricular activity
-exports.deleteActivity = async (req, res) => {
+const deleteActivity = async (req, res) => {
     try {
         const { activityId } = req.params;
         const deleted = await ExtraCurricularActivity.destroy({
@@ -161,24 +164,29 @@ exports.deleteActivity = async (req, res) => {
     }
 };
 
-// Get all activities for a student by enrollment number
-exports.getStudentExtraCurricularActivities = async (req, res) => {
+
+const getStudentExtraCurricularActivities = async (req, res) => {
     try {
         const { enrollmentNumber } = req.params;
+        console.log("Received enrollment number:", enrollmentNumber);
+
         const activities = await ExtraCurricularActivity.findAll({
             where: { enrollmentNumber },
             order: [['date', 'DESC']],
             include: [
                 {
                     model: Student,
-                    attributes: ["name", "rollNumber"],
-                    where: { enrollmentNumber }
+                    attributes: ["name", "enrollmentNumber"]
                 }
             ]
         });
+
         res.status(200).json(activities);
     } catch (error) {
         console.error("Error fetching student's extracurricular activities:", error);
         res.status(500).json({ message: "Error fetching activities", error: error.message });
     }
 };
+
+
+module.exports = { getStudentExtraCurricularActivities, getActivitiesByEnrollmentAndSemester, addActivity, updateActivity, deleteActivity }

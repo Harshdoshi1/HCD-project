@@ -14,7 +14,7 @@ const StudentDetails = ({ student, onClose, category }) => {
   // Calculate strengths based on subjects
   const getStrengthAreas = () => {
     if (!student || !student.subjects) return { writing: 0, analytical: 0, calculation: 0, memory: 0, critical: 0 };
-    
+
     const strengths = {
       writing: student.subjects.find(sub => sub.type === 'writing')?.score || 0,
       analytical: student.subjects.find(sub => sub.type === 'analytical')?.score || 0,
@@ -22,7 +22,7 @@ const StudentDetails = ({ student, onClose, category }) => {
       memory: student.subjects.find(sub => sub.type === 'memory')?.score || 0,
       critical: student.subjects.find(sub => sub.type === 'critical')?.score || 0
     };
-    
+
     return strengths;
   };
 
@@ -39,12 +39,12 @@ const StudentDetails = ({ student, onClose, category }) => {
   // Get the highest strength area
   const getTopStrength = () => {
     if (!Object.keys(strengths).length) return 'No data available';
-    
-    const top = Object.entries(strengths).reduce((max, [key, value]) => 
-      value > max.value ? { key, value } : max, 
+
+    const top = Object.entries(strengths).reduce((max, [key, value]) =>
+      value > max.value ? { key, value } : max,
       { key: '', value: 0 }
     );
-    
+
     const mapping = {
       writing: 'Writing-based subjects',
       analytical: 'Analytical subjects',
@@ -52,7 +52,7 @@ const StudentDetails = ({ student, onClose, category }) => {
       memory: 'Memory-based subjects',
       critical: 'Critical thinking subjects'
     };
-    
+
     return mapping[top.key] || 'No data available';
   };
 
@@ -66,7 +66,7 @@ const StudentDetails = ({ student, onClose, category }) => {
       <div className="student-info-vertical">
         <div className="info-card">
           <h3>{student?.name || 'N/A'}</h3>
-          <p><strong>Roll Number:</strong> {student?.rollNumber || 'N/A'}</p>
+          <p><strong>Roll Number:</strong> {student?.enrollmentNumber || 'N/A'}</p>
           <p><strong>Batch:</strong> {student?.batch || 'N/A'}</p>
           <p><strong>Semester:</strong> {student?.semester || 'N/A'}</p>
           <p><strong>Overall Ranking:</strong> {student?.ranking || 'N/A'}</p>

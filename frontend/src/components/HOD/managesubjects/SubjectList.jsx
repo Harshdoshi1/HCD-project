@@ -14,7 +14,7 @@ const SubjectList = ({ onSelectSubject }) => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllBatches");
+                const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data);

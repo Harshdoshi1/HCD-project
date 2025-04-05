@@ -30,10 +30,10 @@ const StudentGrades = () => {
     // Handle grade input change
     const handleGradeChange = async (studentId, component, value) => {
         const validatedValue = validateGrade(value);
-        
-        setStudentsData(prevData => 
-            prevData.map(student => 
-                student.id === studentId 
+
+        setStudentsData(prevData =>
+            prevData.map(student =>
+                student.id === studentId
                     ? {
                         ...student,
                         grades: {
@@ -93,7 +93,7 @@ const StudentGrades = () => {
 
             // Refresh the student data after successful update
             await fetchStudentData(selectedBatch?.id, selectedSubject?.subCode);
-            
+
             // Update the UI to show success
             setEditingGrades(null);
             setError(null);
@@ -108,20 +108,20 @@ const StudentGrades = () => {
     // Function to fetch student data
     const fetchStudentData = async (batchId, subjectCode) => {
         if (!batchId || !subjectCode) return;
-        
+
         setLoading(true);
         try {
             console.log('vvvvv Fetching student data for batch:', batchId, 'and subject:', subjectCode);
             const response = await fetch(`http://localhost:5001/api/marks/students/${batchId}`)
-            .then(response => {
-              if (!response.ok) {
-                throw new Error(`Error: ${response.status} ${response.statusText}`);
-              }
-              return response.json();
-            })
-            .then(data => console.log("Student Data:", data))
-            .catch(error => console.error("Fetch error:", error));
-          
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => console.log("Student Data:", data))
+                .catch(error => console.error("Fetch error:", error));
+
             const data = await response.json();
             console.log('Fetched student data:', data);
             setStudentsData(data.map(student => ({
@@ -190,7 +190,7 @@ const StudentGrades = () => {
         const fetchBatches = async () => {
             setLoading(true);
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllBatches");
+                const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data.map(batch => ({
@@ -284,7 +284,6 @@ const StudentGrades = () => {
                     id: student.id,
                     name: student.name,
                     enrollmentNo: student.enrollmentNo,
-                    // image: student.profileImage || `https://i.pravatar.cc/150?img=${student.id}`,
                     grades: student.Gettedmarks?.[0] || {
                         ESE: 0,
                         TW: 0,
@@ -355,7 +354,7 @@ const StudentGrades = () => {
             setError("Failed to submit response: " + error.message);
         }
     };
-    
+
     const handleBatchChange = (e) => {
         const batch = batches.find(b => b.batchName === e.target.value);
         setSelectedBatch(batch);
@@ -471,8 +470,8 @@ const StudentGrades = () => {
 
                 <div className="filter-group-sgp">
                     <label>Subject</label>
-                    <select 
-                        value={selectedSubject?.subCode || ''} 
+                    <select
+                        value={selectedSubject?.subCode || ''}
                         onChange={handleSubjectChange}
                         disabled={!selectedSemester}
                     >

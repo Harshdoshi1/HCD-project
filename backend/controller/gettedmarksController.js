@@ -7,7 +7,7 @@ exports.getStudentMarksByBatchAndSubject = async (req, res) => {
     try {
         const { batchId } = req.params;
         console.log("Received check:", batchId);
-        
+
         const batch = await Batch.findOne({ where: { batchName: batchId } });
         if (!batch) {
             return res.status(404).json({ message: "Batch not found" });

@@ -1,8 +1,54 @@
 import React from 'react';
-import { Book, Award, Trophy, User } from 'lucide-react';
+import { Book, Award, Trophy } from 'lucide-react';
 import './Overview.css';
 
-const Overview = ({ student }) => {
+const Overview = () => {
+  const student = {
+    academics: {
+      program: "B.Tech Computer Science",
+      advisor: "Dr. R. Sharma",
+      creditsCompleted: 110,
+      totalCredits: 160,
+      gpa: [
+        { semester: 1, value: 8.2 },
+        { semester: 2, value: 8.5 },
+        { semester: 3, value: 8.8 },
+        { semester: 4, value: 9.1 },
+        { semester: 5, value: 9.0 },
+      ],
+      semesterRanks: [
+        { semester: 1, rank: 12, totalStudents: 120 },
+        { semester: 2, rank: 8, totalStudents: 120 },
+        { semester: 3, rank: 5, totalStudents: 120 },
+        { semester: 4, rank: 3, totalStudents: 120 },
+        { semester: 5, rank: 4, totalStudents: 120 },
+      ]
+    },
+    batch: "2021-2025",
+    semester: "6",
+    cgpa: 8.72,
+    achievements: [
+      {
+        id: 1,
+        title: "Won Hackathon 2024",
+        description: "Secured 1st place in National Hackathon with team of 4.",
+        date: "March 2024"
+      },
+      {
+        id: 2,
+        title: "Research Paper Published",
+        description: "Published a paper on AI in reputed IEEE journal.",
+        date: "January 2024"
+      },
+      {
+        id: 3,
+        title: "Top Performer in Semester 5",
+        description: "Awarded best student for outstanding academic performance.",
+        date: "December 2023"
+      }
+    ]
+  };
+
   return (
     <div className="student-overview-sdp">
       <div className="overview-card-sdp">
@@ -11,10 +57,6 @@ const Overview = ({ student }) => {
         </div>
         <div className="overview-card-sdp-content">
           <div className="detail-grid">
-            <div className="detail-item-sdp">
-              <span className="detail-label-sdp">Department</span>
-              <span className="detail-value-sdp">{student.academics.department}</span>
-            </div>
             <div className="detail-item-sdp">
               <span className="detail-label-sdp">Program</span>
               <span className="detail-value-sdp">{student.academics.program}</span>

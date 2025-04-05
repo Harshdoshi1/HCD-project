@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Calendar, Trophy, Filter, Plus } from 'lucide-react';
 import './StudentCoCurricularActivity.css';
-import AddCoCurricularActivityForm from './components/AddCoCurricularActivityForm';
+import ExtraCurricularActivityForm from './components/ExtraCurricularActivityForm';
 
-const API_BASE_URL = 'http://localhost:5000/api/students/cocurricular';
+const API_BASE_URL = 'http://localhost:5000/api/extracurricular';
 
-const StudentCoCurricularActivity = ({ student, selectedSemester }) => {
+const StudentExtraCurricularActivity = ({ student, selectedSemester }) => {
     const [activityFilter, setActivityFilter] = useState('all');
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
@@ -126,73 +126,51 @@ const StudentCoCurricularActivity = ({ student, selectedSemester }) => {
         }
     };
 
-    const handleFormChange = (e) => {
-        const { name, value } = e.target;
-        setNewActivity(prev => ({
-            ...prev,
-            [name]: name === 'attachments' ? parseInt(value) || 0 : value
-        }));
-    };
-
     const calculateActivityPoints = (activityList) => {
-        return activityList.reduce((total, activity) => {
-            let points = 0;
-            if (activity.achievement && activity.achievement.toLowerCase().includes('first')) {
-                points = 10;
-            } else if (activity.achievement && activity.achievement.toLowerCase().includes('second')) {
-                points = 8;
-            } else if (activity.achievement && activity.achievement.toLowerCase().includes('third')) {
-                points = 6;
-            } else if (activity.achievement) {
-                points = 5;
-            } else {
-                points = 3;
-            }
-            return total + points;
-        }, 0);
+        return activityList.reduce((total, activity) => total + (activity.score || 0), 0);
     };
 
     const filterActivitiesBySemester = (activities, semester) => {
-        if (activityFilter === 'all') return activities;
-        return activities.filter(activity => activity.semester === semester);
+        return activities.filter(a => a.semester === semester);
     };
 
     const renderActivityCard = (activity) => (
         <div key={activity._id} className="activity-card">
-            <div className="activity-icon">
-                <FileText size={18} />
-            </div>
-            <div className="activity-details">
-                <h4 className="activity-title">{activity.title}</h4>
-                <p className="activity-description">{activity.description}</p>
-                <div className="activity-footer">
-                    <span className="activity-date"><Calendar size={14} /> {activity.date}</span>
-                    {activity.achievement && (
-                        <span className="activity-achievement"><Trophy size={14} /> {activity.achievement}</span>
-                    )}
-                    <span className="activity-semester">Semester: {activity.semester || 'N/A'}</span>
+            <div className="activity-header">
+                <h4>{activity.title}</h4>
+                <div className="activity-meta">
+                    <span className="activity-date">
+                        <Calendar size={14} /> {new Date(activity.date).toLocaleDateString()}
+                    </span>
+                    <span className="activity-score">
+                        <Trophy size={14} /> {activity.score || 0} points
+                    </span>
                 </div>
-                {activity.attachments > 0 && (
-                    <div className="activity-attachments">
-                        <span className="attachments-label">
-                            {activity.attachments} document{activity.attachments !== 1 ? 's' : ''} attached
-                        </span>
+            </div>
+            <div className="activity-content">
+                <p>{activity.description}</p>
+                {activity.achievement && (
+                    <div className="achievement-section">
+                        <h5>Achievement:</h5>
+                        <p>{activity.achievement}</p>
                     </div>
                 )}
             </div>
-            <div className="activity-actions">
-                <button className="action-button edit-button" onClick={() => handleEditActivity(activity)}>
-                    +
-                </button>
-                <button className="action-button delete-button" onClick={() => handleDeleteActivity(activity._id)}>
-                    -
-                </button>
+            <div className="activity-footer">
+                <div className="activity-actions">
+                    <button className="edit-button" onClick={() => handleEditActivity(activity)}>
+                        <FileText size={14} /> Edit
+                    </button>
+                    <button className="delete-button" onClick={() => handleDeleteActivity(activity._id)}>
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
     );
 
     const renderActivityForm = () => (
-        <AddCoCurricularActivityForm
+        <ExtraCurricularActivityForm
             activity={showEditForm ? newActivity : null}
             onClose={() => {
                 setShowAddForm(false);
@@ -210,7 +188,7 @@ const StudentCoCurricularActivity = ({ student, selectedSemester }) => {
             ) : (
                 <>
                     <div className="activities-header">
-                        <h3 className="section-title">Co-Curricular Activities</h3>
+                        <h3 className="section-title">Extra-Curricular Activities</h3>
                         <div className="activities-actions">
                             <div className="filter-container">
                                 <button
@@ -268,7 +246,7 @@ const StudentCoCurricularActivity = ({ student, selectedSemester }) => {
 
                         {activities.length === 0 && (
                             <div className="no-activities-message">
-                                <p>No co-curricular activities found for {activityFilter === 'all' ? 'any semester' : `semester ${selectedSemester}`}.</p>
+                                <p>No extra-curricular activities found for {activityFilter === 'all' ? 'any semester' : `semester ${selectedSemester}`}.</p>
                                 <button className="add-activity-button small" onClick={handleAddActivity}>
                                     <Plus size={14} /> Add Activity
                                 </button>
@@ -283,4 +261,4 @@ const StudentCoCurricularActivity = ({ student, selectedSemester }) => {
     );
 };
 
-export default StudentCoCurricularActivity;
+export default StudentExtraCurricularActivity;

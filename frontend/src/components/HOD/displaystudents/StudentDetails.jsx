@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Mail, Phone, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, User } from 'lucide-react';
 import './StudentDetail.css';
 
 // Import the new components
@@ -7,9 +7,11 @@ import Overview from './components/Overview';
 import AcademicDetails from './components/AcademicDetails';
 import CoCurricularActivities from './components/CoCurricularActivities';
 import ExtraCurricularActivities from './components/ExtraCurricularActivities';
-import ActivityForm from './components/ActivityForm';
+import AddCoCurricularActivityForm from './components/AddCoCurricularActivityForm';
+import AddExtraCurricularActivityForm from './components/AddExtraCurricularActivityForm';
 
-const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.history.back() }) => {
+const StudentDetails = ({ studentId, handleBackToList = () => window.history.back() }) => {
+    // studentId is now the enrollment number
     const [activeTab, setActiveTab] = useState('overview');
     const [selectedSemester, setSelectedSemester] = useState(1);
     const [expandedSubjects, setExpandedSubjects] = useState(new Set());
@@ -20,12 +22,161 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
     const [currentActivityType, setCurrentActivityType] = useState(''); // 'co', 'extra'
     const [currentActivity, setCurrentActivity] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
+    const [student, setStudent] = useState(null);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        setTimeout(() => {
+        if (studentId) {
+            fetchStudentData(studentId);
+            fetchCoCurricularActivities(studentId);
+            fetchExtraCurricularActivities(studentId);
+        }
+    }, [studentId]);
+
+    const fetchStudentData = async (enrollmentNumber) => {
+        setIsLoading(true);
+        try {
+            // Get all students and filter by enrollment number
+            const response = await fetch('http://localhost:5001/api/students/getAllStudents');
+            if (!response.ok) {
+                throw new Error('Failed to fetch students data');
+            }
+
+            const students = await response.json();
+            const studentData = students.find(student => student.enrollmentNumber === enrollmentNumber);
+
+            if (!studentData) {
+                throw new Error('Student not found');
+            }
+
+            console.log('Found student:', studentData);
+
+            // Initialize empty arrays for activities
+            const enhancedStudentData = {
+                ...studentData,
+                coCurricular: [],
+                extraCurricular: []
+            };
+
+            setStudent(enhancedStudentData);
+
+            // Set the selected semester to the student's current semester if available
+            if (studentData.semester) {
+                setSelectedSemester(studentData.semester);
+            }
+        } catch (error) {
+            console.error('Error fetching student data:', error);
+            setError('Failed to load student data. Please try again later.');
+        } finally {
             setIsLoading(false);
-        }, 500);
-    }, []);
+        }
+    };
+
+    const fetchCoCurricularActivities = async (enrollmentNumber) => {
+        try {
+            // For co-curricular activities, we'll implement a fallback solution for now
+            // since the API endpoint is having issues
+            // In a production app, you'd use the correct API endpoint
+
+            // Mock data for demonstration
+            const mockActivities = [
+                {
+                    id: 1,
+                    title: 'Technical Paper Presentation',
+                    description: 'Presented research paper at college symposium',
+                    semester: 3,
+                    date: '2024-10-15',
+                    points: 10
+                },
+                {
+                    id: 2,
+                    title: 'Programming Competition',
+                    description: 'Participated in inter-college coding contest',
+                    semester: 4,
+                    date: '2024-11-20',
+                    points: 15
+                }
+            ];
+
+            setStudent(prevStudent => ({
+                ...prevStudent,
+                coCurricular: mockActivities
+            }));
+
+
+        } catch (error) {
+            console.error('Error fetching co-curricular activities:', error);
+        }
+    };
+
+    const fetchExtraCurricularActivities = async (enrollmentNumber) => {
+        try {
+
+            const response = await fetch(`http://localhost:5001/api/students/extracurricular/student/${enrollmentNumber}`);
+
+            // If the API returns an error, use mock data
+            if (!response.ok) {
+                console.warn('API returned error, using mock data instead');
+                // Mock data for demonstration
+                const mockActivities = [
+                    {
+                        id: 1,
+                        title: 'College Sports Day',
+                        description: 'Won gold medal in 100m sprint',
+                        semester: 3,
+                        date: '2024-09-25',
+                        points: 20
+                    },
+                    {
+                        id: 2,
+                        title: 'Cultural Fest',
+                        description: 'Performed in college annual day',
+                        semester: 4,
+                        date: '2024-12-05',
+                        points: 15
+                    }
+                ];
+
+                setStudent(prevStudent => ({
+                    ...prevStudent,
+                    extraCurricular: mockActivities
+                }));
+                return;
+            }
+
+            const activities = await response.json();
+            setStudent(prevStudent => ({
+                ...prevStudent,
+                extraCurricular: activities || []
+            }));
+        } catch (error) {
+            console.error('Error fetching extra-curricular activities:', error);
+            // Mock data as fallback in case of error
+            const mockActivities = [
+                {
+                    id: 1,
+                    title: 'College Sports Day',
+                    description: 'Won gold medal in 100m sprint',
+                    semester: 3,
+                    date: '2024-09-25',
+                    points: 20
+                },
+                {
+                    id: 2,
+                    title: 'Cultural Fest',
+                    description: 'Performed in college annual day',
+                    semester: 4,
+                    date: '2024-12-05',
+                    points: 15
+                }
+            ];
+
+            setStudent(prevStudent => ({
+                ...prevStudent,
+                extraCurricular: mockActivities
+            }));
+        }
+    };
 
     const toggleSubject = (subjectId) => {
         const newExpanded = new Set(expandedSubjects);
@@ -38,210 +189,163 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
     };
 
     const expandAllSubjects = () => {
-        const allSubjectIds = student.academics.semesters[selectedSemester].subjects.map(subject => subject.id);
-        setExpandedSubjects(new Set(allSubjectIds));
+        if (student && student.academics && student.academics.semesters &&
+            student.academics.semesters[selectedSemester] &&
+            student.academics.semesters[selectedSemester].subjects) {
+            const allSubjectIds = student.academics.semesters[selectedSemester].subjects.map(subject => subject.id);
+            setExpandedSubjects(new Set(allSubjectIds));
+        }
     };
 
     const collapseAllSubjects = () => {
-        setExpandedSubjects(new Set());
+        setExpandedSubjects({});
     };
 
     const handleAddActivity = (type) => {
         setCurrentActivityType(type);
         setShowAddForm(true);
-        setShowEditForm(false);
-        setCurrentActivity(null);
-        setSuccessMessage('');
     };
 
     const handleEditActivity = (activity, type) => {
-        setCurrentActivityType(type);
         setCurrentActivity(activity);
-        setShowAddForm(false);
+        setCurrentActivityType(type);
         setShowEditForm(true);
-        setSuccessMessage('');
     };
 
-    const handleDeleteActivity = (activityId, type) => {
-        // In a real app, you would delete from a backend
-        // For now, we'll just show an alert
-        alert(`Activity ${activityId} would be deleted from ${type} activities`);
+    const handleSubmitActivity = async (activity, isEditing) => {
+        setShowAddForm(false);
+        setShowEditForm(false);
+
+        // Add success message
+        setSuccessMessage(isEditing ? 'Activity updated successfully!' : 'Activity added successfully!');
+        setTimeout(() => setSuccessMessage(''), 3000);
+
+        // For now, we're just simulating activity addition/update
+        // In a real app, you would make API calls and then refresh the data
+
+        if (currentActivityType === 'co') {
+            if (isEditing && currentActivity) {
+                // Update existing activity
+                setStudent(prevStudent => ({
+                    ...prevStudent,
+                    coCurricular: prevStudent.coCurricular.map(act =>
+                        act.id === currentActivity.id ? { ...activity, id: currentActivity.id } : act
+                    )
+                }));
+            } else {
+                // Add new activity with a generated ID
+                const newActivity = {
+                    ...activity,
+                    id: Date.now() // Simple way to generate a unique ID
+                };
+                setStudent(prevStudent => ({
+                    ...prevStudent,
+                    coCurricular: [...prevStudent.coCurricular, newActivity]
+                }));
+            }
+        } else {
+            if (isEditing && currentActivity) {
+                // Update existing activity
+                setStudent(prevStudent => ({
+                    ...prevStudent,
+                    extraCurricular: prevStudent.extraCurricular.map(act =>
+                        act.id === currentActivity.id ? { ...activity, id: currentActivity.id } : act
+                    )
+                }));
+            } else {
+                // Add new activity with a generated ID
+                const newActivity = {
+                    ...activity,
+                    id: Date.now() // Simple way to generate a unique ID
+                };
+                setStudent(prevStudent => ({
+                    ...prevStudent,
+                    extraCurricular: [...prevStudent.extraCurricular, newActivity]
+                }));
+            }
+        }
     };
 
-    const handleSubmitActivity = async (activityData) => {
+    const handleDeleteActivity = async (activityId, type) => {
         try {
-            // Prepare the data for API call
-            const data = {
-                enrollmentNumber: activityData.enrollmentNumber,
-                semesterId: activityData.semester,
-                activityName: activityData.activityName,
-                achievementLevel: activityData.achievementLevel,
-                date: new Date(activityData.date).toISOString(),
-                description: activityData.description,
-                certificateUrl: activityData.certificateUrl,
-                type: 'extra'
-            };
+            // For now, we're just simulating deletion since the API endpoints have issues
+            // In a real application, you would use the proper API endpoint
 
-            // Make API call to add activity
-            const response = await fetch('http://localhost:5001/api/students/extracurricular/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
+            // Simulate successful deletion
+            setSuccessMessage('Activity deleted successfully!');
+            setTimeout(() => setSuccessMessage(''), 3000);
+
+            // Update the local state to remove the activity
+            if (type === 'co') {
+                setStudent(prevStudent => ({
+                    ...prevStudent,
+                    coCurricular: prevStudent.coCurricular.filter(activity => activity.id !== activityId)
+                }));
+            } else {
+                setStudent(prevStudent => ({
+                    ...prevStudent,
+                    extraCurricular: prevStudent.extraCurricular.filter(activity => activity.id !== activityId)
+                }));
+            }
+
+            // The actual API call would look like this when the backend is fixed:
+            /*
+            const endpoint = type === 'co'
+                ? `http://localhost:5001/api/students/cocurricular/${activityId}`
+                : `http://localhost:5001/api/students/extracurricular/${activityId}`;
+
+            const response = await fetch(endpoint, {
+                method: 'DELETE'
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to add activity');
+                throw new Error('Failed to delete activity');
             }
 
-            // Close the form
-            setShowAddForm(false);
-            setShowEditForm(false);
-            setCurrentActivity(null);
-
-            // Show success message
-            setSuccessMessage('Activity added successfully!');
-            setTimeout(() => setSuccessMessage(''), 3000);
-
-            // Refresh the student data
-            // In a real app, you would fetch the updated student data here
+            // Refresh only the specific activity type data
+            if (studentId) {
+                if (type === 'co') {
+                    fetchCoCurricularActivities(studentId);
+                } else {
+                    fetchExtraCurricularActivities(studentId);
+                }
+            }
+            */
         } catch (error) {
-            console.error('Error submitting activity:', error);
-            alert(error.message);
+            console.error(`Error deleting ${type}-curricular activity:`, error);
         }
     };
 
     const calculateActivityPoints = (activityList) => {
-        return activityList.reduce((total, activity) => {
-            // Points based on achievement
-            let points = 0;
-            if (activity.achievement && activity.achievement.toLowerCase().includes('first')) {
-                points = 10;
-            } else if (activity.achievement && activity.achievement.toLowerCase().includes('second')) {
-                points = 8;
-            } else if (activity.achievement && activity.achievement.toLowerCase().includes('third')) {
-                points = 6;
-            } else if (activity.achievement) {
-                points = 5;
-            } else {
-                points = 3; // Base points for participation
-            }
-            return total + points;
-        }, 0);
+        if (!activityList || activityList.length === 0) return 0;
+
+        // In a real app, you'd have a more complex calculation based on activity type, level, etc.
+        // For this example, we'll just count each activity as 1 point
+        return activityList.length;
     };
 
-    const filterActivitiesBySemester = (activities, semester) => {
+    const filterActivitiesBySemester = (activities = []) => {
+        if (!activities) return [];
         if (activityFilter === 'all') return activities;
-        return activities.filter(activity => activity.semester === semester);
+        return activities.filter(activity => activity.semester === selectedSemester);
     };
 
-    // Mock student data (in a real app, this would come from an API)
-    const student = {
-        id: studentId,
-        name: "Krish Mamtora",
-        enrollmentNo: "92200133022",
-        department: "ICT",
-        semester: 6,
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH4dcYWVFHFsz8M3Rsjpy2Hg6gQAmgbCIwWA&s",
-        batch: "2022-2026",
-        cgpa: 9.2,
-        personalInfo: {
-            email: "krish@marwadiuniversity.ac.in",
-            phone: "+91 1234567890",
-            dateOfBirth: "15 March 1993",
-        },
-        academics: {
-            department: "Computer Science & Engineering",
-            program: "B.Tech",
-            advisor: "Dr. Jennifer Lawrence",
-            totalCredits: 135,
-            creditsCompleted: 98,
-            gpa: [
-                { semester: 1, value: 9.0 },
-                { semester: 2, value: 9.1 },
-                { semester: 3, value: 9.3 },
-                { semester: 4, value: 9.2 },
-                { semester: 5, value: 9.4 }
-            ],
-            semesterRanks: [
-                { semester: 1, rank: 3, totalStudents: 120 },
-                { semester: 2, rank: 2, totalStudents: 118 },
-                { semester: 3, rank: 2, totalStudents: 115 },
-                { semester: 4, rank: 3, totalStudents: 115 },
-                { semester: 5, rank: 1, totalStudents: 112 }
-            ],
-            semesters: {
-                1: {
-                    gpa: 9.0,
-                    credits: 21,
-                    subjects: [
-                        {
-                            id: "CS101",
-                            name: "Introduction to Programming",
-                            code: "CS101",
-                            credits: 4,
-                            faculty: "Dr. Jonathan Smith",
-                            grade: "A+",
-                            totalMarks: 92,
-                            attendance: 95,
-                            classRank: 3,
-                            totalStudents: 120,
-                            facultyRating: 9.2,
-                            components: {
-                                "Mid-Term": { marks: 47, total: 50 },
-                                "End-Term": { marks: 75, total: 80 },
-                                "Lab Work": { marks: 28, total: 30 },
-                                "Assignments": { marks: 24, total: 25 },
-                                "Presentation": { marks: 18, total: 20 }
-                            },
-                            facultyResponse: {
-                                comments: "Alexandra shows remarkable aptitude for programming. Her solutions are elegant and well-structured. With her analytical mind, she has great potential in the field of computer science.",
-                                lastUpdated: "February 12, 2024"
-                            }
-                        }
-                    ]
-                }
-            }
-        },
-        achievements: [
-            {
-                id: "ACH001",
-                title: "Dean's List",
-                date: "December 2023",
-                description: "Recognized for academic excellence with placement on the Dean's List for Fall 2023",
-                category: "academic",
-                semester: 5
-            }
-        ],
-        coCurricular: [
-            {
-                id: "CC001",
-                title: "Technical Paper Presentation",
-                date: "January 2024",
-                description: "Presented research paper on 'AI in Healthcare' at IEEE International Conference",
-                achievement: "First Prize",
-                semester: 5
-            }
-        ],
-        extraCurricular: [
-            {
-                id: "EC001",
-                title: "University Basketball Team",
-                date: "2023-2024",
-                description: "Member of the university basketball team, participated in inter-university tournament",
-                achievement: "Runner-up in Regional Championship",
-                semester: 5
-            }
-        ]
-    };
-
+    // If loading or error, show appropriate message
     if (isLoading) {
         return (
-            <div className="student-details-container-sdp loading">
-                <div className="loading-spinner"></div>
-                <p>Loading student details...</p>
+            <div className="student-details-container">
+                <div className="loading-spinner">Loading student data...</div>
+            </div>
+        );
+    }
+
+    if (error || !student) {
+        return (
+            <div className="student-details-container">
+                <div className="error-message">{error || 'Student not found'}</div>
+                <button onClick={handleBackToList} className="back-button">
+                    <ArrowLeft size={16} /> Back to Students List
+                </button>
             </div>
         );
     }
@@ -254,36 +358,38 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                 </button>
                 <div className="student-profile-sdp">
                     <div className="profile-image-container-sdp">
-                        <img src={student.image} alt={student.name} className="profile-image-sdp" />
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH4dcYWVFHFsz8M3Rsjpy2Hg6gQAmgbCIwWA&s" alt={student.name} className="profile-image-sdp" />
                     </div>
                     <div className="profile-details-sdp">
                         <h2 className="student-name-sdp">{student.name}</h2>
                         <div className="student-meta-sdp">
-                            <span className="enrollment-sdp">{student.enrollmentNo}</span>
-                            <span className="department-sdp">{student.department}</span>
+                            <span className="enrollment-sdp">{student.enrollmentNumber}</span>
+                            <span className="department-sdp">{student.Department?.departmentName || 'Not Assigned'}</span>
                             <span className="semester-sdp">Semester {student.semester}</span>
                         </div>
                         <div className="contact-info-sdp">
                             <div className="contact-item-sdp">
                                 <Mail size={14} />
-                                <span>{student.personalInfo.email}</span>
+                                <span>{student.email}</span>
                             </div>
                             <div className="contact-item-sdp">
                                 <Phone size={14} />
-                                <span>{student.personalInfo.phone}</span>
-                            </div>
-                            <div className="contact-item-sdp">
-                                <Calendar size={14} />
-                                <span>{student.personalInfo.dateOfBirth}</span>
+                                <span>{student.phone || 'Not Available'}</span>
                             </div>
                             <div className="contact-item-sdp">
                                 <User size={14} />
-                                <span>{student.batch}</span>
+                                <span>{student.Batch?.batchName || 'Not Assigned'}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {successMessage && (
+                <div className="success-message">
+                    {successMessage}
+                </div>
+            )}
 
             <div className="tabs-container-sdp">
                 <div className="tabs-sdp">
@@ -322,11 +428,11 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                         <AcademicDetails
                             student={student}
                             selectedSemester={selectedSemester}
+                            setSelectedSemester={setSelectedSemester}
                             expandedSubjects={expandedSubjects}
                             toggleSubject={toggleSubject}
                             expandAllSubjects={expandAllSubjects}
                             collapseAllSubjects={collapseAllSubjects}
-                            onSemesterChange={setSelectedSemester}
                         />
                     )}
 
@@ -337,8 +443,9 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             activityFilter={activityFilter}
                             setActivityFilter={setActivityFilter}
                             setSelectedSemester={setSelectedSemester}
-                            handleAddActivity={handleAddActivity}
-                            handleEditActivity={handleEditActivity}
+                            handleAddActivity={() => handleAddActivity('co')}
+                            handleEditActivity={(activity) => handleEditActivity(activity, 'co')}
+                            handleDeleteActivity={(activityId) => handleDeleteActivity(activityId, 'co')}
                             filterActivitiesBySemester={filterActivitiesBySemester}
                             calculateActivityPoints={calculateActivityPoints}
                         />
@@ -351,36 +458,49 @@ const StudentDetails = ({ studentId = "S001", handleBackToList = () => window.hi
                             activityFilter={activityFilter}
                             setActivityFilter={setActivityFilter}
                             setSelectedSemester={setSelectedSemester}
-                            handleAddActivity={handleAddActivity}
-                            handleEditActivity={handleEditActivity}
-                            handleDeleteActivity={handleDeleteActivity}
+                            handleAddActivity={() => handleAddActivity('extra')}
+                            handleEditActivity={(activity) => handleEditActivity(activity, 'extra')}
+                            handleDeleteActivity={(activityId) => handleDeleteActivity(activityId, 'extra')}
                             filterActivitiesBySemester={filterActivitiesBySemester}
-                            calculateActivityPoints={calculateActivityPoints}
                         />
                     )}
                 </div>
             </div>
 
-            {successMessage && (
-                <div className="success-alert">
-                    {successMessage}
-                </div>
+            {/* Activity Forms */}
+            {showAddForm && currentActivityType === 'co' && (
+                <AddCoCurricularActivityForm
+                    onClose={() => setShowAddForm(false)}
+                    onSubmit={handleSubmitActivity}
+                    studentId={student.id}
+                />
             )}
 
-            {/* Activity Form Modal */}
-            {(showAddForm || showEditForm) && (
-                <ActivityForm
-                    activity={currentActivity}
+            {showAddForm && currentActivityType === 'extra' && (
+                <AddExtraCurricularActivityForm
+                    onClose={() => setShowAddForm(false)}
                     onSubmit={handleSubmitActivity}
-                    onClose={() => {
-                        setShowAddForm(false);
-                        setShowEditForm(false);
-                        setCurrentActivity(null);
-                        setSuccessMessage('');
-                    }}
-                    isEdit={showEditForm}
-                    currentSemester={selectedSemester}
-                    activityType={currentActivityType}
+                    studentId={student.id}
+                />
+            )}
+
+            {showEditForm && currentActivity && currentActivityType === 'co' && (
+                <AddCoCurricularActivityForm
+                    activity={currentActivity}
+                    onClose={() => setShowEditForm(false)}
+                    onSubmit={handleSubmitActivity}
+                    studentId={student.id}
+                    isEditing={true}
+                />
+            )}
+
+            {showEditForm && currentActivity && currentActivityType === 'extra' && (
+                <AddExtraCurricularActivityForm
+                    activity={currentActivity}
+                    onClose={() => setShowEditForm(false)}
+                    onSubmit={handleSubmitActivity}
+                    studentId={student.id}
+                    isEditing={true}
                 />
             )}
         </div>

@@ -18,7 +18,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllBatches");
+                const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data.map(batch => ({ value: batch.batchName, label: batch.batchName })));
@@ -36,7 +36,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                 if (!response.ok) throw new Error("Failed to fetch faculty members");
                 const data = await response.json();
                 console.log("Fetched Users:", data);
-                
+
                 // Remove role-based filtering
                 setFaculties(data.map(user => ({ value: user.id, label: user.name })));
             } catch (error) {
@@ -45,7 +45,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         };
         fetchFaculties();
     }, []);
-    
+
 
     useEffect(() => {
         if (!assignment.batch) return;
@@ -66,9 +66,9 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         if (!assignment.batch || !assignment.semester) return;
         const fetchSubjects = async () => {
             try {
-                console.log('Fetching subjects with:', { 
-                    batch: assignment.batch.value, 
-                    semester: assignment.semester.value 
+                console.log('Fetching subjects with:', {
+                    batch: assignment.batch.value,
+                    semester: assignment.semester.value
                 });
                 const response = await fetch(`http://localhost:5001/api/users/getSubjects/${assignment.batch.value}/${assignment.semester.value}`);
                 if (!response.ok) throw new Error("Failed to fetch subjects");
@@ -84,8 +84,8 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                     const uniqueInfo = uniqueSubjects.find(u => u.sub_name === subject.subjectName);
                     return {
                         value: subject.subjectName,
-                        label: uniqueInfo ? 
-                            `${subject.subjectName} (${uniqueInfo.sub_code})` : 
+                        label: uniqueInfo ?
+                            `${subject.subjectName} (${uniqueInfo.sub_code})` :
                             subject.subjectName
                     };
                 });

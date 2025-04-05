@@ -1,4 +1,4 @@
-const ComponentWeightage = require("../models/component_weightage");
+const ComponentWeightage = require("../models/componentWeightage");
 const Batch = require("../models/batch");
 const Semester = require("../models/semester");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
@@ -16,7 +16,7 @@ exports.createComponentWeightage = async (req, res) => {
 
     // Create Component Weightage
     const newWeightage = await ComponentWeightage.create({
-   
+
       subjectId: subjectRecord.sub_code,
       ese,
       cse,

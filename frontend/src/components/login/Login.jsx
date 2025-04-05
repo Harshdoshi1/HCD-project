@@ -17,7 +17,7 @@ function Login() {
         // Check if user is already logged in
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user'));
-        
+
         if (token && user) {
             // Redirect based on role
             if (user.role === 'HOD') {
@@ -32,7 +32,7 @@ function Login() {
         e.preventDefault();
         setError('');
         setIsLoading(true);
-    
+
         try {
             const response = await fetch('http://localhost:5001/api/users/login', {
                 method: 'POST',
@@ -41,24 +41,24 @@ function Login() {
                 },
                 body: JSON.stringify({ email, password }),
             });
-    
+
             const data = await response.json();
-            console.log("data",data);
-    
+            console.log("data", data);
+
             if (!response.ok) {
                 throw new Error(data.message || 'Login failed');
             }
-    
+
             // Explicitly remove old local storage items before storing new ones
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            localStorage.removeItem('email'); 
-    
+            localStorage.removeItem('email');
+
             // Store new values
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('email', data.user.email);
-    
+
             // Redirect based on role
             if (data.user.role === 'HOD') {
                 navigate('/dashboardHOD');
@@ -73,7 +73,7 @@ function Login() {
             setIsLoading(false);
         }
     };
-    
+
 
     return (
         <div className="login-container">
