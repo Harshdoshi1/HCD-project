@@ -1,12 +1,10 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, GraduationCap, BookMarked, Settings, Menu, User, LogOut, BarChart2 } from "lucide-react";
-import ProfileModal from "./ProfileModal";
-import Logout from "./Logout";
-import "./Sidebar.css";
+import React, { useState } from 'react';
+import { LayoutDashboard, Users, GraduationCap, Settings, Menu, User, LogOut, BarChart2 } from 'lucide-react';
+import ProfileModal from './ProfileModal';
+import Logout from './Logout';
+import './Sidebar.css';
 
 const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => {
-    const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
@@ -27,10 +25,15 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
         { id: "students", label: "Students", icon: Users },
         { id: "faculty", label: "Faculty", icon: Users },
         { id: "batches", label: "Batches", icon: Users },
-        { id: "subjects", label: "Subjects", icon: BookMarked },
+        { id: "subjects", label: "Subjects", icon: Users },
         { id: "grades", label: "Grades", icon: GraduationCap },
         { id: "studentAnalysis", label: "Student Analysis", icon: BarChart2 },
+        { id: "events", label: "Events", icon: Users }
     ];
+
+    const handleItemClick = (item) => {
+        setActiveItem(item.id);
+    };
 
     return (
         <>
@@ -45,10 +48,10 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
                         <button
                             key={item.id}
                             className={`sidebar-item ${activeItem === item.id ? "active" : ""}`}
-                            onClick={() => setActiveItem(item.id)}
+                            onClick={() => handleItemClick(item)}
                         >
                             <item.icon size={24} className="sidebar-icon" />
-                            <span className={`sidebar-label ${isCollapsed ? "hidden" : ""}`}>{item.label}</span>
+                            {!isCollapsed && <span className="sidebar-text">{item.label}</span>}
                         </button>
                     ))}
                 </div>

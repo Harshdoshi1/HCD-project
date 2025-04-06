@@ -4,11 +4,11 @@ import './ActivityForm.css';
 
 const AddExtraCurricularActivityForm = ({ onClose, onSubmit, formData: initialData }) => {
 
-    return (
-        <div className="activity-form-overlay">
+  return (
+    <div className="activity-form-overlay">
 
-        </div>
-    );
+    </div>
+  );
 };
 
 export default AddExtraCurricularActivityForm;
