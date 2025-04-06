@@ -13,7 +13,8 @@ const Student = require('./students');
 const Gettedmarks = require('./gettedmarks');
 const CoCurricularActivity = require('./cocurricularActivity');
 const ExtraCurricularActivity = require('./extraCurricularActivity');
-
+const EventMaster = require('./EventMaster');
+const StudentPoints = require('./StudentPoints');
 const syncDB = async () => {
     try {
         console.log('Starting database synchronization...');
