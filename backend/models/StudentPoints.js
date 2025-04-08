@@ -19,17 +19,7 @@ const StudentPoints = sequelize.define('StudentPoints', {
     eventId: {
         type: DataTypes.TEXT,
         allowNull: false,
-        get() {
-            const rawValue = this.getDataValue('eventId');
-            return rawValue ? rawValue.split(',').map(Number) : [];
-        },
-        set(value) {
-            if (Array.isArray(value)) {
-                this.setDataValue('eventId', value.join(','));
-            } else {
-                throw new Error('eventId must be an array of integers');
-            }
-        }
+
     },
     totalCocurricular: {
         type: DataTypes.INTEGER,
