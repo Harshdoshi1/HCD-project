@@ -3,12 +3,11 @@ const router = express.Router();
 
 const {
     createEvent,
-    processExcel
-
+    insertFetchedStudents,
+    getAllEventnames
 } = require('../controller/StudentEventController.js');
 
 router.post('/createEvent', createEvent);
-router.post('/uploadExcell', processExcel)
-
-
+router.post('/uploadExcell', insertFetchedStudents)
+router.get('/getAllEventNames', getAllEventnames)
 module.exports = router;

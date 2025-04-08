@@ -1,16 +1,39 @@
 
 import './ExcelUpload.css';
-import { useState, useContextse } from 'react';
+import { useState, useEffect } from 'react';
 import { FileXls, Upload } from 'phosphor-react';
+import * as XLSX from 'xlsx';
 
 const ExcelUpload = ({ onClose, onSuccess }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [eventCategory, setEventCategory] = useState('');
-  const [eventType, setEventType] = useState('');
   const [eventName, setEventName] = useState('');
-  const [points, setPoints] = useState('');
-  const [eventDate, setEventDate] = useState('');
+  // const [eventDate, setEventDate] = useState('');
+  const [allEventNames, setAllEventNames] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+
+  const handleEventNameChange = (e) => {
+    const value = e.target.value;
+    setEventName(value);
+
+    if (value.trim() && Array.isArray(allEventNames)) {
+      const filtered = allEventNames.filter(name =>
+        name.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredEvents(filtered);
+      setShowSuggestions(true);
+    } else {
+      setFilteredEvents([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (name) => {
+    setEventName(name);
+    setShowSuggestions(false);
+  };
 
 
   const handleFileChange = (e) => {
@@ -26,26 +49,84 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
     e.preventDefault();
     if (!file) {
       alert('Please select an Excel file');
-      const processExcelData = async () => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
-          console.log('Excel Data:', jsonData);
-        };
-        reader.readAsArrayBuffer(file);
-      };
-
-      await processExcelData();
+      return;
     }
+
+    const processExcelData = async () => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        // Convert Excel data to proper format
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+          .map(row => row[0])
+          .filter(enrollment => enrollment != null)
+          .map(enrollment => String(enrollment).trim()) // Ensure enrollment numbers are strings and trimmed
+          .filter(enrollment => enrollment !== 'Enrolment' && enrollment !== ''); // Skip header row
+        console.log('Excel Data:', jsonData);
+        try {
+          console.log("reached here");
+          const response = await fetch('http://localhost:5001/api/Events/getAllEventNames', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to save event');
+          }
+          console.log("reached here also");
+          const result = await response.json();
+          console.log('Form submitted successfully:', result);
+
+
+          if (!eventName) {
+            throw new Error('Please select an event name');
+          }
+
+          if (!jsonData || jsonData.length === 0) {
+            throw new Error('No valid enrollment numbers found in the Excel file');
+          }
+
+          try {
+            const response = await fetch('http://localhost:5001/api/Events/uploadExcell', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                eventName: eventName.trim(),
+                participants: jsonData.filter(id => id && id.trim()) // Extra safety check
+              })
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || 'Failed to save event');
+            }
+
+            const result = await response.json();
+            console.log('Form submitted successfully:', result);
+            onSuccess();
+          } catch (error) {
+            console.error('Error saving event:', error);
+          }
+        } catch (error) {
+          console.error('Error saving event:', error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    await processExcelData();
 
     setUploading(true);
     try {
       console.log('File selected:', file);
-      console.log('Event Details:', { eventCategory, eventType, eventName, points, eventDate });
+      console.log('Event Details:', { eventName });
       onSuccess();
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -61,74 +142,50 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
         <div className="modal-header">
           <h3>Upload Participants Excel</h3>
           <button className="close-button" onClick={onClose}>
-            <Upload size={16} />
+            ×
           </button>
         </div>
         <form onSubmit={handleSubmit} className="excel-upload-form">
-          <div className="form-grid three-columns">
-            <div className="form-group">
-              <label htmlFor="eventCategory">Event Category</label>
-              <select
-                id="eventCategory"
-                value={eventCategory}
-                onChange={(e) => setEventCategory(e.target.value)}
-                required
-              >
-                <option value="">Select Category</option>
-                <option value="Category 1">Category 1</option>
-                <option value="Category 2">Category 2</option>
-                <option value="Category 3">Category 3</option>
-                <option value="Category 4">Category 4</option>
-                <option value="Category 5">Category 5</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="eventType">Event Type</label>
-              <select
-                id="eventType"
-                value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
-                required
-              >
-                <option value="">Select Type</option>
-                <option value="Co-Curricular">Co-Curricular</option>
-                <option value="Extra-Curricular">Extra-Curricular</option>
-              </select>
-            </div>
-
+          <div className="form-grid">
             <div className="form-group">
               <label htmlFor="eventName">Event Name</label>
-              <input
-                type="text"
-                id="eventName"
-                value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
-                required
-              />
+              <div className="search-container">
+                <input
+                  type="text"
+                  id="eventName"
+                  value={eventName}
+                  onChange={handleEventNameChange}
+                  onFocus={() => {
+                    if (eventName.trim() && Array.isArray(allEventNames)) {
+                      setFilteredEvents(allEventNames.filter(name =>
+                        name.toLowerCase().includes(eventName.toLowerCase())
+                      ));
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Delay hiding suggestions to allow for clicks
+                    setTimeout(() => setShowSuggestions(false), 200);
+                  }}
+                  placeholder="Search event name..."
+                  required
+                />
+                {showSuggestions && filteredEvents.length > 0 && (
+                  <div className="suggestions-dropdown">
+                    {filteredEvents.map((name, index) => (
+                      <div
+                        key={index}
+                        className="suggestion-item"
+                        onClick={() => handleSuggestionClick(name)}
+                      >
+                        {name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="points">Points</label>
-              <input
-                type="number"
-                id="points"
-                value={points}
-                onChange={(e) => setPoints(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="eventDate">Event Date</label>
-              <input
-                type="date"
-                id="eventDate"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
-                required
-              />
-            </div>
           </div>
 
           <div className="upload-container">

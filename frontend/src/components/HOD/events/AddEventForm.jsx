@@ -3,18 +3,21 @@ import { Plus } from 'lucide-react';
 import './AddEventForm.css';
 
 const AddEventForm = ({ onClose, onSuccess }) => {
+
   const [formData, setFormData] = useState({
     eventId: '',
     eventName: '',
     eventType: 'co-curricular',
     eventCategory: '',
     points: '',
-    duration: ''
+    duration: '',
+    eventDate: ''
   });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Convert eventDate to date before sending
+
       const response = await fetch('http://localhost:5001/api/Events/createEvent', {
         method: 'POST',
         headers: {
@@ -108,6 +111,16 @@ const AddEventForm = ({ onClose, onSuccess }) => {
               id="duration"
               value={formData.duration}
               onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="eventDate">Event Date</label>
+            <input
+              type="date"
+              id="eventDate"
+              value={formData.eventDate}
+              onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+              required
             />
           </div>
 
