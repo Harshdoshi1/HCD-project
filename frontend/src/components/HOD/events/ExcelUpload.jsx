@@ -13,6 +13,37 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // Fetch event names when component mounts
+  useEffect(() => {
+    const fetchEventNames = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/api/Events/getAllEventNames', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch event names');
+        }
+
+        const result = await response.json();
+        console.log('Fetched event names:', result);
+        
+        if (result.success && Array.isArray(result.data)) {
+          setAllEventNames(result.data);
+          // Initialize filtered events with all event names
+          setFilteredEvents(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching event names:', error);
+      }
+    };
+
+    fetchEventNames();
+  }, []);
+
 
   const handleEventNameChange = (e) => {
     const value = e.target.value;
@@ -24,10 +55,19 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
       );
       setFilteredEvents(filtered);
       setShowSuggestions(true);
+    } else if (value.trim() === '') {
+      // If input is empty, show all event names
+      setFilteredEvents(allEventNames);
+      setShowSuggestions(true);
     } else {
       setFilteredEvents([]);
       setShowSuggestions(false);
     }
+    
+    // For debugging
+    console.log('Current input:', value);
+    console.log('Filtered events:', filtered);
+    console.log('Show suggestions:', showSuggestions);
   };
 
   const handleSuggestionClick = (name) => {
@@ -67,22 +107,6 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
           .filter(enrollment => enrollment !== 'Enrolment' && enrollment !== ''); // Skip header row
         console.log('Excel Data:', jsonData);
         try {
-          console.log("reached here");
-          const response = await fetch('http://localhost:5001/api/Events/getAllEventNames', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to save event');
-          }
-          console.log("reached here also");
-          const result = await response.json();
-          console.log('Form submitted successfully:', result);
-
-
           if (!eventName) {
             throw new Error('Please select an event name');
           }
@@ -156,27 +180,39 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
                   value={eventName}
                   onChange={handleEventNameChange}
                   onFocus={() => {
-                    if (eventName.trim() && Array.isArray(allEventNames)) {
+                    // On focus, show all events if input is empty, or filtered events if there's text
+                    if (eventName.trim()) {
                       setFilteredEvents(allEventNames.filter(name =>
                         name.toLowerCase().includes(eventName.toLowerCase())
                       ));
-                      setShowSuggestions(true);
+                    } else {
+                      setFilteredEvents(allEventNames);
                     }
+                    setShowSuggestions(true);
+                    console.log('Focus: showing suggestions', allEventNames.length);
                   }}
                   onBlur={() => {
                     // Delay hiding suggestions to allow for clicks
-                    setTimeout(() => setShowSuggestions(false), 200);
+                    setTimeout(() => {
+                      setShowSuggestions(false);
+                      console.log('Blur: hiding suggestions');
+                    }, 200);
                   }}
                   placeholder="Search event name..."
                   required
+                  autoComplete="off" // Prevent browser's default autocomplete
                 />
                 {showSuggestions && filteredEvents.length > 0 && (
-                  <div className="suggestions-dropdown">
+                  <div className="suggestions-dropdown" style={{ display: 'block' }}>
                     {filteredEvents.map((name, index) => (
                       <div
                         key={index}
                         className="suggestion-item"
                         onClick={() => handleSuggestionClick(name)}
+                        onMouseDown={(e) => {
+                          // Prevent the onBlur event from firing
+                          e.preventDefault();
+                        }}
                       >
                         {name}
                       </div>

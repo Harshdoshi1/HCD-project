@@ -101,7 +101,7 @@ const insertFetchedStudents = async (req, res) => {
 
     const { eventId, eventType, points } = event;
 
-    const result = [];
+    // const result = [];
 
     const processedStudents = [];
     const errors = [];
@@ -149,8 +149,8 @@ const insertFetchedStudents = async (req, res) => {
             enrollmentNumber: enrollment,
             semester: currentSemester,
             eventId: eventId.toString(),
-            totalCocurricular: eventType === 'Cocurricular' ? points : 0,
-            totalExtracurricular: eventType === 'Extracurricular' ? points : 0
+            totalCocurricular: eventType === 'co-curricular' ? points : 0,
+            totalExtracurricular: eventType === 'extra-curricular' ? points : 0
           });
           console.log('Created new student points record');
         } else {
