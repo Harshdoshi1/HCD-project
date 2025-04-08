@@ -6,13 +6,17 @@ const Batch = sequelize.define('Batch', {
     batchName: { type: DataTypes.STRING, unique: true, allowNull: false },
     batchStart: { type: DataTypes.DATE, allowNull: false },
     batchEnd: { type: DataTypes.DATE, allowNull: false },
+    currentSemester: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
     courseType: {
         type: DataTypes.ENUM('Degree', 'Diploma'),
         allowNull: false
     }
-}, { 
+}, {
     tableName: 'Batches',
-    timestamps: false 
+    timestamps: false
 });
 
 module.exports = Batch;

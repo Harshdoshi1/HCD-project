@@ -1,5 +1,7 @@
 const EventMaster = require('../models/EventMaster');
-const StudentPoints = require('../models/StudentPoints')
+const StudentPoints = require('../models/StudentPoints');
+const Batch = require('../models/batch');
+const Student = require('../models/students');
 const xlsx = require('xlsx');
 const path = require('path');
 const fs = require('fs').promises;
@@ -7,15 +9,16 @@ const fs = require('fs').promises;
 // Create new event
 const createEvent = async (req, res) => {
   try {
-    const { eventId, eventName, eventType, eventCategory, points, duration } = req.body;
-
+    const { eventId, eventName, eventType, eventCategory, points, duration, eventDate } = req.body;
+    console.log("Testing ", eventId, eventName, eventType, eventCategory, points, duration, eventDate);
     const event = await EventMaster.create({
       eventId,
       eventName,
       eventType,
       eventCategory,
       points: parseInt(points),
-      duration: duration ? parseInt(duration) : null
+      duration: duration ? parseInt(duration) : null,
+      date: eventDate // Changed from eventDate to date to match the model
     });
 
     res.status(201).json({
@@ -33,90 +36,184 @@ const createEvent = async (req, res) => {
   }
 };
 
-// Process Excel file and update student points
-const processExcel = async (req, res) => {
+
+
+const getAllEventnames = async (req, res) => {
   try {
-    const { eventId } = req.body;
-    const file = req.file;
+    const events = await EventMaster.findAll({
+      attributes: ['eventName']
+    });
 
-    if (!file) {
-      return res.status(400).json({
-        success: false,
-        message: 'No file uploaded'
-      });
-    }
-
-    // Read Excel file
-    const workbook = xlsx.readFile(file.path);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const data = xlsx.utils.sheet_to_json(worksheet);
-
-    // Get event details
-    const event = await EventMaster.findOne({ where: { eventId } });
-    if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: 'Event not found'
-      });
-    }
-
-    // Process each student in the Excel file
-    const processedStudents = [];
-    for (const row of data) {
-      const { enrollmentNumber, semester } = row;
-
-      // Update or create student points
-      const studentPoints = await StudentPoints.findOrCreate({
-        where: { enrollmentNumber, semester },
-        defaults: {
-          enrollmentNumber,
-          semester,
-          eventId,
-          totalCocurricular: 0,
-          totalExtracurricular: 0,
-          date: new Date()
-        }
-      });
-
-      // Update points based on event type
-      if (event.eventType === 'co-curricular') {
-        studentPoints[0].totalCocurricular += event.points;
-      } else {
-        studentPoints[0].totalExtracurricular += event.points;
-      }
-
-      await studentPoints[0].save();
-      processedStudents.push({
-        enrollmentNumber,
-        semester,
-        points: event.points,
-        eventType: event.eventType
-      });
-    }
-
-    // Clean up the uploaded file
-    await fs.unlink(file.path);
+    const eventNames = events.map(event => event.eventName);
 
     res.status(200).json({
       success: true,
-      message: 'Excel processed successfully',
-      data: {
-        event,
-        processedStudents
-      }
+      message: 'Event names fetched successfully',
+      data: eventNames
     });
   } catch (error) {
-    console.error('Error processing Excel:', error);
+    console.error('Error fetching event names:', error);
     res.status(500).json({
       success: false,
-      message: 'Error processing Excel',
+      message: 'Error fetching event names',
       error: error.message
     });
   }
 };
 
+const insertFetchedStudents = async (req, res) => {
+  try {
+    const { eventName, participants: jsonData } = req.body;
+    console.log('Request body:', req.body);
+
+    // Input validation
+    if (!eventName || typeof eventName !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Event name is required and must be a string'
+      });
+    }
+
+    if (!Array.isArray(jsonData) || jsonData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Participants data must be a non-empty array'
+      });
+    }
+
+    console.log('Processing event:', eventName);
+    console.log('Number of participants:', jsonData.length);
+    console.log('Sample participants:', jsonData.slice(0, 3));
+
+    // Fetch event details from EventMaster table
+    const event = await EventMaster.findOne({
+      where: { eventName: eventName.trim() }
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: `Event with name '${eventName}' not found`
+      });
+    }
+
+    console.log('Found event:', event.eventName, 'ID:', event.eventId);
+
+    const { eventId, eventType, points } = event;
+
+    const result = [];
+
+    const processedStudents = [];
+    const errors = [];
+
+    for (const enrollment of jsonData) {
+      try {
+        console.log('Processing enrollment:', enrollment);
+
+        // Find the student's batch using their enrollment number
+        const student = await Student.findOne({
+          where: { enrollmentNumber: enrollment }
+        });
+
+        if (!student) {
+          console.warn(`Student with enrollment number ${enrollment} not found.`);
+          errors.push({ enrollmentNumber: enrollment, error: 'Student not found' });
+          continue;
+        }
+
+        const batchId = student.batchId;
+        console.log('Found student with batchId:', batchId);
+
+        // Find the current semester of the batch
+        const batch = await Batch.findOne({
+          where: { id: batchId }
+        });
+
+        if (!batch) {
+          console.warn(`Batch with ID ${batchId} not found.`);
+          errors.push({ enrollmentNumber: enrollment, error: 'Batch not found' });
+          continue;
+        }
+
+        const currentSemester = batch.currentSemester;
+        console.log('Current semester:', currentSemester);
+
+        // Check if a record exists in StudentPoints
+        let studentPoints = await StudentPoints.findOne({
+          where: { enrollmentNumber: enrollment, semester: currentSemester }
+        });
+
+        if (!studentPoints) {
+          // Create a new record
+          studentPoints = await StudentPoints.create({
+            enrollmentNumber: enrollment,
+            semester: currentSemester,
+            eventId: eventId.toString(),
+            totalCocurricular: eventType === 'Cocurricular' ? points : 0,
+            totalExtracurricular: eventType === 'Extracurricular' ? points : 0
+          });
+          console.log('Created new student points record');
+        } else {
+          // Update existing record
+          const existingEventIds = studentPoints.eventId ? studentPoints.eventId.split(',') : [];
+          if (!existingEventIds.includes(eventId.toString())) {
+            existingEventIds.push(eventId.toString());
+          }
+
+          studentPoints.eventId = existingEventIds.join(',');
+
+          if (eventType === 'Cocurricular') {
+            studentPoints.totalCocurricular += points;
+          } else if (eventType === 'Extracurricular') {
+            studentPoints.totalExtracurricular += points;
+          }
+
+          await studentPoints.save();
+          console.log('Updated existing student points record');
+        }
+
+        processedStudents.push({
+          enrollmentNumber: enrollment,
+          currentSemester,
+          points: {
+            cocurricular: studentPoints.totalCocurricular,
+            extracurricular: studentPoints.totalExtracurricular
+          }
+        });
+      } catch (error) {
+        console.error(`Error processing enrollment ${enrollment}:`, error);
+        errors.push({ enrollmentNumber: enrollment, error: error.message });
+      }
+    }
+
+    // Send the final response with both processed students and errors
+    res.status(200).json({
+      success: true,
+      message: 'Students processed',
+      data: {
+        processed: processedStudents,
+        errors: errors,
+        summary: {
+          total: jsonData.length,
+          successful: processedStudents.length,
+          failed: errors.length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error processing students:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error processing students',
+      error: error.message
+    });
+  }
+};
+
+
 module.exports = {
   createEvent,
-  processExcel
-}
+  insertFetchedStudents,
+  getAllEventnames,
+  // getCurrentSemesterofBatch
+};

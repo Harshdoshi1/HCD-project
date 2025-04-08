@@ -288,29 +288,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
                 }));
             }
 
-            // The actual API call would look like this when the backend is fixed:
-            /*
-            const endpoint = type === 'co'
-                ? `http://localhost:5001/api/students/cocurricular/${activityId}`
-                : `http://localhost:5001/api/students/extracurricular/${activityId}`;
 
-            const response = await fetch(endpoint, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete activity');
-            }
-
-            // Refresh only the specific activity type data
-            if (studentId) {
-                if (type === 'co') {
-                    fetchCoCurricularActivities(studentId);
-                } else {
-                    fetchExtraCurricularActivities(studentId);
-                }
-            }
-            */
         } catch (error) {
             console.error(`Error deleting ${type}-curricular activity:`, error);
         }
@@ -319,8 +297,6 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
     const calculateActivityPoints = (activityList) => {
         if (!activityList || activityList.length === 0) return 0;
 
-        // In a real app, you'd have a more complex calculation based on activity type, level, etc.
-        // For this example, we'll just count each activity as 1 point
         return activityList.length;
     };
 

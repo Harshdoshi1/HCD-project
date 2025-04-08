@@ -28,6 +28,10 @@ const EventMaster = sequelize.define('EventMaster', {
         type: DataTypes.INTEGER, // Optional field
         allowNull: true,
     },
+    date: {
+        type: DataTypes.DATE,
+        allowNull: false, // Make it required or optional as per your needs
+    }
 }, {
     tableName: 'EventMaster',
     timestamps: false,
