@@ -1,4 +1,4 @@
-
+const bcrypt = require('bcrypt');
 const AssignSubject = require("../models/assignSubject");
 const Batch = require("../models/batch");
 const Semester = require("../models/semester");
@@ -166,11 +166,11 @@ const getSubjectsByFaculty = async (req, res) => {
     }
 };
 
-
 const addFaculty = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
-
+        
+console.log("dsfsd",req.body);
         if (role !== 'Faculty') {
             return res.status(400).json({ message: 'Invalid role. Only faculty can be added.' });
         }
@@ -201,7 +201,4 @@ const addFaculty = async (req, res) => {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
-
-
 module.exports = { updateAssignSubject, getAssignSubjectById, createAssignSubject, addFaculty, deleteAssignSubject, getAllAssignSubjects, getSubjectsByFaculty };
-

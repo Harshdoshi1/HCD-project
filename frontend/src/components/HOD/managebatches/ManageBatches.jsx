@@ -78,7 +78,7 @@ const ManageBatches = () => {
 
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/users/addSemester', {
+            const response = await fetch('http://localhost:5001/api/semesters/addSemester', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(semesterData)

@@ -19,7 +19,9 @@ const router = express.Router();
 
 router.post('/addSubject', addSubject);
 router.get('/getSubjectByCode', getSubjectByCode);
-router.get('/getSubjects', getSubjects);
+router.get("/getSubjects/:batchName/:semesterNumber", getSubjectsByBatchAndSemester);
+
+// router.get('/getSubjects', getSubjects);
 router.get('/getDropdownData', getDropdownData);
 router.post('/assignSubject', assignSubject);
 router.post('/getSubjectsByBatchSemesterandFaculty', getSubjectsByBatchSemesterandFaculty);
@@ -33,7 +35,6 @@ router.post("/addSubjectWithComponents", addSubjectWithComponents);
 router.get("/subject/:subjectCode", getSubjectWithComponents);
 
 
-router.get("/getSubjects/:batchName/:semesterNumber", getSubjectsByBatchAndSemester);
 
 
 router.delete("/deleteSubjectbycode", deleteSubject);
