@@ -1,15 +1,44 @@
 import React, { useState } from 'react';
+import './AddCoCurricularActivityForm.css';
 
 const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId }) => {
     const [formData, setFormData] = useState({
-        activityName: activity ? activity.activityName : '',
-        achievementLevel: activity ? activity.achievementLevel : '',
-        date: activity ? activity.date : '',
-        description: activity ? activity.description : '',
-        certificateUrl: activity ? activity.certificateUrl : '',
-        score: activity ? activity.score : '',
-        enrollmentNumber: activity ? activity.enrollmentNumber : '92200133017'
+        enrollmentNumber: '',
+        semesterId: semesterId || '',
+        activityName: '',
+        achievementLevel: '',
+        date: '',
+        description: '',
+        certificateUrl: '',
+        score: ''
     });
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch('http://localhost:5001/api/students/cocurricular', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit activity');
+            }
+
+            const result = await response.json();
+            console.log('Activity submitted successfully:', result);
+
+            // Call the onSubmit callback if needed
+            onSubmit(activity, isEditing);
+        } catch (error) {
+            console.error('Error submitting activity:', error);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -19,39 +48,34 @@ const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId }
         }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch('http://localhost:5001/api/students/cocurricular', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    semesterId: Number(semesterId) || null
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to add co-curricular activity');
-            }
-
-            const data = await response.json();
-            onSubmit(data);
-            onClose();
-        } catch (error) {
-            console.error('Error adding co-curricular activity:', error);
-            alert(error.message || 'Failed to add co-curricular activity. Please try again.');
-        }
-    };
-
     return (
         <div className="activity-form-overlay">
             <div className="activity-form">
                 <h2>{activity ? 'Edit' : 'Add'} Co-Curricular Activity</h2>
                 <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Enrollment Number</label>
+                        <input
+                            type="text"
+                            name="enrollmentNumber"
+                            value={formData.enrollmentNumber}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Semester ID</label>
+
+
+                        <input
+                            type="text"
+                            name="semesterId"
+                            value={formData.semesterId}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
                     <div className="form-group">
                         <label>Activity Name</label>
                         <input
@@ -114,12 +138,6 @@ const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId }
                             onChange={handleChange}
                         />
                     </div>
-
-                    <input
-                        type="hidden"
-                        name="enrollmentNumber"
-                        value={formData.enrollmentNumber}
-                    />
 
                     <div className="form-buttons">
                         <button type="submit" className="submit-btn">
