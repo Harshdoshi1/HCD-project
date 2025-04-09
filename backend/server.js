@@ -40,6 +40,7 @@ app.use('/api/subjects', subRoutes);
 app.use('/api/semesters', semesterRoutes);
 // Marks routes
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
+app.get("/api/marks/students1/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject1);
 app.post("/api/marks/update/:studentId/:subjectId", gettedmarksController.updateStudentMarks);
 
 // Error handling middleware

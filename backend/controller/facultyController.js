@@ -55,7 +55,6 @@ const createAssignSubject = async (req, res) => {
     }
 };
 
-
 // Get all AssignSubject entries
 const getAllAssignSubjects = async (req, res) => {
     try {
@@ -169,7 +168,7 @@ const getSubjectsByFaculty = async (req, res) => {
 const addFaculty = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
-        
+
 console.log("dsfsd",req.body);
         if (role !== 'Faculty') {
             return res.status(400).json({ message: 'Invalid role. Only faculty can be added.' });
@@ -201,4 +200,11 @@ console.log("dsfsd",req.body);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
-module.exports = { updateAssignSubject, getAssignSubjectById, createAssignSubject, addFaculty, deleteAssignSubject, getAllAssignSubjects, getSubjectsByFaculty };
+module.exports = {  updateAssignSubject,
+                    getAssignSubjectById, 
+                    createAssignSubject, 
+                    addFaculty, 
+                    deleteAssignSubject, 
+                    getAllAssignSubjects, 
+                    getSubjectsByFaculty 
+                };
