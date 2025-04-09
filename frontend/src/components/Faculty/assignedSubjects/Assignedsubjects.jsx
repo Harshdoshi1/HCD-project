@@ -82,7 +82,7 @@ const AssignedSubjects = () => {
     useEffect(() => {
         const faculty = JSON.parse(localStorage.getItem('user'));
         const facultyId = faculty?.id;
-        
+
         if (!facultyId) {
             // Redirect to login if faculty data is not found
             window.location.href = '/';
@@ -98,7 +98,7 @@ const AssignedSubjects = () => {
                 }
                 const data = await response.json();
                 console.log("API Response:", data);
-                
+
                 if (Array.isArray(data)) {
                     // Create a map of batch to semesters
                     const batchSemesterMap = {};
@@ -129,7 +129,7 @@ const AssignedSubjects = () => {
                     // Store the batch-semester mapping
                     setBatchToSemesters(batchSemesterMap);
                     setBatchOptions(uniqueBatches);
-                    
+
                     setSubjects(data);
                     setFilteredSubjects(data);
                 } else {
@@ -141,7 +141,7 @@ const AssignedSubjects = () => {
                 setIsLoading(false);
             }
         };
-    
+
         fetchSubjects();
     }, []);
 
@@ -165,22 +165,22 @@ const AssignedSubjects = () => {
     // Apply filters function
     const applyFilters = () => {
         let filtered = [...subjects];
-        
+
         if (searchQuery) {
-            filtered = filtered.filter(subject => 
+            filtered = filtered.filter(subject =>
                 (subject.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
                 (subject.code?.toLowerCase() || '').includes(searchQuery.toLowerCase())
             );
         }
-        
+
         if (batch) {
             filtered = filtered.filter(subject => subject.batch === batch);
         }
-        
+
         if (semester) {
             filtered = filtered.filter(subject => subject.semester === semester);
         }
-        
+
         setFilteredSubjects(filtered);
         setCurrentPage(1); // Reset to first page when filters change
     };
