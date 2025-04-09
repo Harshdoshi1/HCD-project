@@ -11,7 +11,7 @@ const EventManagement = () => {
   return (
     <div className="event-management-container">
       <div className="event-header">
-        <h2>Event Management</h2>
+        <h2>Events</h2>
         <div className="action-buttons">
           <button
             className="add-event-button"

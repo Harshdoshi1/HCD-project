@@ -138,13 +138,11 @@ const insertFetchedStudents = async (req, res) => {
         const currentSemester = batch.currentSemester;
         console.log('Current semester:', currentSemester);
 
-        // Check if a record exists in StudentPoints
         let studentPoints = await StudentPoints.findOne({
           where: { enrollmentNumber: enrollment, semester: currentSemester }
         });
 
         if (!studentPoints) {
-          // Create a new record
           studentPoints = await StudentPoints.create({
             enrollmentNumber: enrollment,
             semester: currentSemester,
@@ -154,7 +152,6 @@ const insertFetchedStudents = async (req, res) => {
           });
           console.log('Created new student points record');
         } else {
-          // Update existing record
           const existingEventIds = studentPoints.eventId ? studentPoints.eventId.split(',') : [];
           if (!existingEventIds.includes(eventId.toString())) {
             existingEventIds.push(eventId.toString());
@@ -162,9 +159,9 @@ const insertFetchedStudents = async (req, res) => {
 
           studentPoints.eventId = existingEventIds.join(',');
 
-          if (eventType === 'Cocurricular') {
+          if (eventType === 'co-curricular') {
             studentPoints.totalCocurricular += points;
-          } else if (eventType === 'Extracurricular') {
+          } else if (eventType === 'extra-curricular') {
             studentPoints.totalExtracurricular += points;
           }
 
