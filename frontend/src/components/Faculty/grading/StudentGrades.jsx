@@ -276,7 +276,7 @@ const StudentGrades = () => {
         const fetchStudents = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:5001/api/facultySide/marks/students/${selectedBatch.batchName}`);
+                const response = await fetch(`http://localhost:5001/api/marks/students1/${selectedBatch.batchName}`);
                 if (!response.ok) throw new Error("Failed to fetch students");
                 const data = await response.json();
                 console.log('Students API Response:', data);

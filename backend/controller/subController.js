@@ -207,7 +207,6 @@ const getSubjects = async (req, res) => {
     }
 };
 
-
 const getSubjectsByBatchAndSemester = async (req, res) => {
     try {
         const { batchName, semesterNumber } = req.params;
@@ -250,6 +249,7 @@ const getSubjectsByBatchAndSemester = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
 
 
 const getSubjectsByBatchSemesterandFaculty = async (req, res) => {
