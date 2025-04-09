@@ -40,16 +40,12 @@ const createEvent = async (req, res) => {
 
 const getAllEventnames = async (req, res) => {
   try {
-    const events = await EventMaster.findAll({
-      attributes: ['eventName']
-    });
-
-    const eventNames = events.map(event => event.eventName);
+    const events = await EventMaster.findAll();
 
     res.status(200).json({
       success: true,
-      message: 'Event names fetched successfully',
-      data: eventNames
+      message: 'Events fetched successfully',
+      data: events
     });
   } catch (error) {
     console.error('Error fetching event names:', error);
