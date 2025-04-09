@@ -1,42 +1,66 @@
 const CoCurricularActivity = require("../models/cocurricularActivity");
+const Student = require("../models/students");
 
 // Add new co-curricular activity
 const addActivity = async (req, res) => {
     try {
-        const activityData = {
-            enrollmentNumber: req.body.enrollmentNumber,
-            semesterId: req.body.semesterId,
-            activityName: req.body.activityName,
-            achievementLevel: req.body.achievementLevel,
-            date: req.body.date,
-            description: req.body.description,
-            certificateUrl: req.body.certificateUrl,
-            score: req.body.score || 0
-        };
+        // const activityData = {
+        //     enrollmentNumber: req.body.enrollmentNumber,
+        //     semesterId: req.body.semesterId,
+        //     activityName: req.body.activityName,
+        //     achievementLevel: req.body.achievementLevel,
+        //     date: req.body.date,
+        //     description: req.body.description,
+        //     certificateUrl: req.body.certificateUrl,
+        //     score: req.body.score || 0
+        // };
+        const {
+            enrollmentNumber,
+            semesterId,
+            activityName,
+            achievementLevel,
+            date,
+            description,
+            certificateUrl,
+            score
+        } = req.body;
+        if (!enrollmentNumber || !semesterId || !activityName || !date || !description) {
+            return res.status(400).json({
+                message: "Missing required fields",
+                required: ["enrollmentNumber", "semesterId", "activityName", "date", "description"]
+            });
+        }
 
-        // Validate required fields
-        if (!activityData.enrollmentNumber) {
-            return res.status(400).json({ message: "Enrollment number is required" });
-        }
-        if (!activityData.semesterId) {
-            return res.status(400).json({ message: "Semester ID is required" });
-        }
-        if (!activityData.activityName) {
-            return res.status(400).json({ message: "Activity name is required" });
-        }
-        if (!activityData.date) {
-            return res.status(400).json({ message: "Date is required" });
-        }
-        if (!activityData.description) {
-            return res.status(400).json({ message: "Description is required" });
+        const student = await Student.findOne({
+            where: { enrollmentNumber }
+        });
+
+        if (!student) {
+            return res.status(404).json({
+                message: "Student not found",
+                enrollmentNumber
+            });
         }
 
-        const newActivity = await CoCurricularActivity.create(activityData);
+
+        // Create new activity
+        const newActivity = await CoCurricularActivity.create({
+            enrollmentNumber,
+            semesterId,
+            activityName,
+            achievementLevel,
+            date: new Date(date),
+            description,
+            certificateUrl,
+            score
+        });
+
+        // const newActivity = await CoCurricularActivity.create(activityData);
         res.status(201).json(newActivity);
     } catch (error) {
         console.error("Error adding co-curricular activity:", error);
         if (error.name === 'SequelizeValidationError') {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: "Validation error",
                 errors: error.errors.map(err => err.message)
             });

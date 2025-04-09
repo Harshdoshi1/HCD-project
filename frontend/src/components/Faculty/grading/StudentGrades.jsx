@@ -523,7 +523,7 @@ const StudentGrades = () => {
                                         className="student-image"
                                     />
                                     <div className="student-info-container-sgp">
-                                        <div className="student-details">
+                                        <div className="student-details-student-grades">
                                             <span className="student-name">{student.name}</span>
                                             <span className="enrollment-number">{student.enrollmentNo}</span>
                                         </div>
