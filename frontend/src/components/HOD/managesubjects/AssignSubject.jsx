@@ -39,7 +39,7 @@ const AssignSubject = () => {
     useEffect(() => {
         const fetchAllSubjects = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getSubjects"); // Replace with actual API URL
+                const response = await fetch("http://localhost:5001/api/subjects/getSubjects"); // Replace with actual API URL
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -70,7 +70,7 @@ const AssignSubject = () => {
 
             try {
                 const response = await fetch(
-                    `http://localhost:5001/api/users/getSubjects/${filters.batch}/${filters.semester}`
+                    `http://localhost:5001/api/subjects/getSubjects/${filters.batch}/${filters.semester}`
                 );
 
                 if (!response.ok) {
@@ -108,7 +108,7 @@ const AssignSubject = () => {
                     return;
                 }
 
-                const response = await fetch(`http://localhost:5001/api/users/getSemestersByBatch/${filters.batch}`);
+                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${filters.batch}`);
                 if (!response.ok) throw new Error("Failed to fetch semesters");
                 const data = await response.json();
                 setSemesters(data);
@@ -129,7 +129,7 @@ const AssignSubject = () => {
                     return;
                 }
 
-                const response = await fetch(`http://localhost:5001/api/users/getSemestersByBatch/${assignFilters.batch}`);
+                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${assignFilters.batch}`);
                 if (!response.ok) throw new Error("Failed to fetch semesters");
                 const data = await response.json();
                 setAssignSemesters(data);
@@ -219,7 +219,7 @@ const AssignSubject = () => {
                 batchName: assignFilters.batch,
             }));
 
-            const response = await fetch("http://localhost:5001/api/users/assignSubject", {
+            const response = await fetch("http://localhost:5001/api/subjects/assignSubject", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ subjects }),
