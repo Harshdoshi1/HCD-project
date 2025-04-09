@@ -3,12 +3,13 @@ const Student = require("../models/students");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 const Batch = require("../models/batch");
 
-exports.getStudentMarksByBatchAndSubject = async (req, res) => {
+const getStudentMarksByBatchAndSubject = async (req, res) => {
     try {
-        const { batchId } = req.params;
-        console.log("Received check:", batchId);
+        const { batchName } = req.params;
 
-        const batch = await Batch.findOne({ where: { batchName: batchId } });
+        console.log("Received check:", batchName);
+
+        const batch = await Batch.findOne({ where: { batchName: batchName } });
         if (!batch) {
             return res.status(404).json({ message: "Batch not found" });
         }
@@ -30,10 +31,10 @@ exports.getStudentMarksByBatchAndSubject = async (req, res) => {
     }
 };
 
-// exports.getStudentMarksByBatchAndSubject = async (req, res) => {
+// exports.getStudentMarksByBatchAndSubjectf = async (req, res) => {
 //     try {
 //         const { batchId } = req.params;
-//         console.log("recieved check==",batchId)
+//         console.log("recieved check==", batchId)
 //         console.log('Fetching marks for batch:', batchId);
 //         // find id from batch table 
 //         const batch = await Batch.findOne({ where: { batchName: batchId } });
@@ -56,7 +57,7 @@ exports.getStudentMarksByBatchAndSubject = async (req, res) => {
 // };
 
 
-exports.updateStudentMarks = async (req, res) => {
+const updateStudentMarks = async (req, res) => {
     try {
         const { studentId, subjectId } = req.params;
         const { ese, cse, ia, tw, viva, facultyId, response } = req.body;
@@ -104,3 +105,11 @@ exports.updateStudentMarks = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 };
+
+
+module.exports = {
+    updateStudentMarks,
+    getStudentMarksByBatchAndSubject,
+    // getStudentMarksByBatchAndSubjectf
+};
+

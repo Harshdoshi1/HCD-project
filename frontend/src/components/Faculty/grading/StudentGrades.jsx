@@ -213,7 +213,7 @@ const StudentGrades = () => {
         const fetchSemesters = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:5001/api/students/getSemestersByBatch/${selectedBatch.batchName}`);
+                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${selectedBatch.batchName}`);
                 if (!response.ok) throw new Error("Failed to fetch semesters");
                 const data = await response.json();
                 setSemesters(data.map(semester => ({
@@ -237,7 +237,7 @@ const StudentGrades = () => {
         const fetchSubjects = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:5001/api/students/getSubjects/${selectedBatch.batchName}/${selectedSemester.semesterNumber}`);
+                const response = await fetch(`http://localhost:5001/api/subjects/getSubjects/${selectedBatch.batchName}/${selectedSemester.semesterNumber}`);
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 console.log('Subject API Response:', data);
@@ -276,7 +276,7 @@ const StudentGrades = () => {
         const fetchStudents = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:5001/api/marks/students/${selectedBatch.batchName}`);
+                const response = await fetch(`http://localhost:5001/api/facultySide/marks/students/${selectedBatch.batchName}`);
                 if (!response.ok) throw new Error("Failed to fetch students");
                 const data = await response.json();
                 console.log('Students API Response:', data);
@@ -523,7 +523,7 @@ const StudentGrades = () => {
                                         className="student-image"
                                     />
                                     <div className="student-info-container-sgp">
-                                        <div className="student-details">
+                                        <div className="student-details-student-grades">
                                             <span className="student-name">{student.name}</span>
                                             <span className="enrollment-number">{student.enrollmentNo}</span>
                                         </div>

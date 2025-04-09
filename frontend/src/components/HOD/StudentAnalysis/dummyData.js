@@ -1,8 +1,8 @@
 export const dummyStudents = [
     {
         id: 1,
-        name: "John Doe",
-        enrollmentNumber: "2022001",
+        name: "Ritesh Sanchala",
+        enrollmentNumber: "92200133001",
         batch: "2022-26",
         semester: "Semester 1",
         totalScore: 85,
@@ -20,8 +20,8 @@ export const dummyStudents = [
     },
     {
         id: 2,
-        name: "Jane Smith",
-        enrollmentNumber: "2022002",
+        name: "Harsh Doshi",
+        enrollmentNumber: "92200133002",
         batch: "2022-26",
         semester: "Semester 1",
         totalScore: 92,
