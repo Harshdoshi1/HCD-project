@@ -63,11 +63,6 @@ const EmptyState = () => (
         <button className="apply-btn-asff">Reset Filters</button>
     </div>
 );
-// fetch data from localstorage
-const faculty = JSON.parse(localStorage.getItem('user'));
-
-const facultyId = faculty.id;
-console.log("sfefsew", facultyId);
 
 const AssignedSubjects = () => {
     const [batch, setBatch] = useState("");
@@ -84,48 +79,16 @@ const AssignedSubjects = () => {
     const [batchToSemesters, setBatchToSemesters] = useState({}); // Map to store semesters for each batch
     const itemsPerPage = 6;
 
-    // Update semester options when batch changes
     useEffect(() => {
-        if (batch) {
-            setSemesterOptions(batchToSemesters[batch] || []);
-            setSemester(''); // Reset semester when batch changes
-        } else {
-            // If no batch is selected, show all unique semesters
-            const allSemesters = [...new Set(subjects.map(subject => subject.semester).filter(Boolean))];
-            allSemesters.sort((a, b) => {
-                const numA = parseInt(a);
-                const numB = parseInt(b);
-                return numA - numB;
-            });
-            setSemesterOptions(allSemesters);
-        }
-    }, [batch, batchToSemesters]);
+        const faculty = JSON.parse(localStorage.getItem('user'));
+        const facultyId = faculty?.id;
 
-    // Apply filters function
-    const applyFilters = () => {
-        let filtered = [...subjects];
-        
-        if (searchQuery) {
-            filtered = filtered.filter(subject => 
-                (subject.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-                (subject.code?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-            );
+        if (!facultyId) {
+            // Redirect to login if faculty data is not found
+            window.location.href = '/';
+            return;
         }
-        
-        if (batch) {
-            filtered = filtered.filter(subject => subject.batch === batch);
-        }
-        
-        if (semester) {
-            filtered = filtered.filter(subject => subject.semester === semester);
-        }
-        
-        setFilteredSubjects(filtered);
-        setCurrentPage(1); // Reset to first page when filters change
-    };
 
-    // Fetch subjects for the current faculty
-    useEffect(() => {
         const fetchSubjects = async () => {
             setIsLoading(true);
             try {
@@ -135,7 +98,7 @@ const AssignedSubjects = () => {
                 }
                 const data = await response.json();
                 console.log("API Response:", data);
-                
+
                 if (Array.isArray(data)) {
                     // Create a map of batch to semesters
                     const batchSemesterMap = {};
@@ -166,7 +129,7 @@ const AssignedSubjects = () => {
                     // Store the batch-semester mapping
                     setBatchToSemesters(batchSemesterMap);
                     setBatchOptions(uniqueBatches);
-                    
+
                     setSubjects(data);
                     setFilteredSubjects(data);
                 } else {
@@ -178,9 +141,49 @@ const AssignedSubjects = () => {
                 setIsLoading(false);
             }
         };
-    
+
         fetchSubjects();
-    }, [facultyId]);
+    }, []);
+
+    // Update semester options when batch changes
+    useEffect(() => {
+        if (batch) {
+            setSemesterOptions(batchToSemesters[batch] || []);
+            setSemester(''); // Reset semester when batch changes
+        } else {
+            // If no batch is selected, show all unique semesters
+            const allSemesters = [...new Set(subjects.map(subject => subject.semester).filter(Boolean))];
+            allSemesters.sort((a, b) => {
+                const numA = parseInt(a);
+                const numB = parseInt(b);
+                return numA - numB;
+            });
+            setSemesterOptions(allSemesters);
+        }
+    }, [batch, batchToSemesters]);
+
+    // Apply filters function
+    const applyFilters = () => {
+        let filtered = [...subjects];
+
+        if (searchQuery) {
+            filtered = filtered.filter(subject =>
+                (subject.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (subject.code?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+            );
+        }
+
+        if (batch) {
+            filtered = filtered.filter(subject => subject.batch === batch);
+        }
+
+        if (semester) {
+            filtered = filtered.filter(subject => subject.semester === semester);
+        }
+
+        setFilteredSubjects(filtered);
+        setCurrentPage(1); // Reset to first page when filters change
+    };
 
     const resetFilters = () => {
         setBatch("");

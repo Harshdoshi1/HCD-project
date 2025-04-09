@@ -117,3 +117,40 @@
 .hidden {
     display: none;
 }
+
+/* Dark theme styles */
+.dark-theme {
+    background-color: #121212;
+    color: #e0e0e0;
+  }
+  
+  .dark-theme .card,
+  .dark-theme .container,
+  .dark-theme .panel {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+  
+  .dark-sidebar {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+  
+  .theme-toggle {
+    padding: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .theme-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  

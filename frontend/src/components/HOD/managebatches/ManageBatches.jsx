@@ -17,7 +17,7 @@ const ManageBatches = () => {
     const fetchBatches = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/users/getAllBatches');
+            const response = await fetch('http://localhost:5001/api/batches/getAllBatches');
             if (!response.ok) throw new Error('Failed to fetch batches');
             const data = await response.json();
             setBatches(data);
@@ -39,7 +39,7 @@ const ManageBatches = () => {
 
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/users/addBatch', {
+            const response = await fetch('http://localhost:5001/api/batches/addBatch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newBatch)
@@ -78,7 +78,7 @@ const ManageBatches = () => {
 
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/users/addSemester', {
+            const response = await fetch('http://localhost:5001/api/semesters/addSemester', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(semesterData)

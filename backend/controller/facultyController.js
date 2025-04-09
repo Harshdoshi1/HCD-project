@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const AssignSubject = require("../models/assignSubject");
 const Batch = require("../models/batch");
 const Semester = require("../models/semester");
@@ -5,21 +6,22 @@ const Faculty = require("../models/faculty");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 const UniqueSubDiploma = require("../models/uniqueSubDiploma");
 const User = require("../models/users");
-exports.createAssignSubject = async (req, res) => {
+
+const createAssignSubject = async (req, res) => {
     try {
         console.log("Received request body:", req.body);
 
-        const batch = req.body.batch.value;  
-        const semester = req.body.semester.value;  
-        const subject = req.body.subject.value;  
-        const faculty = req.body.faculty.label;  
+        const batch = req.body.batch.value;
+        const semester = req.body.semester.value;
+        const subject = req.body.subject.value;
+        const faculty = req.body.faculty.label;
 
         // Find Batch ID & Course Type (Degree/Diploma)
         const batchRecord = await Batch.findOne({ where: { batchName: batch } });
         if (!batchRecord) return res.status(400).json({ error: "Batch not found" });
         console.log("Batch Found:", batchRecord);
 
-        const courseType = batchRecord.courseType; 
+        const courseType = batchRecord.courseType;
 
         // Find Semester ID
         const semesterRecord = await Semester.findOne({ where: { semesterNumber: semester, batchId: batchRecord.id } });
@@ -42,7 +44,7 @@ exports.createAssignSubject = async (req, res) => {
             batchId: batchRecord.id,
             semesterId: semesterRecord.id,
             facultyName: faculty,
-            subjectCode: subjectRecord.sub_code, 
+            subjectCode: subjectRecord.sub_code,
         });
 
         console.log("Assigned Subject:", assignSubject);
@@ -53,9 +55,8 @@ exports.createAssignSubject = async (req, res) => {
     }
 };
 
-
 // Get all AssignSubject entries
-exports.getAllAssignSubjects = async (req, res) => {
+const getAllAssignSubjects = async (req, res) => {
     try {
         const assignSubjects = await AssignSubject.findAll({
             include: [Batch, Semester, Faculty, UniqueSubDegree, UniqueSubDiploma]
@@ -67,7 +68,7 @@ exports.getAllAssignSubjects = async (req, res) => {
 };
 
 // Get a single AssignSubject entry by ID
-exports.getAssignSubjectById = async (req, res) => {
+const getAssignSubjectById = async (req, res) => {
     try {
         const assignSubject = await AssignSubject.findByPk(req.params.id, {
             include: [Batch, Semester, Faculty, UniqueSubDegree, UniqueSubDiploma]
@@ -82,7 +83,7 @@ exports.getAssignSubjectById = async (req, res) => {
 };
 
 // Update an AssignSubject entry
-exports.updateAssignSubject = async (req, res) => {
+const updateAssignSubject = async (req, res) => {
     try {
         const { batchId, semesterId, facultyId, subjectId } = req.body;
         const assignSubject = await AssignSubject.findByPk(req.params.id);
@@ -97,7 +98,7 @@ exports.updateAssignSubject = async (req, res) => {
 };
 
 // Delete an AssignSubject entry
-exports.deleteAssignSubject = async (req, res) => {
+const deleteAssignSubject = async (req, res) => {
     try {
         const assignSubject = await AssignSubject.findByPk(req.params.id);
         if (!assignSubject) {
@@ -111,7 +112,7 @@ exports.deleteAssignSubject = async (req, res) => {
 };
 
 // Get subjects assigned to a specific faculty
-exports.getSubjectsByFaculty = async (req, res) => {
+const getSubjectsByFaculty = async (req, res) => {
     try {
         const { facultyId } = req.params;
         console.log("getted facultyId", facultyId);
@@ -163,3 +164,47 @@ exports.getSubjectsByFaculty = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+const addFaculty = async (req, res) => {
+    try {
+        const { name, email, password, role } = req.body;
+
+console.log("dsfsd",req.body);
+        if (role !== 'Faculty') {
+            return res.status(400).json({ message: 'Invalid role. Only faculty can be added.' });
+        }
+
+        // Check if faculty already exists
+        const userExists = await User.findOne({ where: { email } });
+        if (userExists) {
+            return res.status(400).json({ message: 'Faculty already exists' });
+        }
+
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Create faculty user
+        const newUser = await User.create({ name, email, password: hashedPassword, role });
+
+        // Create faculty record
+        const newFaculty = await Faculty.create({ userId: newUser.id });
+
+        res.status(201).json({
+            message: 'Faculty registered successfully',
+            user: newUser,
+            facultyId: newFaculty.id
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+module.exports = {  updateAssignSubject,
+                    getAssignSubjectById, 
+                    createAssignSubject, 
+                    addFaculty, 
+                    deleteAssignSubject, 
+                    getAllAssignSubjects, 
+                    getSubjectsByFaculty 
+                };

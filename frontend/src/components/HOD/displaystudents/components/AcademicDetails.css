@@ -1,0 +1,55 @@
+.academic-section {
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 1.5rem;
+}
+
+.semester-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.semester-card {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 6px;
+    transition: transform 0.2s ease;
+}
+
+.semester-card:hover {
+    transform: translateY(-2px);
+}
+
+.semester-card h3 {
+    margin: 0 0 1rem 0;
+    color: #1e3a8a;
+    font-size: 1.1rem;
+}
+
+.semester-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 1rem;
+}
+
+.detail-item {
+    text-align: center;
+}
+
+.detail-item label {
+    display: block;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.detail-item p {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #4361ee;
+    font-weight: 600;
+}

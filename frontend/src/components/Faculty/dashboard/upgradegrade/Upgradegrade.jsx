@@ -7,9 +7,9 @@ const UpdateGrades = () => {
     const [grade, setGrade] = useState('');
 
     const mockStudents = [
-        { id: '1', name: 'John Doe' },
-        { id: '2', name: 'Jane Smith' },
-        { id: '3', name: 'Mike Johnson' }
+        { id: '1', name: 'Ritech sanchla' },
+        { id: '2', name: 'Harsh Doshi' },
+        { id: '3', name: 'Prashant Sarvaiya' }
     ];
 
     const handleSubmit = (e) => {

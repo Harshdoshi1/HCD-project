@@ -1,8 +1,10 @@
+const express = require('express');
+const router = express.Router();
 const Student = require('../models/students');
 const Batch = require('../models/batch');
 
 // Create a new student
-exports.createStudent = async (req, res) => {
+const createStudent = async (req, res) => {
     try {
         const { name, email, batchID, enrollment } = req.body;
 
@@ -52,7 +54,7 @@ exports.createStudent = async (req, res) => {
 };
 
 // Create multiple students
-exports.createStudents = async (req, res) => {
+const createStudents = async (req, res) => {
     try {
         const students = req.body.students; // Expecting an array of student objects
 
@@ -102,7 +104,7 @@ exports.createStudents = async (req, res) => {
     }
 };
 // Get all students
-exports.getAllStudents = async (req, res) => {
+const getAllStudents = async (req, res) => {
     try {
         const students = await Student.findAll({ include: Batch });
         res.status(200).json(students);
@@ -112,7 +114,7 @@ exports.getAllStudents = async (req, res) => {
 };
 
 // Get a single student by ID
-exports.getStudentById = async (req, res) => {
+const getStudentById = async (req, res) => {
     try {
         const student = await Student.findByPk(req.params.id, { include: Batch });
         if (!student) return res.status(404).json({ message: 'Student not found' });
@@ -123,7 +125,7 @@ exports.getStudentById = async (req, res) => {
 };
 
 // Update student details
-exports.updateStudent = async (req, res) => {
+const updateStudent = async (req, res) => {
     try {
         const { name, email, batchId, enrollmentNumber } = req.body;
         const student = await Student.findByPk(req.params.id);
@@ -137,7 +139,7 @@ exports.updateStudent = async (req, res) => {
 };
 
 // Delete a student
-exports.deleteStudent = async (req, res) => {
+const deleteStudent = async (req, res) => {
     try {
         const student = await Student.findByPk(req.params.id);
         if (!student) return res.status(404).json({ message: 'Student not found' });
@@ -148,3 +150,6 @@ exports.deleteStudent = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+module.exports = { deleteStudent, updateStudent, getStudentById, getAllStudents, createStudents, createStudent };
+
