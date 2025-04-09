@@ -33,11 +33,10 @@ exports.getStudentMarksByBatchAndSubject = async (req, res) => {
 
 exports.getStudentMarksByBatchAndSubject1 = async (req, res) => {
     try {
-        const { batchName } = req.params;
+        const { batchId } = req.params;
+        console.log("Received check:", batchId);
 
-        console.log("Received check:", batchName);
-
-        const batch = await Batch.findOne({ where: { batchName: batchName } });
+        const batch = await Batch.findOne({ where: { batchName: batchId } });
         if (!batch) {
             return res.status(404).json({ message: "Batch not found" });
         }
@@ -103,16 +102,7 @@ exports.updateStudentMarks = async (req, res) => {
         res.status(200).json({ message: 'Marks updated successfully', data: marks });
 
     } catch (error) {
-        console.error('Error updating student marks:', error);
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+        console.error("Error updating student marks:", error);
+        res.status(500).json({ error: "Internal Server Error", details: error.message });
     }
 };
-
-
-// module.exports = {
-//     updateStudentMarks,
-//     getStudentMarksByBatchAndSubject,
-//     getStudentMarksByBatchAndSubject1
-//     // getStudentMarksByBatchAndSubjectf
-// };
-
