@@ -1,4 +1,4 @@
-.activity-form-overlay {
+/* .activity-form-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -141,4 +141,4 @@
 .form-group input:required:focus {
     border-color: #4CAF50;
     box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-}
+} */
