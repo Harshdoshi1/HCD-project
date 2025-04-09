@@ -3,7 +3,35 @@ const Student = require("../models/students");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 const Batch = require("../models/batch");
 
+
 exports.getStudentMarksByBatchAndSubject = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        console.log("Received check:", batchId);
+
+        // const batch = await Batch.findOne({ where: { id: batchId } });
+        // if (!batch) {
+        //     return res.status(404).json({ message: "Batch not found" });
+        // }
+
+        // console.log('Batch:', batch);
+
+        const students = await Student.findAll({ where: { batchId: batchId} });
+
+        if (!students || students.length === 0) {
+            return res.status(404).json({ message: "No students found for this batch" });
+        }
+
+        console.log('Students:', students);
+
+        res.status(200).json(students.map(student => student.toJSON()));
+    } catch (error) {
+        console.error("Error fetching student marks:", error);
+        res.status(500).json({ message: "Error fetching student marks", error: error.stack });
+    }
+};
+
+exports.getStudentMarksByBatchAndSubject1 = async (req, res) => {
     try {
         const { batchId } = req.params;
         console.log("Received check:", batchId);
@@ -13,7 +41,7 @@ exports.getStudentMarksByBatchAndSubject = async (req, res) => {
             return res.status(404).json({ message: "Batch not found" });
         }
 
-        console.log('Batch:', batch);
+        // console.log('Batch:', batch);
 
         const students = await Student.findAll({ where: { batchId: batch.id } });
 
@@ -29,32 +57,6 @@ exports.getStudentMarksByBatchAndSubject = async (req, res) => {
         res.status(500).json({ message: "Error fetching student marks", error: error.stack });
     }
 };
-
-// exports.getStudentMarksByBatchAndSubject = async (req, res) => {
-//     try {
-//         const { batchId } = req.params;
-//         console.log("recieved check==",batchId)
-//         console.log('Fetching marks for batch:', batchId);
-//         // find id from batch table 
-//         const batch = await Batch.findOne({ where: { batchName: batchId } });
-//         console.log('Batch:', batch);
-//         // Get students from the specified batch with their marks
-//         const students = await Student.findAll({
-//             where: { batchId: batch.id }
-//             // include: [{
-//             //     model: Gettedmarks,
-//             //     where: { subjectId },
-//             //     required: false // Left join to get all students even if they don't have marks yet
-//             // }]
-//         });
-//         console.log('cccccc ===Students:', students);
-//         res.status(200).json(students);
-//     } catch (error) {
-//         console.error("Error fetching student marks:", error);
-//         res.status(500).json({ message: "Error fetching student marks", error: error.message });
-//     }
-// };
-
 
 exports.updateStudentMarks = async (req, res) => {
     try {
