@@ -7,11 +7,27 @@ import './Sidebar.css';
 const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+    const userRole = localStorage.getItem('userRole') || 'faculty';
+
+    // On component mount, restore the active section from localStorage
+    React.useEffect(() => {
+        const savedActiveItem = localStorage.getItem('activeSection');
+        if (savedActiveItem) {
+            setActiveItem(savedActiveItem);
+        } else {
+            // If no saved section, set default based on role
+            setActiveItem(userRole === 'faculty' ? 'faculty' : 'dashboard');
+        }
+    }, []);
 
     const handleLogout = async () => {
         try {
             setIsLogoutOpen(false);
+            const activeSection = localStorage.getItem('activeSection');
             localStorage.clear();
+            if (activeSection) {
+                localStorage.setItem('activeSection', activeSection);
+            }
             await new Promise(resolve => setTimeout(resolve, 100));
             window.location.href = '/';
         } catch (error) {
@@ -27,12 +43,13 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
         { id: "batches", label: "Batches", icon: Users },
         { id: "subjects", label: "Subjects", icon: Users },
         { id: "grades", label: "Grades", icon: GraduationCap },
-        { id: "studentAnalysis", label: "Student Analysis", icon: BarChart2 },
+        { id: "studentAnalysis", label: "Student Anal", icon: BarChart2 },
         { id: "events", label: "Events", icon: Users }
     ];
 
     const handleItemClick = (item) => {
         setActiveItem(item.id);
+        localStorage.setItem('activeSection', item.id);
     };
 
     return (

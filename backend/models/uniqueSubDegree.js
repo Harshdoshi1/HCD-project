@@ -8,7 +8,12 @@ const UniqueSubDegree = sequelize.define('UniqueSubDegree', {
         allowNull: false 
     },
     sub_name: { type: DataTypes.STRING, allowNull: false },
-    sub_credit: { type: DataTypes.INTEGER, allowNull: false }
+    sub_credit: { type: DataTypes.INTEGER, allowNull: false },
+    semester: { type: DataTypes.INTEGER, allowNull: false },
+    program: { 
+        type: DataTypes.ENUM('Degree', 'Diploma'), 
+        allowNull: false 
+    }
 }, { timestamps: false });
 
 module.exports = UniqueSubDegree;

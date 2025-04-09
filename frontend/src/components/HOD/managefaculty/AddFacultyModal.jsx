@@ -25,7 +25,7 @@ const AddFacultyModal = ({ onClose, onSuccess }) => {
         };
 
         try {
-            const response = await fetch('http://localhost:5001/api/users/addFaculty', {
+            const response = await fetch('http://localhost:5001/api/faculties/addFaculty', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(facultyDetails),

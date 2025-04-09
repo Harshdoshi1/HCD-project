@@ -1,9 +1,14 @@
-
 const Batch = require("../models/batch");
 
 const addBatch = async (req, res) => {
     try {
         const { batchName, batchStart, batchEnd, courseType } = req.body;
+
+        // Check for existing batch with same name
+        const existingBatch = await Batch.findOne({ where: { batchName } });
+        if (existingBatch) {
+            return res.status(400).json({ message: 'A batch with this name already exists' });
+        }
 
         // Validate that batchStart and batchEnd are dates
         if (isNaN(new Date(batchStart).getTime()) || isNaN(new Date(batchEnd).getTime())) {
@@ -13,12 +18,6 @@ const addBatch = async (req, res) => {
         // Validate that courseType is either "Degree" or "Diploma"
         if (!['Degree', 'Diploma'].includes(courseType)) {
             return res.status(400).json({ message: "Invalid courseType. It must be 'Degree' or 'Diploma'" });
-        }
-
-        // Check if batch already exists
-        const existingBatch = await Batch.findOne({ where: { batchName } });
-        if (existingBatch) {
-            return res.status(400).json({ message: "Batch already exists" });
         }
 
         // Create the new batch
