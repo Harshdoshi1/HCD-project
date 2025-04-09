@@ -14,10 +14,33 @@ const addActivity = async (req, res) => {
             score: req.body.score || 0
         };
 
+        // Validate required fields
+        if (!activityData.enrollmentNumber) {
+            return res.status(400).json({ message: "Enrollment number is required" });
+        }
+        if (!activityData.semesterId) {
+            return res.status(400).json({ message: "Semester ID is required" });
+        }
+        if (!activityData.activityName) {
+            return res.status(400).json({ message: "Activity name is required" });
+        }
+        if (!activityData.date) {
+            return res.status(400).json({ message: "Date is required" });
+        }
+        if (!activityData.description) {
+            return res.status(400).json({ message: "Description is required" });
+        }
+
         const newActivity = await CoCurricularActivity.create(activityData);
         res.status(201).json(newActivity);
     } catch (error) {
         console.error("Error adding co-curricular activity:", error);
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({ 
+                message: "Validation error",
+                errors: error.errors.map(err => err.message)
+            });
+        }
         res.status(500).json({ message: "Error adding activity", error: error.message });
     }
 };

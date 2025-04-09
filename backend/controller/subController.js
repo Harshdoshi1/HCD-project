@@ -1,22 +1,21 @@
-const UniqueSubDegree = require('../models/uniqueSubDegree');
-const UniqueSubDiploma = require('../models/uniqueSubDiploma');
-const { Batch } = require('../models/batch');
-const { Semester } = require('../models/semester');
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
+const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma } = require('../models'); // Import models
 
 // Add Subject
 const addSubject = async (req, res) => {
     try {
-        const { name, code, courseType, credits, subjectType } = req.body;
+        const { name, code, courseType, credits, subjectType, semester } = req.body;
 
         if (courseType === 'degree') {
             await UniqueSubDegree.create({
                 sub_code: code,
                 sub_name: name,
                 sub_credit: credits,
-                sub_level: subjectType
+                sub_level: subjectType,
+                semester: semester,
+                program: 'Degree'
             });
         } else if (courseType === 'diploma') {
             await UniqueSubDiploma.create({
@@ -82,6 +81,7 @@ const getSubjectByCode = async (req, res) => {
         res.status(500).json({ error: 'Error fetching subject', details: error.message });
     }
 };
+// ✅ Add Subject (Check if already assigned to batch & semester)
 const assignSubject = async (req, res) => {
     try {
         console.log("Received Request Body:", req.body); // Debugging
@@ -125,6 +125,7 @@ const assignSubject = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
 // Delete Subject
 const deleteSubject = async (req, res) => {
     try {
@@ -197,8 +198,7 @@ const getDropdownData = async (req, res) => {
 
 const getSubjects = async (req, res) => {
     try {
-
-        subjects = await UniqueSubDegree.findAll();
+        const subjects = await UniqueSubDegree.findAll();
 
 
         return res.status(200).json({ subjects });
@@ -206,6 +206,7 @@ const getSubjects = async (req, res) => {
         return res.status(500).json({ message: "Error fetching subjects", error: error.message });
     }
 };
+
 
 const getSubjectsByBatchAndSemester = async (req, res) => {
     try {
@@ -405,4 +406,3 @@ const addSubjectWithComponents = async (req, res) => {
 };
 
 module.exports = { getSubjectsByBatchAndSemester, addSubject, getSubjectWithComponents, addSubjectWithComponents, getDropdownData, getSubjectsByBatchSemesterandFaculty, assignSubject, getSubjectByCode, deleteSubject, getSubjects, addUniqueSubDegree, addUniqueSubDiploma };
-

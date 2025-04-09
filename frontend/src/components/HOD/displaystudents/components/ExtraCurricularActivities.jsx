@@ -2,51 +2,19 @@ import React, { useState } from 'react';
 import { Filter, Plus, Calendar, Trophy, FileText } from 'lucide-react';
 import './Activities.css';
 
-const ExtraCurricularActivities = () => {
-  const dummyActivities = [
-    {
-      id: 1,
-      title: 'College Cultural Fest',
-      description: 'Participated in dance competition and secured 2nd place.',
-      date: '2024-11-15',
-      achievement: 'Runner-up',
-      semester: 3,
-    },
-    {
-      id: 2,
-      title: 'Intercollege Hackathon',
-      description: 'Developed a web app for mental health support.',
-      date: '2024-04-08',
-      achievement: 'Winner',
-      semester: 2,
-    },
-    {
-      id: 3,
-      title: 'Photography Contest',
-      description: 'Received appreciation for landscape photography.',
-      date: '2025-01-20',
-      achievement: 'Participant',
-      semester: 4,
-    },
-  ];
-
-  const [selectedSemester, setSelectedSemester] = useState(1);
-  const [activityFilter, setActivityFilter] = useState('all');
-
-  const handleAddActivity = () => alert('Add activity clicked!');
-  const handleEditActivity = (activity) => alert(`Edit activity: ${activity.title}`);
-  const handleDeleteActivity = (id) => alert(`Delete activity with id: ${id}`);
-
-  const filterActivitiesBySemester = (activities, semester) => {
-    if (activityFilter === 'all') return activities;
-    return activities.filter((a) => a.semester === semester);
-  };
-
-  const calculateActivityPoints = (activities) => {
-    return activities.length * 10; // Example: 10 points per activity
-  };
-
-  const filteredActivities = filterActivitiesBySemester(dummyActivities, selectedSemester);
+const ExtraCurricularActivities = ({
+  student,
+  selectedSemester,
+  activityFilter,
+  setActivityFilter,
+  setSelectedSemester,
+  handleAddActivity,
+  handleEditActivity,
+  handleDeleteActivity,
+  filterActivitiesBySemester
+}) => {
+  const activities = student?.extraCurricular || [];
+  const filteredActivities = filterActivitiesBySemester(activities);
 
   return (
     <div className="activities-section">
@@ -83,18 +51,18 @@ const ExtraCurricularActivities = () => {
       <div className="activities-summary">
         <div className="summary-card">
           <h4>Total Activities</h4>
-          <div className="summary-value">{dummyActivities.length}</div>
+          <div className="summary-value">{activities.length}</div>
         </div>
         <div className="summary-card">
           <h4>Current Semester</h4>
           <div className="summary-value">
-            {dummyActivities.filter((a) => a.semester === selectedSemester).length}
+            {activities.filter((a) => a.semester === selectedSemester).length}
           </div>
         </div>
         <div className="summary-card">
           <h4>Semester Points</h4>
           <div className="summary-value">
-            {calculateActivityPoints(dummyActivities.filter((a) => a.semester === selectedSemester))}
+            {activities.filter((a) => a.semester === selectedSemester).reduce((total, activity) => total + (activity.points || 1), 0)}
           </div>
         </div>
       </div>
@@ -124,10 +92,10 @@ const ExtraCurricularActivities = () => {
                 </div>
               </div>
               <div className="activity-actions">
-                <button className="action-button edit-button" onClick={() => handleEditActivity(activity)}>
+                <button className="action-button edit-button" onClick={() => handleEditActivity(activity, 'extra')}>
                   Edit
                 </button>
-                <button className="action-button delete-button" onClick={() => handleDeleteActivity(activity.id)}>
+                <button className="action-button delete-button" onClick={() => handleDeleteActivity(activity.id, 'extra')}>
                   Delete
                 </button>
               </div>
