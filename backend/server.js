@@ -12,8 +12,7 @@ const studentCoCurricularRoutes = require('./routes/student_cocurricular_routes'
 const studentExtracurricularRoutes = require('./routes/student_extracurricular_routes');
 const batchRoutes = require("./routes/batch_routes");
 const facultysideRoutes = require("./routes/facultyside_router");
-// const gettedmarksController = require("./controller/gettedMarksController");
-const { getStudentMarksByBatchAndSubject, updateStudentMarks } = require("./controller/gettedMarksController");
+const gettedmarksController = require("./controller/gettedMarksController");
 const students_points_routes = require("./routes/students_points_routes");
 const semesterRoutes = require("./routes/semester_routes");
 const studentEventRoutes = require("./routes/student_event_routes");
@@ -41,20 +40,12 @@ app.use('/api/students/extracurricular', studentExtracurricularRoutes);
 app.use('/api/students/cocurricular', studentCoCurricularRoutes);
 app.use('/api/subjects', subRoutes);
 app.use('/api/semesters', semesterRoutes);
-<<<<<<< HEAD
 app.use('/api/events', studentEventRoutes);
 
 // Marks routes
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
 app.get("/api/marks/students1/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject1);
 app.post("/api/marks/update/:studentId/:subjectId", gettedmarksController.updateStudentMarks);
-=======
-app.use('/api/facultyside', facultysideRoutes);
-// app.use
-// Marks routes
-// app.get('/api/marks/students/:batchId', getStudentMarksByBatchAndSubject);
-// app.post("/api/marks/update/:studentId/:subjectId", updateStudentMarks);
->>>>>>> 2e802401986c644057b50467ad4d329e339fa83e
 
 // Error handling middleware
 app.use((err, req, res, next) => {
