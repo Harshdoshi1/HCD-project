@@ -2,9 +2,7 @@ const EventMaster = require('../models/EventMaster');
 const StudentPoints = require('../models/StudentPoints');
 const Batch = require('../models/batch');
 const Student = require('../models/students');
-const xlsx = require('xlsx');
-const path = require('path');
-const fs = require('fs').promises;
+const ParticipationType = require('../models/participationTypes');
 
 // Create new event
 const createEvent = async (req, res) => {
@@ -203,9 +201,150 @@ const insertFetchedStudents = async (req, res) => {
   }
 };
 
+const getAllCoCurricularEventsNames = async (req, res) => {
+  try {
+    const events = await EventMaster.findAll({
+      where: { eventType: 'co-curricular' },
+      attributes: ['eventName'] // Only select the eventName attribute
+    });
+    res.status(200).json({
+      success: true,
+      message: 'Co-curricular events fetched successfully',
+      data: events
+    });
+  } catch (error) {
+    console.error('Error fetching co-curricular events:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching co-curricular events',
+      error: error.message
+    });
+  }
+};
+const getAllExtraCurricularEventsNames = async (req, res) => {
+  try {
+    const events = await EventMaster.findAll({
+      where: { eventType: 'extra-curricular' },
+      attributes: ['eventName'] // Only select the eventName attribute
+    });
+    res.status(200).json({
+      success: true,
+      message: 'Extra-curricular events fetched successfully',
+      data: events
+    });
+  } catch (error) {
+    console.error('Error fetching extra-curricular events:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching extra-curricular events',
+      error: error.message
+    });
+  }
+};
 
+const getAllParticipationTypes = async (req, res) => {
+  try {
+    const participationTypes = await ParticipationType.findAll({
+      attributes: ['types'] // Only select the 'type' attribute
+    });
+    res.status(200).json({
+      success: true,
+      message: 'Participation types fetched successfully',
+      data: participationTypes
+    });
+  } catch (error) {
+    console.error('Error fetching participation types:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching participation types',
+      error: error.message
+    });
+  }
+};
+
+const insertIntoStudentPoints = async (req, res) => {
+  try {
+    const { enrollmentNumber, semester, eventName, participationTypeId } = req.body;
+
+    // Validate input
+    if (!enrollmentNumber || !semester || !eventName || !participationTypeId) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields (enrollmentNumber, semester, eventName, participationTypeId) are required'
+      });
+    }
+
+    // Find the event in the EventMaster table
+    const event = await EventMaster.findOne({
+      where: { eventName: eventName.trim() }
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: `Event with name '${eventName}' not found`
+      });
+    }
+
+    const { eventId, eventType, points } = event;
+
+    // Check if a record already exists in StudentPoints for the given enrollmentNumber and semester
+    let studentPoints = await StudentPoints.findOne({
+      where: { enrollmentNumber, semester }
+    });
+
+    if (!studentPoints) {
+      // Create a new record if it doesn't exist
+      studentPoints = await StudentPoints.create({
+        enrollmentNumber,
+        semester,
+        eventId: eventId.toString(),
+        totalCocurricular: eventType === 'co-curricular' ? points : 0,
+        totalExtracurricular: eventType === 'extra-curricular' ? points : 0,
+        participationTypeId
+      });
+      console.log('Created new student points record');
+    } else {
+      // Update the existing record
+      const existingEventIds = studentPoints.eventId ? studentPoints.eventId.split(',') : [];
+      if (!existingEventIds.includes(eventId.toString())) {
+        existingEventIds.push(eventId.toString());
+      }
+
+      studentPoints.eventId = existingEventIds.join(',');
+
+      if (eventType === 'co-curricular') {
+        studentPoints.totalCocurricular += points;
+      } else if (eventType === 'extra-curricular') {
+        studentPoints.totalExtracurricular += points;
+      }
+
+      studentPoints.participationTypeId = participationTypeId;
+
+      await studentPoints.save();
+      console.log('Updated existing student points record');
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Student points updated successfully',
+      data: studentPoints
+    });
+  } catch (error) {
+    console.error('Error inserting into student points:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error inserting into student points',
+      error: error.message
+    });
+  }
+};
 module.exports = {
   createEvent,
   insertFetchedStudents,
-  getAllEventnames
+  getAllEventnames,
+  getAllCoCurricularEventsNames,
+  getAllExtraCurricularEventsNames,
+  getAllParticipationTypes,
+  insertIntoStudentPoints
 };

@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db.js'); // Adjust the path as per your project structure
+const sequelize = require('../config/db.js');
 
 const StudentPoints = sequelize.define('StudentPoints', {
     id: {
@@ -19,7 +19,6 @@ const StudentPoints = sequelize.define('StudentPoints', {
     eventId: {
         type: DataTypes.TEXT,
         allowNull: false,
-
     },
     totalCocurricular: {
         type: DataTypes.INTEGER,
@@ -28,11 +27,16 @@ const StudentPoints = sequelize.define('StudentPoints', {
     totalExtracurricular: {
         type: DataTypes.INTEGER,
         allowNull: false,
+    },
+    participationTypeId: {
+        type: DataTypes.TEXT,
+        allowNull: false,
     }
-
 }, {
     tableName: 'student_points',
     timestamps: false,
 });
+
+
 
 module.exports = StudentPoints;
