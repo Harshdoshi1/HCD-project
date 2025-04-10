@@ -8,7 +8,7 @@ const Batch = sequelize.define('Batch', {
     batchEnd: { type: DataTypes.DATE, allowNull: false },
     currentSemester: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true
     },
     courseType: {
         type: DataTypes.ENUM('Degree', 'Diploma'),

@@ -143,7 +143,7 @@ const StudentsList = ({ onStudentSelect }) => {
                         <span>Filters</span>
                     </button>
                     <div className="search-container">
-                        <FaSearch className="search-icon" />
+                        <FaSearch className="search-icon" style={{ marginLeft: "5px" }} />
                         <input
                             type="text"
                             placeholder="Search students..."

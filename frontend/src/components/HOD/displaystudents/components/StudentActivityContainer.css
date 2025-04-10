@@ -1,0 +1,116 @@
+.activities-list-co-curricular {
+
+    display: flex;
+    overflow-x: auto;
+    padding: 20px 0;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    gap: 20px;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    width: 100%;
+}
+
+.activities-list-co-curricular::-webkit-scrollbar {
+    height: 6px;
+}
+
+.activities-list-co-curricular::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 10px;
+}
+
+.activities-list-co-curricular::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+    border-radius: 10px;
+}
+
+.extra-activities-activity-card {
+    flex: 0 0 calc(33.333% - 20px);
+    min-width: 290px;
+    max-width: 350px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    background-color: white;
+    border: 1px solid #e5e5e5;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    scroll-snap-align: start;
+}
+
+.extra-activities-activity-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Activity card title */
+.extra-activities-activity-card h4 {
+    font-size: 18px;
+    margin: 0 0 15px;
+    color: #333;
+    font-weight: 600;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+/* Activity card paragraphs */
+.extra-activities-activity-card p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.extra-activities-activity-card p strong {
+    color: #444;
+    font-weight: 600;
+}
+
+/* Certificate link button */
+.extra-activities-activity-card a {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 8px 16px;
+    background-color: #3b82f6;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.extra-activities-activity-card a:hover {
+    background-color: #2563eb;
+}
+
+/* Empty state */
+.activities-list-co-curricular p:only-child {
+    width: 100%;
+    text-align: center;
+    color: #777;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 1200px) {
+    .extra-activities-activity-card {
+        flex: 0 0 calc(50% - 20px);
+        /* 2 cards per row on medium screens */
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .extra-activities-activity-card {
+        flex: 0 0 calc(100% - 20px);
+        /* 1 card per row on mobile */
+        min-width: 250px;
+    }
+
+    .activities-list-co-curricular {
+        padding: 15px 0;
+        gap: 15px;
+    }
+}

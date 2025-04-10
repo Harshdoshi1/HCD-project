@@ -6,50 +6,21 @@ const StudentExtraActivity = ({ student, selectedSemester }) => {
     const [activityFilter, setActivityFilter] = useState('all');
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
-    const [newActivity, setNewActivity] = useState({
-        title: '',
-        date: '',
-        description: '',
-        achievement: '',
-        attachments: 0,
-        semester: selectedSemester
-    });
+    // const [newActivity, setNewActivity] = useState({
+    //     title: '',
+    //     date: '',
+    //     description: '',
+    //     achievement: '',
+    //     attachments: 0,
+    //     semester: selectedSemester
+    // });
 
-    const calculateActivityPoints = (activityList) => {
-        return activityList.reduce((total, activity) => {
-            let points = 0;
-            if (activity.achievement && activity.achievement.toLowerCase().includes('first')) {
-                points = 10;
-            } else if (activity.achievement && activity.achievement.toLowerCase().includes('second')) {
-                points = 8;
-            } else if (activity.achievement && activity.achievement.toLowerCase().includes('third')) {
-                points = 6;
-            } else if (activity.achievement) {
-                points = 5;
-            } else {
-                points = 3;
-            }
-            return total + points;
-        }, 0);
-    };
 
     const filterActivitiesBySemester = (activities, semester) => {
         if (activityFilter === 'all') return activities;
         return activities.filter(activity => activity.semester === semester);
     };
 
-    const handleAddActivity = () => {
-        setShowAddForm(true);
-        setShowEditForm(false);
-        setNewActivity({
-            title: '',
-            date: '',
-            description: '',
-            achievement: '',
-            attachments: 0,
-            semester: selectedSemester
-        });
-    };
 
     const handleEditActivity = (activity) => {
         setCurrentActivity(activity);
@@ -123,7 +94,7 @@ const StudentExtraActivity = ({ student, selectedSemester }) => {
                         }}>×</button>
                     </div>
 
-                    <form onSubmit={handleFormSubmit} className="activity-form">
+                    {/* <form onSubmit={handleFormSubmit} className="activity-form">
                         <div className="form-group">
                             <label htmlFor="title">Activity Title</label>
                             <input
@@ -193,7 +164,7 @@ const StudentExtraActivity = ({ student, selectedSemester }) => {
                                 {isEditMode ? 'Update Activity' : 'Add Activity'}
                             </button>
                         </div>
-                    </form>
+                    </form> */}
                 </div>
             </div>
         );
