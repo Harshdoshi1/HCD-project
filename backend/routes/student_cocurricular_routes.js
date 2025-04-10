@@ -4,7 +4,9 @@ const {
     addActivity,
     updateActivity,
     deleteActivity,
-    getStudentActivities
+    getStudentActivities,
+    getStudentActivitieswithenrollmentandSemester
+
 } = require('../controller/studentCocurricularController');
 
 // Add new co-curricular activity
@@ -17,6 +19,8 @@ router.put('/:activityId', updateActivity);
 router.delete('/:activityId', deleteActivity);
 
 // Get activities for a student by enrollment number
-router.post('/students', getStudentActivities);
+router.post('/getco', getStudentActivities);//update route
+
+router.post('/getCoWithSem', getStudentActivitieswithenrollmentandSemester);
 
 module.exports = router;
