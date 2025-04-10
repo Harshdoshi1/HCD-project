@@ -43,7 +43,7 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
         { id: "batches", label: "Batches", icon: Users },
         { id: "subjects", label: "Subjects", icon: Users },
         // { id: "grades", label: "Grades", icon: GraduationCap },
-        { id: "studentAnalysis", label: "Student Anal", icon: BarChart2 },
+        { id: "studentAnalysis", label: "Student Analysis", icon: BarChart2 },
         { id: "events", label: "Events", icon: Users }
     ];
 
