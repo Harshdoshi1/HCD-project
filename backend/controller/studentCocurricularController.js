@@ -5,15 +5,7 @@ const Student = require("../models/students");
 const addActivity = async (req, res) => {
     try {
         // const activityData = {
-        //     enrollmentNumber: req.body.enrollmentNumber,
-        //     semesterId: req.body.semesterId,
-        //     activityName: req.body.activityName,
-        //     achievementLevel: req.body.achievementLevel,
-        //     date: req.body.date,
-        //     description: req.body.description,
-        //     certificateUrl: req.body.certificateUrl,
-        //     score: req.body.score || 0
-        // };
+
         const {
             enrollmentNumber,
             semesterId,
@@ -130,5 +122,30 @@ const getStudentActivities = async (req, res) => {
         res.status(500).json({ message: "Error fetching activities", error: error.message });
     }
 };
+const getStudentActivitieswithenrollmentandSemester = async (req, res) => {
+    try {
+        const { enrollmentNumber, semesterId } = req.body;
 
-module.exports = { getStudentActivities, deleteActivity, updateActivity, addActivity }
+        if (!enrollmentNumber || !semesterId) {
+            return res.status(400).json({
+                message: "Missing required fields",
+                required: ["enrollmentNumber", "semesterId"]
+            });
+        }
+
+        const activities = await CoCurricularActivity.findAll({
+            where: { enrollmentNumber, semesterId }
+        });
+
+        if (activities.length === 0) {
+            return res.status(200).json({ message: "No activities found for the given enrollment number and semester" });
+        }
+
+        res.status(200).json(activities);
+    } catch (error) {
+        console.error("Error fetching student activities with enrollment and semester:", error);
+        res.status(500).json({ message: "Error fetching activities", error: error.message });
+    }
+};
+
+module.exports = { getStudentActivities, deleteActivity, updateActivity, addActivity, getStudentActivitieswithenrollmentandSemester };

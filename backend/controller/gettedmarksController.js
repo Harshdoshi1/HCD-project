@@ -16,7 +16,7 @@ exports.getStudentMarksByBatchAndSubject = async (req, res) => {
 
         // console.log('Batch:', batch);
 
-        const students = await Student.findAll({ where: { batchId: batchId} });
+        const students = await Student.findAll({ where: { batchId: batchId } });
 
         if (!students || students.length === 0) {
             return res.status(404).json({ message: "No students found for this batch" });

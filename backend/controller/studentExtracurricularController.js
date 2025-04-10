@@ -188,5 +188,42 @@ const getStudentExtraCurricularActivities = async (req, res) => {
     }
 };
 
+const getextraStudentActivities = async (req, res) => {
+    try {
+        const { enrollmentNumber } = req.body;
+        const activities = await ExtraCurricularActivity.findAll({
+            where: { enrollmentNumber }
+        });
+        res.status(200).json(activities);
+    } catch (error) {
+        console.error("Error fetching student activities:", error);
+        res.status(500).json({ message: "Error fetching activities", error: error.message });
+    }
+};
 
-module.exports = { getStudentExtraCurricularActivities, getActivitiesByEnrollmentAndSemester, addActivity, updateActivity, deleteActivity }
+const getextraStudentActivitieswithenrollmentandSemester = async (req, res) => {
+    try {
+        const { enrollmentNumber, semesterId } = req.body;
+
+        if (!enrollmentNumber || !semesterId) {
+            return res.status(400).json({
+                message: "Missing required fields",
+                required: ["enrollmentNumber", "semesterId"]
+            });
+        }
+
+        const activities = await ExtraCurricularActivity.findAll({
+            where: { enrollmentNumber, semesterId }
+        });
+
+        if (activities.length === 0) {
+            return res.status(200).json({ message: "No activities found for the given enrollment number and semester" });
+        }
+
+        res.status(200).json(activities);
+    } catch (error) {
+        console.error("Error fetching student activities with enrollment and semester:", error);
+        res.status(500).json({ message: "Error fetching activities", error: error.message });
+    }
+};
+module.exports = { getextraStudentActivitieswithenrollmentandSemester, getStudentExtraCurricularActivities, getextraStudentActivities, getActivitiesByEnrollmentAndSemester, addActivity, updateActivity, deleteActivity }

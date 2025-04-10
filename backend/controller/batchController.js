@@ -25,7 +25,7 @@ const addBatch = async (req, res) => {
             batchName,
             batchStart: new Date(batchStart),  // Convert to Date object
             batchEnd: new Date(batchEnd),      // Convert to Date object
-            courseType
+            courseType,
         });
 
         res.status(201).json({ message: "Batch created successfully", batch });

@@ -207,6 +207,5 @@ const insertFetchedStudents = async (req, res) => {
 module.exports = {
   createEvent,
   insertFetchedStudents,
-  getAllEventnames,
-  // getCurrentSemesterofBatch
+  getAllEventnames
 };

@@ -73,7 +73,8 @@ const ManageBatches = () => {
             batchName: selectedBatch.batchName,
             semesterNumber: semesterToAdd.semesterNumber,
             startDate: semesterToAdd.startDate,
-            endDate: semesterToAdd.endDate
+            endDate: semesterToAdd.endDate,
+
         };
 
         setIsLoading(true);

@@ -74,11 +74,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
 
     const fetchCoCurricularActivities = async (enrollmentNumber) => {
         try {
-            // For co-curricular activities, we'll implement a fallback solution for now
-            // since the API endpoint is having issues
-            // In a production app, you'd use the correct API endpoint
 
-            // Mock data for demonstration
             const mockActivities = [
                 {
                     id: 1,
@@ -432,6 +428,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
 
                     {activeTab === 'co-curricular' && (
                         <CoCurricularActivities
+                            studentEnrollment={student.enrollmentNumber}
                             student={student}
                             selectedSemester={selectedSemester}
                             activityFilter={activityFilter}
@@ -447,6 +444,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
 
                     {activeTab === 'extra-curricular' && (
                         <ExtraCurricularActivities
+                            studentEnrollment={student.enrollmentNumber}
                             student={student}
                             selectedSemester={selectedSemester}
                             activityFilter={activityFilter}
