@@ -16,4 +16,6 @@ const ParticipationType = sequelize.define('ParticipationType', {
     timestamps: false,
 });
 
+
+
 module.exports = ParticipationType;
