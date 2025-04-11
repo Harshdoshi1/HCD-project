@@ -244,9 +244,7 @@ const getAllExtraCurricularEventsNames = async (req, res) => {
 
 const getAllParticipationTypes = async (req, res) => {
   try {
-    const participationTypes = await ParticipationType.findAll({
-      attributes: ['types'] // Only select the 'type' attribute
-    });
+    const participationTypes = await ParticipationType.findAll({});
     res.status(200).json({
       success: true,
       message: 'Participation types fetched successfully',
@@ -339,6 +337,128 @@ const insertIntoStudentPoints = async (req, res) => {
     });
   }
 };
+
+const fetchEventsbyEnrollandSemester = async (req, res) => {
+  try {
+    const { enrollmentNumber, semester } = req.body;
+
+    if (!enrollmentNumber || !semester) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        required: ["enrollmentNumber", "semester"]
+      });
+    }
+
+    const activities = await StudentPoints.findAll({
+      where: { enrollmentNumber, semester },
+      attributes: ['eventId', 'totalCocurricular', 'totalExtracurricular']
+    });
+
+    if (activities.length === 0) {
+      return res.status(200).json({ message: "No activities found for the given enrollment number and semester" });
+    }
+
+    res.status(200).json(activities);
+  } catch (error) {
+    console.error("Error fetching student activities with enrollment and semester:", error);
+    res.status(500).json({ message: "Error fetching activities", error: error.message });
+  }
+};
+const fetchEventsIDsbyEnroll = async (req, res) => {
+  try {
+    const { enrollmentNumber } = req.body;
+
+    if (!enrollmentNumber) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        required: ["enrollmentNumber"]
+      });
+    }
+
+    const activities = await StudentPoints.findAll({
+      where: { enrollmentNumber },
+      attributes: ['eventId']
+    });
+
+    if (activities.length === 0) {
+      return res.status(200).json({ message: "No activities found for the given enrollment number" });
+    }
+
+    res.status(200).json(activities);
+  } catch (error) {
+    console.error("Error fetching student activities with enrollment:", error);
+    res.status(500).json({ message: "Error fetching activities", error: error.message });
+  }
+};
+const fetchEventsByIds = async (req, res) => {
+  try {
+    const { eventIds } = req.body;
+
+    if (!eventIds || typeof eventIds !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Event IDs must be provided as a comma-separated string'
+      });
+    }
+
+    // Split the comma-separated string into an array
+    const eventIdArray = eventIds.split(',').map(id => id.trim());
+
+    const events = await EventMaster.findAll({
+      where: {
+        eventId: eventIdArray
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Events fetched successfully',
+      data: events
+    });
+  } catch (error) {
+    console.error('Error fetching events by IDs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching events',
+      error: error.message
+    });
+  }
+};
+const fetchEventsByEventIds = async (req, res) => {
+  try {
+    const { eventIds, eventType } = req.body;
+
+    if (!eventIds || typeof eventIds !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Event IDs must be provided as a comma-separated string'
+      });
+    }
+
+    // Split the comma-separated string into an array
+    const eventIdArray = eventIds.split(',').map(id => id.trim());
+
+    const events = await EventMaster.findAll({
+      where: {
+        eventId: eventIdArray,
+        eventType: eventType
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Events fetched successfully',
+      data: events
+    });
+  } catch (error) {
+    console.error('Error fetching events by IDs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching events',
+      error: error.message
+    });
+  }
+};
 module.exports = {
   createEvent,
   insertFetchedStudents,
@@ -346,5 +466,9 @@ module.exports = {
   getAllCoCurricularEventsNames,
   getAllExtraCurricularEventsNames,
   getAllParticipationTypes,
-  insertIntoStudentPoints
+  insertIntoStudentPoints,
+  fetchEventsbyEnrollandSemester,
+  fetchEventsIDsbyEnroll,
+  fetchEventsByIds,
+  fetchEventsByEventIds
 };

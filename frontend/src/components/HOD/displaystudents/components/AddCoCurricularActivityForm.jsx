@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './AddCoCurricularActivityForm.css';
 
-const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId }) => {
+const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId, isEditing = false }) => {
     const [formData, setFormData] = useState({
         enrollmentNumber: '',
         semester: semesterId || '',
@@ -60,10 +62,34 @@ const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId }
             const result = await response.json();
             console.log('Activity submitted successfully:', result);
 
-            // Call the onSubmit callback if needed
-            onSubmit(activity, isEditing);
+            if (result.success) {
+                // Show success toast
+                toast.success(isEditing ? 'Activity updated successfully!' : 'Activity added successfully!', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true
+                });
+
+                // Call the onSubmit callback with the result data
+                if (onSubmit) {
+                    onSubmit(result.data);
+                }
+
+                // Close the form
+                if (onClose) {
+                    onClose();
+                }
+            }
         } catch (error) {
             console.error('Error submitting activity:', error);
+            // Show error toast
+            toast.error(isEditing ? 'Failed to update activity.' : 'Failed to add activity.', {
+                position: 'top-right',
+                autoClose: 3000
+            });
         }
     };
 
