@@ -1,30 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './ActivityForm.css';
 import './AddExtraCurricularActivityForm.css';
 
-const AddExtraCurricularActivityForm = ({ onClose, onSubmit, activity: initialActivity, isEditing = false }) => {
-  const [activity, setActivity] = useState(initialActivity || {
+const AddExtraCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId, isEditing = false }) => {
+  const [formData, setFormData] = useState({
     enrollmentNumber: '',
-    semesterId: '',
-    activityName: '',
-    achievementLevel: '',
-    date: '',
-    description: '',
-    certificateUrl: '',
-    score: ''
-
+    semester: semesterId || '',
+    eventName: '',
+    participationTypeId: ''
   });
+
+  const [activities, setActivities] = useState([]);
+  const [participationTypes, setParticipationTypes] = useState([]);
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/api/events/allExtraCurricularnames');
+        const data = await response.json();
+        if (data.success) {
+          setActivities(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+      }
+    };
+
+    const fetchParticipationTypes = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/api/events/allParticipationTypes');
+        const data = await response.json();
+        if (data.success) {
+          setParticipationTypes(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching participation types:', error);
+      }
+    };
+
+    fetchActivities();
+    fetchParticipationTypes();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5001/api/students/extracurricular', {
+      const response = await fetch('http://localhost:5001/api/events/insertIntoStudentPoints', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(activity),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
@@ -34,133 +62,116 @@ const AddExtraCurricularActivityForm = ({ onClose, onSubmit, activity: initialAc
       const result = await response.json();
       console.log('Activity submitted successfully:', result);
 
-      // Call the onSubmit callback if needed
-      onSubmit(activity, isEditing);
+      if (result.success) {
+        // First close the form to prevent navigation issues
+        if (onClose) {
+          onClose();
+        }
+
+        // Then show the success toast
+        toast.success(isEditing ? 'Activity updated successfully!' : 'Activity added successfully!', {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        });
+
+        // Finally call the onSubmit callback with the result data
+        if (onSubmit) {
+          onSubmit(result.data);
+        }
+      }
     } catch (error) {
       console.error('Error submitting activity:', error);
+      // Show error toast without closing the form
+      toast.error(isEditing ? 'Failed to update activity.' : 'Failed to add activity.', {
+        position: 'top-right',
+        autoClose: 3000
+      });
     }
   };
 
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setActivity(prev => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
   return (
-    <div className="activity-form-overlay-form-for-extra">
-      <div className="activity-form-for-extra">
-        <h3>{isEditing ? 'Edit Extra-Curricular Activity' : 'Add Extra-Curricular Activity'}</h3>
+    <div className="activity-form-overlay">
+      <div className="activity-form">
+        <h2>{activity ? 'Edit' : 'Add'} Extra-Curricular Activity</h2>
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Enrollment Number</label>
+            <input
+              type="text"
+              name="enrollmentNumber"
+              value={formData.enrollmentNumber}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <div className="form-fields-container-form-for-extra">
-            <div className="form-group">
-              <label htmlFor="enrollmentNumber">Enrollment Number:</label>
-              <input
-                type="text"
-                id="enrollmentNumber"
-                name="enrollmentNumber"
-                value={activity.enrollmentNumber}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label>Semester</label>
+            <input
+              type="text"
+              name="semester"
+              value={formData.semester}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-            <div className="form-group">
-              <label htmlFor="semesterId">Semester ID:</label>
-              <input
-                type="text"
-                id="semesterId"
-                name="semesterId"
-                value={activity.semesterId}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label>Event Name</label>
+            <select
+              name="eventName"
+              value={formData.eventName}
+              onChange={handleChange}
+              required
+              className="form-select"
+            >
+              <option value="">Select Event</option>
+              {activities.map((activity, index) => (
+                <option key={index} value={activity.eventName}>
+                  {activity.eventName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="form-group">
-              <label htmlFor="activityName">Activity Name:</label>
-              <input
-                type="text"
-                id="activityName"
-                name="activityName"
-                value={activity.activityName}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label>Participation Type</label>
+            <select
+              name="participationTypeId"
+              value={formData.participationTypeId}
+              onChange={handleChange}
+              required
+              className="form-select"
+            >
+              <option value="">Select Type</option>
+              {participationTypes.map((role, index) => (
+                <option key={index} value={role.types}>
+                  {role.types}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="form-group">
-              <label htmlFor="achievementLevel">Achievement Level:</label>
-              <input
-                type="text"
-                id="achievementLevel"
-                name="achievementLevel"
-                value={activity.achievementLevel}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="date">Date:</label>
-              <input
-                type="date"
-                id="date"
-                name="date"
-                value={activity.date}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group full-width">
-              <label htmlFor="description">Description:</label>
-              <textarea
-                id="description"
-                name="description"
-                value={activity.description}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="certificateUrl">Certificate URL:</label>
-              <input
-                type="url"
-                id="certificateUrl"
-                name="certificateUrl"
-                value={activity.certificateUrl}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="score">Score:</label>
-              <input
-                type="number"
-                id="score"
-                name="score"
-                value={activity.score}
-                onChange={handleChange}
-                min="0"
-                max="100"
-                required
-              />
-            </div>
-
-            <div className="form-actions full-width">
-              <button type="button" className="cancel-btn" onClick={onClose}>
-                Cancel
-              </button>
-              <button type="submit" className="submit-btn">
-                {isEditing ? 'Update' : 'Add'} Activity
-              </button>
-            </div>
+          <div className="form-buttons">
+            <button type="submit" className="submit-btn">
+              {activity ? 'Update' : 'Add'} Activity
+            </button>
+            <button type="button" className="cancel-btn" onClick={onClose}>
+              Cancel
+            </button>
           </div>
         </form>
       </div>

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Filter, Plus, Calendar, Trophy, FileText } from 'lucide-react';
+
+import React, { useEffect, useState } from 'react';
+import { Filter, Plus } from 'lucide-react';
 import './Activities.css';
+import './StudentActivityContainer.css';
 
 const ExtraCurricularActivities = ({
   studentEnrollment,
@@ -10,142 +12,183 @@ const ExtraCurricularActivities = ({
   setActivityFilter,
   setSelectedSemester,
   handleAddActivity,
-  handleEditActivity,
-  handleDeleteActivity,
-  filterActivitiesBySemester
+  calculateActivityPoints
 }) => {
   const [activities, setActivities] = useState([]);
-  const fetchAllActivities = async () => {
+
+  const fetchAllActivitiesidforstudent = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/students/extracurricular/getextra', {
+      console.log('Fetching activities for enrollment:', studentEnrollment);
+      const response = await fetch('http://localhost:5001/api/events/fetchEventsIDsbyEnroll', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ enrollmentNumber: studentEnrollment }),
+        body: JSON.stringify({
+          enrollmentNumber: studentEnrollment
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setActivities(data);
+        console.log('Received event IDs:', data);
+        if (data && data.length > 0) {
+          // Collect all event IDs from the response
+          const allEventIds = data
+            .map(item => item.eventId) // Get all eventId strings
+            .filter(id => id) // Remove any undefined or null values
+            .join(','); // Join them with commas
+
+          if (allEventIds) {
+            await fetchEventDetailsFromEventIds(allEventIds);
+          } else {
+            console.log('No event IDs found');
+            setActivities({ data: [] });
+          }
+        } else {
+          console.log('No event IDs found');
+          setActivities({ data: [] });
+        }
       } else {
         console.error('Failed to fetch all activities');
+        setActivities({ data: [] });
       }
     } catch (error) {
       console.error('Error fetching all activities:', error);
-    }//
+      setActivities({ data: [] });
+    }
   };
-  const fetchSemesterActivities = async () => {
+  const fetchEventDetailsFromEventIds = async (eventIds) => {
     try {
-      const response = await fetch('http://localhost:5001/api/students/extracurricular/getExtraWithSem', {
+      console.log('Fetching details for event IDs:', eventIds);
+      // If eventIds is already a string, use it directly, otherwise join the array
+      const eventIdsString = typeof eventIds === 'string' ? eventIds : eventIds.join(',');
+
+      const response = await fetch('http://localhost:5001/api/events/fetchEventsByEventIds', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventIds: eventIdsString,
+          eventType: 'extra-curricular'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Received event details:', data);
+        setActivities({ data: data.data || [] });
+      } else {
+        console.error('Failed to fetch event details');
+        setActivities({ data: [] });
+      }
+    } catch (error) {
+      console.error('Error fetching event details:', error);
+      setActivities({ data: [] });
+    }
+  };
+  const fetchAllActivitiesWithSemesterAndEnrollment = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           enrollmentNumber: studentEnrollment,
-          semesterId: parseInt(selectedSemester, 10),
+          semester: parseInt(selectedSemester)
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (data.message === 'No activities found for the given enrollment number and semester') {
-          setActivities([]);
+        if (data && data[0] && data[0].eventId) {
+          await fetchEventDetailsFromEventIds(data[0].eventId);
         } else {
-          setActivities(data);
+          setActivities({ data: [] });
         }
       } else {
-        console.error('Failed to fetch semester activities');
+        console.error('Failed to fetch all activities');
+        setActivities({ data: [] });
       }
     } catch (error) {
-      console.error('Error fetching semester activities:', error);
+      console.error('Error fetching all activities:', error);
+      setActivities({ data: [] });
     }
   };
 
+
   useEffect(() => {
     if (activityFilter === 'all') {
-      fetchAllActivities();
+      fetchAllActivitiesidforstudent();
     } else if (activityFilter === 'semester') {
-      fetchSemesterActivities();
+      fetchAllActivitiesWithSemesterAndEnrollment();
     }
   }, [studentEnrollment, selectedSemester, activityFilter]);
 
-
   return (
     <div className="activities-section">
-      <div className="activities-header"></div>
-      <h3 className="section-title">Extra-Curricular Activities of {studentEnrollment}</h3>
-      <div className="activities-actions">
-        <div className="filter-container">
-          <button
-            className={`filter-button ${activityFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setActivityFilter('all')}
-          >
-            <Filter size={14} /> All Semesters
-          </button>
-          {[...Array(8)].map((_, i) => (
+      <div className="activities-header">
+        <h3 className="section-title">Extra-Curricular Activities of {studentEnrollment}</h3>
+        <div className="activities-actions">
+          <div className="filter-container">
             <button
-              key={i + 1}
-              className={`filter-button ${activityFilter === 'semester' && selectedSemester === i + 1 ? 'active' : ''
-                }`}
-              onClick={() => {
-                setSelectedSemester(i + 1);
-                setActivityFilter('semester');
-              }}
-              disabled={i + 1 > student.semester}
+              className={`filter-button ${activityFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setActivityFilter('all')}
             >
-              <Filter size={14} /> Sem {i + 1}
+              <Filter size={14} /> All Semesters
             </button>
-          ))}
-          {/* shifter from here */}
+            {[...Array(8)].map((_, i) => (
+              <button
+                key={i + 1}
+                className={`filter-button ${activityFilter === 'semester' && selectedSemester === i + 1 ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedSemester(i + 1);
+                  setActivityFilter('semester');
+                }}
+                disabled={i + 1 > student.semester}
+              >
+                <Filter size={14} /> Sem {i + 1}
+              </button>
+            ))}
+          </div>
+          <button className="add-activity-button" onClick={() => handleAddActivity('co')}>
+            <Plus size={14} /> Add Activity
+          </button>
         </div>
-        <button className="add-activity-button" onClick={() => handleAddActivity('extra')}>
-          <Plus size={14} /> Add Activity
-        </button>
       </div>
 
       <div className="activities-summary">
         <div className="summary-card">
           <h4>Total Activities</h4>
-          <div className="summary-value">{student.extraCurricular ? student.extraCurricular.length : 0}</div>
+          <div className="summary-value">{activities?.data ? activities.data.length : 0}</div>
         </div>
-        <div className="summary-card">
-          <h4>Current Semester</h4>
-          <div className="summary-value">
-            {(student.coCurricular || []).filter(a => a && a.semester === selectedSemester).length}
-          </div>
-        </div>
-
         <div className="summary-card">
           <h4>Total Points</h4>
-          {/* <div className="summary-value">{calculateActivityPoints(student.coCurricular || [])}</div> */}
-        </div>
-        <div className="summary-card">
-          <h4>Semester Points</h4>
           <div className="summary-value">
-            {/* {calculateActivityPoints((student.coCurricular || []).filter(a => a && a.semester === selectedSemester))} */}
+            {activities?.data ? activities.data.reduce((sum, activity) => sum + activity.points, 0) : 0}
           </div>
         </div>
       </div>
 
-      <h3>Extra-Curricular Activities</h3>
-      <div className="activities-list-co-curricular">
-        {activities.length > 0 ? (
-          activities.map(activity => (
-            <div key={`${activity.id}-${activity.date}`} className="extra-activities-activity-card">
-              <h4>{activity.activityName}</h4>
-              <p><strong>Achievement:</strong> {activity.achievementLevel}</p>
-              <p><strong>Date:</strong> {new Date(activity.date).toLocaleDateString('en-IN')}</p>
-              <p><strong>Description:</strong> {activity.description}</p>
-              <p><strong>Score:</strong> {activity.score}</p>
-              <a href={activity.certificateUrl} target="_blank" rel="noopener noreferrer">
-                View Certificate
-              </a>
+      <div className="activities-list">
+        {activities?.data && activities.data.length > 0 ? (
+          activities.data.map((activity) => (
+            <div key={activity.eventId} className="activity-card">
+              <div className="activity-header">
+                <h4>{activity.eventName}</h4>
+                <span className="points">{activity.points} points</span>
+              </div>
+              <div className="activity-details">
+                <p><strong>Category:</strong> {activity.eventCategory}</p>
+                <p><strong>Date:</strong> {new Date(activity.date).toLocaleDateString()}</p>
+                <p><strong>Duration:</strong> {activity.duration} {activity.duration === 1 ? 'day' : 'days'}</p>
+              </div>
             </div>
           ))
         ) : (
-          <p style={{ textAlign: 'center', color: '#999' }}>No activities found for this filter.</p>
+          <p className="no-activities">No activities found</p>
         )}
       </div>
     </div>
