@@ -11,11 +11,11 @@ const subRoutes = require('./routes/sub_routes');
 // const studentCoCurricularRoutes = require('./routes/student_cocurricular_routes');
 // const studentExtracurricularRoutes = require('./routes/student_extracurricular_routes');
 const batchRoutes = require("./routes/batch_routes");
-const facultysideRoutes = require("./routes/facultyside_router");
 const gettedmarksController = require("./controller/gettedMarksController");
 const students_points_routes = require("./routes/students_points_routes");
 const semesterRoutes = require("./routes/semester_routes");
 const studentEventRoutes = require("./routes/student_event_routes");
+const facultysideRoutes = require("./routes/facultyside_router");
 const app = express();
 
 // Enable CORS
@@ -41,7 +41,7 @@ app.use('/api/Events', students_points_routes);
 app.use('/api/subjects', subRoutes);
 app.use('/api/semesters', semesterRoutes);
 app.use('/api/events', studentEventRoutes);
-
+app.use('/api/facultyside', facultysideRoutes);
 // Marks routes
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
 app.get("/api/marks/students1/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject1);

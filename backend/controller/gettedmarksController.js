@@ -2,7 +2,7 @@ const Gettedmarks = require("../models/gettedmarks");
 const Student = require("../models/students");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 const Batch = require("../models/batch");
-
+const AssignSubject = require("../models/assignSubject");
 
 exports.getStudentMarksByBatchAndSubject = async (req, res) => {
     try {
@@ -103,6 +103,58 @@ exports.updateStudentMarks = async (req, res) => {
 
     } catch (error) {
         console.error("Error updating student marks:", error);
+        res.status(500).json({ error: "Internal Server Error", details: error.message });
+    }
+};
+
+exports.getSubjectNamefromCode = async (req, res) => {
+    try {
+        const { subjectCode } = req.params;
+        const subject = await UniqueSubDegree.findOne({ where: { sub_code: subjectCode } });
+        if (!subject) {
+            return res.status(404).json({ message: "Subject not found" });
+        }
+        res.status(200).json({ subjectName: subject.sub_name });
+    } catch (error) {
+        console.error("Error fetching subject name:", error);
+        res.status(500).json({ message: "Error fetching subject name", error: error.stack });
+    }
+};
+
+exports.getBatchIdfromName = async (req, res) => {
+    try {
+        const { batchName } = req.params;
+        const batch = await Batch.findOne({ where: { batchName } });
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found" });
+        }
+        res.status(200).json({ batchId: batch.id });
+    } catch (error) {
+        console.error("Error fetching batch ID:", error);
+        res.status(500).json({ message: "Error fetching batch ID", error: error.stack });
+    }
+};
+exports.getSubjectByBatchAndSemester = async (req, res) => {
+    try {
+        const { batchId, semesterId, facultyName } = req.params;
+
+        if (!facultyName) {
+            return res.status(400).json({ error: "Faculty name is required" });
+        }
+
+        const assignedSubjects = await AssignSubject.findAll({
+            where: {
+                batchId,
+                semesterId,
+                facultyName
+            },
+            attributes: ['subjectCode'], // fetch only subjectCode
+            order: [['facultyName', 'ASC']] // optional if needed
+        });
+
+        res.status(200).json(assignedSubjects);
+    } catch (error) {
+        console.error("Error fetching assigned subjects:", error);
         res.status(500).json({ error: "Internal Server Error", details: error.message });
     }
 };
