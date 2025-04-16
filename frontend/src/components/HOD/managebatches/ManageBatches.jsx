@@ -125,6 +125,7 @@ const ManageBatches = () => {
                 >
                     Add Semester
                 </button>
+                <button>Update Semester</button>
             </div>
 
             <div className="tab-container">

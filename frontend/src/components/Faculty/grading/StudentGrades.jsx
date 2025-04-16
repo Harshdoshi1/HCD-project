@@ -253,11 +253,11 @@ const StudentGrades = () => {
                         }
                     }
                 );
-                
+
                 if (!batchIdResponse.ok) throw new Error("Failed to fetch batch ID");
                 const batchIdData = await batchIdResponse.json();
                 const batchId = batchIdData.batchId;
-                
+
                 console.log('Fetching subjects with params:', {
                     batchId: batchId,
                     semesterId: selectedSemester.semesterNumber,
@@ -268,7 +268,7 @@ const StudentGrades = () => {
                 const response = await fetch(
                     `http://localhost:5001/api/facultyside/marks/getsubjectByBatchAndSemester/${batchId}/${selectedSemester.semesterNumber}/${faculty.name}`
                 );
-                
+
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 console.log('Faculty Subject API Response:', data);
@@ -286,7 +286,7 @@ const StudentGrades = () => {
                                 }
                             }
                         );
-                        
+
                         if (subjectNameResponse.ok) {
                             const subjectNameData = await subjectNameResponse.json();
                             return {
@@ -427,14 +427,14 @@ const StudentGrades = () => {
     const handleSubjectChange = (e) => {
         console.log('Selected subject value:', e.target.value); // Debug log
         console.log('Available subjects:', subjects); // Debug log
-        
+
         // Find the subject by subCode
         const subject = subjects.find(s => s.subCode === e.target.value);
         console.log('Found subject:', subject); // Debug log
-        
+
         if (subject) {
             setSelectedSubject(subject);
-            
+
             // Get batch ID and then fetch student data
             const getBatchIdAndFetchStudents = async () => {
                 try {
@@ -448,11 +448,11 @@ const StudentGrades = () => {
                             }
                         }
                     );
-                    
+
                     if (!batchIdResponse.ok) throw new Error("Failed to fetch batch ID");
                     const batchIdData = await batchIdResponse.json();
                     const batchId = batchIdData.batchId;
-                    
+
                     // Fetch student data with batch ID
                     fetchStudentData(batchId, subject.subCode);
                 } catch (error) {
@@ -460,7 +460,7 @@ const StudentGrades = () => {
                     setError("Failed to get batch ID: " + error.message);
                 }
             };
-            
+
             getBatchIdAndFetchStudents();
         } else {
             console.error('Subject not found for code:', e.target.value);
