@@ -57,7 +57,7 @@ const getAllEventnames = async (req, res) => {
 
 const insertFetchedStudents = async (req, res) => {
   try {
-    const { eventName, participants: jsonData } = req.body;
+    const { eventName, participants } = req.body;
     console.log('Request body:', req.body);
 
     // Input validation
@@ -68,7 +68,7 @@ const insertFetchedStudents = async (req, res) => {
       });
     }
 
-    if (!Array.isArray(jsonData) || jsonData.length === 0) {
+    if (!Array.isArray(participants) || participants.length === 0) {
       return res.status(400).json({
         success: false,
         message: 'Participants data must be a non-empty array'
@@ -76,8 +76,8 @@ const insertFetchedStudents = async (req, res) => {
     }
 
     console.log('Processing event:', eventName);
-    console.log('Number of participants:', jsonData.length);
-    console.log('Sample participants:', jsonData.slice(0, 3));
+    console.log('Number of participants:', participants.length);
+    console.log('Sample participants:', participants.slice(0, 3));
 
     // Fetch event details from EventMaster table
     const event = await EventMaster.findOne({
@@ -95,23 +95,22 @@ const insertFetchedStudents = async (req, res) => {
 
     const { eventId, eventType, points } = event;
 
-    // const result = [];
-
     const processedStudents = [];
     const errors = [];
 
-    for (const enrollment of jsonData) {
+    for (const participant of participants) {
       try {
-        console.log('Processing enrollment:', enrollment);
+        const { enrollmentNumber, participationType } = participant;
+        console.log('Processing enrollment:', enrollmentNumber, 'Type:', participationType);
 
         // Find the student's batch using their enrollment number
         const student = await Student.findOne({
-          where: { enrollmentNumber: enrollment }
+          where: { enrollmentNumber }
         });
 
         if (!student) {
-          console.warn(`Student with enrollment number ${enrollment} not found.`);
-          errors.push({ enrollmentNumber: enrollment, error: 'Student not found' });
+          console.warn(`Student with enrollment number ${enrollmentNumber} not found.`);
+          errors.push({ enrollmentNumber, error: 'Student not found' });
           continue;
         }
 
@@ -125,7 +124,7 @@ const insertFetchedStudents = async (req, res) => {
 
         if (!batch) {
           console.warn(`Batch with ID ${batchId} not found.`);
-          errors.push({ enrollmentNumber: enrollment, error: 'Batch not found' });
+          errors.push({ enrollmentNumber, error: 'Batch not found' });
           continue;
         }
 
@@ -133,16 +132,17 @@ const insertFetchedStudents = async (req, res) => {
         console.log('Current semester:', currentSemester);
 
         let studentPoints = await StudentPoints.findOne({
-          where: { enrollmentNumber: enrollment, semester: currentSemester }
+          where: { enrollmentNumber, semester: currentSemester }
         });
 
         if (!studentPoints) {
           studentPoints = await StudentPoints.create({
-            enrollmentNumber: enrollment,
+            enrollmentNumber,
             semester: currentSemester,
             eventId: eventId.toString(),
             totalCocurricular: eventType === 'co-curricular' ? points : 0,
-            totalExtracurricular: eventType === 'extra-curricular' ? points : 0
+            totalExtracurricular: eventType === 'extra-curricular' ? points : 0,
+            participationTypeId: participationType
           });
           console.log('Created new student points record');
         } else {
@@ -152,6 +152,7 @@ const insertFetchedStudents = async (req, res) => {
           }
 
           studentPoints.eventId = existingEventIds.join(',');
+          studentPoints.participationTypeId = participationType;
 
           if (eventType === 'co-curricular') {
             studentPoints.totalCocurricular += points;
@@ -164,16 +165,17 @@ const insertFetchedStudents = async (req, res) => {
         }
 
         processedStudents.push({
-          enrollmentNumber: enrollment,
+          enrollmentNumber,
           currentSemester,
+          participationType,
           points: {
             cocurricular: studentPoints.totalCocurricular,
             extracurricular: studentPoints.totalExtracurricular
           }
         });
       } catch (error) {
-        console.error(`Error processing enrollment ${enrollment}:`, error);
-        errors.push({ enrollmentNumber: enrollment, error: error.message });
+        console.error(`Error processing enrollment ${participant.enrollmentNumber}:`, error);
+        errors.push({ enrollmentNumber: participant.enrollmentNumber, error: error.message });
       }
     }
 
@@ -185,7 +187,7 @@ const insertFetchedStudents = async (req, res) => {
         processed: processedStudents,
         errors: errors,
         summary: {
-          total: jsonData.length,
+          total: participants.length,
           successful: processedStudents.length,
           failed: errors.length
         }
