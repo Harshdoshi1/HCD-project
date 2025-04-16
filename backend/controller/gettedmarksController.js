@@ -9,13 +9,6 @@ exports.getStudentMarksByBatchAndSubject = async (req, res) => {
         const { batchId } = req.params;
         console.log("Received check:", batchId);
 
-        // const batch = await Batch.findOne({ where: { id: batchId } });
-        // if (!batch) {
-        //     return res.status(404).json({ message: "Batch not found" });
-        // }
-
-        // console.log('Batch:', batch);
-
         const students = await Student.findAll({ where: { batchId: batchId } });
 
         if (!students || students.length === 0) {
@@ -30,7 +23,25 @@ exports.getStudentMarksByBatchAndSubject = async (req, res) => {
         res.status(500).json({ message: "Error fetching student marks", error: error.stack });
     }
 };
+exports.getStudentsByBatchAndSemester = async (req, res) => {
+    try {
+        const { batchId, semesterId } = req.params;
+        console.log("Received check:", batchId, semesterId);
 
+        const students = await Student.findAll({ where: { batchId: batchId, currnetsemester: semesterId } });
+
+        if (!students || students.length === 0) {
+            return res.status(404).json({ message: "No students found for this batch and semester" });
+        }
+
+        console.log('Students:', students);
+
+        res.status(200).json(students.map(student => student.toJSON()));
+    } catch (error) {
+        console.error("Error fetching students:", error);
+        res.status(500).json({ message: "Error fetching students", error: error.stack });
+    }
+};
 exports.getStudentMarksByBatchAndSubject1 = async (req, res) => {
     try {
         const { batchId } = req.params;
