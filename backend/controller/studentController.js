@@ -160,4 +160,65 @@ const deleteStudent = async (req, res) => {
     }
 };
 
-module.exports = { deleteStudent, updateStudent, getStudentById, getAllStudents, createStudents, createStudent };
+// Update multiple students' semesters
+const updateStudentSemesters = async (req, res) => {
+    try {
+        const { studentIds, newSemester } = req.body;
+        
+        if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+            return res.status(400).json({ message: 'No student IDs provided' });
+        }
+        
+        if (newSemester === undefined || isNaN(parseInt(newSemester))) {
+            return res.status(400).json({ message: 'Invalid semester value' });
+        }
+        
+        // Update all selected students
+        const updatePromises = studentIds.map(id => 
+            Student.update(
+                { currnetsemester: parseInt(newSemester) },
+                { where: { id } }
+            )
+        );
+        
+        await Promise.all(updatePromises);
+        
+        res.status(200).json({ message: 'Student semesters updated successfully' });
+    } catch (error) {
+        console.error('Error updating student semesters:', error);
+        res.status(500).json({ message: 'Failed to update student semesters', error: error.message });
+    }
+};
+
+// Get students by batch ID
+const getStudentsByBatch = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        
+        if (!batchId) {
+            return res.status(400).json({ message: 'Batch ID is required' });
+        }
+        
+        const students = await Student.findAll({
+            where: { batchId: parseInt(batchId) },
+            attributes: ['id', 'name', 'enrollmentNumber', 'currnetsemester'],
+            order: [['name', 'ASC']]
+        });
+        
+        res.status(200).json(students);
+    } catch (error) {
+        console.error('Error fetching students by batch:', error);
+        res.status(500).json({ message: 'Failed to fetch students', error: error.message });
+    }
+};
+
+module.exports = { 
+    deleteStudent, 
+    updateStudent, 
+    getStudentById, 
+    getAllStudents, 
+    createStudents, 
+    createStudent,
+    updateStudentSemesters,
+    getStudentsByBatch
+};

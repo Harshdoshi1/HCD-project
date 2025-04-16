@@ -327,19 +327,38 @@ const StudentGrades = () => {
 
     // Fetch students when subject changes
     useEffect(() => {
-        if (!selectedBatch || !selectedSubject) return;
+        if (!selectedBatch || !selectedSubject || !selectedSemester) return;
 
         const fetchStudents = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:5001/api/marks/students1/${selectedBatch.batchName}`);
+                // Get batch ID first
+                const batchIdResponse = await fetch(
+                    `http://localhost:5001/api/facultyside/marks/getBatchId/${selectedBatch.batchName}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                
+                if (!batchIdResponse.ok) throw new Error("Failed to fetch batch ID");
+                const batchIdData = await batchIdResponse.json();
+                const batchId = batchIdData.batchId;
+                
+                console.log('Fetching students for batch ID:', batchId, 'and semester:', selectedSemester.semesterNumber);
+                
+                // Use the new API endpoint that filters by both batch and semester
+                const response = await fetch(`http://localhost:5001/api/marks/students/${batchId}/${selectedSemester.semesterNumber}`);
                 if (!response.ok) throw new Error("Failed to fetch students");
                 const data = await response.json();
                 console.log('Students API Response:', data);
+                
                 const studentsWithGrades = data.map(student => ({
                     id: student.id,
                     name: student.name,
-                    enrollmentNo: student.enrollmentNo,
+                    enrollmentNo: student.enrollmentNumber,
                     grades: student.Gettedmarks?.[0] || {
                         ESE: 0,
                         TW: 0,
@@ -360,14 +379,15 @@ const StudentGrades = () => {
                 setRatings(initialRatings);
             } catch (error) {
                 console.error("Error fetching students:", error);
-                setError("Failed to fetch students");
+                setError("Failed to fetch students: " + error.message);
+                setStudentsData([]);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchStudents();
-    }, [selectedBatch, selectedSubject]);
+    }, [selectedBatch, selectedSemester, selectedSubject]);
 
     const handleSubmitResponse = async (studentId) => {
         if (!selectedSubject) {

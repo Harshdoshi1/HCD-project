@@ -35,7 +35,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${filters.batch}`);
                 if (!response.ok) throw new Error("Failed to fetch semesters");
                 const data = await response.json();
-                console.log("dasada", data);  
+                console.log("dasada", data);
                 setSemesters(data);
             } catch (error) {
                 console.error("Error fetching semesters:", error);
@@ -107,7 +107,8 @@ const SubjectList = ({ onSelectSubject }) => {
                             <div style={{ marginTop: '10px' }} className="subject-code">{subject.sub_code}</div>
                             <div className="subject-name">{subject.sub_name}</div>
                             <div className="subject-details">
-                                <span>{filters.program}</span>
+                                <span>{filters.program}</span><br />
+                                <span>{subject.subjectName}</span><br />
                                 <span>{filters.semester !== 'all' ? `Semester ${filters.semester}` : 'All Semesters'}</span>
                             </div>
                         </div>
