@@ -30,6 +30,10 @@
     transition: all 0.2s ease;
 }
 
+.last-button {
+    text-align: end;
+}
+
 .cancel-button:hover {
     background-color: var(--light-gray);
     border-color: var(--primary-blue);
