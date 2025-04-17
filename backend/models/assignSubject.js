@@ -24,10 +24,6 @@ const AssignSubject = sequelize.define(
         semesterId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: {
-                model: Semester,
-                key: "id",
-            },
         },
         facultyName: {
             type: DataTypes.STRING,
@@ -43,7 +39,7 @@ const AssignSubject = sequelize.define(
 
 // Relationships
 AssignSubject.belongsTo(Batch, { foreignKey: "batchId" });
-AssignSubject.belongsTo(Semester, { foreignKey: "semesterId" });
+// AssignSubject.belongsTo(Semester, { foreignKey: "semesterId" });
 
 // subjectCode can belong to either UniqueSubDegree or UniqueSubDiploma
 AssignSubject.belongsTo(UniqueSubDegree, { foreignKey: "subjectCode", targetKey: "sub_code", constraints: false });

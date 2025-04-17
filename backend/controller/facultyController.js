@@ -15,7 +15,7 @@ const createAssignSubject = async (req, res) => {
         const semester = req.body.semester.value;
         const subject = req.body.subject.value;
         const faculty = req.body.faculty.label;
-
+        console.log("assigned received: ",batch,"--",semester,"--",subject,"--",faculty)
         // Find Batch ID & Course Type (Degree/Diploma)
         const batchRecord = await Batch.findOne({ where: { batchName: batch } });
         if (!batchRecord) return res.status(400).json({ error: "Batch not found" });
@@ -42,7 +42,8 @@ const createAssignSubject = async (req, res) => {
         // Assign Subject
         const assignSubject = await AssignSubject.create({
             batchId: batchRecord.id,
-            semesterId: semesterRecord.id,
+            // semesterId: semesterRecord.id,
+            semesterId:semester,
             facultyName: faculty,
             subjectCode: subjectRecord.sub_code,
         });
@@ -112,23 +113,79 @@ const deleteAssignSubject = async (req, res) => {
 };
 
 // Get subjects assigned to a specific faculty
+// const getSubjectsByFaculty = async (req, res) => {
+//     try {
+//         const { facultyId } = req.params;
+//         console.log("getted facultyId", facultyId);
+
+//         const facultyName = await User.findOne({ where: { id: facultyId } });
+//         console.log("getted facultyName", facultyName.name);
+//         const assignSubjects = await AssignSubject.findAll({
+            
+//             where: { facultyName: facultyName.name },
+//             include: [
+//                 {
+//                     model: Batch,
+//                     attributes: ['batchName', 'courseType']
+//                 }
+//                 ,
+//                 // {
+//                 //     model: Semester,
+//                 //     attributes: ['semesterNumber']
+//                 // },
+//                 {
+//                     model: UniqueSubDegree,
+//                     attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level'],
+//                     required: false
+//                 }
+//                 ,
+//                 {
+//                     model: UniqueSubDiploma,
+//                     attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level'],
+//                     required: false
+//                 }
+//             ]
+//         });
+//         console.log("getted assignSubjects", assignSubjects);
+//         // Transform the data to match the frontend's expected format
+//         const formattedSubjects = assignSubjects.map(assignSubject => {
+//             const subject = assignSubject.UniqueSubDegree || assignSubject.UniqueSubDiploma;
+//             return {
+//                 id: assignSubject.id,
+//                 name: subject.sub_name,
+//                 code: subject.sub_code,
+//                 credits: subject.sub_credit,
+//                 type: subject.sub_level,
+//                 description: subject.sub_name,
+//                 department: assignSubject.Batch.courseType,
+//                 semester: `${assignSubject.Semester.semesterNumber} Semester`,
+//                 batch: assignSubject.Batch.batchName
+//             };
+//         });
+
+//         res.status(200).json(formattedSubjects);
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// };
+// Get subjects assigned to a specific faculty
 const getSubjectsByFaculty = async (req, res) => {
     try {
         const { facultyId } = req.params;
-        console.log("getted facultyId", facultyId);
+        console.log("Requested facultyId:", facultyId);
 
-        const facultyName = await User.findOne({ where: { id: facultyId } });
-        console.log("getted facultyName", facultyName.name);
+        // Find faculty name using ID
+        const faculty = await User.findOne({ where: { id: facultyId } });
+        if (!faculty) {
+            return res.status(404).json({ error: 'Faculty not found' });
+        }
+
         const assignSubjects = await AssignSubject.findAll({
-            where: { facultyName: facultyName.name },
+            where: { facultyName: faculty.name },  // Match faculty name in AssignSubject
             include: [
                 {
                     model: Batch,
                     attributes: ['batchName', 'courseType']
-                },
-                {
-                    model: Semester,
-                    attributes: ['semesterNumber']
                 },
                 {
                     model: UniqueSubDegree,
@@ -142,25 +199,28 @@ const getSubjectsByFaculty = async (req, res) => {
                 }
             ]
         });
-        console.log("getted assignSubjects", assignSubjects);
-        // Transform the data to match the frontend's expected format
+
+        console.log("Fetched assignSubjects:", assignSubjects.length);
+
+        // Format results
         const formattedSubjects = assignSubjects.map(assignSubject => {
             const subject = assignSubject.UniqueSubDegree || assignSubject.UniqueSubDiploma;
             return {
                 id: assignSubject.id,
-                name: subject.sub_name,
-                code: subject.sub_code,
-                credits: subject.sub_credit,
-                type: subject.sub_level,
-                description: subject.sub_name,
+                name: subject?.sub_name || 'N/A',
+                code: subject?.sub_code || 'N/A',
+                credits: subject?.sub_credit || 'N/A',
+                type: subject?.sub_level || 'N/A',
+                description: subject?.sub_name || 'N/A',
                 department: assignSubject.Batch.courseType,
-                semester: `${assignSubject.Semester.semesterNumber} Semester`,
-                batch: assignSubject.Batch.batchName
+                batch: assignSubject.Batch.batchName,
+                semesterId: assignSubject.semesterId  // added here
             };
         });
 
         res.status(200).json(formattedSubjects);
     } catch (error) {
+        console.error("Error fetching subjects:", error);
         res.status(500).json({ error: error.message });
     }
 };
