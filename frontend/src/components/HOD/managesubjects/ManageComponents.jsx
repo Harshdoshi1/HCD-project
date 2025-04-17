@@ -53,21 +53,28 @@ const ManageComponents = ({ selectedSubject }) => {
         }
 
         // Prepare the data to be sent to the API
-        const componentsData = {};
+        const componentsWeightage = [];
+        const componentsMarks = [];
+
         Object.entries(weightages).forEach(([component, data]) => {
             if (data.enabled) {
-                componentsData[component] = {
-                    enabled: data.enabled,
-                    weightage: data.weightage,
-                    totalMarks: data.totalMarks
-                };
+                componentsWeightage.push({
+                    name: component,
+                    weightage: data.weightage
+                });
+                componentsMarks.push({
+                    name: component,
+                    value: data.totalMarks
+                });
             }
         });
 
         try {
             console.log('Sending data:', {
-                ...newSubject,
-                components: componentsData
+                subject: newSubject.code,
+                credits: Number(newSubject.credits),
+                componentsWeightage,
+                componentsMarks
             });
 
             // Call the new API endpoint to add subject with components
@@ -75,11 +82,10 @@ const ManageComponents = ({ selectedSubject }) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    code: newSubject.code,
-                    name: newSubject.name,
-                    credits: newSubject.credits,
-                    type: newSubject.type,
-                    components: componentsData
+                    subject: newSubject.code,
+                    credits: Number(newSubject.credits),
+                    componentsWeightage,
+                    componentsMarks
                 })
             });
 
@@ -125,13 +131,13 @@ const ManageComponents = ({ selectedSubject }) => {
                         onChange={(e) => handleSubjectChange('code', e.target.value)}
                         className="subject-input"
                     />
-                    <input
+                    {/* <input
                         type="text"
                         placeholder="Subject Name"
                         value={newSubject.name}
                         onChange={(e) => handleSubjectChange('name', e.target.value)}
                         className="subject-input"
-                    />
+                    /> */}
                     <input
                         type="number"
                         placeholder="Credits"
