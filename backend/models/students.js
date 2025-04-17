@@ -24,6 +24,10 @@ const Student = sequelize.define('Student', {
     enrollmentNumber: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    currnetsemester:{
+        type: DataTypes.INTEGER,
+        allowNull: false
     }
 }, {
     tableName: 'Students',

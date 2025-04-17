@@ -173,7 +173,6 @@ const AssignSubject = () => {
 
     // Handle filters for selected subjects section
     const handleAssignFiltersChange = (e) => {
-        alert("iuaerbiqerubiqrbirbyr");
         const { name, value } = e.target;
         const filterName = name.replace("-to-assign", "");
 

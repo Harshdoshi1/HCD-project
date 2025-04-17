@@ -1,17 +1,89 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 const StudentTable = ({
-  students,
   onViewDetails,
   searchQuery,
   setSearchQuery,
   sortConfig,
   onSort
 }) => {
+  const [studentData, setStudentData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/api/students/getAllStudents');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setStudentData(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return '↕';
     return sortConfig.direction === 'asc' ? '↑' : '↓';
   };
+
+  // Always declare the useMemo hook, regardless of conditions
+  const filteredStudents = useMemo(() => {
+    return studentData.filter(student =>
+      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.enrollmentNumber.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [studentData, searchQuery]);
+
+  // Always declare sortedStudents with useMemo, regardless of conditions
+  const sortedStudents = useMemo(() => {
+    if (!sortConfig.key) {
+      return filteredStudents;
+    }
+    
+    return [...filteredStudents].sort((a, b) => {
+      let aValue, bValue;
+      if (sortConfig.key === 'name') {
+        aValue = a.name.toLowerCase();
+        bValue = b.name.toLowerCase();
+      } else if (sortConfig.key === 'enrollmentNumber') {
+        aValue = a.enrollmentNumber;
+        bValue = b.enrollmentNumber;
+      } else if (sortConfig.key === 'totalScore') {
+        aValue = a.Batch.currentSemester;
+        bValue = b.Batch.currentSemester;
+      } else if (sortConfig.key === 'ranking') {
+        aValue = parseInt(a.id, 10);
+        bValue = parseInt(b.id, 10);
+      } else {
+        return 0;
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredStudents, sortConfig]);
+
+  if (loading) {
+    return <div className="student-table-section">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="student-table-section">Error: {error}</div>;
+  }
 
   return (
     <div className="student-table-section">
@@ -29,7 +101,7 @@ const StudentTable = ({
         </div>
       </div>
 
-      {students.length === 0 ? (
+      {sortedStudents.length === 0 ? (
         <div className="no-results">
           <p>No students found. Try adjusting your filters or search query.</p>
         </div>
@@ -54,24 +126,24 @@ const StudentTable = ({
                   onClick={() => onSort('totalScore')}
                   data-sort={sortConfig.key === 'totalScore' ? sortConfig.direction : null}
                 >
-                  Total Score {getSortIcon('totalScore')}
+                  Current Semester {getSortIcon('totalScore')}
                 </th>
                 <th
                   onClick={() => onSort('ranking')}
                   data-sort={sortConfig.key === 'ranking' ? sortConfig.direction : null}
                 >
-                  Ranking {getSortIcon('ranking')}
+                  ID {getSortIcon('ranking')}
                 </th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {students.map((student, index) => (
+              {sortedStudents.map((student, index) => (
                 <tr key={`${student.id}-${index}`}>
                   <td>{student.name}</td>
                   <td>{student.enrollmentNumber}</td>
-                  <td>{student.totalScore}%</td>
-                  <td>{student.ranking}</td>
+                  <td>{student.Batch.currentSemester}</td>
+                  <td>{student.id}</td>
                   <td>
                     <button
                       className="view-details-btn"

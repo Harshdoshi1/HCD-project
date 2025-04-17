@@ -3,16 +3,17 @@ const router = express.Router();
 const {
     getStudentMarksByBatchAndSubject,
     updateStudentMarks,
-    // getStudentMarksByBatchAndSubjectf
+    getSubjectByBatchAndSemester,
+    getBatchIdfromName,
+    getSubjectNamefromCode
+
 } = require("../controller/gettedMarksController");
 
-
-// router.get('/api/marks/students/:batchId', getStudentMarksByBatchAndSubject);
-// router.post('/api/marks/update/:studentId/:subjectId', updateStudentMarks);
+router.post('/marks/getBatchId/:batchName', getBatchIdfromName);
+router.post('/marks/getSubjectName/:subjectCode', getSubjectNamefromCode);
 
 router.get('/marks/students/:batchName', getStudentMarksByBatchAndSubject);
 router.post('/marks/update/:studentId/:subjectId', updateStudentMarks);
-// router.get('marks/studentss/:batchId', getStudentMarksByBatchAndSubjectf)
 
-
+router.get('/marks/getsubjectByBatchAndSemester/:batchId/:semesterId/:facultyName', getSubjectByBatchAndSemester);
 module.exports = router;
