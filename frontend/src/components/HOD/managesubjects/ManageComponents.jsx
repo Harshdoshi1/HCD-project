@@ -47,11 +47,6 @@ const ManageComponents = ({ selectedSubject }) => {
     };
 
     const handleSave = async () => {
-        if (totalWeightage !== 100) {
-            alert('Total weightage must equal 100%');
-            return;
-        }
-
         if (!newSubject.code || !newSubject.name || !newSubject.credits) {
             alert('Please fill in all subject details');
             return;
@@ -208,16 +203,18 @@ const ManageComponents = ({ selectedSubject }) => {
                     </tbody>
                 </table>
                 <div className="weightage-summary">
-                    <p className={totalWeightage === 100 ? "weightage-ok" : "weightage-error"}>
-                        Total Weightage: {totalWeightage}% {totalWeightage !== 100 && "(Must be 100%)"}
+                    <p>
+                        Total Weightage: {totalWeightage}%
                     </p>
                 </div>
-                <button
-                    className="save-weightage-btn"
-                    onClick={handleSave}
-                >
-                    Add Subject
-                </button>
+                <div className="last-button">
+                    <button
+                        className="save-weightage-btn"
+                        onClick={handleSave}
+                    >
+                        Add Subject
+                    </button>
+                </div>
             </div>
         </div>
     );

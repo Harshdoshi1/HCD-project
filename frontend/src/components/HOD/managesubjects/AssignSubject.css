@@ -31,7 +31,7 @@
     flex-direction: row;
     justify-content: end;
     margin-top: -11px;
-    width: 20%;
+    width: 100%;
 }
 
 .filter-button {
@@ -128,10 +128,15 @@
 }
 
 .professional-filter {
-    padding: 5px;
+    padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: white;
+    min-width: 120px;
+    cursor: pointer;
+    font-size: 14px;
+    height: 35px;
+    width: 100%;
 }
 
 .selected-subjects-section,
