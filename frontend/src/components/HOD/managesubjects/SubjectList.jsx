@@ -35,7 +35,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${filters.batch}`);
                 if (!response.ok) throw new Error("Failed to fetch semesters");
                 const data = await response.json();
-                console.log("dasada", data);  
+                console.log("dasada", data);
                 setSemesters(data);
             } catch (error) {
                 console.error("Error fetching semesters:", error);
@@ -61,7 +61,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 }
                 const data = await response.json();
                 console.log('Subjects API Response:', data);
-                setSubjects(data.subjects);
+                setSubjects(data.uniqueSubjects || data.subjects || []);
             } catch (error) {
                 console.error("Error fetching subjects:", error);
             }
@@ -76,6 +76,8 @@ const SubjectList = ({ onSelectSubject }) => {
             [name]: value,
             ...(name === "batch" ? { semester: "all" } : {}),
         }));
+        // Clear subjects immediately on filter change
+        setSubjects([]);
     };
 
     return (
@@ -102,16 +104,29 @@ const SubjectList = ({ onSelectSubject }) => {
 
             <div className="subjects-grid">
                 {subjects.length > 0 ? (
-                    subjects.map(subject => (
-                        <div key={subject.sub_code} style={{ padding: '1px' }} className="subject-card" onClick={() => onSelectSubject(subject)}>
-                            <div style={{ marginTop: '10px' }} className="subject-code">{subject.sub_code}</div>
-                            <div className="subject-name">{subject.sub_name}</div>
-                            <div className="subject-details">
-                                <span>{filters.program}</span>
-                                <span>{filters.semester !== 'all' ? `Semester ${filters.semester}` : 'All Semesters'}</span>
+                    subjects.map((subject, index) => {
+                        const code = subject.sub_code || subject.subjectCode || subject.code;
+                        const name = subject.sub_name || subject.subjectName || subject.name;
+                        return (
+                            <div key={subject._id || code || index} className="subject-card" onClick={() => onSelectSubject(subject)}>
+                                {code && (
+                                    <div className="subject-code">{code}</div>
+                                )}
+                                <div className="subject-name">
+                                    {name}
+                                </div>
+                                <div className="subject-details">
+                                    <div><strong>Type:</strong> {filters.program.charAt(0).toUpperCase() + filters.program.slice(1)}</div>
+                                    {(subject.sub_credit || subject.credits) &&
+                                        <div><strong>Credits:</strong> {subject.sub_credit || subject.credits}</div>}
+                                    {(subject.sub_type || subject.type) &&
+                                        <div><strong>Category:</strong> {subject.sub_type || subject.type}</div>}
+                                    <div><strong>Semester:</strong> {filters.semester}</div>
+                                    <div><strong>Batch:</strong> {filters.batch}</div>
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 ) : (
 
                     <p className="no-subjects">No subjects found for the selected filters.</p>

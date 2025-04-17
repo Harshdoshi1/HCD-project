@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ManageBatches.css';
+import PassStudents from './PassStudents';
 
 const ManageBatches = () => {
     const [batches, setBatches] = useState([]);
@@ -9,6 +10,7 @@ const ManageBatches = () => {
     const [activeTab, setActiveTab] = useState('batch');
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isPassStudentsModalOpen, setIsPassStudentsModalOpen] = useState(false);
 
     useEffect(() => {
         fetchBatches();
@@ -109,6 +111,14 @@ const ManageBatches = () => {
         });
     };
 
+    const handleOpenPassStudentsModal = () => {
+        setIsPassStudentsModalOpen(true);
+    };
+
+    const handleClosePassStudentsModal = () => {
+        setIsPassStudentsModalOpen(false);
+    };
+
     return (
 
         <div className="manage-batches-container">
@@ -124,6 +134,12 @@ const ManageBatches = () => {
                     onClick={() => setActiveTab('semester')}
                 >
                     Add Semester
+                </button>
+                <button
+                    className={`tab-button ${activeTab === 'update' ? 'active' : ''}`}
+                    onClick={handleOpenPassStudentsModal}
+                >
+                    Update Semester
                 </button>
             </div>
 
@@ -314,6 +330,11 @@ const ManageBatches = () => {
                     </div>
                 </div>
             )}
+            {/* PassStudents Modal */}
+            <PassStudents 
+                isOpen={isPassStudentsModalOpen} 
+                onClose={handleClosePassStudentsModal} 
+            />
         </div>
     );
 };

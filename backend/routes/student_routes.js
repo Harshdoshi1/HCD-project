@@ -7,7 +7,9 @@ const {
     getAllStudents,
     updateStudent,
     deleteStudent,
-    createStudents
+    createStudents,
+    updateStudentSemesters,
+    getStudentsByBatch
 } = require('../controller/studentController');
 
 router.post('/createStudent', createStudent);
@@ -16,6 +18,8 @@ router.get('/getAllStudents', getAllStudents);
 router.put('/updateStudent', updateStudent);
 router.delete('/deleteStudent', deleteStudent);
 router.post('/bulkUpload', createStudents);
+router.post('/updateStudentSemesters', updateStudentSemesters);
+router.get('/getStudentsByBatch/:batchId', getStudentsByBatch);
 
 
 module.exports = router;

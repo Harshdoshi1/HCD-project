@@ -1,24 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './AddCoCurricularActivityForm.css';
 
-const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId }) => {
+const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId, isEditing = false }) => {
     const [formData, setFormData] = useState({
         enrollmentNumber: '',
-        semesterId: semesterId || '',
-        activityName: '',
-        achievementLevel: '',
-        date: '',
-        description: '',
-        certificateUrl: '',
-        score: ''
+        semester: semesterId || '',
+        eventName: '',
+        participationTypeId: ''
     });
 
+    const [activities, setActivities] = useState([]);
+    const [participationTypes, setParticipationTypes] = useState([]);
+
+    useEffect(() => {
+        const fetchActivities = async () => {
+            try {
+                const response = await fetch('http://localhost:5001/api/events/allCoCurricularnames');
+                const data = await response.json();
+                if (data.success) {
+                    setActivities(data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching activities:', error);
+            }
+        };
+
+        const fetchParticipationTypes = async () => {
+            try {
+                const response = await fetch('http://localhost:5001/api/events/allParticipationTypes');
+                const data = await response.json();
+                if (data.success) {
+                    setParticipationTypes(data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching participation types:', error);
+            }
+        };
+
+        fetchActivities();
+        fetchParticipationTypes();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            const response = await fetch('http://localhost:5001/api/students/cocurricular', {
+            const response = await fetch('http://localhost:5001/api/events/insertIntoStudentPoints', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -33,10 +62,34 @@ const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId }
             const result = await response.json();
             console.log('Activity submitted successfully:', result);
 
-            // Call the onSubmit callback if needed
-            onSubmit(activity, isEditing);
+            if (result.success) {
+                // Show success toast
+                toast.success(isEditing ? 'Activity updated successfully!' : 'Activity added successfully!', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true
+                });
+
+                // Call the onSubmit callback with the result data
+                if (onSubmit) {
+                    onSubmit(result.data);
+                }
+
+                // Close the form
+                if (onClose) {
+                    onClose();
+                }
+            }
         } catch (error) {
             console.error('Error submitting activity:', error);
+            // Show error toast
+            toast.error(isEditing ? 'Failed to update activity.' : 'Failed to add activity.', {
+                position: 'top-right',
+                autoClose: 3000
+            });
         }
     };
 
@@ -65,78 +118,50 @@ const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId }
                     </div>
 
                     <div className="form-group">
-                        <label>Semester ID</label>
-
-
+                        <label>Semester</label>
                         <input
                             type="text"
-                            name="semesterId"
-                            value={formData.semesterId}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Activity Name</label>
-                        <input
-                            type="text"
-                            name="activityName"
-                            value={formData.activityName}
+                            name="semester"
+                            value={formData.semester}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
                     <div className="form-group">
-                        <label>Achievement Level</label>
-                        <input
-                            type="text"
-                            name="achievementLevel"
-                            value={formData.achievementLevel}
+                        <label>Event Name</label>
+                        <select
+                            name="eventName"
+                            value={formData.eventName}
                             onChange={handleChange}
                             required
-                        />
+                            className="form-select"
+                        >
+                            <option value="">Select Event</option>
+                            {activities.map((activity, index) => (
+                                <option key={index} value={activity.eventName}>
+                                    {activity.eventName}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="form-group">
-                        <label>Date</label>
-                        <input
-                            type="date"
-                            name="date"
-                            value={formData.date}
+                        <label>Participation Type</label>
+                        <select
+                            name="participationTypeId"
+                            value={formData.participationTypeId}
                             onChange={handleChange}
                             required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Description</label>
-                        <textarea
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Certificate URL</label>
-                        <input
-                            type="url"
-                            name="certificateUrl"
-                            value={formData.certificateUrl}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Score</label>
-                        <input
-                            type="number"
-                            name="score"
-                            value={formData.score}
-                            onChange={handleChange}
-                        />
+                            className="form-select"
+                        >
+                            <option value="">Select Type</option>
+                            {participationTypes.map((role, index) => (
+                                <option key={index} value={role.types}>
+                                    {role.types}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="form-buttons">

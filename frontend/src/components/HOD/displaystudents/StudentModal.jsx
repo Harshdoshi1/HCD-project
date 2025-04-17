@@ -8,6 +8,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
         email: '',
         enrollment: '',
         batchID: '',
+        currentSemester: '',
     });
     const [batches, setBatches] = useState([]);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -71,29 +72,63 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
             return;
         }
 
+        let successCount = 0;
+        let errorCount = 0;
+
         for (const row of parsedData) {
             try {
+                // Log the data being sent for debugging
+                console.log('Uploading student data:', {
+                    name: row.NAME,
+                    email: row.EMAIL,
+                    enrollment: row.ROLLNO,
+                    batchID: row.BATCH,
+                    currentSemester: row.CURRENTSEM
+                });
+
+                // Validate current semester is a number
+                const currentSem = parseInt(row.CURRENTSEM);
+                if (isNaN(currentSem)) {
+                    console.error('Invalid current semester value:', row.CURRENTSEM);
+                    errorCount++;
+                    continue;
+                }
+
                 const response = await fetch('http://localhost:5001/api/students/createStudent', {
                     method: 'POST',
                     body: JSON.stringify({
                         name: row.NAME,
                         email: row.EMAIL,
                         enrollment: row.ROLLNO,
-                        batchID: row.BATCH
+                        batchID: row.BATCH,
+                        currentSemester: currentSem
                     }),
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 });
+
                 const data = await response.json();
+
                 if (!response.ok) {
-                    console.error('Failed to upload row:', data.message);
+                    console.error('Failed to upload row:', data);
+                    errorCount++;
+                } else {
+                    successCount++;
                 }
             } catch (error) {
-                console.error('Failed to upload row:', error);
+                console.error('Error uploading student:', error);
+                errorCount++;
             }
         }
-        alert("All students uploaded successfully!");
+
+        // Provide detailed feedback
+        if (errorCount > 0) {
+            alert(`Upload completed with issues:\n${successCount} students added successfully\n${errorCount} students failed to upload\n\nCheck console for details.`);
+        } else {
+            alert(`All ${successCount} students uploaded successfully!`);
+        }
+
         setSelectedFile(null);
         setParsedData([]);
     };
@@ -106,14 +141,30 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
             return;
         }
 
+        // Validate current semester is a number
+        const currentSem = parseInt(studentData.currentSemester);
+        if (isNaN(currentSem) || currentSem < 1 || currentSem > 8) {
+            alert('Please enter a valid semester number (1-8)');
+            return;
+        }
+
         try {
+            console.log('Submitting student data:', {
+                name: studentData.name,
+                email: studentData.email,
+                enrollment: studentData.enrollment,
+                batchID: selectedBatch.batchName,
+                currentSemester: currentSem
+            });
+
             const response = await fetch('http://localhost:5001/api/students/createStudent', {
                 method: 'POST',
                 body: JSON.stringify({
                     name: studentData.name,
                     email: studentData.email,
                     enrollment: studentData.enrollment,
-                    batchID: selectedBatch.batchName
+                    batchID: selectedBatch.batchName,
+                    currentSemester: currentSem
                 }),
                 headers: {
                     'Content-Type': 'application/json'
@@ -125,7 +176,8 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                 onSuccess();
                 onClose();
             } else {
-                alert(data.message);
+                console.error('Error response:', data);
+                alert(data.error || data.message || 'Failed to add student');
             }
         } catch (error) {
             console.error('Failed to add student:', error);
@@ -134,7 +186,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
     };
 
     const clearManualEntryFields = () => {
-        setStudentData({ name: '', email: '', enrollment: '', batchID: '' });
+        setStudentData({ name: '', email: '', enrollment: '', batchID: '', currentSemester: '' });
     };
 
     const clearFileUpload = () => {
@@ -164,6 +216,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                                 <option key={batch.id} value={batch.id}>{batch.batchName}</option>
                             ))}
                         </select>
+                        <input type="number" name="currentSemester" placeholder="Current Semester" value={studentData.currentSemester} onChange={handleChange} required min="1" max="8" />
                         <button type="button" onClick={clearManualEntryFields}>Clear Fields</button>
                         <div className="actions-add-student-model">
                             <button type="button" onClick={onClose}>Cancel</button>

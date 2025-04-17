@@ -3,7 +3,6 @@ import { Book, Users, CalendarDays, Filter, Grid, Award, Clock, MoreHorizontal, 
 import './AssignedSubjects.css';
 
 const SubjectCard = ({ subject }) => {
-    console.log("Subject data in card:", subject); // Add this for debugging
     return (
         <div className="subject-card-asff">
             <div className="card-header-asff">
@@ -18,7 +17,7 @@ const SubjectCard = ({ subject }) => {
             <div className="card-content-asff">
                 <div className="content-row-asff">
                     <span className="content-label-asff">Semester:</span>
-                    <span className="content-value-asff">{subject.semester || 'Not assigned'}</span>
+                    <span className="content-value-asff">{subject.semesterId || 'Not assigned'}</span>
                 </div>
                 <div className="content-row-asff">
                     <span className="content-label-asff">Batch:</span>
@@ -75,8 +74,9 @@ const AssignedSubjects = () => {
     const [subjects, setSubjects] = useState([]); // Store original subjects
     const [filteredSubjects, setFilteredSubjects] = useState([]); // Filtered subjects
     const [batchOptions, setBatchOptions] = useState([]);
+    const [typeOptions, setTypeOptions] = useState([]);
+    const [departmentOptions, setDepartmentOptions] = useState([]);
     const [semesterOptions, setSemesterOptions] = useState([]);
-    const [batchToSemesters, setBatchToSemesters] = useState({}); // Map to store semesters for each batch
     const itemsPerPage = 6;
 
     useEffect(() => {
@@ -100,35 +100,23 @@ const AssignedSubjects = () => {
                 console.log("API Response:", data);
 
                 if (Array.isArray(data)) {
-                    // Create a map of batch to semesters
-                    const batchSemesterMap = {};
-                    data.forEach(subject => {
-                        if (subject.batch && subject.semester) {
-                            if (!batchSemesterMap[subject.batch]) {
-                                batchSemesterMap[subject.batch] = new Set();
-                            }
-                            batchSemesterMap[subject.batch].add(subject.semester);
-                        }
-                    });
-
-                    // Convert Sets to sorted arrays
-                    Object.keys(batchSemesterMap).forEach(batchKey => {
-                        const semesterArray = Array.from(batchSemesterMap[batchKey]);
-                        semesterArray.sort((a, b) => {
-                            const numA = parseInt(a);
-                            const numB = parseInt(b);
-                            return numA - numB;
-                        });
-                        batchSemesterMap[batchKey] = semesterArray;
-                    });
-
-                    // Extract unique batches
+                    // Extract unique filter options from the data
                     const uniqueBatches = [...new Set(data.map(subject => subject.batch).filter(Boolean))];
-                    uniqueBatches.sort(); // Sort batches alphabetically
+                    const uniqueTypes = [...new Set(data.map(subject => subject.type).filter(Boolean))];
+                    const uniqueDepartments = [...new Set(data.map(subject => subject.department).filter(Boolean))];
+                    const uniqueSemesters = [...new Set(data.map(subject => subject.semesterId).filter(Boolean))];
 
-                    // Store the batch-semester mapping
-                    setBatchToSemesters(batchSemesterMap);
+                    // Sort options
+                    uniqueBatches.sort();
+                    uniqueTypes.sort();
+                    uniqueDepartments.sort();
+                    uniqueSemesters.sort((a, b) => Number(a) - Number(b));
+
+                    // Set filter options
                     setBatchOptions(uniqueBatches);
+                    setTypeOptions(uniqueTypes);
+                    setDepartmentOptions(uniqueDepartments);
+                    setSemesterOptions(uniqueSemesters);
 
                     setSubjects(data);
                     setFilteredSubjects(data);
@@ -145,23 +133,6 @@ const AssignedSubjects = () => {
         fetchSubjects();
     }, []);
 
-    // Update semester options when batch changes
-    useEffect(() => {
-        if (batch) {
-            setSemesterOptions(batchToSemesters[batch] || []);
-            setSemester(''); // Reset semester when batch changes
-        } else {
-            // If no batch is selected, show all unique semesters
-            const allSemesters = [...new Set(subjects.map(subject => subject.semester).filter(Boolean))];
-            allSemesters.sort((a, b) => {
-                const numA = parseInt(a);
-                const numB = parseInt(b);
-                return numA - numB;
-            });
-            setSemesterOptions(allSemesters);
-        }
-    }, [batch, batchToSemesters]);
-
     // Apply filters function
     const applyFilters = () => {
         let filtered = [...subjects];
@@ -169,7 +140,8 @@ const AssignedSubjects = () => {
         if (searchQuery) {
             filtered = filtered.filter(subject =>
                 (subject.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-                (subject.code?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+                (subject.code?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (subject.description?.toLowerCase() || '').includes(searchQuery.toLowerCase())
             );
         }
 
@@ -177,13 +149,26 @@ const AssignedSubjects = () => {
             filtered = filtered.filter(subject => subject.batch === batch);
         }
 
+        if (type) {
+            filtered = filtered.filter(subject => subject.type === type);
+        }
+
+        if (department) {
+            filtered = filtered.filter(subject => subject.department === department);
+        }
+
         if (semester) {
-            filtered = filtered.filter(subject => subject.semester === semester);
+            filtered = filtered.filter(subject => String(subject.semesterId) === semester);
         }
 
         setFilteredSubjects(filtered);
         setCurrentPage(1); // Reset to first page when filters change
     };
+
+    // Apply filters whenever any filter value changes
+    useEffect(() => {
+        applyFilters();
+    }, [searchQuery, batch, type, department, semester]);
 
     const resetFilters = () => {
         setBatch("");
@@ -197,7 +182,7 @@ const AssignedSubjects = () => {
 
     // Statistics for dashboard
     const stats = [
-        { id: 1, icon: <Grid size={24} />, value: 8, label: "Total Subjects" },
+        { id: 1, icon: <Grid size={24} />, value: subjects.length, label: "Total Subjects" },
         { id: 2, icon: <Clock size={24} />, value: 26, label: "Teaching Hours" },
         { id: 3, icon: <Users size={24} />, value: 186, label: "Students" },
         { id: 4, icon: <Award size={24} />, value: 3, label: "Departments" }
@@ -287,14 +272,34 @@ const AssignedSubjects = () => {
                             </select>
                         </div>
 
+                        <div className="filter-group-asff">
+                            <label htmlFor="type">Type</label>
+                            <select id="type" value={type} onChange={(e) => setType(e.target.value)}>
+                                <option value="">All Types</option>
+                                {typeOptions.map((typeOption) => (
+                                    <option key={typeOption} value={typeOption}>
+                                        {typeOption}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="filter-group-asff">
+                            <label htmlFor="department">Department</label>
+                            <select id="department" value={department} onChange={(e) => setDepartment(e.target.value)}>
+                                <option value="">All Departments</option>
+                                {departmentOptions.map((deptOption) => (
+                                    <option key={deptOption} value={deptOption}>
+                                        {deptOption}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         <div className="filter-actions-asff">
                             <button className="reset-btn-asff" onClick={resetFilters}>
                                 <X size={16} className="action-icon-asff" />
                                 Reset Filters
-                            </button>
-                            <button className="apply-btn-asff" onClick={applyFilters}>
-                                <Filter size={16} className="action-icon-asff" />
-                                Apply Filters
                             </button>
                         </div>
                     </div>
@@ -309,12 +314,34 @@ const AssignedSubjects = () => {
                 </div>
             ) : (
                 <>
-                    {filteredSubjects.length > 0 ? (
-                        <div className="subjects-grid-asff">
-                            {filteredSubjects.map((subject) => (
-                                <SubjectCard key={subject.id} subject={subject} />
-                            ))}
-                        </div>
+                    {currentSubjects.length > 0 ? (
+                        <>
+                            <div className="subjects-grid-asff">
+                                {currentSubjects.map((subject) => (
+                                    <SubjectCard key={subject.id} subject={subject} />
+                                ))}
+                            </div>
+
+                            {totalPages > 1 && (
+                                <div className="pagination-asff">
+                                    <button
+                                        className="page-btn-asff nav-btn-asff"
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        Previous
+                                    </button>
+                                    {renderPaginationButtons()}
+                                    <button
+                                        className="page-btn-asff nav-btn-asff"
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <EmptyState />
                     )}

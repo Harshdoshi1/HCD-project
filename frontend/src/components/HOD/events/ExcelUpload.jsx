@@ -1,4 +1,3 @@
-
 import './ExcelUpload.css';
 import { useState, useEffect } from 'react';
 import { FileXls, Upload } from 'phosphor-react';
@@ -30,11 +29,13 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
 
         const result = await response.json();
         console.log('Fetched event names:', result);
-        
+
         if (result.success && Array.isArray(result.data)) {
-          setAllEventNames(result.data);
+          // Extract event names from the event objects
+          const eventNames = result.data.map(event => event.eventName);
+          setAllEventNames(eventNames);
           // Initialize filtered events with all event names
-          setFilteredEvents(result.data);
+          setFilteredEvents(eventNames);
         }
       } catch (error) {
         console.error('Error fetching event names:', error);
@@ -43,7 +44,6 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
 
     fetchEventNames();
   }, []);
-
 
   const handleEventNameChange = (e) => {
     const value = e.target.value;
@@ -63,7 +63,7 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
       setFilteredEvents([]);
       setShowSuggestions(false);
     }
-    
+
     // For debugging
     console.log('Current input:', value);
     console.log('Filtered events:', filtered);
@@ -74,7 +74,6 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
     setEventName(name);
     setShowSuggestions(false);
   };
-
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -99,49 +98,90 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        // Convert Excel data to proper format
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
-          .map(row => row[0])
-          .filter(enrollment => enrollment != null)
-          .map(enrollment => String(enrollment).trim()) // Ensure enrollment numbers are strings and trimmed
-          .filter(enrollment => enrollment !== 'Enrolment' && enrollment !== ''); // Skip header row
-        console.log('Excel Data:', jsonData);
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        // Log the entire Excel file data
+        console.log('Excel File Data:', jsonData);
+
+        // Check if the file has any data
+        if (!jsonData.length) {
+          alert('Excel file is empty');
+          return;
+        }
+
+        // Get the column headers from the first row
+        const headers = Object.keys(jsonData[0]);
+        console.log('Excel headers:', headers);
+
+        // Find enrollment and type columns (case-insensitive)
+        const enrollmentColumn = headers.find(h => 
+          h.toLowerCase().includes('enrol') || h.toLowerCase() === 'enrollment number' || h.toLowerCase() === 'enrollmentnumber'
+        );
+        const typeColumn = headers.find(h => 
+          h.toLowerCase().includes('type') || h.toLowerCase() === 'participation type' || h.toLowerCase() === 'participationtype'
+        );
+
+        if (!enrollmentColumn || !typeColumn) {
+          alert('Excel file must contain columns for Enrollment Number and Participation Type. Please check your column headers.');
+          return;
+        }
+
+        // Format data for API
+        const participants = jsonData.map(row => ({
+          enrollmentNumber: row[enrollmentColumn].toString(),
+          participationType: row[typeColumn]
+        }));
+
+        // Validate data
+        const invalidRows = participants.filter(p => 
+          !p.enrollmentNumber || !p.participationType || 
+          p.enrollmentNumber.trim() === '' || 
+          p.participationType.trim() === ''
+        );
+
+        if (invalidRows.length > 0) {
+          alert(`Found ${invalidRows.length} invalid rows. Please ensure all cells have valid data.`);
+          console.log('Invalid rows:', invalidRows);
+          return;
+        }
+
         try {
-          if (!eventName) {
-            throw new Error('Please select an event name');
+          setUploading(true);
+          const response = await fetch('http://localhost:5001/api/Events/uploadExcell', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              eventName,
+              participants
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to upload data');
           }
 
-          if (!jsonData || jsonData.length === 0) {
-            throw new Error('No valid enrollment numbers found in the Excel file');
-          }
+          const result = await response.json();
+          console.log('Upload result:', result);
 
-          try {
-            const response = await fetch('http://localhost:5001/api/Events/uploadExcell', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                eventName: eventName.trim(),
-                participants: jsonData.filter(id => id && id.trim()) // Extra safety check
-              })
-            });
-
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.message || 'Failed to save event');
-            }
-
-            const result = await response.json();
-            console.log('Form submitted successfully:', result);
-            onSuccess();
-          } catch (error) {
-            console.error('Error saving event:', error);
+          if (result.success) {
+            // Show detailed success message
+            const summary = result.data.summary;
+            alert(`Excel upload successful!\n\nTotal students: ${summary.total}\nSuccessfully processed: ${summary.successful}\nErrors: ${summary.failed}`);
+            onSuccess && onSuccess();
+            onClose && onClose();
+          } else {
+            alert('Error uploading data: ' + result.message);
           }
         } catch (error) {
-          console.error('Error saving event:', error);
+          console.error('Error uploading data:', error);
+          alert('Error uploading data: ' + error.message);
+        } finally {
+          setUploading(false);
         }
       };
+
       reader.readAsArrayBuffer(file);
     };
 
