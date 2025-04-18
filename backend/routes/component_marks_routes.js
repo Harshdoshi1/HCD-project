@@ -5,7 +5,8 @@ const {
     getComponentMarksById,
     getAllComponentMarks,
     updateComponentMarks,
-    deleteComponentMarks
+    deleteComponentMarks,
+    addSubjectWithComponents
 } = require("../controller/componentMarksController");
 
 
@@ -15,5 +16,5 @@ router.get("/marks", getAllComponentMarks);
 router.get("/marks/:id", getComponentMarksById);
 router.put("/marks/:id", updateComponentMarks);
 router.delete("/marks/:id", deleteComponentMarks);
-
+router.post("/addSubjectWithComponents", addSubjectWithComponents);
 module.exports = router;
