@@ -8,10 +8,16 @@ const {
     addUniqueSubDiploma,
     addSubjectWithComponents,
     getSubjectWithComponents,
+    getSubjectComponentsWithSubjectCode,
     addSubject,
     getSubjectByCode,
     deleteSubject,
-    getSubjectsByBatchAndSemester
+    getSubjectsByBatchAndSemester,
+    getAllUniqueSubjects,
+    getSubjectsByBatch,
+    getAllSubjectsWithDetails,
+    getSubjectsByBatchWithDetails,
+    getSubjectsByBatchAndSemesterWithDetails
 } = require('../controller/subController');
 
 const router = express.Router();
@@ -34,8 +40,14 @@ router.post('/addUniqueSubDiploma', addUniqueSubDiploma);
 router.post("/addSubjectWithComponents", addSubjectWithComponents);
 router.get("/subject/:subjectCode", getSubjectWithComponents);
 
+router.get("/getSubjectComponentsWithSubjectCode/:subjectCode", getSubjectComponentsWithSubjectCode);
 
+router.get('/getAllUniqueSubjects', getAllUniqueSubjects);
+router.get('/getSubjectsByBatch/:batchName', getSubjectsByBatch);
 
+router.get('/getAllSubjectsWithDetails', getAllSubjectsWithDetails);
+router.get('/getSubjectsByBatchWithDetails/:batchName', getSubjectsByBatchWithDetails);
+router.get('/getSubjectsByBatchAndSemesterWithDetails/:batchName/:semesterNumber', getSubjectsByBatchAndSemesterWithDetails);
 
 router.delete("/deleteSubjectbycode", deleteSubject);
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
-const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma } = require('../models'); // Import models
+const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma, ComponentWeightage, ComponentMarks, AssignSubjects } = require('../models'); // Import models
 
 // Add Subject
 const addSubject = async (req, res) => {
@@ -81,7 +81,7 @@ const getSubjectByCode = async (req, res) => {
         res.status(500).json({ error: 'Error fetching subject', details: error.message });
     }
 };
-// ✅ Add Subject (Check if already assigned to batch & semester)
+// Add Subject (Check if already assigned to batch & semester)
 const assignSubject = async (req, res) => {
     try {
         console.log("Received Request Body:", req.body); // Debugging
@@ -326,76 +326,85 @@ const getSubjectsByBatchSemesterandFaculty = async (req, res) => {
 
 
 const addSubjectWithComponents = async (req, res) => {
-    const t = await sequelize.transaction();
-
     try {
         const {
-            code, // subject code
-            name, // subject name
+            subject, // subject code (from frontend)
+            name,    // subject name
             credits, // subject credits
-            type, // subject type (central or departmental)
-            components // object containing component data
+            type,    // subject type (central or departmental)
+            componentsWeightage, // array of component weightages
+            componentsMarks      // array of component marks
         } = req.body;
 
         console.log('Received data:', req.body);
 
         // Validate input
-        if (!code || !name || !credits || !type || !components) {
+        if (!subject || !name || !credits) {
             return res.status(400).json({
                 error: 'Missing required fields',
-                received: { code, name, credits, type, components }
+                received: { subject, name, credits }
             });
         }
 
+        if (!componentsWeightage || !componentsMarks || !Array.isArray(componentsWeightage) || !Array.isArray(componentsMarks)) {
+            return res.status(400).json({
+                error: 'Invalid component data',
+                received: { componentsWeightage, componentsMarks }
+            });
+        }
+
+        // Create subject with required fields
+        // Default semester to 1 and program to 'Degree' if not provided
+        const subjectRecord = await UniqueSubDegree.create({
+            sub_code: subject,
+            sub_name: name,
+            sub_credit: credits,
+            sub_level: type || 'central', // Use type from request or default to 'central'
+            semester: 1,                  // Default semester
+            program: 'Degree'             // Default program
+        });
+
         // Map component names from frontend to database
         const componentMap = {
-            'CA': 'cse', // Continuous Assessment maps to CSE in DB
-            'ESE': 'ese', // End Semester Exam
-            'IA': 'ia',   // Internal Assessment
-            'TW': 'tw',   // Term Work
+            'CA': 'cse',   // Continuous Assessment maps to CSE in DB
+            'ESE': 'ese',  // End Semester Exam
+            'IA': 'ia',    // Internal Assessment
+            'TW': 'tw',    // Term Work
             'VIVA': 'viva' // Viva
         };
 
-        // Create subject
-        const subject = await UniqueSubDegree.create({
-            sub_code: code,
-            sub_name: name,
-            sub_credit: credits,
-            sub_level: type === 'central' ? 'central' : 'department'
-        }, { transaction: t });
-
         // Prepare weightage and marks data
-        const weightageData = { subjectId: code };
-        const marksData = { subjectId: code };
+        const weightageData = { subjectId: subject };
+        const marksData = { subjectId: subject };
 
-        // Process each component
-        Object.entries(components).forEach(([component, data]) => {
-            if (data.enabled) {
-                const dbField = componentMap[component];
-                if (dbField) {
-                    weightageData[dbField] = data.weightage;
-                    marksData[dbField] = data.totalMarks;
-                }
+        // Process weightage components
+        componentsWeightage.forEach(component => {
+            const dbField = componentMap[component.name];
+            if (dbField) {
+                weightageData[dbField] = component.weightage;
             }
         });
 
-        // Create weightage
-        const weightage = await ComponentWeightage.create(weightageData, { transaction: t });
+        // Process marks components
+        componentsMarks.forEach(component => {
+            const dbField = componentMap[component.name];
+            if (dbField) {
+                marksData[dbField] = component.value;
+            }
+        });
 
-        // Create marks
-        const marks = await ComponentMarks.create(marksData, { transaction: t });
-
-        await t.commit();
+        // Create weightage and marks records
+        const weightage = await ComponentWeightage.create(weightageData);
+        const marks = await ComponentMarks.create(marksData);
 
         res.status(201).json({
-            subject,
+            subject: subjectRecord,
             weightage,
             marks,
             message: 'Subject and components added successfully'
         });
 
     } catch (error) {
-        await t.rollback();
         console.error('Error adding subject with components:', error);
         res.status(500).json({
             error: error.message,
@@ -405,4 +414,272 @@ const addSubjectWithComponents = async (req, res) => {
     }
 };
 
-module.exports = { getSubjectsByBatchAndSemester, addSubject, getSubjectWithComponents, addSubjectWithComponents, getDropdownData, getSubjectsByBatchSemesterandFaculty, assignSubject, getSubjectByCode, deleteSubject, getSubjects, addUniqueSubDegree, addUniqueSubDiploma };
+const getSubjectComponentsWithSubjectCode = async (req, res) => {
+    try {
+        const { subjectCode } = req.params;
+        console.log('Fetching components for subject code:', subjectCode);
+
+        // Find the subject by code
+        const subject = await UniqueSubDegree.findOne({ where: { sub_code: subjectCode } });
+        if (!subject) {
+            console.log('Subject not found with code:', subjectCode);
+            return res.status(404).json({ error: 'Subject not found' });
+        }
+
+        console.log('Found subject:', subject.sub_code, subject.sub_name);
+
+        // Use the subject's sub_code as the subjectId in the related tables
+        const weightage = await ComponentWeightage.findOne({ where: { subjectId: subject.sub_code } });
+        const marks = await ComponentMarks.findOne({ where: { subjectId: subject.sub_code } });
+
+        console.log('Component weightage:', weightage);
+        console.log('Component marks:', marks);
+
+        // If no weightage or marks are found, return empty objects
+        res.status(200).json({
+            subject,
+            weightage: weightage || {},
+            marks: marks || {}
+        });
+    } catch (error) {
+        console.error('Error getting subject components:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Get all unique subjects from UniqueSubDegrees
+const getAllUniqueSubjects = async (req, res) => {
+    try {
+        const subjects = await UniqueSubDegree.findAll();
+        console.log(`Found ${subjects.length} unique subjects`);
+        return res.status(200).json({ subjects });
+    } catch (error) {
+        console.error('Error fetching unique subjects:', error);
+        return res.status(500).json({ message: "Error fetching unique subjects", error: error.message });
+    }
+};
+
+// Get subjects by batch
+const getSubjectsByBatch = async (req, res) => {
+    try {
+        const { batchName } = req.params;
+        console.log(`Fetching subjects for batch: ${batchName}`);
+        
+        // First get the batch ID
+        const batch = await Batch.findOne({ where: { batchName } });
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found" });
+        }
+        
+        // Get all subjects assigned to this batch
+        const subjects = await Subject.findAll({
+            where: { batchId: batch.id },
+            attributes: ['id', 'subjectName', 'batchId', 'semesterId']
+        });
+        
+        // Get the unique subject codes from UniqueSubDegree that match these subjects
+        const uniqueSubjects = await UniqueSubDegree.findAll();
+        
+        return res.status(200).json({ 
+            subjects,
+            uniqueSubjects
+        });
+    } catch (error) {
+        console.error('Error fetching subjects by batch:', error);
+        return res.status(500).json({ message: "Error fetching subjects by batch", error: error.message });
+    }
+};
+
+// Get all subjects with their related information
+const getAllSubjectsWithDetails = async (req, res) => {
+    try {
+        // Find all subjects with their related batch and semester information
+        const subjects = await Subject.findAll({
+            include: [
+                {
+                    model: Batch,
+                    attributes: ['batchName', 'courseType']
+                },
+                {
+                    model: Semester,
+                    attributes: ['semesterNumber']
+                }
+            ]
+        });
+
+        if (!subjects || subjects.length === 0) {
+            return res.status(404).json({ message: "No subjects found" });
+        }
+
+        // Get the unique subject codes and names from UniqueSubDegree
+        const subjectNames = subjects.map(s => s.subjectName);
+        const uniqueSubjectsInfo = await UniqueSubDegree.findAll({
+            where: { sub_name: { [Op.in]: subjectNames } },
+            attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level', 'program']
+        });
+
+        // Map the unique subject info to each subject
+        const subjectsWithDetails = subjects.map(subject => {
+            const uniqueInfo = uniqueSubjectsInfo.find(u => u.sub_name === subject.subjectName);
+            return {
+                id: subject.id,
+                subjectName: subject.subjectName,
+                batchId: subject.batchId,
+                semesterId: subject.semesterId,
+                batchName: subject.Batch ? subject.Batch.batchName : null,
+                semesterNumber: subject.Semester ? subject.Semester.semesterNumber : null,
+                courseType: subject.Batch ? subject.Batch.courseType : null,
+                sub_code: uniqueInfo ? uniqueInfo.sub_code : null,
+                sub_credit: uniqueInfo ? uniqueInfo.sub_credit : null,
+                sub_level: uniqueInfo ? uniqueInfo.sub_level : null,
+                program: uniqueInfo ? uniqueInfo.program : null
+            };
+        });
+
+        return res.status(200).json({ subjects: subjectsWithDetails });
+    } catch (error) {
+        console.error("Error fetching subjects with details:", error);
+        return res.status(500).json({ message: "Error fetching subjects", error: error.message });
+    }
+};
+
+// Get subjects by batch
+const getSubjectsByBatchWithDetails = async (req, res) => {
+    try {
+        const { batchName } = req.params;
+        
+        // Find batch ID from batchName
+        const batch = await Batch.findOne({ where: { batchName } });
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found" });
+        }
+        
+        // Find all subjects for this batch with their related semester information
+        const subjects = await Subject.findAll({
+            where: { batchId: batch.id },
+            include: [
+                {
+                    model: Semester,
+                    attributes: ['semesterNumber']
+                }
+            ]
+        });
+        
+        if (!subjects || subjects.length === 0) {
+            return res.status(404).json({ message: "No subjects found for this batch" });
+        }
+        
+        // Get the unique subject codes and names from UniqueSubDegree
+        const subjectNames = subjects.map(s => s.subjectName);
+        const uniqueSubjectsInfo = await UniqueSubDegree.findAll({
+            where: { sub_name: { [Op.in]: subjectNames } },
+            attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level', 'program']
+        });
+        
+        // Map the unique subject info to each subject
+        const subjectsWithDetails = subjects.map(subject => {
+            const uniqueInfo = uniqueSubjectsInfo.find(u => u.sub_name === subject.subjectName);
+            return {
+                id: subject.id,
+                subjectName: subject.subjectName,
+                batchId: subject.batchId,
+                semesterId: subject.semesterId,
+                semesterNumber: subject.Semester ? subject.Semester.semesterNumber : null,
+                sub_code: uniqueInfo ? uniqueInfo.sub_code : null,
+                sub_credit: uniqueInfo ? uniqueInfo.sub_credit : null,
+                sub_level: uniqueInfo ? uniqueInfo.sub_level : null,
+                program: uniqueInfo ? uniqueInfo.program : null
+            };
+        });
+        
+        return res.status(200).json({ subjects: subjectsWithDetails });
+    } catch (error) {
+        console.error("Error fetching subjects by batch:", error);
+        return res.status(500).json({ message: "Error fetching subjects", error: error.message });
+    }
+};
+
+// Get subjects by batch and semester
+const getSubjectsByBatchAndSemesterWithDetails = async (req, res) => {
+    try {
+        const { batchName, semesterNumber } = req.params;
+        
+        // Find batch ID from batchName
+        const batch = await Batch.findOne({ where: { batchName } });
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found" });
+        }
+        
+        // Find semester ID from semesterNumber and batchId
+        const semester = await Semester.findOne({ 
+            where: { 
+                semesterNumber: parseInt(semesterNumber), 
+                batchId: batch.id 
+            } 
+        });
+        if (!semester) {
+            return res.status(404).json({ message: "Semester not found for this batch" });
+        }
+        
+        // Find all subjects for this batch and semester
+        const subjects = await Subject.findAll({
+            where: { 
+                batchId: batch.id,
+                semesterId: semester.id
+            }
+        });
+        
+        if (!subjects || subjects.length === 0) {
+            return res.status(404).json({ message: "No subjects found for this batch and semester" });
+        }
+        
+        // Get the unique subject codes and names from UniqueSubDegree
+        const subjectNames = subjects.map(s => s.subjectName);
+        const uniqueSubjectsInfo = await UniqueSubDegree.findAll({
+            where: { sub_name: { [Op.in]: subjectNames } },
+            attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level', 'program']
+        });
+        
+        // Map the unique subject info to each subject
+        const subjectsWithDetails = subjects.map(subject => {
+            const uniqueInfo = uniqueSubjectsInfo.find(u => u.sub_name === subject.subjectName);
+            return {
+                id: subject.id,
+                subjectName: subject.subjectName,
+                batchId: subject.batchId,
+                semesterId: subject.semesterId,
+                semesterNumber: parseInt(semesterNumber),
+                sub_code: uniqueInfo ? uniqueInfo.sub_code : null,
+                sub_credit: uniqueInfo ? uniqueInfo.sub_credit : null,
+                sub_level: uniqueInfo ? uniqueInfo.sub_level : null,
+                program: uniqueInfo ? uniqueInfo.program : null
+            };
+        });
+        
+        return res.status(200).json({ subjects: subjectsWithDetails });
+    } catch (error) {
+        console.error("Error fetching subjects by batch and semester:", error);
+        return res.status(500).json({ message: "Error fetching subjects", error: error.message });
+    }
+};
+
+module.exports = { 
+    getSubjectsByBatchAndSemester, 
+    addSubject, 
+    getSubjectWithComponents, 
+    addSubjectWithComponents, 
+    getDropdownData, 
+    getSubjectsByBatchSemesterandFaculty, 
+    assignSubject, 
+    getSubjectByCode, 
+    deleteSubject, 
+    getSubjects, 
+    addUniqueSubDegree, 
+    addUniqueSubDiploma, 
+    getSubjectComponentsWithSubjectCode, 
+    getAllUniqueSubjects, 
+    getSubjectsByBatch,
+    getAllSubjectsWithDetails,
+    getSubjectsByBatchWithDetails,
+    getSubjectsByBatchAndSemesterWithDetails 
+};

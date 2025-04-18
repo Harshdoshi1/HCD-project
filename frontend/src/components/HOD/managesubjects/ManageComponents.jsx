@@ -74,18 +74,20 @@ const ManageComponents = ({ selectedSubject }) => {
                 subject: newSubject.code,
                 name: newSubject.name,
                 credits: Number(newSubject.credits),
+                type: newSubject.type,
                 componentsWeightage,
                 componentsMarks
             });
 
             // Call the new API endpoint to add subject with components
-            const response = await fetch('http://localhost:5001/api/components/addSubjectWithComponents', {
+            const response = await fetch('http://localhost:5001/api/subjects/addSubjectWithComponents', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     subject: newSubject.code,
                     name: newSubject.name,
                     credits: Number(newSubject.credits),
+                    type: newSubject.type,
                     componentsWeightage,
                     componentsMarks
                 })

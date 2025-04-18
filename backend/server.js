@@ -16,7 +16,7 @@ const students_points_routes = require("./routes/students_points_routes");
 const semesterRoutes = require("./routes/semester_routes");
 const studentEventRoutes = require("./routes/student_event_routes");
 const facultysideRoutes = require("./routes/facultyside_router");
-const studentCPIRoutes = require('./routes/student_CPI_routes');
+const studentCPIRoutes = require('./routes/studentCPI_routes');
 const app = express();
 
 // Enable CORS
