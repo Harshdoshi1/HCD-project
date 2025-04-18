@@ -20,8 +20,8 @@ const StudentAnalysis = () => {
   // Fetch students data based on filters
   useEffect(() => {
     const filteredStudents = dummyStudents.filter(
-      student => 
-        student.batch === selectedBatch && 
+      student =>
+        student.batch === selectedBatch &&
         student.semester === selectedSemester
     );
     setStudents(filteredStudents);
@@ -47,7 +47,7 @@ const StudentAnalysis = () => {
               <select
                 value={selectedBatch}
                 onChange={(e) => setSelectedBatch(e.target.value)}
-                style={{ width: '100px' }}
+                Performance Analytics style={{ width: '100px' }}
               >
                 <option value="2022-26">2022-26</option>
                 <option value="2023-27">2023-27</option>
@@ -82,9 +82,9 @@ const StudentAnalysis = () => {
               <div className="back-button" onClick={handleCloseDetails}>
                 <i className="fas fa-arrow-left"></i> Back to Student List
               </div>
-              <StudentDetails 
-                key={selectedStudent?.id} 
-                student={selectedStudent} 
+              <StudentDetails
+                key={selectedStudent?.id}
+                student={selectedStudent}
                 onClose={handleCloseDetails}
                 category={selectedCategory}
               />
@@ -98,7 +98,7 @@ const StudentAnalysis = () => {
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               sortConfig={sortConfig}
-              onSort={() => {}}
+              onSort={() => { }}
             />
           )}
         </div>
