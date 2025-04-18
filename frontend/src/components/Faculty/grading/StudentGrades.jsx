@@ -17,19 +17,29 @@ const StudentGrades = () => {
     const [ratings, setRatings] = useState({});
     const [error, setError] = useState(null);
     const [gradeUpdating, setGradeUpdating] = useState(false);
+    const [componentMarks, setComponentMarks] = useState(null);
+    const [activeComponents, setActiveComponents] = useState([]);
 
     // Function to validate grade value
-    const validateGrade = (value) => {
+    const validateGrade = (value, component) => {
         const numValue = parseInt(value);
         if (isNaN(numValue)) return 0;
         if (numValue < 0) return 0;
-        if (numValue > 100) return 100;
+        
+        // Check if we have component marks and limit the value to the maximum allowed
+        if (componentMarks && component) {
+            const maxValue = componentMarks[component.toLowerCase()] || 100;
+            if (numValue > maxValue) return maxValue;
+        } else if (numValue > 100) {
+            return 100;
+        }
+        
         return numValue;
     };
 
     // Handle grade input change
     const handleGradeChange = async (studentId, component, value) => {
-        const validatedValue = validateGrade(value);
+        const validatedValue = validateGrade(value, component);
 
         setStudentsData(prevData =>
             prevData.map(student =>
@@ -44,6 +54,33 @@ const StudentGrades = () => {
                     : student
             )
         );
+    };
+
+    // Function to fetch component marks by subject code
+    const fetchComponentMarks = async (subjectCode) => {
+        if (!subjectCode) return;
+
+        try {
+            const response = await fetch(`http://localhost:5001/api/componentMarks/marksBySubject/${subjectCode}`);
+            if (!response.ok) throw new Error("Failed to fetch component marks");
+
+            const data = await response.json();
+            setComponentMarks(data);
+            
+            // Determine which components are active (non-zero)
+            const components = [];
+            if (data.ese > 0) components.push('ESE');
+            if (data.cse > 0) components.push('CSE');
+            if (data.ia > 0) components.push('IA');
+            if (data.tw > 0) components.push('TW');
+            if (data.viva > 0) components.push('Viva');
+            
+            setActiveComponents(components);
+            console.log("Active components:", components);
+        } catch (error) {
+            console.error("Error fetching component marks:", error);
+            setError("Failed to fetch component marks: " + error.message);
+        }
     };
 
     // Handle grade submission
@@ -79,7 +116,8 @@ const StudentGrades = () => {
                     ia: parseInt(student.grades?.ia) || 0,
                     tw: parseInt(student.grades?.tw) || 0,
                     viva: parseInt(student.grades?.viva) || 0,
-                    response: student.response || ''
+                    response: student.response || '',
+                    rating: ratings[studentId] || 0
                 })
             });
 
@@ -134,6 +172,18 @@ const StudentGrades = () => {
                     viva: student.viva || 0
                 }
             })));
+            
+            // Initialize ratings from fetched data
+            const initialRatings = {};
+            data.forEach(student => {
+                if (student.rating) {
+                    initialRatings[student.id] = student.rating;
+                } else {
+                    initialRatings[student.id] = 0;
+                }
+            });
+            setRatings(initialRatings);
+            
         } catch (error) {
             console.error('Error fetching student data:', error);
             // setError('Failed to fetch student data');
@@ -143,8 +193,9 @@ const StudentGrades = () => {
     };
 
     // Custom grade input component
-    const GradeInput = ({ value, onChange, disabled }) => {
+    const GradeInput = ({ value, onChange, disabled, component }) => {
         const [localValue, setLocalValue] = useState(value || '');
+        const maxValue = componentMarks ? componentMarks[component.toLowerCase()] || 100 : 100;
 
         const handleChange = (e) => {
             const newValue = e.target.value;
@@ -160,7 +211,7 @@ const StudentGrades = () => {
         };
 
         const handleBlur = () => {
-            const validatedValue = validateGrade(localValue);
+            const validatedValue = validateGrade(localValue, component);
             setLocalValue(validatedValue.toString());
             onChange(validatedValue.toString());
         };
@@ -175,7 +226,7 @@ const StudentGrades = () => {
                 type="text"
                 pattern="\\d*"
                 min="0"
-                max="100"
+                max={maxValue}
                 value={localValue}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -388,6 +439,12 @@ const StudentGrades = () => {
 
         fetchStudents();
     }, [selectedBatch, selectedSemester, selectedSubject]);
+
+    // Fetch component marks when subject changes
+    useEffect(() => {
+        if (!selectedSubject) return;
+        fetchComponentMarks(selectedSubject.subCode);
+    }, [selectedSubject]);
 
     const handleSubmitResponse = async (studentId) => {
         if (!selectedSubject) {
@@ -670,14 +727,20 @@ const StudentGrades = () => {
                                         <div className="grade-components">
                                             <h4>Grade Components</h4>
                                             <div className="grade-inputs-container">
-                                                {['ESE', 'CSE', 'IA', 'TW', 'Viva'].map((component) => (
+                                                {activeComponents.map((component) => (
                                                     <div key={component} className="grade-input-group">
                                                         <label>{component}:</label>
                                                         <GradeInput
                                                             value={student.grades?.[component.toLowerCase()]}
                                                             onChange={(value) => handleGradeChange(student.id, component, value)}
                                                             disabled={editingGrades !== student.id}
+                                                            component={component}
                                                         />
+                                                        {componentMarks && (
+                                                            <span className="max-marks">
+                                                                / {componentMarks[component.toLowerCase()]}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>

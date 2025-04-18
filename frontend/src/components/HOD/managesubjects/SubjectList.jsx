@@ -61,7 +61,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 }
                 const data = await response.json();
                 console.log('Subjects API Response:', data);
-                setSubjects(data.subjects);
+                setSubjects(data.uniqueSubjects || data.subjects || []);
             } catch (error) {
                 console.error("Error fetching subjects:", error);
             }
@@ -76,13 +76,15 @@ const SubjectList = ({ onSelectSubject }) => {
             [name]: value,
             ...(name === "batch" ? { semester: "all" } : {}),
         }));
+        // Clear subjects immediately on filter change
+        setSubjects([]);
     };
 
     return (
         <div className="subject-list">
             <div className="filters-container-display-subject-list">
 
-                <select className="professional-filter ds" name="batch" value={filters.batch} onChange={handleChange} required>
+                <select className="professional-filter-ds" name="batch" value={filters.batch} onChange={handleChange} required>
                     <option value="all">Batch</option>
                     {batches.map((batch, index) => (
                         <option key={batch._id || index} value={batch.batchName}>
@@ -90,7 +92,7 @@ const SubjectList = ({ onSelectSubject }) => {
                         </option>
                     ))}
                 </select>
-                <select className="professional-filter ds" name="semester" value={filters.semester} onChange={handleChange} required>
+                <select className="professional-filter-ds" name="semester" value={filters.semester} onChange={handleChange} required>
                     <option value="all">Semester</option>
                     {semesters.map((sem, index) => (
                         <option key={sem._id || index} value={sem.semesterNumber}>
@@ -102,17 +104,29 @@ const SubjectList = ({ onSelectSubject }) => {
 
             <div className="subjects-grid">
                 {subjects.length > 0 ? (
-                    subjects.map(subject => (
-                        <div key={subject.sub_code} style={{ padding: '1px' }} className="subject-card" onClick={() => onSelectSubject(subject)}>
-                            <div style={{ marginTop: '10px' }} className="subject-code">{subject.sub_code}</div>
-                            <div className="subject-name">{subject.sub_name}</div>
-                            <div className="subject-details">
-                                <span>{filters.program}</span><br />
-                                <span>{subject.subjectName}</span><br />
-                                <span>{filters.semester !== 'all' ? `Semester ${filters.semester}` : 'All Semesters'}</span>
+                    subjects.map((subject, index) => {
+                        const code = subject.sub_code || subject.subjectCode || subject.code;
+                        const name = subject.sub_name || subject.subjectName || subject.name;
+                        return (
+                            <div key={subject._id || code || index} className="subject-card" onClick={() => onSelectSubject(subject)}>
+                                {code && (
+                                    <div className="subject-code">{code}</div>
+                                )}
+                                <div className="subject-name">
+                                    {name}
+                                </div>
+                                <div className="subject-details">
+                                    <div><strong>Type:</strong> {filters.program.charAt(0).toUpperCase() + filters.program.slice(1)}</div>
+                                    {(subject.sub_credit || subject.credits) &&
+                                        <div><strong>Credits:</strong> {subject.sub_credit || subject.credits}</div>}
+                                    {(subject.sub_type || subject.type) &&
+                                        <div><strong>Category:</strong> {subject.sub_type || subject.type}</div>}
+                                    <div><strong>Semester:</strong> {filters.semester}</div>
+                                    <div><strong>Batch:</strong> {filters.batch}</div>
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 ) : (
 
                     <p className="no-subjects">No subjects found for the selected filters.</p>
