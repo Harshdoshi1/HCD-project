@@ -173,7 +173,6 @@ const AssignSubject = () => {
 
     // Handle filters for selected subjects section
     const handleAssignFiltersChange = (e) => {
-        alert("iuaerbiqerubiqrbirbyr");
         const { name, value } = e.target;
         const filterName = name.replace("-to-assign", "");
 
@@ -288,16 +287,19 @@ const AssignSubject = () => {
                     </div>
                 </div>
                 <div className="selected-subjects-section">
-
                     <div className="selected-subjects-container">
                         {selectedSubjects.map((subject, index) => (
-                            <div key={subject.sub_code || index} className="subject-item">
-                                <span>
-                                    {subject.sub_code} - {subject.sub_name} ({subject.sub_credit} )
-                                </span>
-                                <button className="remove-subject-btn" onClick={() => handleSubjectRemove(subject)}>
-                                    ×
-                                </button>
+                            <div key={subject.sub_code || index} className="subject-item" style={{ flexDirection: "row" }}>
+                                <div className="spantag">
+                                    <span>
+                                        {subject.sub_code} - {subject.sub_name} ({subject.sub_credit} )
+                                    </span>
+                                </div>
+                                <div className="canceltag">
+                                    <button className="remove-subject-btn" onClick={() => handleSubjectRemove(subject)}>
+                                        ×
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -349,7 +351,7 @@ const AssignSubject = () => {
                             </select>
 
                             <button
-                                className="filter-button"
+                                className="apply-filter-button"
                                 onClick={handleFilter}
                                 disabled={filters.batch === "all" || filters.semester === "all"}
                             >
@@ -386,7 +388,7 @@ const AssignSubject = () => {
             </div>
 
             <div className="save-subjects-section">
-                <button className="save-subjects-btn" onClick={handleSaveSubjects}>
+                <button className="save-subjects-btn-final" onClick={handleSaveSubjects}>
                     Save Selected Subjects
                 </button>
             </div>
