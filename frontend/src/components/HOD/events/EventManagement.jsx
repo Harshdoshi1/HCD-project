@@ -79,10 +79,9 @@ const EventManagement = () => {
               <div key={index} className="event-card">
                 <h3>{event.eventName}</h3>
                 <div className="event-details">
-                  <p><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
                   <p><strong>Category:</strong> {event.eventCategory}</p>
-                  <p><strong>Level:</strong> {event.eventLevel}</p>
-                  <p><strong>Description:</strong> {event.eventDescription}</p>
+                  <p><strong>Date:</strong> {event.date}</p>
+                  <p><strong>Duration:</strong> {event.duration}</p>
                 </div>
               </div>
             ))}

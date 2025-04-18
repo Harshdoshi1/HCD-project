@@ -1,22 +1,26 @@
-const express = require('express');
-const router = express.Router();
-const {
-    addActivity,
-    updateActivity,
-    deleteActivity,
-    getStudentActivities
-} = require('../controller/studentCocurricularController');
+// const express = require('express');
+// const router = express.Router();
+// const {
+//     addActivity,
+//     updateActivity,
+//     deleteActivity,
+//     getStudentActivities,
+//     getStudentActivitieswithenrollmentandSemester
 
-// Add new co-curricular activity
-router.post('/', addActivity);
+// } = require('../controller/studentCocurricularController');
 
-// Update existing co-curricular activity
-router.put('/:activityId', updateActivity);
+// // Add new co-curricular activity
+// router.post('/', addActivity);
 
-// Delete co-curricular activity
-router.delete('/:activityId', deleteActivity);
+// // Update existing co-curricular activity
+// router.put('/:activityId', updateActivity);
 
-// Get activities for a student by enrollment number
-router.post('/students', getStudentActivities);
+// // Delete co-curricular activity
+// router.delete('/:activityId', deleteActivity);
 
-module.exports = router;
+// // Get activities for a student by enrollment number
+// router.post('/getco', getStudentActivities);//update route
+
+// router.post('/getCoWithSem', getStudentActivitieswithenrollmentandSemester);
+
+// module.exports = router;

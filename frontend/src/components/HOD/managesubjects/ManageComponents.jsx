@@ -47,32 +47,34 @@ const ManageComponents = ({ selectedSubject }) => {
     };
 
     const handleSave = async () => {
-        if (totalWeightage !== 100) {
-            alert('Total weightage must equal 100%');
-            return;
-        }
-
         if (!newSubject.code || !newSubject.name || !newSubject.credits) {
             alert('Please fill in all subject details');
             return;
         }
 
         // Prepare the data to be sent to the API
-        const componentsData = {};
+        const componentsWeightage = [];
+        const componentsMarks = [];
+
         Object.entries(weightages).forEach(([component, data]) => {
             if (data.enabled) {
-                componentsData[component] = {
-                    enabled: data.enabled,
-                    weightage: data.weightage,
-                    totalMarks: data.totalMarks
-                };
+                componentsWeightage.push({
+                    name: component,
+                    weightage: data.weightage
+                });
+                componentsMarks.push({
+                    name: component,
+                    value: data.totalMarks
+                });
             }
         });
 
         try {
             console.log('Sending data:', {
-                ...newSubject,
-                components: componentsData
+                subject: newSubject.code,
+                credits: Number(newSubject.credits),
+                componentsWeightage,
+                componentsMarks
             });
 
             // Call the new API endpoint to add subject with components
@@ -80,11 +82,10 @@ const ManageComponents = ({ selectedSubject }) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    code: newSubject.code,
-                    name: newSubject.name,
-                    credits: newSubject.credits,
-                    type: newSubject.type,
-                    components: componentsData
+                    subject: newSubject.code,
+                    credits: Number(newSubject.credits),
+                    componentsWeightage,
+                    componentsMarks
                 })
             });
 
@@ -130,13 +131,13 @@ const ManageComponents = ({ selectedSubject }) => {
                         onChange={(e) => handleSubjectChange('code', e.target.value)}
                         className="subject-input"
                     />
-                    <input
+                    {/* <input
                         type="text"
                         placeholder="Subject Name"
                         value={newSubject.name}
                         onChange={(e) => handleSubjectChange('name', e.target.value)}
                         className="subject-input"
-                    />
+                    /> */}
                     <input
                         type="number"
                         placeholder="Credits"
@@ -208,16 +209,18 @@ const ManageComponents = ({ selectedSubject }) => {
                     </tbody>
                 </table>
                 <div className="weightage-summary">
-                    <p className={totalWeightage === 100 ? "weightage-ok" : "weightage-error"}>
-                        Total Weightage: {totalWeightage}% {totalWeightage !== 100 && "(Must be 100%)"}
+                    <p>
+                        Total Weightage: {totalWeightage}%
                     </p>
                 </div>
-                <button
-                    className="save-weightage-btn"
-                    onClick={handleSave}
-                >
-                    Add Subject
-                </button>
+                <div className="last-button">
+                    <button
+                        className="save-weightage-btn"
+                        onClick={handleSave}
+                    >
+                        Add Subject
+                    </button>
+                </div>
             </div>
         </div>
     );

@@ -237,30 +237,86 @@ const StudentGrades = () => {
         const fetchSubjects = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:5001/api/subjects/getSubjects/${selectedBatch.batchName}/${selectedSemester.semesterNumber}`);
-                if (!response.ok) throw new Error("Failed to fetch subjects");
-                const data = await response.json();
-                console.log('Subject API Response:', data);
+                // Get faculty information from localStorage
+                const faculty = JSON.parse(localStorage.getItem('user'));
+                if (!faculty || !faculty.name) {
+                    throw new Error("Faculty information not found");
+                }
 
-                // Extract subjects from the response
-                const subjectList = data.subjects || [];
-                const uniqueSubjects = data.uniqueSubjects || [];
+                // First, get the batch ID from batch name
+                const batchIdResponse = await fetch(
+                    `http://localhost:5001/api/facultyside/marks/getBatchId/${selectedBatch.batchName}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
 
-                // Map subjects with additional info from uniqueSubjects if available
-                const mappedSubjects = subjectList.map(subject => {
-                    const uniqueInfo = uniqueSubjects.find(u => u.sub_name === subject.subjectName);
-                    return {
-                        id: subject.id,
-                        subjectName: subject.subjectName,
-                        subCode: uniqueInfo?.sub_code,
-                        subLevel: uniqueInfo?.sub_level
-                    };
+                if (!batchIdResponse.ok) throw new Error("Failed to fetch batch ID");
+                const batchIdData = await batchIdResponse.json();
+                const batchId = batchIdData.batchId;
+
+                console.log('Fetching subjects with params:', {
+                    batchId: batchId,
+                    semesterId: selectedSemester.semesterNumber,
+                    facultyName: faculty.name
                 });
 
-                setSubjects(mappedSubjects);
+                // Use the new API endpoint that filters by faculty name with the batch ID
+                const response = await fetch(
+                    `http://localhost:5001/api/facultyside/marks/getsubjectByBatchAndSemester/${batchId}/${selectedSemester.semesterNumber}/${faculty.name}`
+                );
+
+                if (!response.ok) throw new Error("Failed to fetch subjects");
+                const data = await response.json();
+                console.log('Faculty Subject API Response:', data);
+
+                // Process each subject to get its name
+                const subjectsWithNames = await Promise.all(data.map(async (subject) => {
+                    try {
+                        // Get subject name from subject code
+                        const subjectNameResponse = await fetch(
+                            `http://localhost:5001/api/facultyside/marks/getSubjectName/${subject.subjectCode}`,
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            }
+                        );
+
+                        if (subjectNameResponse.ok) {
+                            const subjectNameData = await subjectNameResponse.json();
+                            return {
+                                id: subject.id || subject.subjectCode,
+                                subjectName: subjectNameData.subjectName,
+                                subCode: subject.subjectCode
+                            };
+                        } else {
+                            // If we can't get the name, just use the code as the name
+                            return {
+                                id: subject.id || subject.subjectCode,
+                                subjectName: subject.subjectCode,
+                                subCode: subject.subjectCode
+                            };
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching name for subject ${subject.subjectCode}:`, error);
+                        return {
+                            id: subject.id || subject.subjectCode,
+                            subjectName: subject.subjectCode, // Fallback to code if name fetch fails
+                            subCode: subject.subjectCode
+                        };
+                    }
+                }));
+
+                console.log('Subjects with names:', subjectsWithNames);
+                setSubjects(subjectsWithNames);
             } catch (error) {
                 console.error("Error fetching subjects:", error);
-                setError("Failed to fetch subjects");
+                setError("Failed to fetch subjects: " + error.message);
                 setSubjects([]);
             } finally {
                 setLoading(false);
@@ -271,19 +327,38 @@ const StudentGrades = () => {
 
     // Fetch students when subject changes
     useEffect(() => {
-        if (!selectedBatch || !selectedSubject) return;
+        if (!selectedBatch || !selectedSubject || !selectedSemester) return;
 
         const fetchStudents = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:5001/api/marks/students1/${selectedBatch.batchName}`);
+                // Get batch ID first
+                const batchIdResponse = await fetch(
+                    `http://localhost:5001/api/facultyside/marks/getBatchId/${selectedBatch.batchName}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                
+                if (!batchIdResponse.ok) throw new Error("Failed to fetch batch ID");
+                const batchIdData = await batchIdResponse.json();
+                const batchId = batchIdData.batchId;
+                
+                console.log('Fetching students for batch ID:', batchId, 'and semester:', selectedSemester.semesterNumber);
+                
+                // Use the new API endpoint that filters by both batch and semester
+                const response = await fetch(`http://localhost:5001/api/marks/students/${batchId}/${selectedSemester.semesterNumber}`);
                 if (!response.ok) throw new Error("Failed to fetch students");
                 const data = await response.json();
                 console.log('Students API Response:', data);
+                
                 const studentsWithGrades = data.map(student => ({
                     id: student.id,
                     name: student.name,
-                    enrollmentNo: student.enrollmentNo,
+                    enrollmentNo: student.enrollmentNumber,
                     grades: student.Gettedmarks?.[0] || {
                         ESE: 0,
                         TW: 0,
@@ -304,14 +379,15 @@ const StudentGrades = () => {
                 setRatings(initialRatings);
             } catch (error) {
                 console.error("Error fetching students:", error);
-                setError("Failed to fetch students");
+                setError("Failed to fetch students: " + error.message);
+                setStudentsData([]);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchStudents();
-    }, [selectedBatch, selectedSubject]);
+    }, [selectedBatch, selectedSemester, selectedSubject]);
 
     const handleSubmitResponse = async (studentId) => {
         if (!selectedSubject) {
@@ -371,10 +447,44 @@ const StudentGrades = () => {
     const handleSubjectChange = (e) => {
         console.log('Selected subject value:', e.target.value); // Debug log
         console.log('Available subjects:', subjects); // Debug log
+
+        // Find the subject by subCode
         const subject = subjects.find(s => s.subCode === e.target.value);
         console.log('Found subject:', subject); // Debug log
-        setSelectedSubject(subject);
-        fetchStudentData(selectedBatch?.id, subject?.subCode);
+
+        if (subject) {
+            setSelectedSubject(subject);
+
+            // Get batch ID and then fetch student data
+            const getBatchIdAndFetchStudents = async () => {
+                try {
+                    // Get batch ID from batch name
+                    const batchIdResponse = await fetch(
+                        `http://localhost:5001/api/facultyside/marks/getBatchId/${selectedBatch.batchName}`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }
+                    );
+
+                    if (!batchIdResponse.ok) throw new Error("Failed to fetch batch ID");
+                    const batchIdData = await batchIdResponse.json();
+                    const batchId = batchIdData.batchId;
+
+                    // Fetch student data with batch ID
+                    fetchStudentData(batchId, subject.subCode);
+                } catch (error) {
+                    console.error("Error getting batch ID:", error);
+                    setError("Failed to get batch ID: " + error.message);
+                }
+            };
+
+            getBatchIdAndFetchStudents();
+        } else {
+            console.error('Subject not found for code:', e.target.value);
+        }
     };
 
     const handleResponseChange = (studentId, response) => {
@@ -477,7 +587,7 @@ const StudentGrades = () => {
                     >
                         <option value="">Select Subject</option>
                         {subjects.map(subject => (
-                            <option key={subject.id} value={subject.subCode}>
+                            <option key={subject.id || subject.subCode} value={subject.subCode}>
                                 {subject.subjectName} ({subject.subCode})
                             </option>
                         ))}

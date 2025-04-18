@@ -1,8 +1,8 @@
 const ComponentMarks = require("../models/componentMarks");
-
+const ComponentWeightage = require("../models/componentWeightage");
 const UniqueSubDegree = require("../models/uniqueSubDegree");
 
-// ✅ Create Component Marks
+// Create Component Marks
 const createComponentMarks = async (req, res) => {
   try {
     console.log("Received request body:", req.body);
@@ -31,7 +31,7 @@ const createComponentMarks = async (req, res) => {
   }
 };
 
-// ✅ Get All Component Marks
+// Get All Component Marks
 const getAllComponentMarks = async (req, res) => {
   try {
     const marks = await ComponentMarks.findAll({
@@ -47,7 +47,7 @@ const getAllComponentMarks = async (req, res) => {
   }
 };
 
-// ✅ Get Component Marks by ID
+// Get Component Marks by ID
 const getComponentMarksById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -66,7 +66,7 @@ const getComponentMarksById = async (req, res) => {
   }
 };
 
-// ✅ Update Component Marks
+// Update Component Marks
 const updateComponentMarks = async (req, res) => {
   try {
     const { id } = req.params;
@@ -86,7 +86,7 @@ const updateComponentMarks = async (req, res) => {
   }
 };
 
-// ✅ Delete Component Marks
+// Delete Component Marks
 const deleteComponentMarks = async (req, res) => {
   try {
     const { id } = req.params;
@@ -104,7 +104,76 @@ const deleteComponentMarks = async (req, res) => {
   }
 };
 
+const addSubjectWithComponents = async (req, res) => {
+  try {
+    const { subject, credits, componentsWeightage, componentsMarks } = req.body;
+
+    // Fetch Subject ID
+    const subjectRecord = await UniqueSubDegree.findOne({ where: { sub_code: subject } });
+    if (!subjectRecord) return res.status(400).json({ error: "Subject not found" });
+
+    // Update credits in UniqueSubDegree
+    if (typeof credits === 'number') {
+      await subjectRecord.update({ credits });
+    }
+
+    // Prepare mapping helper
+    function mapComponents(components) {
+      const map = { ESE: 0, CSE: 0, IA: 0, TW: 0, VIVA: 0 };
+      if (Array.isArray(components)) {
+        components.forEach(comp => {
+          if (comp.name && typeof comp.value === 'number') {
+            const key = comp.name.toUpperCase();
+            if (map.hasOwnProperty(key)) {
+              map[key] = comp.value;
+            }
+          } else if (comp.name && typeof comp.weightage === 'number') {
+            // fallback for weightage
+            const key = comp.name.toUpperCase();
+            if (map.hasOwnProperty(key)) {
+              map[key] = comp.weightage;
+            }
+          }
+        });
+      }
+      return map;
+    }
+
+    // Map weightages
+    const weightageMap = mapComponents(componentsWeightage);
+    // Map marks
+    const marksMap = mapComponents(componentsMarks);
+
+    // Insert into ComponentWeightage
+    const newWeightage = await ComponentWeightage.create({
+      subjectId: subjectRecord.sub_code,
+      ese: weightageMap.ESE,
+      cse: weightageMap.CSE,
+      ia: weightageMap.IA,
+      tw: weightageMap.TW,
+      viva: weightageMap.VIVA
+    });
+
+    // Insert into ComponentMarks
+    const newMarks = await ComponentMarks.create({
+      subjectId: subjectRecord.sub_code,
+      ese: marksMap.ESE,
+      cse: marksMap.CSE,
+      ia: marksMap.IA,
+      tw: marksMap.TW,
+      viva: marksMap.VIVA
+    });
+
+    res.status(201).json({
+      weightage: newWeightage,
+      marks: newMarks
+    });
+  } catch (error) {
+    console.error("Error in addSubjectWithComponents:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
-  deleteComponentMarks, updateComponentMarks, getComponentMarksById, getAllComponentMarks, createComponentMarks
+  deleteComponentMarks, addSubjectWithComponents, updateComponentMarks, getComponentMarksById, getAllComponentMarks, createComponentMarks
 }

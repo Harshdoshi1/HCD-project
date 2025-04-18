@@ -74,11 +74,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
 
     const fetchCoCurricularActivities = async (enrollmentNumber) => {
         try {
-            // For co-curricular activities, we'll implement a fallback solution for now
-            // since the API endpoint is having issues
-            // In a production app, you'd use the correct API endpoint
 
-            // Mock data for demonstration
             const mockActivities = [
                 {
                     id: 1,
@@ -212,73 +208,19 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
         setShowEditForm(true);
     };
 
-    const handleSubmitActivity = async (activity, isEditing) => {
-        try {
-            const endpoint = currentActivityType === 'co'
-                ? 'http://localhost:5001/api/students/cocurricular'
-                : 'http://localhost:5001/api/students/extracurricular';
-
-            const method = isEditing ? 'PUT' : 'POST';
-            const url = isEditing ? `${endpoint}/${activity.id}` : endpoint;
-
-            // Prepare the request body based on activity type
-            let requestBody;
-            if (currentActivityType === 'co') {
-                requestBody = {
-                    title: activity.title,
-                    description: activity.description,
-                    date: activity.date,
-                    semester: activity.semester,
-                    points: activity.points,
-                    enrollmentNumber: student.enrollmentNumber
-                };
-            } else {
-                requestBody = {
-                    title: activity.title,
-                    description: activity.description,
-                    date: activity.date,
-                    semester: activity.semester,
-                    activityType: activity.activityType,
-                    position: activity.position,
-                    venue: activity.venue,
-                    points: activity.points,
-                    enrollmentNumber: student.enrollmentNumber
-                };
-            }
-
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to save activity');
-            }
-
-            // Refresh activities based on type
-            if (currentActivityType === 'co') {
-                fetchCoCurricularActivities(student.enrollmentNumber);
-            } else {
-                fetchExtraCurricularActivities(student.enrollmentNumber);
-            }
-
-            // Close the form
-            setShowAddForm(false);
-            setShowEditForm(false);
-            setCurrentActivity(null);
-
-            // Show success message
-            setSuccessMessage(`Activity ${isEditing ? 'updated' : 'added'} successfully!`);
-            setTimeout(() => setSuccessMessage(''), 3000);
-
-        } catch (error) {
-            console.error('Error saving activity:', error);
-            setError('Failed to save activity. Please try again.');
-            setTimeout(() => setError(''), 3000);
+    const handleSubmitActivity = async (activity) => {
+        // Just refresh the activities list and close the form
+        // The form components will handle their own success/error messages
+        if (currentActivityType === 'co') {
+            fetchCoCurricularActivities(student.enrollmentNumber);
+        } else {
+            fetchExtraCurricularActivities(student.enrollmentNumber);
         }
+
+        // Close the forms
+        setShowAddForm(false);
+        setShowEditForm(false);
+        setCurrentActivity(null);
     };
 
     const handleDeleteActivity = async (activityId, type) => {
@@ -432,6 +374,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
 
                     {activeTab === 'co-curricular' && (
                         <CoCurricularActivities
+                            studentEnrollment={student.enrollmentNumber}
                             student={student}
                             selectedSemester={selectedSemester}
                             activityFilter={activityFilter}
@@ -447,6 +390,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
 
                     {activeTab === 'extra-curricular' && (
                         <ExtraCurricularActivities
+                            studentEnrollment={student.enrollmentNumber}
                             student={student}
                             selectedSemester={selectedSemester}
                             activityFilter={activityFilter}
@@ -461,7 +405,6 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
                 </div>
             </div>
 
-            {/* Activity Forms */}
             {showAddForm && currentActivityType === 'co' && (
                 <AddCoCurricularActivityForm
                     onClose={() => setShowAddForm(false)}
