@@ -14,7 +14,7 @@ const SubjectList = ({ onSelectSubject }) => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllBatches");
+                const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data);
@@ -32,9 +32,10 @@ const SubjectList = ({ onSelectSubject }) => {
                     setSemesters([]);
                     return;
                 }
-                const response = await fetch(`http://localhost:5001/api/users/getSemestersByBatch/${filters.batch}`);
+                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${filters.batch}`);
                 if (!response.ok) throw new Error("Failed to fetch semesters");
                 const data = await response.json();
+                console.log("dasada", data);
                 setSemesters(data);
             } catch (error) {
                 console.error("Error fetching semesters:", error);
@@ -51,11 +52,16 @@ const SubjectList = ({ onSelectSubject }) => {
                     return;
                 }
                 const response = await fetch(
-                    `http://localhost:5001/api/users/getSubjects/${filters.batch}/${filters.semester}`
+                    `http://localhost:5001/api/subjects/getSubjects/${encodeURIComponent(filters.batch)}/${filters.semester}`
                 );
-                if (!response.ok) throw new Error("Failed to fetch subjects");
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    throw new Error(errorData.message || "Failed to fetch subjects");
+                }
                 const data = await response.json();
-                setSubjects(data.uniqueSubjects);
+                console.log('Subjects API Response:', data);
+                setSubjects(data.subjects);
             } catch (error) {
                 console.error("Error fetching subjects:", error);
             }
@@ -101,12 +107,14 @@ const SubjectList = ({ onSelectSubject }) => {
                             <div style={{ marginTop: '10px' }} className="subject-code">{subject.sub_code}</div>
                             <div className="subject-name">{subject.sub_name}</div>
                             <div className="subject-details">
-                                <span>{filters.program}</span>
+                                <span>{filters.program}</span><br />
+                                <span>{subject.subjectName}</span><br />
                                 <span>{filters.semester !== 'all' ? `Semester ${filters.semester}` : 'All Semesters'}</span>
                             </div>
                         </div>
                     ))
                 ) : (
+
                     <p className="no-subjects">No subjects found for the selected filters.</p>
                 )}
             </div>

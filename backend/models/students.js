@@ -2,7 +2,6 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const Batch = require('./batch');
 
-
 const Student = sequelize.define('Student', {
     id: {
         type: DataTypes.INTEGER,
@@ -25,14 +24,16 @@ const Student = sequelize.define('Student', {
     enrollmentNumber: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    currnetsemester:{
+        type: DataTypes.INTEGER,
+        allowNull: false
     }
 }, {
     tableName: 'Students',
     timestamps: true
 });
 
-
 Student.belongsTo(Batch, { foreignKey: 'batchId' });
-
 
 module.exports = Student;
