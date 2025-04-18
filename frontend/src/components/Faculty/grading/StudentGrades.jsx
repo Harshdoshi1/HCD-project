@@ -61,25 +61,40 @@ const StudentGrades = () => {
         if (!subjectCode) return;
 
         try {
-            const response = await fetch(`http://localhost:5001/api/componentMarks/marksBySubject/${subjectCode}`);
-            if (!response.ok) throw new Error("Failed to fetch component marks");
+            console.log('Fetching components for subject:', subjectCode);
+            // Use the getSubjectComponentsWithSubjectCode endpoint
+            const response = await fetch(`http://localhost:5001/api/subjects/getSubjectComponentsWithSubjectCode/${subjectCode}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Failed to fetch subject components");
+            }
 
             const data = await response.json();
-            setComponentMarks(data);
+            console.log("Subject components data:", data);
             
-            // Determine which components are active (non-zero)
+            // Extract component marks from the response
+            const componentMarksData = data.marks || {};
+            setComponentMarks({
+                ese: componentMarksData.ese || 0,
+                cse: componentMarksData.cse || 0,
+                ia: componentMarksData.ia || 0,
+                tw: componentMarksData.tw || 0,
+                viva: componentMarksData.viva || 0
+            });
+            
+            // Determine which components are active (non-zero) based on the component marks
             const components = [];
-            if (data.ese > 0) components.push('ESE');
-            if (data.cse > 0) components.push('CSE');
-            if (data.ia > 0) components.push('IA');
-            if (data.tw > 0) components.push('TW');
-            if (data.viva > 0) components.push('Viva');
+            if (componentMarksData.ese > 0) components.push('ESE');
+            if (componentMarksData.cse > 0) components.push('CSE');
+            if (componentMarksData.ia > 0) components.push('IA');
+            if (componentMarksData.tw > 0) components.push('TW');
+            if (componentMarksData.viva > 0) components.push('Viva');
             
             setActiveComponents(components);
             console.log("Active components:", components);
         } catch (error) {
-            console.error("Error fetching component marks:", error);
-            setError("Failed to fetch component marks: " + error.message);
+            console.error("Error fetching subject components:", error);
+            setError("Failed to fetch subject components: " + error.message);
         }
     };
 
@@ -150,16 +165,13 @@ const StudentGrades = () => {
         setLoading(true);
         try {
             console.log('vvvvv Fetching student data for batch:', batchId, 'and subject:', subjectCode);
-            const response = await fetch(`http://localhost:5001/api/marks/students/${batchId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Error: ${response.status} ${response.statusText}`);
-                    }
-                    return response.json();
-                })
-                .then(data => console.log("Student Data:", data))
-                .catch(error => console.error("Fetch error:", error));
-
+            const response = await fetch(`http://localhost:5001/api/marks/students/${batchId}`);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Error: ${response.status} ${response.statusText}`);
+            }
+            
             const data = await response.json();
             console.log('Fetched student data:', data);
             setStudentsData(data.map(student => ({
@@ -186,7 +198,7 @@ const StudentGrades = () => {
             
         } catch (error) {
             console.error('Error fetching student data:', error);
-            // setError('Failed to fetch student data');
+            setError('Failed to fetch student data: ' + error.message);
         } finally {
             setLoading(false);
         }
@@ -727,22 +739,28 @@ const StudentGrades = () => {
                                         <div className="grade-components">
                                             <h4>Grade Components</h4>
                                             <div className="grade-inputs-container">
-                                                {activeComponents.map((component) => (
-                                                    <div key={component} className="grade-input-group">
-                                                        <label>{component}:</label>
-                                                        <GradeInput
-                                                            value={student.grades?.[component.toLowerCase()]}
-                                                            onChange={(value) => handleGradeChange(student.id, component, value)}
-                                                            disabled={editingGrades !== student.id}
-                                                            component={component}
-                                                        />
-                                                        {componentMarks && (
-                                                            <span className="max-marks">
-                                                                / {componentMarks[component.toLowerCase()]}
-                                                            </span>
-                                                        )}
+                                                {activeComponents.length > 0 ? (
+                                                    activeComponents.map((component) => (
+                                                        <div key={component} className="grade-input-group">
+                                                            <label>{component}:</label>
+                                                            <GradeInput
+                                                                value={student.grades?.[component.toLowerCase()]}
+                                                                onChange={(value) => handleGradeChange(student.id, component, value)}
+                                                                disabled={editingGrades !== student.id}
+                                                                component={component}
+                                                            />
+                                                            {componentMarks && (
+                                                                <span className="max-marks">
+                                                                    / {componentMarks[component.toLowerCase()]}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="no-components-message">
+                                                        <p>No grade components defined for this subject</p>
                                                     </div>
-                                                ))}
+                                                )}
                                             </div>
                                             <div className="grade-actions">
                                                 {editingGrades === student.id ? (
