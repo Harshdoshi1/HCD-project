@@ -90,6 +90,10 @@
     transition: height 0.3s ease;
 }
 
+.spi-bar {
+    background: #ff6b6b;
+}
+
 .gpa-value {
     position: absolute;
     top: -25px;
@@ -179,7 +183,12 @@
 .cgpa-fill {
     height: 100%;
     background: #4361ee;
+    border-radius: 4px;
     transition: width 0.3s ease;
+}
+
+.spi-fill {
+    background: #ff6b6b;
 }
 
 .achievements-list {
