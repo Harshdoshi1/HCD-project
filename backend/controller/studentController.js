@@ -1,17 +1,19 @@
+const express = require('express');
+const router = express.Router();
 const Student = require('../models/students');
 const Batch = require('../models/batch');
 
 // Create a new student
-exports.createStudent = async (req, res) => {
+const createStudent = async (req, res) => {
     try {
-        const { name, email, batchID, enrollment } = req.body;
+        const { name, email, batchID, enrollment, currentSemester } = req.body;
 
         // Input validation
-        if (!name || !email || !batchID || !enrollment) {
-            console.error("Missing required fields:", { name, email, batchID, enrollment });
+        if (!name || !email || !batchID || !enrollment || !currentSemester) {
+            console.error("Missing required fields:", { name, email, batchID, enrollment, currentSemester });
             return res.status(400).json({
                 error: "All fields are required",
-                received: { name, email, batchID, enrollment }
+                received: { name, email, batchID, enrollment, currentSemester }
             });
         }
 
@@ -36,7 +38,8 @@ exports.createStudent = async (req, res) => {
             name,
             email,
             batchId: batch.id,
-            enrollmentNumber: enrollment
+            enrollmentNumber: enrollment,
+            currnetsemester: currentSemester // Note: using the field name as defined in the model
         });
 
         console.log("Created student:", student.toJSON());
@@ -52,7 +55,7 @@ exports.createStudent = async (req, res) => {
 };
 
 // Create multiple students
-exports.createStudents = async (req, res) => {
+const createStudents = async (req, res) => {
     try {
         const students = req.body.students; // Expecting an array of student objects
 
@@ -81,11 +84,12 @@ exports.createStudents = async (req, res) => {
         }
 
         // Prepare student data with correct batch IDs
-        const studentData = students.map(({ name, email, batchID, enrollment }) => ({
+        const studentData = students.map(({ name, email, batchID, enrollment, currentSemester }) => ({
             name,
             email,
             batchId: batchMap[batchID], // Replace batch name with batch ID
-            enrollmentNumber: enrollment
+            enrollmentNumber: enrollment,
+            currnetsemester: currentSemester // Note: using the field name as defined in the model
         }));
 
         // Bulk insert students
@@ -101,8 +105,9 @@ exports.createStudents = async (req, res) => {
         });
     }
 };
+
 // Get all students
-exports.getAllStudents = async (req, res) => {
+const getAllStudents = async (req, res) => {
     try {
         const students = await Student.findAll({ include: Batch });
         res.status(200).json(students);
@@ -112,7 +117,7 @@ exports.getAllStudents = async (req, res) => {
 };
 
 // Get a single student by ID
-exports.getStudentById = async (req, res) => {
+const getStudentById = async (req, res) => {
     try {
         const student = await Student.findByPk(req.params.id, { include: Batch });
         if (!student) return res.status(404).json({ message: 'Student not found' });
@@ -123,13 +128,19 @@ exports.getStudentById = async (req, res) => {
 };
 
 // Update student details
-exports.updateStudent = async (req, res) => {
+const updateStudent = async (req, res) => {
     try {
-        const { name, email, batchId, enrollmentNumber } = req.body;
+        const { name, email, batchId, enrollmentNumber, currentSemester } = req.body;
         const student = await Student.findByPk(req.params.id);
         if (!student) return res.status(404).json({ message: 'Student not found' });
 
-        await student.update({ name, email, batchId, enrollmentNumber });
+        await student.update({ 
+            name, 
+            email, 
+            batchId, 
+            enrollmentNumber, 
+            currnetsemester: currentSemester 
+        });
         res.status(200).json(student);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -137,7 +148,7 @@ exports.updateStudent = async (req, res) => {
 };
 
 // Delete a student
-exports.deleteStudent = async (req, res) => {
+const deleteStudent = async (req, res) => {
     try {
         const student = await Student.findByPk(req.params.id);
         if (!student) return res.status(404).json({ message: 'Student not found' });
@@ -147,4 +158,67 @@ exports.deleteStudent = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+};
+
+// Update multiple students' semesters
+const updateStudentSemesters = async (req, res) => {
+    try {
+        const { studentIds, newSemester } = req.body;
+        
+        if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+            return res.status(400).json({ message: 'No student IDs provided' });
+        }
+        
+        if (newSemester === undefined || isNaN(parseInt(newSemester))) {
+            return res.status(400).json({ message: 'Invalid semester value' });
+        }
+        
+        // Update all selected students
+        const updatePromises = studentIds.map(id => 
+            Student.update(
+                { currnetsemester: parseInt(newSemester) },
+                { where: { id } }
+            )
+        );
+        
+        await Promise.all(updatePromises);
+        
+        res.status(200).json({ message: 'Student semesters updated successfully' });
+    } catch (error) {
+        console.error('Error updating student semesters:', error);
+        res.status(500).json({ message: 'Failed to update student semesters', error: error.message });
+    }
+};
+
+// Get students by batch ID
+const getStudentsByBatch = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+        
+        if (!batchId) {
+            return res.status(400).json({ message: 'Batch ID is required' });
+        }
+        
+        const students = await Student.findAll({
+            where: { batchId: parseInt(batchId) },
+            attributes: ['id', 'name', 'enrollmentNumber', 'currnetsemester'],
+            order: [['name', 'ASC']]
+        });
+        
+        res.status(200).json(students);
+    } catch (error) {
+        console.error('Error fetching students by batch:', error);
+        res.status(500).json({ message: 'Failed to fetch students', error: error.message });
+    }
+};
+
+module.exports = { 
+    deleteStudent, 
+    updateStudent, 
+    getStudentById, 
+    getAllStudents, 
+    createStudents, 
+    createStudent,
+    updateStudentSemesters,
+    getStudentsByBatch
 };
