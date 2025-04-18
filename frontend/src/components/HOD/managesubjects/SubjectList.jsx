@@ -84,7 +84,7 @@ const SubjectList = ({ onSelectSubject }) => {
         <div className="subject-list">
             <div className="filters-container-display-subject-list">
 
-                <select className="professional-filter ds" name="batch" value={filters.batch} onChange={handleChange} required>
+                <select className="professional-filter-ds" name="batch" value={filters.batch} onChange={handleChange} required>
                     <option value="all">Batch</option>
                     {batches.map((batch, index) => (
                         <option key={batch._id || index} value={batch.batchName}>
@@ -92,7 +92,7 @@ const SubjectList = ({ onSelectSubject }) => {
                         </option>
                     ))}
                 </select>
-                <select className="professional-filter ds" name="semester" value={filters.semester} onChange={handleChange} required>
+                <select className="professional-filter-ds" name="semester" value={filters.semester} onChange={handleChange} required>
                     <option value="all">Semester</option>
                     {semesters.map((sem, index) => (
                         <option key={sem._id || index} value={sem.semesterNumber}>
