@@ -72,6 +72,7 @@ const ManageComponents = ({ selectedSubject }) => {
         try {
             console.log('Sending data:', {
                 subject: newSubject.code,
+                name: newSubject.name,
                 credits: Number(newSubject.credits),
                 componentsWeightage,
                 componentsMarks
@@ -83,6 +84,7 @@ const ManageComponents = ({ selectedSubject }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     subject: newSubject.code,
+                    name: newSubject.name,
                     credits: Number(newSubject.credits),
                     componentsWeightage,
                     componentsMarks
@@ -131,13 +133,13 @@ const ManageComponents = ({ selectedSubject }) => {
                         onChange={(e) => handleSubjectChange('code', e.target.value)}
                         className="subject-input"
                     />
-                    {/* <input
+                    <input
                         type="text"
                         placeholder="Subject Name"
                         value={newSubject.name}
                         onChange={(e) => handleSubjectChange('name', e.target.value)}
                         className="subject-input"
-                    /> */}
+                    />
                     <input
                         type="number"
                         placeholder="Credits"
