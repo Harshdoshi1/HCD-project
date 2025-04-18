@@ -123,7 +123,7 @@
 }
 
 
-.student-count-sgp-sgp {
+.student-count-sgp {
     display: inline-block;
     margin: 20px 0;
     font-size: 14px;
@@ -160,6 +160,16 @@
 .student-basic-info-sgp {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.student-left-section {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 250px;
 }
 
 .student-image {
@@ -198,9 +208,19 @@
     font-weight: 500;
 }
 
+.student-grade-components {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+}
+
 .student-actions-sgp {
     display: flex;
     gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    min-width: 200px;
 }
 
 .grade-button,
@@ -336,6 +356,13 @@
     background-color: #e2e8f0;
 }
 
+.faculty-response {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+}
+
 .faculty-response textarea {
     width: 95%;
     height: 150px;
@@ -348,8 +375,6 @@
     font-size: 14px;
     margin-right: 10px;
 }
-
-.faculty-response {}
 
 .faculty-response textarea:focus {
     outline: none;
@@ -642,4 +667,185 @@
     font-size: 14px;
     color: #4b5563;
     font-weight: 500;
+}
+
+.grade-components-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.grade-input-mini {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.save-grades-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+    padding: 0 15px;
+}
+
+.edit-grades-button.active {
+    background-color: #f97316;
+    color: white;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 992px) {
+    .student-basic-info-sgp {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .student-left-section,
+    .student-grade-components,
+    .student-actions-sgp {
+        width: 100%;
+        justify-content: flex-start;
+        margin-bottom: 10px;
+    }
+    
+    .student-actions-sgp {
+        justify-content: flex-start;
+    }
+}
+
+/* Styles for always visible grade components */
+.always-visible-grades {
+    margin-top: 15px;
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.grade-components-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.grade-input-mini {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.grade-input-mini label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    margin-right: 5px;
+}
+
+.mini-input {
+    width: 40px;
+    text-align: center;
+    padding: 3px 5px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 13px;
+    background-color: white;
+}
+
+.mini-input:disabled {
+    background-color: #f8f9fa;
+    cursor: default;
+}
+
+.mini-input.graded {
+    background-color: #e8f5e9;
+    border-color: #4caf50;
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.mini-max {
+    font-size: 12px;
+    color: #64748b;
+    margin-left: 2px;
+}
+
+.no-components-mini {
+    font-size: 13px;
+    color: #64748b;
+    font-style: italic;
+}
+
+.mini-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    margin-top: 10px;
+    width: 100%;
+    justify-content: flex-end;
+}
+
+.response-button.active {
+    background-color: #4a5568;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .grade-components-mini {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .grade-input-mini {
+        width: 100%;
+    }
+}
+
+/* Graded badge and related styles */
+.graded-badge {
+    background-color: #4caf50;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    margin-left: 10px;
+    display: inline-block;
+}
+
+.graded-info {
+    background-color: #e8f5e9;
+    border-left: 3px solid #4caf50;
+    padding: 8px 12px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.graded-count {
+    font-size: 0.9rem;
+    color: #666;
+    margin-left: 15px;
+}
+
+.edit-grade {
+    background-color: #2196f3;
+}
+
+.rating-stars.disabled button {
+    cursor: default;
+    opacity: 0.8;
+}
+
+textarea.readonly {
+    background-color: #f5f5f5;
+    cursor: default;
 }
