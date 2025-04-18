@@ -106,16 +106,22 @@ const deleteComponentMarks = async (req, res) => {
 
 const addSubjectWithComponents = async (req, res) => {
   try {
-    const { subject, credits, componentsWeightage, componentsMarks } = req.body;
+    const { subject, name, credits, componentsWeightage, componentsMarks } = req.body;
 
     // Fetch Subject ID
     const subjectRecord = await UniqueSubDegree.findOne({ where: { sub_code: subject } });
     if (!subjectRecord) return res.status(400).json({ error: "Subject not found" });
 
-    // Update credits in UniqueSubDegree
+    // Update credits and name in UniqueSubDegree
+    const updateData = {};
     if (typeof credits === 'number') {
-      await subjectRecord.update({ credits });
+      updateData.credits = credits;
     }
+    if (name) {
+      updateData.sub_name = name;
+    }
+    
+    await subjectRecord.update(updateData);
 
     // Prepare mapping helper
     function mapComponents(components) {
@@ -174,6 +180,33 @@ const addSubjectWithComponents = async (req, res) => {
   }
 };
 
+// Get Component Marks by Subject Code
+const getComponentMarksBySubject = async (req, res) => {
+  try {
+    const { subjectCode } = req.params;
+    
+    const marks = await ComponentMarks.findOne({
+      where: { subjectId: subjectCode },
+      include: [
+        { model: UniqueSubDegree, attributes: ["sub_name"] },
+      ],
+    });
+
+    if (!marks) return res.status(404).json({ error: "Component Marks not found for this subject" });
+
+    res.status(200).json(marks);
+  } catch (error) {
+    console.error("Error in getComponentMarksBySubject:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
-  deleteComponentMarks, addSubjectWithComponents, updateComponentMarks, getComponentMarksById, getAllComponentMarks, createComponentMarks
+  deleteComponentMarks, 
+  addSubjectWithComponents, 
+  updateComponentMarks, 
+  getComponentMarksById, 
+  getAllComponentMarks, 
+  createComponentMarks,
+  getComponentMarksBySubject
 }
