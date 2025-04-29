@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import supabase from '../config/supabase';
+import { useState, useEffect } from "react";
+import supabase, { TABLES } from "../config/supabase";
 
 const TestSupabase = () => {
   const [data, setData] = useState(null);
@@ -9,10 +9,10 @@ const TestSupabase = () => {
   useEffect(() => {
     const testConnection = async () => {
       try {
-        // Try to fetch data from your Students table
+        // Try to fetch data from your users table
         const { data, error } = await supabase
-          .from('Students')
-          .select('*')
+          .from(TABLES.USERS)
+          .select("*")
           .limit(5);
 
         if (error) {
@@ -39,20 +39,20 @@ const TestSupabase = () => {
       {data && data.length > 0 ? (
         <div>
           <h3>Successfully connected to Supabase!</h3>
-          <p>Found {data.length} records in Students table:</p>
+          <p>Found {data.length} records in users table:</p>
           <ul>
-            {data.map((student) => (
-              <li key={student.id}>
-                {student.name} - {student.roll_number}
+            {data.map((user) => (
+              <li key={user.id}>
+                {user.email} - {user.role}
               </li>
             ))}
           </ul>
         </div>
       ) : (
-        <p>No data found in Students table</p>
+        <p>No data found in users table</p>
       )}
     </div>
   );
 };
 
-export default TestSupabase; 
+export default TestSupabase;

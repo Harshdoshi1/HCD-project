@@ -1,17 +1,26 @@
 /**
  * Supabase Service
- * 
+ *
  * This service provides functions to sync data between the local MySQL database and Supabase.
  * It handles CRUD operations for all the tables defined in the project.
  */
 
-const supabase = require('../supabaseClient');
-const { 
-  User, Batch, Semester, Faculty, Subject, 
-  UniqueSubDegree, UniqueSubDiploma, AssignSubject, 
-  ComponentWeightage, ComponentMarks, Student, 
-  Gettedmarks, ParticipationType 
-} = require('../models');
+const { supabase } = require("../config/supabaseClient");
+const {
+  User,
+  Batch,
+  Semester,
+  Faculty,
+  Subject,
+  UniqueSubDegree,
+  UniqueSubDiploma,
+  AssignSubject,
+  ComponentWeightage,
+  ComponentMarks,
+  Student,
+  Gettedmarks,
+  ParticipationType,
+} = require("../models");
 
 /**
  * Sync a single record to Supabase
@@ -25,11 +34,11 @@ const syncRecord = async (table, data, id) => {
     // Check if record exists in Supabase
     const { data: existingData, error: fetchError } = await supabase
       .from(table)
-      .select('id')
-      .eq('id', id)
+      .select("id")
+      .eq("id", id)
       .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
+    if (fetchError && fetchError.code !== "PGRST116") {
       console.error(`Error checking record in ${table}:`, fetchError);
       return { error: fetchError };
     }
@@ -39,15 +48,15 @@ const syncRecord = async (table, data, id) => {
       const { data: updatedData, error: updateError } = await supabase
         .from(table)
         .update(data)
-        .eq('id', id)
+        .eq("id", id)
         .select();
 
       if (updateError) {
         console.error(`Error updating record in ${table}:`, updateError);
         return { error: updateError };
       }
-      
-      return { data: updatedData, operation: 'update' };
+
+      return { data: updatedData, operation: "update" };
     } else {
       const { data: insertedData, error: insertError } = await supabase
         .from(table)
@@ -58,8 +67,8 @@ const syncRecord = async (table, data, id) => {
         console.error(`Error inserting record in ${table}:`, insertError);
         return { error: insertError };
       }
-      
-      return { data: insertedData, operation: 'insert' };
+
+      return { data: insertedData, operation: "insert" };
     }
   } catch (error) {
     console.error(`Unexpected error in syncRecord for ${table}:`, error);
@@ -75,17 +84,14 @@ const syncRecord = async (table, data, id) => {
  */
 const deleteRecord = async (table, id) => {
   try {
-    const { data, error } = await supabase
-      .from(table)
-      .delete()
-      .eq('id', id);
+    const { data, error } = await supabase.from(table).delete().eq("id", id);
 
     if (error) {
       console.error(`Error deleting record from ${table}:`, error);
       return { error };
     }
-    
-    return { data, operation: 'delete' };
+
+    return { data, operation: "delete" };
   } catch (error) {
     console.error(`Unexpected error in deleteRecord for ${table}:`, error);
     return { error };
@@ -102,32 +108,32 @@ const syncAllRecords = async (model, tableName) => {
   try {
     // Get all records from local database
     const records = await model.findAll();
-    
+
     // Convert records to plain objects
-    const plainRecords = records.map(record => record.get({ plain: true }));
-    
+    const plainRecords = records.map((record) => record.get({ plain: true }));
+
     // Track results
     const results = {
       success: 0,
       failed: 0,
-      errors: []
+      errors: [],
     };
-    
+
     // Sync each record to Supabase
     for (const record of plainRecords) {
       const { error } = await syncRecord(tableName, record, record.id);
-      
+
       if (error) {
         results.failed++;
         results.errors.push({
           id: record.id,
-          error: error.message || error
+          error: error.message || error,
         });
       } else {
         results.success++;
       }
     }
-    
+
     return results;
   } catch (error) {
     console.error(`Error syncing all records for ${tableName}:`, error);
@@ -137,55 +143,55 @@ const syncAllRecords = async (model, tableName) => {
 
 // Specific sync functions for each model
 const syncUsers = async () => {
-  return await syncAllRecords(User, 'Users');
+  return await syncAllRecords(User, "users");
 };
 
 const syncBatches = async () => {
-  return await syncAllRecords(Batch, 'Batches');
+  return await syncAllRecords(Batch, "Batches");
 };
 
 const syncSemesters = async () => {
-  return await syncAllRecords(Semester, 'Semesters');
+  return await syncAllRecords(Semester, "Semesters");
 };
 
 const syncFaculties = async () => {
-  return await syncAllRecords(Faculty, 'Faculties');
+  return await syncAllRecords(Faculty, "Faculties");
 };
 
 const syncSubjects = async () => {
-  return await syncAllRecords(Subject, 'Subjects');
+  return await syncAllRecords(Subject, "Subjects");
 };
 
 const syncUniqueSubDegrees = async () => {
-  return await syncAllRecords(UniqueSubDegree, 'UniqueSubDegrees');
+  return await syncAllRecords(UniqueSubDegree, "UniqueSubDegrees");
 };
 
 const syncUniqueSubDiplomas = async () => {
-  return await syncAllRecords(UniqueSubDiploma, 'UniqueSubDiplomas');
+  return await syncAllRecords(UniqueSubDiploma, "UniqueSubDiplomas");
 };
 
 const syncAssignSubjects = async () => {
-  return await syncAllRecords(AssignSubject, 'AssignSubjects');
+  return await syncAllRecords(AssignSubject, "AssignSubjects");
 };
 
 const syncComponentWeightages = async () => {
-  return await syncAllRecords(ComponentWeightage, 'ComponentWeightages');
+  return await syncAllRecords(ComponentWeightage, "ComponentWeightages");
 };
 
 const syncComponentMarks = async () => {
-  return await syncAllRecords(ComponentMarks, 'ComponentMarks');
+  return await syncAllRecords(ComponentMarks, "ComponentMarks");
 };
 
 const syncStudents = async () => {
-  return await syncAllRecords(Student, 'Students');
+  return await syncAllRecords(Student, "Students");
 };
 
 const syncGettedmarks = async () => {
-  return await syncAllRecords(Gettedmarks, 'Gettedmarks');
+  return await syncAllRecords(Gettedmarks, "Gettedmarks");
 };
 
 const syncParticipationTypes = async () => {
-  return await syncAllRecords(ParticipationType, 'participation_types');
+  return await syncAllRecords(ParticipationType, "participation_types");
 };
 
 /**
@@ -194,7 +200,7 @@ const syncParticipationTypes = async () => {
  */
 const syncAllData = async () => {
   const results = {};
-  
+
   try {
     // Sync all tables
     results.users = await syncUsers();
@@ -210,20 +216,31 @@ const syncAllData = async () => {
     results.students = await syncStudents();
     results.gettedmarks = await syncGettedmarks();
     results.participationTypes = await syncParticipationTypes();
-    
+
     return {
       success: true,
-      results
+      results,
     };
   } catch (error) {
-    console.error('Error syncing all data:', error);
+    console.error("Error syncing all data:", error);
     return {
       success: false,
       error: error.message || error,
-      results
+      results,
     };
   }
 };
+
+async function getUserByEmail(email) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
 
 module.exports = {
   syncRecord,
@@ -241,5 +258,6 @@ module.exports = {
   syncStudents,
   syncGettedmarks,
   syncParticipationTypes,
-  syncAllData
+  syncAllData,
+  getUserByEmail,
 };

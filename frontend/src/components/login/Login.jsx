@@ -1,32 +1,10 @@
-<<<<<<< Updated upstream
-
-import React, { useState } from 'react';
-import './Login.css';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
-import { PulseLoader } from 'react-spinners';
-=======
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { PulseLoader } from "react-spinners";
->>>>>>> Stashed changes
-
 
 function Login() {
-<<<<<<< Updated upstream
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [rememberMe, setRememberMe] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setIsLoading(true);
-=======
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,7 +32,6 @@ function Login() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
->>>>>>> Stashed changes
 
     try {
       const response = await fetch("http://localhost:5001/api/auth/login", {
@@ -65,106 +42,16 @@ function Login() {
         body: JSON.stringify({ email, password }),
       });
 
-<<<<<<< Updated upstream
-            const data = await response.json();
-=======
-      const data = await response.json();
-      console.log("data", data);
->>>>>>> Stashed changes
-
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
 
-<<<<<<< Updated upstream
-            // Store the token and user data in local storage
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
+      const data = await response.json();
+      console.log("Login response:", data);
 
-            // Redirect to the dashboard
-            window.location.href = '/dashboardHOD';
-        } catch (error) {
-            setError(error.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="login-container">
-            <div className="background-effect"></div>
-
-            <div className="login-box fade-in">
-                <div className="logo-container">
-                    <img
-                        src="https://images.unsplash.com/photo-1562774053-701939374585?w=150&h=150&fit=crop"
-                        alt="Department Logo"
-                        className="department-logo"
-                    />
-                </div>
-
-                <h1>Faculty Portal Login</h1>
-
-                <form onSubmit={handleSubmit}>
-                    <div className="input-group">
-                        <Mail className="input-icon" size={20} />
-                        <input
-                            type="email"
-                            placeholder="Email Address"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className={error ? 'error' : ''}
-                            required
-                        />
-                    </div>
-
-                    <div className="input-group">
-                        <Lock className="input-icon" size={20} />
-                        <input
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className={error ? 'error' : ''}
-                            required
-                        />
-                        <button
-                            type="button"
-                            className="toggle-password"
-                            onClick={() => setShowPassword(!showPassword)}
-                        >
-                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
-                    </div>
-
-                    {error && <div className="error-message">{error}</div>}
-
-                    <div className="options-row">
-                        <label className="remember-me">
-                            <input
-                                type="checkbox"
-                                checked={rememberMe}
-                                onChange={(e) => setRememberMe(e.target.checked)}
-                            />
-                            <span>Remember me</span>
-                        </label>
-                        <a href="#" className="forgot-password">Forgot Password?</a>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="login-button"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <PulseLoader color="#ffffff" size={8} />
-                        ) : (
-                            'Login'
-                        )}
-                    </button>
-                </form>
-            </div>
-=======
       // Explicitly remove old local storage items before storing new ones
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -184,7 +71,8 @@ function Login() {
         throw new Error("Invalid user role");
       }
     } catch (error) {
-      setError(error.message);
+      console.error("Login error:", error);
+      setError(error.message || "Failed to login. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -201,7 +89,6 @@ function Login() {
             alt="Department Logo"
             className="department-logo"
           />
->>>>>>> Stashed changes
         </div>
 
         <h1>Faculty Portal Login</h1>

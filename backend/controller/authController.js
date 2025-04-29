@@ -1,201 +1,236 @@
-<<<<<<< Updated upstream
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma } = require('../models'); // Import models
-=======
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
->>>>>>> Stashed changes
-
+const { supabase } = require("../config/supabaseClient");
 
 // ✅ Add Subject (Check if already assigned to batch & semester)
 const assignSubject = async (req, res) => {
-    try {
-        console.log("Received Request Body:", req.body); // Debugging
+  try {
+    console.log("Received Request Body:", req.body); // Debugging
 
-        const { subjects } = req.body;
-        if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
-            return res.status(400).json({ message: "Invalid or empty subjects array" });
-        }
-
-        for (const subject of subjects) {
-            const { subjectName, semesterNumber, batchName } = subject;
-
-            if (!subjectName || !semesterNumber || !batchName) {
-                return res.status(400).json({ message: "Missing subjectName, semesterNumber, or batchName" });
-            }
-
-            const batch = await Batch.findOne({ where: { batchName } });
-            if (!batch) {
-                return res.status(404).json({ message: `Batch '${batchName}' not found` });
-            }
-
-            const semester = await Semester.findOne({ where: { semesterNumber, batchId: batch.id } });
-            if (!semester) {
-                return res.status(404).json({ message: `Semester '${semesterNumber}' not found for batch '${batchName}'` });
-            }
-
-            const existingSubject = await Subject.findOne({
-                where: { subjectName, semesterId: semester.id, batchId: batch.id }
-            });
-
-            if (existingSubject) {
-                return res.status(400).json({ message: `Subject '${subjectName}' already assigned to this batch and semester` });
-            }
-
-            await Subject.create({ subjectName, semesterId: semester.id, batchId: batch.id });
-        }
-
-        res.status(201).json({ message: "Subjects assigned successfully" });
-    } catch (error) {
-        console.error("Error assigning subjects:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+    const { subjects } = req.body;
+    if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or empty subjects array" });
     }
+
+    for (const subject of subjects) {
+      const { subjectName, semesterNumber, batchName } = subject;
+
+      if (!subjectName || !semesterNumber || !batchName) {
+        return res.status(400).json({
+          message: "Missing subjectName, semesterNumber, or batchName",
+        });
+      }
+
+      const batch = await Batch.findOne({ where: { batchName } });
+      if (!batch) {
+        return res
+          .status(404)
+          .json({ message: `Batch '${batchName}' not found` });
+      }
+
+      const semester = await Semester.findOne({
+        where: { semesterNumber, batchId: batch.id },
+      });
+      if (!semester) {
+        return res.status(404).json({
+          message: `Semester '${semesterNumber}' not found for batch '${batchName}'`,
+        });
+      }
+
+      const existingSubject = await Subject.findOne({
+        where: { subjectName, semesterId: semester.id, batchId: batch.id },
+      });
+
+      if (existingSubject) {
+        return res.status(400).json({
+          message: `Subject '${subjectName}' already assigned to this batch and semester`,
+        });
+      }
+
+      await Subject.create({
+        subjectName,
+        semesterId: semester.id,
+        batchId: batch.id,
+      });
+    }
+
+    res.status(201).json({ message: "Subjects assigned successfully" });
+  } catch (error) {
+    console.error("Error assigning subjects:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };
 
 const getDropdownData = async (req, res) => {
-    try {
-        const subjects = await UniqueSubDegree.findAll();
+  try {
+    const subjects = await UniqueSubDegree.findAll();
 
-        const batches = [...new Set(subjects.map((s) => s.batch))];
-        const semesters = [...new Set(subjects.map((s) => s.semester))];
-        const programs = [...new Set(subjects.map((s) => s.program))];
+    const batches = [...new Set(subjects.map((s) => s.batch))];
+    const semesters = [...new Set(subjects.map((s) => s.semester))];
+    const programs = [...new Set(subjects.map((s) => s.program))];
 
-        return res.status(200).json({ subjects, batches, semesters, programs });
-    } catch (error) {
-        return res.status(500).json({ message: "Error fetching data", error: error.message });
-    }
+    return res.status(200).json({ subjects, batches, semesters, programs });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error fetching data", error: error.message });
+  }
 };
-
-
 
 const getSubjects = async (req, res) => {
-    try {
-        const { program } = req.body;
+  try {
+    const { program } = req.body;
 
-        if (!program || (program !== 'degree' && program !== 'diploma')) {
-            return res.status(400).json({ message: "Invalid or missing program parameter" });
-        }
-
-        let subjects;
-        if (program === 'degree') {
-            subjects = await UniqueSubDegree.findAll();
-        } else if (program === 'diploma') {
-            subjects = await UniqueSubDiploma.findAll();
-        }
-
-        return res.status(200).json({ subjects });
-    } catch (error) {
-        return res.status(500).json({ message: "Error fetching subjects", error: error.message });
+    if (!program || (program !== "degree" && program !== "diploma")) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing program parameter" });
     }
+
+    let subjects;
+    if (program === "degree") {
+      subjects = await UniqueSubDegree.findAll();
+    } else if (program === "diploma") {
+      subjects = await UniqueSubDiploma.findAll();
+    }
+
+    return res.status(200).json({ subjects });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error fetching subjects", error: error.message });
+  }
 };
-
-
-
 
 // Function to add a unique subject for Degree
 const addUniqueSubDegree = async (req, res) => {
-    try {
-        const { sub_code, sub_level, sub_name, sub_credit } = req.body;
+  try {
+    const { sub_code, sub_level, sub_name, sub_credit } = req.body;
 
-        if (!sub_code || !sub_level || !sub_name || !sub_credit) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
-
-        const subject = await UniqueSubDegree.create({ sub_code, sub_level, sub_name, sub_credit });
-        return res.status(201).json({ message: 'Degree subject added successfully', subject });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error adding degree subject', error: error.message });
+    if (!sub_code || !sub_level || !sub_name || !sub_credit) {
+      return res.status(400).json({ message: "All fields are required" });
     }
+
+    const subject = await UniqueSubDegree.create({
+      sub_code,
+      sub_level,
+      sub_name,
+      sub_credit,
+    });
+    return res
+      .status(201)
+      .json({ message: "Degree subject added successfully", subject });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error adding degree subject", error: error.message });
+  }
 };
 
 // Function to add a unique subject for Diploma
 const addUniqueSubDiploma = async (req, res) => {
-    try {
-        const { sub_code, sub_level, sub_name, sub_credit } = req.body;
+  try {
+    const { sub_code, sub_level, sub_name, sub_credit } = req.body;
 
-        if (!sub_code || !sub_level || !sub_name || !sub_credit) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
-
-        const subject = await UniqueSubDiploma.create({ sub_code, sub_level, sub_name, sub_credit });
-        return res.status(201).json({ message: 'Diploma subject added successfully', subject });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error adding diploma subject', error: error.message });
+    if (!sub_code || !sub_level || !sub_name || !sub_credit) {
+      return res.status(400).json({ message: "All fields are required" });
     }
+
+    const subject = await UniqueSubDiploma.create({
+      sub_code,
+      sub_level,
+      sub_name,
+      sub_credit,
+    });
+    return res
+      .status(201)
+      .json({ message: "Diploma subject added successfully", subject });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error adding diploma subject", error: error.message });
+  }
 };
 
 module.exports = { addUniqueSubDegree, addUniqueSubDiploma };
 
 const getSubjectsByBatchAndSemester = async (req, res) => {
-    try {
-        const { batchName, semesterNumber } = req.params;
+  try {
+    const { batchName, semesterNumber } = req.params;
 
-        // Find batch ID from batchName
-        const batch = await Batch.findOne({ where: { batchName } });
-        if (!batch) {
-            return res.status(404).json({ message: "Batch not found" });
-        }
-
-        // Find semester where batchId matches
-        const semester = await Semester.findOne({ where: { semesterNumber, batchId: batch.id } });
-        if (!semester) {
-            return res.status(404).json({ message: "Semester not found for this batch" });
-        }
-
-        // Fetch subjects for the given batch and semester
-        const subjects = await Subject.findAll({ where: { semesterId: semester.id, batchId: batch.id } });
-
-        res.status(200).json(subjects);
-    } catch (error) {
-        console.error("Error fetching subjects:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+    // Find batch ID from batchName
+    const batch = await Batch.findOne({ where: { batchName } });
+    if (!batch) {
+      return res.status(404).json({ message: "Batch not found" });
     }
-};
 
+    // Find semester where batchId matches
+    const semester = await Semester.findOne({
+      where: { semesterNumber, batchId: batch.id },
+    });
+    if (!semester) {
+      return res
+        .status(404)
+        .json({ message: "Semester not found for this batch" });
+    }
+
+    // Fetch subjects for the given batch and semester
+    const subjects = await Subject.findAll({
+      where: { semesterId: semester.id, batchId: batch.id },
+    });
+
+    res.status(200).json(subjects);
+  } catch (error) {
+    console.error("Error fetching subjects:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 // @desc    Get all batches
 // @route   GET /api/batches
 // @access  Admin (HOD)
 const getAllBatches = async (req, res) => {
-    try {
-        const batches = await Batch.findAll(); // Sequelize equivalent of find()
-        res.status(200).json(batches);
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
+  try {
+    const batches = await Batch.findAll(); // Sequelize equivalent of find()
+    res.status(200).json(batches);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };
 
 // Add Subject
 const addSubject = async (req, res) => {
-    try {
-        const { name, code, courseType, credits, subjectType } = req.body;
+  try {
+    const { name, code, courseType, credits, subjectType } = req.body;
 
-        if (courseType === 'degree') {
-            await UniqueSubDegree.create({
-                sub_code: code,
-                sub_name: name,
-                sub_credit: credits,
-                sub_level: subjectType
-            });
-        } else if (courseType === 'diploma') {
-            await UniqueSubDiploma.create({
-                sub_code: code,
-                sub_name: name,
-                sub_credit: credits,
-                sub_level: subjectType
-            });
-        } else {
-            return res.status(400).json({ error: 'Invalid course type' });
-        }
-
-        res.status(201).json({ message: 'Subject added successfully' });
-    } catch (error) {
-        res.status(500).json({ error: 'Error adding subject', details: error.message });
+    if (courseType === "degree") {
+      await UniqueSubDegree.create({
+        sub_code: code,
+        sub_name: name,
+        sub_credit: credits,
+        sub_level: subjectType,
+      });
+    } else if (courseType === "diploma") {
+      await UniqueSubDiploma.create({
+        sub_code: code,
+        sub_name: name,
+        sub_credit: credits,
+        sub_level: subjectType,
+      });
+    } else {
+      return res.status(400).json({ error: "Invalid course type" });
     }
-};
 
+    res.status(201).json({ message: "Subject added successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Error adding subject", details: error.message });
+  }
+};
 
 module.exports = { addSubject };
 
@@ -219,37 +254,44 @@ module.exports = { addSubject };
 //     }
 // };
 const addBatch = async (req, res) => {
-    try {
-        const { batchName, batchStart, batchEnd, courseType } = req.body;
+  try {
+    const { batchName, batchStart, batchEnd, courseType } = req.body;
 
-        // Validate that batchStart and batchEnd are dates
-        if (isNaN(new Date(batchStart).getTime()) || isNaN(new Date(batchEnd).getTime())) {
-            return res.status(400).json({ message: "Invalid date format for batchStart or batchEnd" });
-        }
-
-        // Validate that courseType is either "Degree" or "Diploma"
-        if (!['Degree', 'Diploma'].includes(courseType)) {
-            return res.status(400).json({ message: "Invalid courseType. It must be 'Degree' or 'Diploma'" });
-        }
-
-        // Check if batch already exists
-        const existingBatch = await Batch.findOne({ where: { batchName } });
-        if (existingBatch) {
-            return res.status(400).json({ message: "Batch already exists" });
-        }
-
-        // Create the new batch
-        const batch = await Batch.create({
-            batchName,
-            batchStart: new Date(batchStart),  // Convert to Date object
-            batchEnd: new Date(batchEnd),      // Convert to Date object
-            courseType
-        });
-
-        res.status(201).json({ message: "Batch created successfully", batch });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+    // Validate that batchStart and batchEnd are dates
+    if (
+      isNaN(new Date(batchStart).getTime()) ||
+      isNaN(new Date(batchEnd).getTime())
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Invalid date format for batchStart or batchEnd" });
     }
+
+    // Validate that courseType is either "Degree" or "Diploma"
+    if (!["Degree", "Diploma"].includes(courseType)) {
+      return res.status(400).json({
+        message: "Invalid courseType. It must be 'Degree' or 'Diploma'",
+      });
+    }
+
+    // Check if batch already exists
+    const existingBatch = await Batch.findOne({ where: { batchName } });
+    if (existingBatch) {
+      return res.status(400).json({ message: "Batch already exists" });
+    }
+
+    // Create the new batch
+    const batch = await Batch.create({
+      batchName,
+      batchStart: new Date(batchStart), // Convert to Date object
+      batchEnd: new Date(batchEnd), // Convert to Date object
+      courseType,
+    });
+
+    res.status(201).json({ message: "Batch created successfully", batch });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };
 
 // @desc    Register a new user
@@ -260,7 +302,12 @@ const registerUser = async (req, res) => {
     const { name, email, password, role } = req.body;
 
     // Check if user already exists
-    const { data: existingUser } = await User.findOne({ email });
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select()
+      .eq("email", email)
+      .single();
+
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -270,12 +317,18 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
-    const { data: user, error } = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role,
-    });
+    const { data: user, error } = await supabase
+      .from("users")
+      .insert([
+        {
+          name,
+          email,
+          password: hashedPassword,
+          role,
+        },
+      ])
+      .select()
+      .single();
 
     if (error) throw error;
 
@@ -285,135 +338,79 @@ const registerUser = async (req, res) => {
   }
 };
 
-<<<<<<< Updated upstream
-// @desc    Add faculty (Admin/HOD only)
-// @route   POST /api/faculty
-// @access  Admin (HOD)
-const addFaculty = async (req, res) => {
-    try {
-        const { name, email, password, role } = req.body;
-
-        if (role !== 'Faculty') {
-            return res.status(400).json({ message: 'Invalid role. Only faculty can be added.' });
-        }
-
-        // Check if faculty already exists
-        const userExists = await User.findOne({ where: { email } });
-        if (userExists) {
-            return res.status(400).json({ message: 'Faculty already exists' });
-        }
-
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Create faculty user
-        const newUser = await User.create({ name, email, password: hashedPassword, role });
-
-        // Create faculty record
-        const newFaculty = await Faculty.create({ userId: newUser.id });
-
-        res.status(201).json({
-            message: 'Faculty registered successfully',
-            user: newUser,
-            facultyId: newFaculty.id
-        });
-
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
-    }
-};
-
-// @desc    Login user
-// @route   POST /api/users/login
-// @access  Public
-const loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        // Check if user exists
-        const user = await User.findOne({ where: { email } });
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
-
-        // Validate password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
-
-        // Generate JWT token
-        const token = jwt.sign(
-            { id: user.id, role: user.role },
-            process.env.JWT_SECRET || 'your_secret_key',
-            { expiresIn: '1h' }
-        );
-
-        res.status(200).json({ message: 'Login successful', token, user });
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
-=======
+// Login User
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("email", email);
 
     if (!email || !password) {
-      return res.status(400).json({
-        message: "Email and password are required",
-        error: "Missing required fields",
-      });
->>>>>>> Stashed changes
+      return res
+        .status(400)
+        .json({ message: "Please provide email and password" });
     }
 
-    // Log the received email (for debugging)
-    console.log("Login attempt for email:", email);
+    // Get user from Supabase
+    const { data: user, error } = await supabase
+      .from("users")
+      .select()
+      .eq("email", email)
+      .single();
 
-    // Check if user exists
-    const { data: user, error } = await User.findOne({ email });
-    if (error || !user) {
-      console.log("User not found for email:", email);
-      return res.status(400).json({
-        message: "Invalid email or password",
-        error: "User not found",
-      });
+    if (error) {
+      console.error("Error fetching user:", error);
+      return res.status(500).json({ message: "Error fetching user" });
     }
 
-    // Validate password
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Check if password is hashed
+    if (!user.password.startsWith("$2")) {
+      // Password is not hashed, hash it now
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(user.password, salt);
+
+      // Update user with hashed password
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ password: hashedPassword })
+        .eq("email", email);
+
+      if (updateError) {
+        console.error("Error updating password:", updateError);
+        return res.status(500).json({ message: "Error updating password" });
+      }
+
+      // Update user object with hashed password
+      user.password = hashedPassword;
+    }
+
+    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("Invalid password for email:", email);
-      return res.status(400).json({
-        message: "Invalid email or password",
-        error: "Invalid password",
-      });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Generate JWT token
+    // Create JWT token
     const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET || "your_secret_key",
-      { expiresIn: "1h" }
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "your-secret-key",
+      { expiresIn: "1d" }
     );
 
-    console.log("Login successful for email:", email);
-    res.status(200).json({
-      message: "Login successful",
+    res.json({
       token,
       user: {
         id: user.id,
-        name: user.name,
         email: user.email,
         role: user.role,
+        name: user.name,
       },
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({
-      message: "Server Error",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -422,7 +419,8 @@ const loginUser = async (req, res) => {
 // @access  Private (Requires Admin Role)
 const getAllUsers = async (req, res) => {
   try {
-    const { data: users, error } = await User.findAll();
+    const { data: users, error } = await supabase.from("users").select();
+
     if (error) throw error;
 
     // Remove password from response
@@ -441,32 +439,33 @@ const getAllUsers = async (req, res) => {
 // @route   POST /api/semesters
 // @access  Admin (HOD)
 const addSemester = async (req, res) => {
-    try {
-        const { batchName, semesterNumber, startDate, endDate } = req.body;
+  try {
+    const { batchName, semesterNumber, startDate, endDate } = req.body;
 
-        if (!batchName || !semesterNumber || !startDate || !endDate) {
-            return res.status(400).json({ message: "All fields are required." });
-        }
-
-        // Find batch
-        const batch = await Batch.findOne({ where: { batchName } });
-        if (!batch) {
-            return res.status(404).json({ message: "Batch not found." });
-        }
-
-        // Create semester
-        const newSemester = await Semester.create({
-            batchId: batch.id,
-            semesterNumber,
-            startDate,
-            endDate
-        });
-
-        res.status(201).json({ message: "Semester added successfully", semester: newSemester });
-
-    } catch (error) {
-        res.status(500).json({ message: "Server Error", error: error.message });
+    if (!batchName || !semesterNumber || !startDate || !endDate) {
+      return res.status(400).json({ message: "All fields are required." });
     }
+
+    // Find batch
+    const batch = await Batch.findOne({ where: { batchName } });
+    if (!batch) {
+      return res.status(404).json({ message: "Batch not found." });
+    }
+
+    // Create semester
+    const newSemester = await Semester.create({
+      batchId: batch.id,
+      semesterNumber,
+      startDate,
+      endDate,
+    });
+
+    res
+      .status(201)
+      .json({ message: "Semester added successfully", semester: newSemester });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
 };
 
 // @desc    Get semesters by batch
@@ -474,62 +473,54 @@ const addSemester = async (req, res) => {
 // @access  Admin (HOD)
 
 const getSemestersByBatch = async (req, res) => {
-    try {
-        console.log("Received request with params:", req.params); // Debugging log
+  try {
+    console.log("Received request with params:", req.params); // Debugging log
 
-        const { batchName } = req.params; // Use params instead of query
-        if (!batchName) {
-            console.log("❌ Missing batchName in request.");
-            return res.status(400).json({ message: "Batch name is required." });
-        }
-
-        console.log(`🔍 Searching for batch: ${batchName}`);
-        const batch = await Batch.findOne({ where: { batchName } });
-
-        if (!batch) {
-            console.log(`❌ Batch '${batchName}' not found in DB.`);
-            return res.status(404).json({ message: "Batch not found." });
-        }
-
-        console.log(`✅ Found batch with ID: ${batch.id}, fetching semesters...`);
-        const semesters = await Semester.findAll({ where: { batchId: batch.id } });
-
-        if (!semesters.length) {
-            console.log(`⚠️ No semesters found for batch ID: ${batch.id}`);
-            return res.status(404).json({ message: "No semesters found for this batch." });
-        }
-
-        console.log(`✅ Found ${semesters.length} semesters. Sending response.`);
-        res.status(200).json(semesters);
-    } catch (error) {
-        console.error("❌ Server Error:", error.message);
-        res.status(500).json({ message: "Server Error", error: error.message });
+    const { batchName } = req.params; // Use params instead of query
+    if (!batchName) {
+      console.log("❌ Missing batchName in request.");
+      return res.status(400).json({ message: "Batch name is required." });
     }
+
+    console.log(`🔍 Searching for batch: ${batchName}`);
+    const batch = await Batch.findOne({ where: { batchName } });
+
+    if (!batch) {
+      console.log(`❌ Batch '${batchName}' not found in DB.`);
+      return res.status(404).json({ message: "Batch not found." });
+    }
+
+    console.log(`✅ Found batch with ID: ${batch.id}, fetching semesters...`);
+    const semesters = await Semester.findAll({ where: { batchId: batch.id } });
+
+    if (!semesters.length) {
+      console.log(`⚠️ No semesters found for batch ID: ${batch.id}`);
+      return res
+        .status(404)
+        .json({ message: "No semesters found for this batch." });
+    }
+
+    console.log(`✅ Found ${semesters.length} semesters. Sending response.`);
+    res.status(200).json(semesters);
+  } catch (error) {
+    console.error("❌ Server Error:", error.message);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
 };
 
-
-
-
 module.exports = {
-<<<<<<< Updated upstream
-    registerUser,
-    loginUser,
-    getSemestersByBatch,
-    getAllUsers,
-    addFaculty,
-    addBatch,
-    getAllBatches,
-    addSemester,
-    addSubject,
-    getSubjectsByBatchAndSemester,
-    addUniqueSubDegree,
-    addUniqueSubDiploma,
-    getSubjects,
-    getDropdownData,
-    assignSubject
-=======
   registerUser,
   loginUser,
+  getSemestersByBatch,
   getAllUsers,
->>>>>>> Stashed changes
+  addBatch,
+  getAllBatches,
+  addSemester,
+  addSubject,
+  getSubjectsByBatchAndSemester,
+  addUniqueSubDegree,
+  addUniqueSubDiploma,
+  getSubjects,
+  getDropdownData,
+  assignSubject,
 };

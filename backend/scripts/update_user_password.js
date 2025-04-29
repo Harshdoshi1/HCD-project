@@ -1,37 +1,32 @@
-const bcrypt = require('bcryptjs');
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+require("dotenv").config();
+const { supabase } = require("../config/supabaseClient");
+const bcrypt = require("bcrypt");
 
 async function updateUserPassword() {
   try {
-    const email = 'harsh.faculty@marwadiuniversity.edu.in';
-    const password = '12345';
+    const email = "harsh.faculty@marwadiuniversity.edu.in";
+    const newPassword = "12345";
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-    // Update user
+    // Update the user's password in Supabase
     const { data, error } = await supabase
-      .from('Users')
+      .from("users")
       .update({ password: hashedPassword })
-      .eq('email', email)
+      .eq("email", email)
       .select();
 
     if (error) {
-      console.error('Error updating user:', error);
+      console.error("Error updating password:", error);
       return;
     }
 
-    console.log('User updated successfully:', data);
+    console.log("Password updated successfully:", data);
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
   }
 }
 
-updateUserPassword(); 
+updateUserPassword();

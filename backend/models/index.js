@@ -1,45 +1,22 @@
-<<<<<<< Updated upstream
-const sequelize = require('../config/db');
-const User = require('./users');
-const Batch = require('./batch');
-const Semester = require('./semester');
-const Faculty = require('./faculty');
-const Subject = require('./subjects');
-const UniqueSubDegree = require('./uniqueSubDegree');
-const UniqueSubDiploma = require('./uniqueSubDiploma');
-const AssignSubject = require('./assignSubject');
-const ComponentWeightage = require('./component_weightage');
-
-const syncDB = async () => {
-    try {
-        await sequelize.sync({ alter: true });
-        console.log('All tables synchronized.');
-    } catch (error) {
-        console.error('Error syncing database:', error);
-    }
-};
-
-module.exports = { User, Batch, Semester, Faculty, Subject, UniqueSubDegree, UniqueSubDiploma, AssignSubject, ComponentWeightage, syncDB };
-=======
-const supabase = require("../supabaseClient");
+const { supabase } = require("../config/supabaseClient");
 
 // Define table names
 const TABLES = {
   USERS: "users",
-  BATCHES: "Batches",
-  SEMESTERS: "Semesters",
-  FACULTIES: "Faculties",
-  SUBJECTS: "Subjects",
-  UNIQUE_SUB_DEGREES: "UniqueSubDegrees",
-  UNIQUE_SUB_DIPLOMAS: "UniqueSubDiplomas",
-  ASSIGN_SUBJECTS: "AssignSubjects",
-  COMPONENT_WEIGHTAGES: "ComponentWeightages",
-  COMPONENT_MARKS: "ComponentMarks",
-  STUDENTS: "Students",
-  GETTED_MARKS: "Gettedmarks",
-  PARTICIPATION_TYPES: "ParticipationTypes",
-  STUDENT_POINTS: "StudentPoints",
-  EVENT_MASTER: "EventMaster",
+  BATCHES: "batches",
+  SEMESTERS: "semesters",
+  FACULTIES: "faculties",
+  SUBJECTS: "subjects",
+  UNIQUE_SUB_DEGREES: "unique_sub_degrees",
+  UNIQUE_SUB_DIPLOMAS: "unique_sub_diplomas",
+  ASSIGN_SUBJECTS: "assign_subjects",
+  COMPONENT_WEIGHTAGES: "component_weightages",
+  COMPONENT_MARKS: "component_marks",
+  STUDENTS: "students",
+  GETTED_MARKS: "getted_marks",
+  PARTICIPATION_TYPES: "participation_types",
+  STUDENT_POINTS: "student_points",
+  EVENT_MASTER: "event_master",
 };
 
 // Helper function to create model functions
@@ -96,4 +73,3 @@ const syncDB = async () => {
 };
 
 module.exports = { ...models, syncDB, TABLES };
->>>>>>> Stashed changes

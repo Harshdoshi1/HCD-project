@@ -1,7 +1,7 @@
 const supabase = require("../config/db");
 
-const Batch = {
-  tableName: "Batches",
+const UniqueSubDiploma = {
+  tableName: "UniqueSubDiplomas",
 
   async findAll() {
     const { data, error } = await supabase.from(this.tableName).select("*");
@@ -54,4 +54,4 @@ const Batch = {
   },
 };
 
-module.exports = { Batch };
+module.exports = { UniqueSubDiploma };
