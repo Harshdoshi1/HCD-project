@@ -6,7 +6,6 @@ import DashboardHOD from "./components/HOD/dashboard/Dashboard";
 import StudentDetail from "./components/HOD/displaystudents/StudentDetails";
 import { ThemeProvider } from "./context/ThemeContext";
 import "./App.css";
-import TestSupabase from "./components/TestSupabase";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -23,7 +22,6 @@ const App = () => {
         </Routes>
         <ToastContainer />
       </Router>
-      <TestSupabase />
     </ThemeProvider>
   );
 };
