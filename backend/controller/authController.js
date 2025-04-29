@@ -1,6 +1,12 @@
+<<<<<<< Updated upstream
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma } = require('../models'); // Import models
+=======
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { User } = require("../models");
+>>>>>>> Stashed changes
 
 
 // ✅ Add Subject (Check if already assigned to batch & semester)
@@ -250,28 +256,36 @@ const addBatch = async (req, res) => {
 // @route   POST /api/users/register
 // @access  Public
 const registerUser = async (req, res) => {
-    try {
-        const { name, email, password, role } = req.body;
+  try {
+    const { name, email, password, role } = req.body;
 
-        // Check if user already exists
-        const userExists = await User.findOne({ where: { email } });
-        if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Create user
-        const user = await User.create({ name, email, password: hashedPassword, role });
-
-        res.status(201).json({ message: 'User registered successfully', user });
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+    // Check if user already exists
+    const { data: existingUser } = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
     }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const { data: user, error } = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    if (error) throw error;
+
+    res.status(201).json({ message: "User registered successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
 };
 
+<<<<<<< Updated upstream
 // @desc    Add faculty (Admin/HOD only)
 // @route   POST /api/faculty
 // @access  Admin (HOD)
@@ -339,19 +353,88 @@ const loginUser = async (req, res) => {
         res.status(200).json({ message: 'Login successful', token, user });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
+=======
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log("email", email);
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
+        error: "Missing required fields",
+      });
+>>>>>>> Stashed changes
     }
+
+    // Log the received email (for debugging)
+    console.log("Login attempt for email:", email);
+
+    // Check if user exists
+    const { data: user, error } = await User.findOne({ email });
+    if (error || !user) {
+      console.log("User not found for email:", email);
+      return res.status(400).json({
+        message: "Invalid email or password",
+        error: "User not found",
+      });
+    }
+
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      console.log("Invalid password for email:", email);
+      return res.status(400).json({
+        message: "Invalid email or password",
+        error: "Invalid password",
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET || "your_secret_key",
+      { expiresIn: "1h" }
+    );
+
+    console.log("Login successful for email:", email);
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
 };
 
 // @desc    Get all users (Admin only)
 // @route   GET /api/users
 // @access  Private (Requires Admin Role)
 const getAllUsers = async (req, res) => {
-    try {
-        const users = await User.findAll({ attributes: { exclude: ['password'] } }); // Exclude password
-        res.status(200).json(users);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
-    }
+  try {
+    const { data: users, error } = await User.findAll();
+    if (error) throw error;
+
+    // Remove password from response
+    const usersWithoutPassword = users.map((user) => {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+
+    res.status(200).json(usersWithoutPassword);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
 };
 
 // @desc    Add a semester to a batch
@@ -428,6 +511,7 @@ const getSemestersByBatch = async (req, res) => {
 
 
 module.exports = {
+<<<<<<< Updated upstream
     registerUser,
     loginUser,
     getSemestersByBatch,
@@ -443,4 +527,9 @@ module.exports = {
     getSubjects,
     getDropdownData,
     assignSubject
+=======
+  registerUser,
+  loginUser,
+  getAllUsers,
+>>>>>>> Stashed changes
 };
