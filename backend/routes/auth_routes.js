@@ -14,6 +14,7 @@ const {
   getSubjects,
   getDropdownData,
   assignSubject,
+  addFaculty,
 } = require("../controller/authController"); // Ensure correct path
 
 const router = express.Router();
@@ -44,4 +45,8 @@ router.post("/addUniqueSubDiploma", addUniqueSubDiploma);
 router.post("/getSubjects", getSubjects);
 router.get("/getDropdownData", getDropdownData);
 router.post("/assignSubject", assignSubject);
+
+// Add faculty route
+router.post("/addFaculty", addFaculty);
+
 module.exports = router;
