@@ -3,112 +3,133 @@ const { supabase } = require("../config/supabaseClient");
 // Add Subject
 const addSubject = async (req, res) => {
   try {
-    const { name, code, courseType, credits, subjectType } = req.body;
-    const tableName =
-      courseType === "degree" ? "unique_sub_degree" : "unique_sub_diploma";
+    console.log("\n=== Adding New Subject ===");
+    console.log("1. Received request body:", req.body);
+    const { id, subjectName, semesterId, batchId } = req.body;
 
-    if (!["degree", "diploma"].includes(courseType)) {
-      return res.status(400).json({ error: "Invalid course type" });
+    // Log the extracted values
+    console.log("2. Extracted values:", {
+      id,
+      subjectName,
+      semesterId,
+      batchId,
+    });
+
+    // Validate required fields
+    if (!id || !subjectName || !semesterId || !batchId) {
+      console.log("3. Validation failed - Missing required fields");
+      return res.status(400).json({
+        error: "All fields are required",
+        details: {
+          id: !id ? "Subject code is required" : null,
+          subjectName: !subjectName ? "Subject name is required" : null,
+          semesterId: !semesterId ? "Semester ID is required" : null,
+          batchId: !batchId ? "Batch ID is required" : null,
+        },
+      });
     }
 
-    const { data, error } = await supabase.from(tableName).insert([
-      {
-        sub_code: code,
-        sub_name: name,
-        sub_credit: credits,
-        sub_level: subjectType,
-      },
-    ]);
-
-    if (error) throw error;
-
-    res.status(201).json({ message: "Subject added successfully" });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Error adding subject", details: error.message });
-  }
-};
-
-// Get Subject by Code and Course Type
-const getSubjectByCode = async (req, res) => {
-  try {
-    const { code, courseType } = req.params;
-
-    if (!["degree", "diploma"].includes(courseType)) {
-      return res.status(400).json({ error: "Invalid course type" });
-    }
-
-    const tableName =
-      courseType === "degree" ? "unique_sub_degree" : "unique_sub_diploma";
-
-    const { data: subject, error } = await supabase
-      .from(tableName)
+    // Check if subject code already exists
+    console.log(`4. Checking if subject code ${id} exists`);
+    const { data: existingSubject, error: checkError } = await supabase
+      .from("subjects")
       .select("*")
-      .eq("sub_code", code)
+      .eq("id", id)
       .single();
 
-    if (error) throw error;
-    if (!subject) {
-      return res.status(404).json({ error: "Subject not found" });
+    if (checkError) {
+      console.log("5. Error checking existing subject:", checkError);
+      if (checkError.code === "PGRST116") {
+        console.log("   Not found - proceeding with insert");
+      } else {
+        return res.status(500).json({
+          error: "Error checking existing subject",
+          details: checkError.message,
+        });
+      }
     }
 
-    res.status(200).json(subject);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Error fetching subject", details: error.message });
-  }
-};
-
-// Delete Subject
-const deleteSubject = async (req, res) => {
-  try {
-    const { code, courseType } = req.params;
-
-    if (!["degree", "diploma"].includes(courseType)) {
-      return res.status(400).json({ error: "Invalid course type" });
+    if (existingSubject) {
+      console.log("5. Subject code already exists:", id);
+      return res
+        .status(400)
+        .json({ error: `Subject with code ${id} already exists` });
     }
 
-    const tableName =
-      courseType === "degree" ? "unique_sub_degree" : "unique_sub_diploma";
+    // Prepare the subject data
+    const subjectData = {
+      id,
+      subjectName,
+      semesterId: parseInt(semesterId),
+      batchId: parseInt(batchId),
+    };
 
+    console.log("6. Attempting to insert subject:", subjectData);
+
+    // Insert new subject
     const { data, error } = await supabase
-      .from(tableName)
-      .delete()
-      .eq("sub_code", code);
+      .from("subjects")
+      .insert([subjectData])
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.log("7. Error inserting subject:", error);
+      return res.status(500).json({
+        error: "Error inserting subject",
+        details: error.message,
+        code: error.code,
+      });
+    }
 
-    res.status(200).json({ message: "Subject deleted successfully" });
+    console.log("7. Subject added successfully:", data[0]);
+    res.status(201).json({
+      message: "Subject added successfully",
+      subject: data[0],
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Error deleting subject", details: error.message });
+    console.error("Error in addSubject:", error);
+    res.status(500).json({
+      error: "Error adding subject",
+      details: error.message,
+    });
   }
 };
 
+// Get Subjects
 const getSubjects = async (req, res) => {
   try {
-    const { program } = req.params;
+    console.log("\n=== Getting Subjects ===");
+    const { batchId, semesterId } = req.query;
+    console.log("1. Query params:", { batchId, semesterId });
 
-    if (!["degree", "diploma"].includes(program)) {
-      return res.status(400).json({ error: "Invalid program type" });
+    let query = supabase.from("subjects").select("*");
+
+    if (batchId) {
+      query = query.eq("batchId", parseInt(batchId));
+    }
+    if (semesterId) {
+      query = query.eq("semesterId", parseInt(semesterId));
     }
 
-    const tableName =
-      program === "degree" ? "unique_sub_degree" : "unique_sub_diploma";
+    const { data: subjects, error } = await query;
 
-    const { data: subjects, error } = await supabase
-      .from(tableName)
-      .select("*");
+    if (error) {
+      console.log("2. Error fetching subjects:", error);
+      throw error;
+    }
 
-    if (error) throw error;
-
+    console.log(`2. Found ${subjects?.length || 0} subjects`);
     res.json(subjects);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch subjects" });
+    console.error("Error in getSubjects:", error);
+    res.status(500).json({
+      error: "Failed to fetch subjects",
+      details: error.message,
+    });
   }
 };
 
-module.exports = { addSubject, getSubjectByCode, deleteSubject, getSubjects };
+module.exports = {
+  addSubject,
+  getSubjects,
+};
