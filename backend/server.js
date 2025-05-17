@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { syncDB } = require('./models');
 
+
 const userRoutes = require('./routes/auth_routes');
 const facultyRoutes = require('./routes/faculty_routes');
 const componentRoutes = require('./routes/component_marks_routes');
