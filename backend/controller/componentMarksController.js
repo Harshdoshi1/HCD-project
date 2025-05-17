@@ -1,6 +1,4 @@
-const ComponentMarks = require("../models/componentMarks");
-const ComponentWeightage = require("../models/componentWeightage");
-const UniqueSubDegree = require("../models/uniqueSubDegree");
+const { supabase } = require('../config/db');
 
 // Create Component Marks
 const createComponentMarks = async (req, res) => {
@@ -9,19 +7,31 @@ const createComponentMarks = async (req, res) => {
     const { subject, ese, cse, ia, tw, viva } = req.body;
 
     // Fetch Subject ID
-    const subjectRecord = await UniqueSubDegree.findOne({ where: { sub_code: subject } });
-    if (!subjectRecord) return res.status(400).json({ error: "Subject not found" });
+    const { data: subjectRecord, error: subjectError } = await supabase
+      .from('unique_sub_degree')
+      .select('id')
+      .eq('sub_code', subject)
+      .single();
+
+    if (subjectError || !subjectRecord) {
+      return res.status(400).json({ error: "Subject not found" });
+    }
 
     // Create Component Marks
-    const newMarks = await ComponentMarks.create({
+    const { data: newMarks, error: createError } = await supabase
+      .from('component_marks')
+      .insert({
+        subject_id: subjectRecord.id,
+        ese,
+        cse,
+        ia,
+        tw,
+        viva
+      })
+      .select()
+      .single();
 
-      subjectId: subjectRecord.sub_code,
-      ese,
-      cse,
-      ia,
-      tw,
-      viva,
-    });
+    if (createError) throw createError;
 
     console.log("Created Component Marks:", newMarks);
     res.status(201).json(newMarks);
@@ -34,11 +44,14 @@ const createComponentMarks = async (req, res) => {
 // Get All Component Marks
 const getAllComponentMarks = async (req, res) => {
   try {
-    const marks = await ComponentMarks.findAll({
-      include: [
-        { model: UniqueSubDegree, attributes: ["sub_name"] },
-      ],
-    });
+    const { data: marks, error } = await supabase
+      .from('component_marks')
+      .select(`
+        *,
+        unique_sub_degree:subject_id (sub_name)
+      `);
+
+    if (error) throw error;
 
     res.status(200).json(marks);
   } catch (error) {
@@ -51,13 +64,21 @@ const getAllComponentMarks = async (req, res) => {
 const getComponentMarksById = async (req, res) => {
   try {
     const { id } = req.params;
-    const marks = await ComponentMarks.findByPk(id, {
-      include: [
-        { model: UniqueSubDegree, attributes: ["sub_name"] },
-      ],
-    });
+    const { data: marks, error } = await supabase
+      .from('component_marks')
+      .select(`
+        *,
+        unique_sub_degree:subject_id (sub_name)
+      `)
+      .eq('id', id)
+      .single();
 
-    if (!marks) return res.status(404).json({ error: "Component Marks not found" });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: "Component Marks not found" });
+      }
+      throw error;
+    }
 
     res.status(200).json(marks);
   } catch (error) {
@@ -72,14 +93,29 @@ const updateComponentMarks = async (req, res) => {
     const { id } = req.params;
     const { ese, cse, ia, tw, viva } = req.body;
 
-    const marks = await ComponentMarks.findByPk(id);
-    if (!marks) return res.status(404).json({ error: "Component Marks not found" });
+    // Check if marks exist
+    const { data: existingMarks, error: checkError } = await supabase
+      .from('component_marks')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (checkError || !existingMarks) {
+      return res.status(404).json({ error: "Component Marks not found" });
+    }
 
     // Update values
-    await marks.update({ ese, cse, ia, tw, viva });
+    const { data: updatedMarks, error: updateError } = await supabase
+      .from('component_marks')
+      .update({ ese, cse, ia, tw, viva })
+      .eq('id', id)
+      .select()
+      .single();
 
-    console.log("Updated Component Marks:", marks);
-    res.status(200).json(marks);
+    if (updateError) throw updateError;
+
+    console.log("Updated Component Marks:", updatedMarks);
+    res.status(200).json(updatedMarks);
   } catch (error) {
     console.error("Error in updateComponentMarks:", error);
     res.status(500).json({ error: error.message });
@@ -91,12 +127,26 @@ const deleteComponentMarks = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const marks = await ComponentMarks.findByPk(id);
-    if (!marks) return res.status(404).json({ error: "Component Marks not found" });
+    // Check if marks exist
+    const { data: existingMarks, error: checkError } = await supabase
+      .from('component_marks')
+      .select('id')
+      .eq('id', id)
+      .single();
 
-    await marks.destroy();
+    if (checkError || !existingMarks) {
+      return res.status(404).json({ error: "Component Marks not found" });
+    }
 
-    console.log("Deleted Component Marks:", marks);
+    // Delete marks
+    const { error: deleteError } = await supabase
+      .from('component_marks')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) throw deleteError;
+
+    console.log("Deleted Component Marks:", existingMarks);
     res.status(200).json({ message: "Component Marks deleted successfully" });
   } catch (error) {
     console.error("Error in deleteComponentMarks:", error);
@@ -109,8 +159,15 @@ const addSubjectWithComponents = async (req, res) => {
     const { subject, name, credits, componentsWeightage, componentsMarks } = req.body;
 
     // Fetch Subject ID
-    const subjectRecord = await UniqueSubDegree.findOne({ where: { sub_code: subject } });
-    if (!subjectRecord) return res.status(400).json({ error: "Subject not found" });
+    const { data: subjectRecord, error: subjectError } = await supabase
+      .from('unique_sub_degree')
+      .select('id')
+      .eq('sub_code', subject)
+      .single();
+
+    if (subjectError || !subjectRecord) {
+      return res.status(400).json({ error: "Subject not found" });
+    }
 
     // Update credits and name in UniqueSubDegree
     const updateData = {};
@@ -121,7 +178,12 @@ const addSubjectWithComponents = async (req, res) => {
       updateData.sub_name = name;
     }
     
-    await subjectRecord.update(updateData);
+    const { error: updateError } = await supabase
+      .from('unique_sub_degree')
+      .update(updateData)
+      .eq('id', subjectRecord.id);
+
+    if (updateError) throw updateError;
 
     // Prepare mapping helper
     function mapComponents(components) {
@@ -151,24 +213,36 @@ const addSubjectWithComponents = async (req, res) => {
     const marksMap = mapComponents(componentsMarks);
 
     // Insert into ComponentWeightage
-    const newWeightage = await ComponentWeightage.create({
-      subjectId: subjectRecord.sub_code,
-      ese: weightageMap.ESE,
-      cse: weightageMap.CSE,
-      ia: weightageMap.IA,
-      tw: weightageMap.TW,
-      viva: weightageMap.VIVA
-    });
+    const { data: newWeightage, error: weightageError } = await supabase
+      .from('component_weightage')
+      .insert({
+        subject_id: subjectRecord.id,
+        ese: weightageMap.ESE,
+        cse: weightageMap.CSE,
+        ia: weightageMap.IA,
+        tw: weightageMap.TW,
+        viva: weightageMap.VIVA
+      })
+      .select()
+      .single();
+
+    if (weightageError) throw weightageError;
 
     // Insert into ComponentMarks
-    const newMarks = await ComponentMarks.create({
-      subjectId: subjectRecord.sub_code,
-      ese: marksMap.ESE,
-      cse: marksMap.CSE,
-      ia: marksMap.IA,
-      tw: marksMap.TW,
-      viva: marksMap.VIVA
-    });
+    const { data: newMarks, error: marksError } = await supabase
+      .from('component_marks')
+      .insert({
+        subject_id: subjectRecord.id,
+        ese: marksMap.ESE,
+        cse: marksMap.CSE,
+        ia: marksMap.IA,
+        tw: marksMap.TW,
+        viva: marksMap.VIVA
+      })
+      .select()
+      .single();
+
+    if (marksError) throw marksError;
 
     res.status(201).json({
       weightage: newWeightage,
@@ -185,14 +259,33 @@ const getComponentMarksBySubject = async (req, res) => {
   try {
     const { subjectCode } = req.params;
     
-    const marks = await ComponentMarks.findOne({
-      where: { subjectId: subjectCode },
-      include: [
-        { model: UniqueSubDegree, attributes: ["sub_name"] },
-      ],
-    });
+    // First get the subject ID
+    const { data: subject, error: subjectError } = await supabase
+      .from('unique_sub_degree')
+      .select('id')
+      .eq('sub_code', subjectCode)
+      .single();
 
-    if (!marks) return res.status(404).json({ error: "Component Marks not found for this subject" });
+    if (subjectError || !subject) {
+      return res.status(404).json({ error: "Subject not found" });
+    }
+
+    // Get marks for the subject
+    const { data: marks, error: marksError } = await supabase
+      .from('component_marks')
+      .select(`
+        *,
+        unique_sub_degree:subject_id (sub_name)
+      `)
+      .eq('subject_id', subject.id)
+      .single();
+
+    if (marksError) {
+      if (marksError.code === 'PGRST116') {
+        return res.status(404).json({ error: "Component Marks not found for this subject" });
+      }
+      throw marksError;
+    }
 
     res.status(200).json(marks);
   } catch (error) {

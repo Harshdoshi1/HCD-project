@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Student = require('../models/students');
-const Batch = require('../models/batch');
+const { supabase } = require('../config/db');
 
 // Create a new student
 const createStudent = async (req, res) => {
@@ -109,21 +108,44 @@ const createStudents = async (req, res) => {
 // Get all students
 const getAllStudents = async (req, res) => {
     try {
-        const students = await Student.findAll({ include: Batch });
+        const { data: students, error } = await supabase
+            .from('students')
+            .select(`
+                *,
+                batches:batch_id (*)
+            `);
+
+        if (error) throw error;
         res.status(200).json(students);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching students:', error);
+        res.status(500).json({ message: 'Failed to fetch students', error: error.message });
     }
 };
 
 // Get a single student by ID
 const getStudentById = async (req, res) => {
     try {
-        const student = await Student.findByPk(req.params.id, { include: Batch });
-        if (!student) return res.status(404).json({ message: 'Student not found' });
+        const { data: student, error } = await supabase
+            .from('students')
+            .select(`
+                *,
+                batches:batch_id (*)
+            `)
+            .eq('id', req.params.id)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return res.status(404).json({ message: 'Student not found' });
+            }
+            throw error;
+        }
+
         res.status(200).json(student);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching student:', error);
+        res.status(500).json({ message: 'Failed to fetch student', error: error.message });
     }
 };
 

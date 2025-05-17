@@ -1,7 +1,4 @@
-const ComponentWeightage = require("../models/componentWeightage");
-const Batch = require("../models/batch");
-const Semester = require("../models/semester");
-const UniqueSubDegree = require("../models/uniqueSubDegree");
+const { supabase } = require('../config/db');
 
 // ✅ Create Component Weightage
 const createComponentWeightage = async (req, res) => {
@@ -10,52 +7,81 @@ const createComponentWeightage = async (req, res) => {
     const { batch, semester, subject, ese, cse, ia, tw, viva } = req.body;
 
     // Fetch Batch ID
-    const batchRecord = await Batch.findOne({ where: { batchName: batch } });
-    if (!batchRecord) return res.status(400).json({ error: "Batch not found" });
+    const { data: batchRecord, error: batchError } = await supabase
+      .from('batches')
+      .select('id')
+      .eq('name', batch)
+      .single();
+
+    if (batchError || !batchRecord) {
+      return res.status(400).json({ error: "Batch not found" });
+    }
 
     // Fetch Semester ID
-    const semesterRecord = await Semester.findOne({ where: { semesterNumber: semester, batchId: batchRecord.id } });
-    if (!semesterRecord) return res.status(400).json({ error: "Semester not found" });
+    const { data: semesterRecord, error: semesterError } = await supabase
+      .from('semesters')
+      .select('id')
+      .eq('semester_number', semester)
+      .eq('batch_id', batchRecord.id)
+      .single();
+
+    if (semesterError || !semesterRecord) {
+      return res.status(400).json({ error: "Semester not found" });
+    }
 
     // Fetch Subject ID
-    const subjectRecord = await UniqueSubDegree.findOne({ where: { sub_name: subject } });
-    if (!subjectRecord) return res.status(400).json({ error: "Subject not found" });
+    const { data: subjectRecord, error: subjectError } = await supabase
+      .from('unique_sub_degree')
+      .select('id')
+      .eq('sub_name', subject)
+      .single();
 
+    if (subjectError || !subjectRecord) {
+      return res.status(400).json({ error: "Subject not found" });
+    }
     // Create Component Weightage
-    const newWeightage = await ComponentWeightage.create({
-      batchId: batchRecord.id,
-      semesterId: semesterRecord.id,
-      subjectId: subjectRecord.sub_code,
-      ese,
-      cse,
-      ia,
-      tw,
-      viva,
-    });
+    const { data: newWeightage, error: createError } = await supabase
+      .from('component_weightage')
+      .insert({
+        batch_id: batchRecord.id,
+        semester_id: semesterRecord.id,
+        subject_id: subjectRecord.id,
+        ese: ese,
+        cse: cse,
+        ia: ia,
+        tw: tw,
+        viva: viva
+      })
+      .select()
+      .single();
 
-    console.log("Created Component Weightage:", newWeightage);
+    if (createError) throw createError;
+
     res.status(201).json(newWeightage);
   } catch (error) {
-    console.error("Error in createComponentWeightage:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error creating component weightage:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // ✅ Get All Component Weightages
 const getAllComponentWeightages = async (req, res) => {
   try {
-    const weightages = await ComponentWeightage.findAll({
-      include: [
-        { model: Batch, attributes: ["batchName"] },
-        { model: Semester, attributes: ["semesterNumber"] },
-        { model: UniqueSubDegree, attributes: ["sub_name"] },
-      ],
-    });
+    const { data: weightages, error } = await supabase
+      .from('component_weightage')
+      .select(`
+        *,
+        batches:batch_id (*),
+        semesters:semester_id (*),
+        unique_sub_degree:subject_id (*)
+      `);
+
+    if (error) throw error;
 
     res.status(200).json(weightages);
   } catch (error) {
-    console.error("Error in getAllComponentWeightages:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching component weightages:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -63,20 +89,28 @@ const getAllComponentWeightages = async (req, res) => {
 const getComponentWeightageById = async (req, res) => {
   try {
     const { id } = req.params;
-    const weightage = await ComponentWeightage.findByPk(id, {
-      include: [
-        { model: Batch, attributes: ["batchName"] },
-        { model: Semester, attributes: ["semesterNumber"] },
-        { model: UniqueSubDegree, attributes: ["sub_name"] },
-      ],
-    });
+    const { data: weightage, error } = await supabase
+      .from('component_weightage')
+      .select(`
+        *,
+        batches:batch_id (*),
+        semesters:semester_id (*),
+        unique_sub_degree:subject_id (*)
+      `)
+      .eq('id', id)
+      .single();
 
-    if (!weightage) return res.status(404).json({ error: "Component Weightage not found" });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: "Component weightage not found" });
+      }
+      throw error;
+    }
 
     res.status(200).json(weightage);
   } catch (error) {
-    console.error("Error in getComponentWeightageById:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching component weightage:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -86,17 +120,37 @@ const updateComponentWeightage = async (req, res) => {
     const { id } = req.params;
     const { ese, cse, ia, tw, viva } = req.body;
 
-    const weightage = await ComponentWeightage.findByPk(id);
-    if (!weightage) return res.status(404).json({ error: "Component Weightage not found" });
+    // Check if weightage exists
+    const { data: existingWeightage, error: checkError } = await supabase
+      .from('component_weightage')
+      .select('id')
+      .eq('id', id)
+      .single();
 
-    // Update values
-    await weightage.update({ ese, cse, ia, tw, viva });
+    if (checkError || !existingWeightage) {
+      return res.status(404).json({ error: "Component weightage not found" });
+    }
 
-    console.log("Updated Component Weightage:", weightage);
-    res.status(200).json(weightage);
+    // Update weightage
+    const { data: updatedWeightage, error: updateError } = await supabase
+      .from('component_weightage')
+      .update({
+        ese,
+        cse,
+        ia,
+        tw,
+        viva
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    res.status(200).json(updatedWeightage);
   } catch (error) {
-    console.error("Error in updateComponentWeightage:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error updating component weightage:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -105,25 +159,36 @@ const deleteComponentWeightage = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const weightage = await ComponentWeightage.findByPk(id);
-    if (!weightage) return res.status(404).json({ error: "Component Weightage not found" });
+    // Check if weightage exists
+    const { data: existingWeightage, error: checkError } = await supabase
+      .from('component_weightage')
+      .select('id')
+      .eq('id', id)
+      .single();
 
-    await weightage.destroy();
+    if (checkError || !existingWeightage) {
+      return res.status(404).json({ error: "Component weightage not found" });
+    }
 
-    console.log("Deleted Component Weightage:", weightage);
-    res.status(200).json({ message: "Component Weightage deleted successfully" });
+    // Delete weightage
+    const { error: deleteError } = await supabase
+      .from('component_weightage')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) throw deleteError;
+
+    res.status(200).json({ message: "Component weightage deleted successfully" });
   } catch (error) {
-    console.error("Error in deleteComponentWeightage:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error deleting component weightage:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
-
 module.exports = {
-  updateComponentWeightage,
-  deleteComponentWeightage,
-  getComponentWeightageById,
+  createComponentWeightage,
   getAllComponentWeightages,
-  createComponentWeightage
+  getComponentWeightageById,
+  updateComponentWeightage,
+  deleteComponentWeightage
 };
-

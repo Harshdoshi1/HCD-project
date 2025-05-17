@@ -353,16 +353,7 @@ const getSubjectsByBatchSemesterandFaculty = async (req, res) => {
 
 const addSubjectWithComponents = async (req, res) => {
     try {
-        const {
-            subject, // subject code (from frontend)
-            name,    // subject name
-            credits, // subject credits
-            type,    // subject type (central or departmental)
-            componentsWeightage, // array of component weightages
-            componentsMarks      // array of component marks
-        } = req.body;
-
-        console.log('Received data:', req.body);
+        const { subject, name, credits, type, componentsWeightage, componentsMarks } = req.body;
 
         // Validate input
         if (!subject || !name || !credits) {
@@ -379,64 +370,102 @@ const addSubjectWithComponents = async (req, res) => {
             });
         }
 
-        // Create subject with required fields
-        // Default semester to 1 and program to 'Degree' if not provided
-        const subjectRecord = await UniqueSubDegree.create({
+        // Check if subject exists in UniqueSubDegree
+        const { data: existingSubject, error: subjectError } = await supabase
+            .from('unique_sub_degree')
+            .select('*')
+            .eq('sub_code', subject)
+            .single();
+
+        if (subjectError && subjectError.code !== 'PGRST116') throw subjectError;
+
+        // Create or update subject
+        const subjectData = {
             sub_code: subject,
             sub_name: name,
             sub_credit: credits,
-            sub_level: type || 'central', // Use type from request or default to 'central'
-            semester: 1,                  // Default semester
-            program: 'Degree'             // Default program
-        });
-
-        // Map component names from frontend to database
-        const componentMap = {
-            'CA': 'cse',   // Continuous Assessment maps to CSE in DB
-            'ESE': 'ese',  // End Semester Exam
-            'IA': 'ia',    // Internal Assessment
-            'TW': 'tw',    // Term Work
-            'VIVA': 'viva' // Viva
+            sub_level: type || 'central',
+            program: 'Degree'
         };
 
-        // Prepare weightage and marks data
-        const weightageData = { subjectId: subject };
-        const marksData = { subjectId: subject };
+        const { data: subjectRecord, error: upsertError } = await supabase
+            .from('unique_sub_degree')
+            .upsert(subjectData)
+            .select()
+            .single();
 
-        // Process weightage components
-        componentsWeightage.forEach(component => {
-            const dbField = componentMap[component.name];
-            if (dbField) {
-                weightageData[dbField] = component.weightage;
+        if (upsertError) throw upsertError;
+
+        // Prepare mapping helper
+        function mapComponents(components) {
+            const map = { ESE: 0, CSE: 0, IA: 0, TW: 0, VIVA: 0 };
+            if (Array.isArray(components)) {
+                components.forEach(comp => {
+                    if (comp.name && typeof comp.value === 'number') {
+                        const key = comp.name.toUpperCase();
+                        if (map.hasOwnProperty(key)) {
+                            map[key] = comp.value;
+                        }
+                    } else if (comp.name && typeof comp.weightage === 'number') {
+                        // fallback for weightage
+                        const key = comp.name.toUpperCase();
+                        if (map.hasOwnProperty(key)) {
+                            map[key] = comp.weightage;
+                        }
+                    }
+                });
             }
-        });
+            return map;
+        }
 
-        // Process marks components
-        componentsMarks.forEach(component => {
-            const dbField = componentMap[component.name];
-            if (dbField) {
-                marksData[dbField] = component.value;
-            }
-        });
+        // Map weightages and marks
+        const weightageMap = mapComponents(componentsWeightage);
+        const marksMap = mapComponents(componentsMarks);
 
-        // Create weightage and marks records
-        const weightage = await ComponentWeightage.create(weightageData);
-        const marks = await ComponentMarks.create(marksData);
+        // Upsert into ComponentWeightage
+        const weightageData = {
+            subject_id: subject,
+            ese: weightageMap.ESE,
+            cse: weightageMap.CSE,
+            ia: weightageMap.IA,
+            tw: weightageMap.TW,
+            viva: weightageMap.VIVA
+        };
+
+        const { data: weightage, error: weightageError } = await supabase
+            .from('component_weightage')
+            .upsert(weightageData)
+            .select()
+            .single();
+
+        if (weightageError) throw weightageError;
+
+        // Upsert into ComponentMarks
+        const marksData = {
+            subject_id: subject,
+            ese: marksMap.ESE,
+            cse: marksMap.CSE,
+            ia: marksMap.IA,
+            tw: marksMap.TW,
+            viva: marksMap.VIVA
+        };
+
+        const { data: marks, error: marksError } = await supabase
+            .from('component_marks')
+            .upsert(marksData)
+            .select()
+            .single();
+
+        if (marksError) throw marksError;
 
         res.status(201).json({
             subject: subjectRecord,
             weightage,
-            marks,
-            message: 'Subject and components added successfully'
+            marks
         });
-
     } catch (error) {
-        console.error('Error adding subject with components:', error);
-        res.status(500).json({
-            error: error.message,
-            type: error.name,
-            details: error.errors?.map(e => e.message) || []
-        });
+        console.error("Error adding subject with components:", error);
+        res.status(500).json({ error: error.message });
     }
 };
 

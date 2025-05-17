@@ -1,9 +1,5 @@
-const StudentCPI = require('../models/studentCPI');
-const Batch = require('../models/batch');
-const Semester = require('../models/semester');
-const Student = require('../models/students');
+const { supabase } = require('../config/db');
 const xlsx = require('xlsx');
-const { Op } = require('sequelize');
 
 // Upload student CPI/SPI data from Excel file
 exports.uploadStudentCPI = async (req, res) => {
@@ -41,56 +37,67 @@ exports.uploadStudentCPI = async (req, res) => {
         for (const row of data) {
             try {
                 // Find batch by name
-                const batch = await Batch.findOne({
-                    where: { batchName: row.Batch }
-                });
+                const { data: batch, error: batchError } = await supabase
+                    .from('batches')
+                    .select('id')
+                    .eq('name', row.Batch)
+                    .single();
 
-                if (!batch) {
+                if (batchError || !batch) {
                     results.failed++;
                     results.errors.push(`Batch not found: ${row.Batch} for enrollment ${row.EnrollmentNumber}`);
                     continue;
                 }
 
                 // Find semester by number and batch
-                const semester = await Semester.findOne({
-                    where: {
-                        batchId: batch.id,
-                        semesterNumber: row.Semester
-                    }
-                });
+                const { data: semester, error: semesterError } = await supabase
+                    .from('semesters')
+                    .select('id')
+                    .eq('batch_id', batch.id)
+                    .eq('semester_number', row.Semester)
+                    .single();
 
-                if (!semester) {
+                if (semesterError || !semester) {
                     results.failed++;
                     results.errors.push(`Semester ${row.Semester} not found for batch ${row.Batch}`);
                     continue;
                 }
 
                 // Check if record already exists
-                const existingRecord = await StudentCPI.findOne({
-                    where: {
-                        BatchId: batch.id,
-                        SemesterId: semester.id,
-                        EnrollmentNumber: row.EnrollmentNumber
-                    }
-                });
+                const { data: existingRecord, error: existingError } = await supabase
+                    .from('student_cpi')
+                    .select('id')
+                    .eq('batch_id', batch.id)
+                    .eq('semester_id', semester.id)
+                    .eq('enrollment_number', row.EnrollmentNumber)
+                    .single();
 
                 if (existingRecord) {
                     // Update existing record
-                    await existingRecord.update({
-                        CPI: row.CPI,
-                        SPI: row.SPI,
-                        Rank: row.Rank
-                    });
+                    const { error: updateError } = await supabase
+                        .from('student_cpi')
+                        .update({
+                            cpi: row.CPI,
+                            spi: row.SPI,
+                            rank: row.Rank
+                        })
+                        .eq('id', existingRecord.id);
+
+                    if (updateError) throw updateError;
                 } else {
                     // Create new record
-                    await StudentCPI.create({
-                        BatchId: batch.id,
-                        SemesterId: semester.id,
-                        EnrollmentNumber: row.EnrollmentNumber,
-                        CPI: row.CPI,
-                        SPI: row.SPI,
-                        Rank: row.Rank
-                    });
+                    const { error: insertError } = await supabase
+                        .from('student_cpi')
+                        .insert({
+                            batch_id: batch.id,
+                            semester_id: semester.id,
+                            enrollment_number: row.EnrollmentNumber,
+                            cpi: row.CPI,
+                            spi: row.SPI,
+                            rank: row.Rank
+                        });
+
+                    if (insertError) throw insertError;
                 }
 
                 results.success++;
@@ -113,17 +120,20 @@ exports.uploadStudentCPI = async (req, res) => {
 // Get all student CPI/SPI data
 exports.getAllStudentCPI = async (req, res) => {
     try {
-        const studentCPIs = await StudentCPI.findAll({
-            include: [
-                { model: Batch },
-                { model: Semester }
-            ]
-        });
+        const { data: studentCPIs, error } = await supabase
+            .from('student_cpi')
+            .select(`
+                *,
+                batches:batch_id (*),
+                semesters:semester_id (*)
+            `);
 
-        return res.status(200).json(studentCPIs);
+        if (error) throw error;
+
+        res.status(200).json(studentCPIs);
     } catch (error) {
         console.error('Error fetching student CPI data:', error);
-        return res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
@@ -131,19 +141,21 @@ exports.getAllStudentCPI = async (req, res) => {
 exports.getStudentCPIByBatch = async (req, res) => {
     try {
         const { batchId } = req.params;
+        const { data: studentCPIs, error } = await supabase
+            .from('student_cpi')
+            .select(`
+                *,
+                batches:batch_id (*),
+                semesters:semester_id (*)
+            `)
+            .eq('batch_id', batchId);
 
-        const studentCPIs = await StudentCPI.findAll({
-            where: { BatchId: batchId },
-            include: [
-                { model: Batch },
-                { model: Semester }
-            ]
-        });
+        if (error) throw error;
 
-        return res.status(200).json(studentCPIs);
+        res.status(200).json(studentCPIs);
     } catch (error) {
         console.error('Error fetching student CPI data by batch:', error);
-        return res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
@@ -153,30 +165,34 @@ exports.getStudentCPIByEnrollment = async (req, res) => {
         const { enrollmentNumber } = req.params;
         console.log(`Searching for student CPI data with enrollment number: ${enrollmentNumber}`);
 
-        const studentCPIs = await StudentCPI.findAll({
-            where: { EnrollmentNumber: enrollmentNumber },
-            include: [
-                { model: Batch },
-                { model: Semester }
-            ],
-            order: [
-                [{ model: Semester }, 'semesterNumber', 'ASC']
-            ]
-        });
+        const { data: studentCPIs, error } = await supabase
+            .from('student_cpi')
+            .select(`
+                *,
+                batches:batch_id (*),
+                semesters:semester_id (*)
+            `)
+            .eq('enrollment_number', enrollmentNumber)
+            .order('semester_id', { ascending: true });
 
-        console.log(`Found ${studentCPIs.length} records for enrollment number: ${enrollmentNumber}`);
+        if (error) throw error;
 
-        if (studentCPIs.length === 0) {
+        console.log(`Found ${studentCPIs?.length || 0} records for enrollment number: ${enrollmentNumber}`);
+
+        if (!studentCPIs || studentCPIs.length === 0) {
             // If no records found, let's check if the enrollment number exists in the database
-            const allEnrollments = await StudentCPI.findAll({
-                attributes: ['EnrollmentNumber'],
-                group: ['EnrollmentNumber']
-            });
+            const { data: allEnrollments, error: enrollmentError } = await supabase
+                .from('student_cpi')
+                .select('enrollment_number')
+                .limit(100); // Limit to avoid too many results
+
+            if (enrollmentError) throw enrollmentError;
 
             console.log('Available enrollment numbers in database:',
-                allEnrollments.map(e => e.EnrollmentNumber));
+                allEnrollments.map(e => e.enrollment_number));
         }
-        return res.status(200).json(studentCPIs);
+
+        return res.status(200).json(studentCPIs || []);
     } catch (error) {
         console.error('Error fetching student CPI data by enrollment:', error);
         return res.status(500).json({ message: 'Server error', error: error.message });
@@ -190,27 +206,31 @@ exports.addTestData = async (req, res) => {
         console.log(`Adding test data for enrollment number: ${enrollmentNumber}`);
 
         // First check if the batch exists
-        const batch = await Batch.findOne({ where: { batchName: 'Degree 22-26' } });
-        if (!batch) {
+        const { data: batch, error: batchError } = await supabase
+            .from('batches')
+            .select('id')
+            .eq('name', 'Degree 22-26')
+            .single();
+
+        if (batchError || !batch) {
             return res.status(404).json({ message: 'Batch not found' });
         }
 
         // Get all semesters for this batch
-        const semesters = await Semester.findAll({
-            where: { batchId: batch.id },
-            order: [['semesterNumber', 'ASC']]
-        });
+        const { data: semesters, error: semesterError } = await supabase
+            .from('semesters')
+            .select('id,semester_number')
+            .eq('batch_id', batch.id)
+            .order('semester_number', { ascending: true });
 
-        if (semesters.length === 0) {
+        if (semesterError || !semesters || semesters.length === 0) {
             return res.status(404).json({ message: 'No semesters found for this batch' });
         }
 
         // Create test data for each semester
         const createdRecords = [];
 
-        for (let i = 0; i < semesters.length; i++) {
-            const semester = semesters[i];
-
+        for (const semester of semesters) {
             // Generate random CPI and SPI values (between 6 and 9.5)
             const spi = (6 + Math.random() * 3.5).toFixed(2);
 
@@ -221,15 +241,20 @@ exports.addTestData = async (req, res) => {
             // Random rank between 1 and 50
             const rank = Math.floor(Math.random() * 50) + 1;
 
-            const record = await StudentCPI.create({
-                BatchId: batch.id,
-                SemesterId: semester.id,
-                EnrollmentNumber: enrollmentNumber,
-                CPI: cpi,
-                SPI: spi,
-                Rank: rank
-            });
+            const { data: record, error: insertError } = await supabase
+                .from('student_cpi')
+                .insert({
+                    batch_id: batch.id,
+                    semester_id: semester.id,
+                    enrollment_number: enrollmentNumber,
+                    cpi: cpi,
+                    spi: spi,
+                    rank: rank
+                })
+                .select()
+                .single();
 
+            if (insertError) throw insertError;
             createdRecords.push(record);
         }
 
@@ -246,46 +271,46 @@ exports.addTestData = async (req, res) => {
 exports.getStudentCPIByEmail = async (req, res) => {
     try {
         const { email } = req.params;
+        
         // Fetch student by email
-        const student = await Student.findOne({
-            where: { email }
-        });
+        const { data: student, error: studentError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('email', email)
+            .single();
 
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
-
-        console.log('Found student:', student.dataValues);
-
-        try {
-            const enrollmentNumber = student.enrollmentNumber;
-
-            const studentCPIs = await StudentCPI.findAll({
-                where: {
-                    EnrollmentNumber: enrollmentNumber
-                },
-
-            });
-
-            if (studentCPIs.length === 0) {
-                return res.status(404).json({
-                    message: 'No CPI records found for this student',
-                    studentInfo: {
-                        name: student.name,
-                        enrollmentNumber: student.enrollmentNumber,
-                        email: student.email,
-                        currentSemester: student.currnetsemester
-                    }
-                });
+        if (studentError) {
+            if (studentError.code === 'PGRST116') {
+                return res.status(404).json({ message: 'Student not found' });
             }
-
-            // Return all CPI records for this student
-            return res.status(200).json(studentCPIs);
-
-        } catch (error) {
-            console.error('Error fetching student CPI data by enrollment:', error);
-            return res.status(500).json({ message: 'Server error', error: error.message });
+            throw studentError;
         }
+
+        // Fetch CPI records
+        const { data: studentCPIs, error: cpiError } = await supabase
+            .from('student_cpi')
+            .select(`
+                *,
+                batches:batch_id (*),
+                semesters:semester_id (*)
+            `)
+            .eq('enrollment_number', student.enrollment_number);
+
+        if (cpiError) throw cpiError;
+
+        if (!studentCPIs || studentCPIs.length === 0) {
+            return res.status(404).json({
+                message: 'No CPI records found for this student',
+                studentInfo: {
+                    name: student.name,
+                    enrollmentNumber: student.enrollment_number,
+                    email: student.email,
+                    currentSemester: student.current_semester
+                }
+            });
+        }
+
+        return res.status(200).json(studentCPIs);
     } catch (error) {
         console.error('Error fetching student CPI data by email:', error);
         return res.status(500).json({ message: 'Server error', error: error.message });
