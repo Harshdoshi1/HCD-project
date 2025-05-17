@@ -17,15 +17,16 @@
 
 
 .students-list-container {
-    max-width: 100%;
+    max-width: 120vw;
     margin: 0 auto;
-    /* padding: 0.7rem; */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     color: var(--text-dark);
     border-radius: 12px;
     min-height: 90vh;
     display: flex;
     flex-direction: column;
+    margin-left: 200px; 
+
 }
 
 .students-list-header {
@@ -115,7 +116,8 @@
 }
 
 .filter-toggle-btn,
-.add-student-btn {
+.add-student-btn,
+.cpi-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -147,7 +149,8 @@
     color: var(--primary-color);
 }
 
-.add-student-btn {
+.add-student-btn,
+.cpi-btn {
     background-color: white;
     color: #3674B5;
 }
@@ -158,7 +161,8 @@
 } */
 
 .filter-toggle-btn svg,
-.add-student-btn svg {
+.add-student-btn svg,
+.cpi-btn svg {
     margin-right: 8px;
     font-size: 0.9rem;
 }
@@ -425,7 +429,8 @@
     }
 
     .filter-toggle-btn,
-    .add-student-btn {
+    .add-student-btn,
+    .cpi-btn {
         width: 100%;
         justify-content: center;
     }
