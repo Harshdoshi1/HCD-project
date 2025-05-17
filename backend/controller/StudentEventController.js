@@ -3,20 +3,19 @@ const { supabase } = require('../config/db');
 // Create new event
 const createEvent = async (req, res) => {
   try {
-    const { eventId, eventName, eventType, eventCategory, points, duration, eventDate } = req.body;
-    console.log("Testing ", eventId, eventName, eventType, eventCategory, points, duration, eventDate);
+    const { eventName, description, eventDate, eventType, eventCategory, points, duration } = req.body;
+    console.log("Creating event:", { eventName, eventDate, eventType, eventCategory, points, duration });
     
     // Insert the event into the event_master table using Supabase
     const { data: event, error } = await supabase
       .from('event_master')
       .insert({
-        event_id: eventId,
         event_name: eventName,
         event_type: eventType,
         event_category: eventCategory,
-        points: parseInt(points),
-        duration: duration ? parseInt(duration) : null,
-        date: eventDate
+        event_date: eventDate,
+        points: points ? parseInt(points) : 0,
+        duration: duration ? parseInt(duration) : null
       })
       .select()
       .single();
