@@ -32,7 +32,7 @@ const AddFacultyModal = ({ onClose, onSuccess }) => {
       console.log("Request body:", facultyDetails);
 
       const response = await fetch(
-        "http://localhost:5001/api/faculties/addFaculty",
+        "http://localhost:5001/api/auth/addFaculty",
         {
           method: "POST",
           headers: {
@@ -42,22 +42,9 @@ const AddFacultyModal = ({ onClose, onSuccess }) => {
           body: JSON.stringify(facultyDetails),
         }
       );
-
-      console.log("Response status:", response.status);
-      const data = await response.json();
-      console.log("Response data:", data);
-
-      if (response.ok) {
-        console.log("Faculty added:", data);
-        onSuccess();
-        onClose();
-      } else {
-        console.error("Error response:", data);
-        alert(data.message || "Failed to add faculty");
-      }
     } catch (error) {
-      console.error("Error details:", error);
-      alert("Failed to add faculty. Try again.");
+      console.error('Error details:', error);
+      alert('Failed to add faculty. Try again.');
     }
   };
 
