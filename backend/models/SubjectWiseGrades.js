@@ -1,50 +1,44 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
-const Student = require("./students");
-const UniqueSubDegree = require("./uniqueSubDegree"); 
+const TABLE_NAME = 'subject_wise_grades';
 
-const SubjectWiseGrade = sequelize.define('SubjectWiseGrade', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
-    studentId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: Student,
-            key: 'id'
+const SubjectWiseGrades = {
+    TableStructure: {
+        id: {
+            type: 'uuid',
+            primaryKey: true,
+            defaultValue: 'uuid_generate_v4()'
+        },
+        student_id: {
+            type: 'uuid',
+            references: 'students.id',
+            required: true
+        },
+        subject_id: {
+            type: 'text',
+            references: 'unique_sub_degree.sub_code',
+            required: true
+        },
+        semester: {
+            type: 'integer',
+            required: true
+        },
+        grade: {
+            type: 'text',
+            required: true,
+            enum: ['O', 'A+', 'A', 'B+', 'B', 'C', 'P', 'F']
+        },
+        points: {
+            type: 'numeric',
+            required: true
+        },
+        created_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        },
+        updated_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
         }
-    },
-
-    
-    subjectId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        references: {
-            model: UniqueSubDegree,
-            key: 'sub_code'
-        }
-    },
-    semester: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
-    grade: {
-        type: DataTypes.ENUM('O', 'A+', 'A', 'B+', 'B', 'C', 'P', 'F'),
-        allowNull: false
-    },
-    points: {
-        type: DataTypes.INTEGER,
-        allowNull: false
     }
-}, {
-    timestamps: true
-});
+};
 
-// Relationships
-SubjectWiseGrade.belongsTo(Student, { foreignKey: 'id' });
-SubjectWiseGrade.belongsTo(UniqueSubDegree, { foreignKey: 'sub_code' });  // ✅ Clean association
-
-module.exports = SubjectWiseGrade;
+module.exports = SubjectWiseGrades;

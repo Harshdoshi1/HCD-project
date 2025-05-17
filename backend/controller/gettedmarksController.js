@@ -1,15 +1,16 @@
-const Gettedmarks = require("../models/gettedmarks");
-const Student = require("../models/students");
-const UniqueSubDegree = require("../models/uniqueSubDegree");
-const Batch = require("../models/batch");
-const AssignSubject = require("../models/assignSubject");
+const { supabase } = require('../config/db');
 
 exports.getStudentMarksByBatchAndSubject = async (req, res) => {
     try {
         const { batchId } = req.params;
         console.log("Received check:", batchId);
 
-        const students = await Student.findAll({ where: { batchId: batchId } });
+        const { data: students, error } = await supabase
+            .from('students')
+            .select('*')
+            .eq('batch_id', batchId);
+
+        if (error) throw error;
 
         if (!students || students.length === 0) {
             return res.status(404).json({ message: "No students found for this batch" });
@@ -28,7 +29,13 @@ exports.getStudentsByBatchAndSemester = async (req, res) => {
         const { batchId, semesterId } = req.params;
         console.log("Received check:", batchId, semesterId);
 
-        const students = await Student.findAll({ where: { batchId: batchId, currnetsemester: semesterId } });
+        const { data: students, error } = await supabase
+            .from('students')
+            .select('*')
+            .eq('batch_id', batchId)
+            .eq('currnet_semester', semesterId);
+
+        if (error) throw error;
 
         if (!students || students.length === 0) {
             return res.status(404).json({ message: "No students found for this batch and semester" });
@@ -47,14 +54,25 @@ exports.getStudentMarksByBatchAndSubject1 = async (req, res) => {
         const { batchId } = req.params;
         console.log("Received check:", batchId);
 
-        const batch = await Batch.findOne({ where: { batchName: batchId } });
+        const { data: batch, error: batchError } = await supabase
+            .from('batches')
+            .select('id')
+            .eq('batch_name', batchId)
+            .single();
+
+        if (batchError) throw batchError;
         if (!batch) {
             return res.status(404).json({ message: "Batch not found" });
         }
 
         // console.log('Batch:', batch);
 
-        const students = await Student.findAll({ where: { batchId: batch.id } });
+        const { data: students, error: studentsError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('batch_id', batch.id);
+
+        if (studentsError) throw studentsError;
 
         if (!students || students.length === 0) {
             return res.status(404).json({ message: "No students found for this batch" });
@@ -77,37 +95,70 @@ exports.updateStudentMarks = async (req, res) => {
         console.log('Updating marks for student:', studentId, 'and subject:', subjectId);
 
         // Ensure subject exists
-        const subjectExists = await UniqueSubDegree.findOne({
-            where: { sub_code: subjectId }
-        });
+        const { data: subjectExists, error: subjectError } = await supabase
+            .from('unique_sub_degrees')
+            .select('sub_code')
+            .eq('sub_code', subjectId)
+            .single();
+
+        if (subjectError) throw subjectError;
 
         if (!subjectExists) {
             return res.status(400).json({ error: `Subject ID ${subjectId} does not exist.` });
         }
 
-        const [marks, created] = await Gettedmarks.findOrCreate({
-            where: { studentId, subjectId },
-            defaults: {
-                facultyId,
-                ese: ese || 0,
-                cse: cse || 0,
-                ia: ia || 0,
-                tw: tw || 0,
-                viva: viva || 0,
-                facultyResponse: response || ''
-            }
-        });
+        // Try to get existing marks
+        const { data: existingMarks, error: getError } = await supabase
+            .from('getted_marks')
+            .select('*')
+            .eq('student_id', studentId)
+            .eq('subject_id', subjectId)
+            .single();
 
-        if (!created) {
-            await marks.update({
-                facultyId,
-                ...(ese !== undefined && { ese }),
-                ...(cse !== undefined && { cse }),
-                ...(ia !== undefined && { ia }),
-                ...(tw !== undefined && { tw }),
-                ...(viva !== undefined && { viva }),
-                ...(response !== undefined && { facultyResponse: response })
-            });
+        if (getError && getError.code !== 'PGRST116') { // PGRST116 means no rows found
+            throw getError;
+        }
+
+        if (existingMarks) {
+            // Update existing marks
+            const { data: marks, error: updateError } = await supabase
+                .from('getted_marks')
+                .update({
+                    faculty_id: facultyId,
+                    ...(ese !== undefined && { ese }),
+                    ...(cse !== undefined && { cse }),
+                    ...(ia !== undefined && { ia }),
+                    ...(tw !== undefined && { tw }),
+                    ...(viva !== undefined && { viva }),
+                    ...(response !== undefined && { faculty_response: response })
+                })
+                .eq('student_id', studentId)
+                .eq('subject_id', subjectId)
+                .select()
+                .single();
+
+            if (updateError) throw updateError;
+            return marks;
+        } else {
+            // Create new marks
+            const { data: marks, error: insertError } = await supabase
+                .from('getted_marks')
+                .insert({
+                    student_id: studentId,
+                    subject_id: subjectId,
+                    faculty_id: facultyId,
+                    ese: ese || 0,
+                    cse: cse || 0,
+                    ia: ia || 0,
+                    tw: tw || 0,
+                    viva: viva || 0,
+                    faculty_response: response || ''
+                })
+                .select()
+                .single();
+
+            if (insertError) throw insertError;
+            return marks;
         }
 
         res.status(200).json({ message: 'Marks updated successfully', data: marks });
@@ -121,7 +172,13 @@ exports.updateStudentMarks = async (req, res) => {
 exports.getSubjectNamefromCode = async (req, res) => {
     try {
         const { subjectCode } = req.params;
-        const subject = await UniqueSubDegree.findOne({ where: { sub_code: subjectCode } });
+        const { data: subject, error } = await supabase
+            .from('unique_sub_degrees')
+            .select('sub_name')
+            .eq('sub_code', subjectCode)
+            .single();
+
+        if (error) throw error;
         if (!subject) {
             return res.status(404).json({ message: "Subject not found" });
         }
@@ -140,9 +197,13 @@ exports.getBatchIdfromName = async (req, res) => {
             return res.status(400).json({ error: "Batch name is required" });
         }
 
-        const batch = await Batch.findOne({
-            where: { batchName }
-        });
+        const { data: batch, error } = await supabase
+            .from('batches')
+            .select('id')
+            .eq('batch_name', batchName)
+            .single();
+
+        if (error) throw error;
 
         if (!batch) {
             return res.status(404).json({ error: `Batch with name ${batchName} not found` });
@@ -163,15 +224,15 @@ exports.getSubjectByBatchAndSemester = async (req, res) => {
             return res.status(400).json({ error: "Faculty name is required" });
         }
 
-        const assignedSubjects = await AssignSubject.findAll({
-            where: {
-                batchId,
-                semesterId,
-                facultyName
-            },
-            attributes: ['subjectCode'], // fetch only subjectCode
-            order: [['facultyName', 'ASC']] // optional if needed
-        });
+        const { data: assignedSubjects, error } = await supabase
+            .from('assign_subjects')
+            .select('subject_code')
+            .eq('batch_id', batchId)
+            .eq('semester_id', semesterId)
+            .eq('faculty_name', facultyName)
+            .order('faculty_name', { ascending: true });
+
+        if (error) throw error;
 
         res.status(200).json(assignedSubjects);
     } catch (error) {

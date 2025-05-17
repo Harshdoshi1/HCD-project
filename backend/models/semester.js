@@ -1,15 +1,38 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
-const Batch = require('./batch');
+const TABLE_NAME = 'semesters';
 
-const Semester = sequelize.define('Semester', {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    batchId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Batch, key: 'id' } },
-    semesterNumber: { type: DataTypes.TINYINT, allowNull: false, validate: { min: 1, max: 8 } },
-    startDate: { type: DataTypes.DATEONLY, allowNull: false },
-    endDate: { type: DataTypes.DATEONLY, allowNull: false }
-}, { timestamps: false });
-
-Semester.belongsTo(Batch, { foreignKey: 'batchId' });
+const Semester = {
+    TableStructure: {
+        id: {
+            type: 'uuid',
+            primaryKey: true,
+            defaultValue: 'uuid_generate_v4()'
+        },
+        batch_id: {
+            type: 'uuid',
+            references: 'batches.id',
+            required: true
+        },
+        semester_number: {
+            type: 'integer',
+            required: true
+        },
+        start_date: {
+            type: 'date',
+            required: true
+        },
+        end_date: {
+            type: 'date',
+            required: true
+        },
+        created_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        },
+        updated_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        }
+    }
+};
 
 module.exports = Semester;

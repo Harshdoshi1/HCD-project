@@ -1,19 +1,29 @@
-const { Sequelize } = require('sequelize');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-const sequelize = new Sequelize(
-    process.env.DB_NAME || 'hcd',
-    process.env.DB_USER || 'root',
-    process.env.DB_PASSWORD || '',
-    {
-        host: process.env.DB_HOST || 'localhost',
-        dialect: 'mysql',
-        logging: false
-    }
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+    throw new Error('Missing Supabase environment variables');
+}
+
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
 );
 
-sequelize.authenticate()
-    .then(() => console.log('MySQL Connected via Sequelize'))
-    .catch(err => console.error('MySQL Connection Failed:', err));
+// Test the connection
+const testConnection = async () => {
+    try {
+        // Try to access the users table as a basic connection test
+        const { error } = await supabase.from('users').select('count').single();
+        if (error && error.code !== 'PGRST116') { // Ignore 'no rows returned' error
+            throw error;
+        }
+        console.log('Supabase Connected Successfully');
+        return true;
+    } catch (error) {
+        console.error('Supabase Connection Failed:', error.message);
+        return false;
+    }
+};
 
-module.exports = sequelize;
+module.exports = { supabase, testConnection };

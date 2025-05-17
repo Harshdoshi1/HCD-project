@@ -1,7 +1,4 @@
-const express = require('express');
-const router = express.Router();
-const { Op } = require('sequelize');
-const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma, ComponentWeightage, ComponentMarks, AssignSubjects } = require('../models'); // Import models
+const { supabase } = require('../config/db');
 
 // Add Subject
 const addSubject = async (req, res) => {
@@ -9,21 +6,29 @@ const addSubject = async (req, res) => {
         const { name, code, courseType, credits, subjectType, semester } = req.body;
 
         if (courseType === 'degree') {
-            await UniqueSubDegree.create({
-                sub_code: code,
-                sub_name: name,
-                sub_credit: credits,
-                sub_level: subjectType,
-                semester: semester,
-                program: 'Degree'
-            });
+            const { error } = await supabase
+                .from('unique_sub_degrees')
+                .insert({
+                    sub_code: code,
+                    sub_name: name,
+                    sub_credit: credits,
+                    sub_level: subjectType,
+                    semester: semester,
+                    program: 'Degree'
+                });
+
+            if (error) throw error;
         } else if (courseType === 'diploma') {
-            await UniqueSubDiploma.create({
-                sub_code: code,
-                sub_name: name,
-                sub_credit: credits,
-                sub_level: subjectType
-            });
+            const { error } = await supabase
+                .from('unique_sub_diplomas')
+                .insert({
+                    sub_code: code,
+                    sub_name: name,
+                    sub_credit: credits,
+                    sub_level: subjectType
+                });
+
+            if (error) throw error;
         } else {
             return res.status(400).json({ error: 'Invalid course type' });
         }
@@ -39,13 +44,18 @@ const getSubjectWithComponents = async (req, res) => {
     try {
         const { subjectCode } = req.params;
 
-        const subject = await UniqueSubDegree.findOne({
-            where: { sub_code: subjectCode },
-            include: [
-                { model: ComponentWeightage, as: 'weightage' },
-                { model: ComponentMarks, as: 'marks' }
-            ]
-        });
+        // Get subject
+        const { data: subject, error: subjectError } = await supabase
+            .from('unique_sub_degrees')
+            .select(`
+                *,
+                weightage:component_weightages(*),
+                marks:component_marks(*)
+            `)
+            .eq('sub_code', subjectCode)
+            .single();
+
+        if (subjectError) throw subjectError;
 
         if (!subject) {
             return res.status(404).json({ error: 'Subject not found' });
@@ -62,13 +72,16 @@ const getSubjectWithComponents = async (req, res) => {
 const getSubjectByCode = async (req, res) => {
     try {
         const { code, courseType } = req.params;
-        let subject;
 
-        if (courseType === 'degree') {
-            subject = await UniqueSubDegree.findOne({ where: { sub_code: code } });
-        } else if (courseType === 'diploma') {
-            subject = await UniqueSubDiploma.findOne({ where: { sub_code: code } });
-        } else {
+        const { data: subject, error } = await supabase
+            .from(courseType === 'degree' ? 'unique_sub_degrees' : 'unique_sub_diplomas')
+            .select('*')
+            .eq('sub_code', code)
+            .single();
+
+        if (error) throw error;
+
+        if (!courseType.match(/^(degree|diploma)$/i)) {
             return res.status(400).json({ error: 'Invalid course type' });
         }
 
@@ -98,13 +111,26 @@ const assignSubject = async (req, res) => {
                 return res.status(400).json({ message: "Missing subjectName, semesterNumber, or batchName" });
             }
 
-            const batch = await Batch.findOne({ where: { batchName } });
-            if (!batch) {
+            // Get batch
+            const { data: batch, error: batchError } = await supabase
+                .from('batches')
+                .select('id')
+                .eq('batch_name', batchName)
+                .single();
+
+            if (batchError || !batch) {
                 return res.status(404).json({ message: `Batch '${batchName}' not found` });
             }
 
-            const semester = await Semester.findOne({ where: { semesterNumber, batchId: batch.id } });
-            if (!semester) {
+            // Get semester
+            const { data: semester, error: semesterError } = await supabase
+                .from('semesters')
+                .select('id')
+                .eq('semester_number', semesterNumber)
+                .eq('batch_id', batch.id)
+                .single();
+
+            if (semesterError || !semester) {
                 return res.status(404).json({ message: `Semester '${semesterNumber}' not found for batch '${batchName}'` });
             }
 
@@ -622,12 +648,13 @@ const getSubjectsByBatchAndSemesterWithDetails = async (req, res) => {
         }
         
         // Find all subjects for this batch and semester
-        const subjects = await Subject.findAll({
-            where: { 
-                batchId: batch.id,
-                semesterId: semester.id
-            }
-        });
+        const { data: subjects, error: subjectsError } = await supabase
+            .from('subjects')
+            .select('*')
+            .eq('batch_id', batch.id)
+            .eq('semester_id', semester.id);
+
+        if (subjectsError) throw subjectsError;
         
         if (!subjects || subjects.length === 0) {
             return res.status(404).json({ message: "No subjects found for this batch and semester" });

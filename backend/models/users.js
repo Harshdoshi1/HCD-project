@@ -1,32 +1,41 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const TABLE_NAME = 'users';
 
-const User = sequelize.define('User', {
-    id: { 
-        type: DataTypes.INTEGER, 
-        autoIncrement: true, 
-        primaryKey: true 
-    },
-    name: { 
-        type: DataTypes.STRING, 
-        allowNull: false 
-    },
-    email: { 
-        type: DataTypes.STRING, 
-        allowNull: false,
-        unique: 'email_unique'  // Using a unique constraint instead of index
-    },
-    password: { 
-        type: DataTypes.STRING, 
-        allowNull: false 
-    },
-    role: { 
-        type: DataTypes.ENUM('student', 'Faculty', 'HOD'), 
-        allowNull: false 
+const Users = {
+    TableStructure: {
+        id: {
+            type: 'integer',
+            primaryKey: true,
+            autoIncrement: true
+        },
+        auth_id: {
+            type: 'text',
+            unique: true
+        },
+        name: {
+            type: 'text',
+            required: true
+        },
+        email: {
+            type: 'text',
+            required: true,
+            unique: true,
+            format: 'email'
+        },
+
+        role: {
+            type: 'text',
+            required: true,
+            enum: ['HOD', 'faculty', 'student']
+        },
+        created_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        },
+        updated_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        }
     }
-}, { 
-    timestamps: false,
-    indexes: []  // Explicitly define indexes if needed
-});
+};
 
-module.exports = User;
+module.exports = Users;

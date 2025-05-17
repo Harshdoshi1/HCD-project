@@ -1,42 +1,41 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db.js');
+const TABLE_NAME = 'student_points';
 
-const StudentPoints = sequelize.define('StudentPoints', {
-    id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-        autoIncrement: true,
-    },
-    enrollmentNumber: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    semester: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    eventId: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-    },
-    totalCocurricular: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    totalExtracurricular: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    participationTypeId: {
-        type: DataTypes.TEXT,
-        allowNull: false,
+const StudentPoints = {
+    TableStructure: {
+        id: {
+            type: 'uuid',
+            primaryKey: true,
+            defaultValue: 'uuid_generate_v4()'
+        },
+        student_id: {
+            type: 'uuid',
+            references: 'students.id',
+            required: true
+        },
+        event_id: {
+            type: 'uuid',
+            references: 'event_master.id',
+            required: true
+        },
+        points_earned: {
+            type: 'integer',
+            required: true,
+            default: 0
+        },
+        date_earned: {
+            type: 'timestamp',
+            required: true,
+            defaultValue: 'now()'
+        },
+        created_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        },
+        updated_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        }
     }
-}, {
-    tableName: 'student_points',
-    timestamps: false,
-});
-
-
+};
 
 module.exports = StudentPoints;

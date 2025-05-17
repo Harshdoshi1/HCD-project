@@ -1,48 +1,41 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
-const Batch = require("./batch");
-const Semester = require("./semester");
-const UniqueSubDegree = require("./uniqueSubDegree");
-const UniqueSubDiploma = require("./uniqueSubDiploma");
+const TABLE_NAME = 'assign_subjects';
 
-const AssignSubject = sequelize.define(
-    "AssignSubject",
-    {
+const AssignSubject = {
+    TableStructure: {
         id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
+            type: 'uuid',
             primaryKey: true,
+            defaultValue: 'uuid_generate_v4()'
         },
-        batchId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: Batch,
-                key: "id",
-            },
+        batch_id: {
+            type: 'uuid',
+            references: 'batches.id',
+            required: true
         },
-        semesterId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
+        semester_id: {
+            type: 'uuid',
+            references: 'semesters.id',
+            required: true
         },
-        facultyName: {
-            type: DataTypes.STRING,
-            allowNull: false,
+        faculty_id: {
+            type: 'uuid',
+            references: 'faculty.id',
+            required: true
         },
-        subjectCode: {
-            type: DataTypes.STRING,
-            allowNull: false,
+        subject_id: {
+            type: 'text',
+            references: 'unique_sub_degree.sub_code',
+            required: true
         },
-    },
-    { timestamps: false }
-);
-
-// Relationships
-AssignSubject.belongsTo(Batch, { foreignKey: "batchId" });
-// AssignSubject.belongsTo(Semester, { foreignKey: "semesterId" });
-
-// subjectCode can belong to either UniqueSubDegree or UniqueSubDiploma
-AssignSubject.belongsTo(UniqueSubDegree, { foreignKey: "subjectCode", targetKey: "sub_code", constraints: false });
-AssignSubject.belongsTo(UniqueSubDiploma, { foreignKey: "subjectCode", targetKey: "sub_code", constraints: false });
+        created_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        },
+        updated_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        }
+    }
+};
 
 module.exports = AssignSubject;

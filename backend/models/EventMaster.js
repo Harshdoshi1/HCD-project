@@ -1,40 +1,46 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require("../config/db");
+const TABLE_NAME = 'event_master';
 
-const EventMaster = sequelize.define('EventMaster', {
-    eventId: {
-        type: DataTypes.STRING,
-        primaryKey: true,
-        allowNull: false,
-        unique: true,
-    },
-    eventName: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    eventType: {
-        type: DataTypes.ENUM('co-curricular', 'extra-curricular'),
-        allowNull: false,
-    },
-    eventCategory: {
-        type: DataTypes.STRING,
-        allowNull: true, // Optional field
-    },
-    points: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    duration: {
-        type: DataTypes.INTEGER, // Optional field
-        allowNull: true,
-    },
-    date: {
-        type: DataTypes.DATE,
-        allowNull: false, // Make it required or optional as per your needs
+const EventMaster = {
+    TableStructure: {
+        id: {
+            type: 'uuid',
+            primaryKey: true,
+            defaultValue: 'uuid_generate_v4()'
+        },
+        event_name: {
+            type: 'text',
+            required: true
+        },
+        event_date: {
+            type: 'timestamp',
+            required: true
+        },
+        event_type: {
+            type: 'text',
+            required: true,
+            enum: ['co-curricular', 'extra-curricular']
+        },
+        event_category: {
+            type: 'text',
+            required: false
+        },
+        points: {
+            type: 'integer',
+            required: true
+        },
+        duration: {
+            type: 'integer',
+            required: false
+        },
+        created_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        },
+        updated_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        }
     }
-}, {
-    tableName: 'EventMaster',
-    timestamps: false,
-});
+};
 
 module.exports = EventMaster;

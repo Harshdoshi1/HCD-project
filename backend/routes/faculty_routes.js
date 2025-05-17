@@ -19,7 +19,7 @@ router.post('/createAssignSubject', createAssignSubject);
 router.post('/getAllAssignSubjects', getAllAssignSubjects);
 router.get('/getAssignSubjectById', getAssignSubjectById);
 router.put('/updateAssignSubject', updateAssignSubject);
-router.delete('/deleteAssignSubject', deleteAssignSubject);
+// router.delete('/deleteAssignSubject', deleteAssignSubject);
 router.get('/getSubjectsByFaculty/:facultyId', getSubjectsByFaculty);
 
 module.exports = router; 

@@ -1,64 +1,76 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
-const Batch = require('./batch');
-const Semester = require('./semester');
+const { supabase } = require('../config/db');
 
-const StudentCPI = sequelize.define('StudentCPI', {
-    id: { 
-        type: DataTypes.INTEGER, 
-        autoIncrement: true, 
-        primaryKey: true 
+const TABLE_NAME = 'student_cpi';
+
+const StudentCPI = {
+    // Table name constant
+    tableName: TABLE_NAME,
+
+    // Database operations
+    async create(data) {
+        const { data: result, error } = await supabase
+            .from(TABLE_NAME)
+            .insert(data)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return result;
     },
-    BatchId: { 
-        type: DataTypes.INTEGER, 
-        allowNull: false,
-        references: {
-            model: Batch,
-            key: 'id'
+
+    async findAll(options = {}) {
+        let query = supabase.from(TABLE_NAME).select(`
+            *,
+            batch:batches(*),
+            semester:semesters(*)
+        `);
+
+        if (options.where) {
+            Object.entries(options.where).forEach(([key, value]) => {
+                query = query.eq(key, value);
+            });
         }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data;
     },
-    SemesterId: { 
-        type: DataTypes.INTEGER, 
-        allowNull: false,
-        references: {
-            model: Semester,
-            key: 'id'
-        }
+
+    async findOne(options = {}) {
+        const { data, error } = await supabase
+            .from(TABLE_NAME)
+            .select(`
+                *,
+                batch:batches(*),
+                semester:semesters(*)
+            `)
+            .match(options.where || {})
+            .single();
+
+        if (error) throw error;
+        return data;
     },
-    EnrollmentNumber: { 
-        type: DataTypes.STRING, 
-        allowNull: false 
+
+    async update(where, updates) {
+        const { data, error } = await supabase
+            .from(TABLE_NAME)
+            .update(updates)
+            .match(where)
+            .select();
+
+        if (error) throw error;
+        return data;
     },
-    CPI: { 
-        type: DataTypes.FLOAT, 
-        allowNull: false,
-        validate: {
-            min: 0,
-            max: 10
-        }
-    },
-    SPI: { 
-        type: DataTypes.FLOAT, 
-        allowNull: false,
-        validate: {
-            min: 0,
-            max: 10
-        }
-    },
-    Rank: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        validate: {
-            min: 1
-        }
+
+    async delete(where) {
+        const { error } = await supabase
+            .from(TABLE_NAME)
+            .delete()
+            .match(where);
+
+        if (error) throw error;
+        return true;
     }
-}, {
-    tableName: 'StudentCPIs',
-    timestamps: true
-});
-
-// Define associations
-StudentCPI.belongsTo(Batch, { foreignKey: 'BatchId' });
-StudentCPI.belongsTo(Semester, { foreignKey: 'SemesterId' });
+};
 
 module.exports = StudentCPI;
