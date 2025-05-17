@@ -186,7 +186,10 @@ const loginUser = async (req, res) => {
         res.status(200).json({
             message: 'Login successful',
             session: authData.session,
-            user: userData
+            user: {
+                ...userData,
+                role: userData.role.toUpperCase() // Normalize role to uppercase
+            }
         });
     } catch (error) {
         console.error('Login error:', error);

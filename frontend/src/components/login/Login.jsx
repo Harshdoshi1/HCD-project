@@ -36,7 +36,7 @@ function Login() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5001/api/users/login', {
+            const response = await fetch('http://localhost:5001/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -57,14 +57,15 @@ function Login() {
             localStorage.removeItem('email');
 
             // Store new values
-            localStorage.setItem('token', data.token);
+            localStorage.setItem('token', data.session.access_token);
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('email', data.user.email);
 
             // Redirect based on role
-            if (data.user.role === 'HOD') {
+            const role = data.user.role.toUpperCase();
+            if (role === 'HOD') {
                 navigate('/dashboardHOD');
-            } else if (data.user.role === 'Faculty') {
+            } else if (role === 'FACULTY') {
                 navigate('/dashboardFaculty');
             } else {
                 throw new Error('Invalid user role');
