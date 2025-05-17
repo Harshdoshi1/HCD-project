@@ -1,49 +1,50 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
-const Batch = require('./batch');
+const TABLE_NAME = 'students';
 
-const Student = sequelize.define('Student', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    email: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    batchId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: { model: 'Batches', key: 'id' }
-    },
-    enrollmentNumber: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    hardwarePoints:{
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue:0
-    },
-    softwarePoints:{
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue:0
-    },
-    currnetsemester:{
-        type: DataTypes.INTEGER,
-        allowNull: false
+const Student = {
+    TableStructure: {
+        id: {
+            type: 'uuid',
+            primaryKey: true,
+            defaultValue: 'uuid_generate_v4()'
+        },
+        user_id: {
+            type: 'uuid',
+            references: 'users.id',
+            required: true
+        },
+        batch_id: {
+            type: 'uuid',
+            references: 'batches.id',
+            required: true
+        },
+        enrollment_number: {
+            type: 'text',
+            required: true,
+            unique: true
+        },
+        hardware_points: {
+            type: 'integer',
+            default: 0
+        },
+        software_points: {
+            type: 'integer',
+            default: 0
+        },
+        current_semester: {
+            type: 'integer',
+            required: true,
+            min: 1,
+            max: 8
+        },
+        created_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        },
+        updated_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        }
     }
-}, {
-    tableName: 'Students',
-    timestamps: true
-});
-
-Student.belongsTo(Batch, { foreignKey: 'batchId' });
+};
 
 module.exports = Student;

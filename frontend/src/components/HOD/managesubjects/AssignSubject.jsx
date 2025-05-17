@@ -27,7 +27,13 @@ const AssignSubject = () => {
                 const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
-                setBatches(data);
+                // Map Supabase response to match frontend structure
+                const mappedBatches = data.map(batch => ({
+                    batchName: batch.name,
+                    courseType: batch.program,
+                    id: batch.id
+                }));
+                setBatches(mappedBatches);
             } catch (error) {
                 console.error("Error fetching batches:", error);
                 setError("Failed to fetch batches");
@@ -453,9 +459,9 @@ const AssignSubject = () => {
                         <div className="all-subjects-container">
                             {availableSubjects.length > 0 ? (
                                 availableSubjects.map((subject, index) => (
-                                    <div key={subject.sub_code || index} className="subject-item" onClick={() => handleSubjectSelect(subject)}>
+                                    <div key={subject.id || subject.sub_code || index} className="subject-item" onClick={() => handleSubjectSelect(subject)}>
                                         <span>
-                                            {subject.sub_code} - {subject.sub_name || subject.subjectName}
+                                            {subject.sub_code} - {subject.sub_name}
                                         </span>
                                         <span className="subject-credits">{subject.sub_credit} credits</span>
                                     </div>

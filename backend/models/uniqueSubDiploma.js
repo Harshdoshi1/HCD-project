@@ -1,14 +1,32 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const TABLE_NAME = 'unique_sub_diploma';
 
-const UniqueSubDiploma = sequelize.define('UniqueSubDiploma', {
-    sub_code: { type: DataTypes.STRING, primaryKey: true },
-    sub_level: { 
-        type: DataTypes.ENUM('department', 'central'), 
-        allowNull: false 
-    },
-    sub_name: { type: DataTypes.STRING, allowNull: false },
-    sub_credit: { type: DataTypes.INTEGER, allowNull: false }
-}, { timestamps: false });
+const UniqueSubDiploma = {
+    TableStructure: {
+        sub_code: {
+            type: 'text',
+            primaryKey: true
+        },
+        sub_level: {
+            type: 'text',
+            required: true
+        },
+        sub_name: {
+            type: 'text',
+            required: true
+        },
+        sub_credit: {
+            type: 'integer',
+            required: true
+        },
+        created_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        },
+        updated_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        }
+    }
+};
 
 module.exports = UniqueSubDiploma;

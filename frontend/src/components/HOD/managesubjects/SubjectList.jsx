@@ -20,7 +20,13 @@ const SubjectList = ({ onSelectSubject }) => {
                 const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
-                setBatches(data);
+                // Map Supabase response to match frontend structure
+                const mappedBatches = data.map(batch => ({
+                    batchName: batch.name,
+                    courseType: batch.program,
+                    id: batch.id
+                }));
+                setBatches(mappedBatches);
             } catch (error) {
                 console.error("Error fetching batches:", error);
                 setError("Failed to fetch batches");
@@ -124,7 +130,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 <select className="professional-filter-ds" name="batch" value={filters.batch} onChange={handleChange} required>
                     <option value="all">Batch</option>
                     {batches.map((batch, index) => (
-                        <option key={batch._id || index} value={batch.batchName}>
+                        <option key={batch.id || index} value={batch.batchName}>
                             {batch.batchName}
                         </option>
                     ))}
@@ -132,7 +138,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 <select className="professional-filter-ds" name="semester" value={filters.semester} onChange={handleChange} required>
                     <option value="all">Semester</option>
                     {semesters.map((sem, index) => (
-                        <option key={sem._id || index} value={sem.semesterNumber}>
+                        <option key={sem.id || index} value={sem.semester_number}>
                             Semester {sem.semesterNumber}
                         </option>
                     ))}
@@ -145,7 +151,7 @@ const SubjectList = ({ onSelectSubject }) => {
                         const code = subject.sub_code || subject.subjectCode || subject.code;
                         const name = subject.sub_name || subject.subjectName || subject.name;
                         return (
-                            <div key={subject._id || code || index} className="subject-card" onClick={() => onSelectSubject(subject)}>
+                            <div key={subject.id || code || index} className="subject-card" onClick={() => onSelectSubject(subject)}>
                                 {code && (
                                     <div className="subject-code">{code}</div>
                                 )}

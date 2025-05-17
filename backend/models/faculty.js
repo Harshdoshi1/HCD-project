@@ -1,12 +1,26 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
-const User = require('./users');
+const TABLE_NAME = 'faculty';
 
-const Faculty = sequelize.define('Faculty', {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    userId: { type: DataTypes.INTEGER, unique: true, allowNull: false, references: { model: User, key: 'id' } }
-}, { timestamps: true });
-
-Faculty.belongsTo(User, { foreignKey: 'userId' });
+const Faculty = {
+    TableStructure: {
+        id: {
+            type: 'uuid',
+            primaryKey: true,
+            defaultValue: 'uuid_generate_v4()'
+        },
+        user_id: {
+            type: 'uuid',
+            references: 'users.id',
+            required: true
+        },
+        created_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        },
+        updated_at: {
+            type: 'timestamp',
+            defaultValue: 'now()'
+        }
+    }
+};
 
 module.exports = Faculty;

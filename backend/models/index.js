@@ -1,47 +1,58 @@
-const sequelize = require('../config/db');
-const User = require('./users');
-const Batch = require('./batch');
-const Semester = require('./semester');
-const Faculty = require('./faculty');
-const Subject = require('./subjects');
-const UniqueSubDegree = require('./uniqueSubDegree');
-const UniqueSubDiploma = require('./uniqueSubDiploma');
-const AssignSubject = require('./assignSubject');
-const ComponentWeightage = require('./componentWeightage');
-const ComponentMarks = require('./componentMarks');
-const Student = require('./students');
-const Gettedmarks = require('./gettedmarks');
-const SubjectWiseGrades = require('./SubjectWiseGrades');
+const { supabase, testConnection } = require('../config/db');
 
-const ParticipationType = require('./participationTypes');
+// Table names in your Supabase database
+const TABLES = {
+    USERS: 'users',
+    BATCH: 'batch',
+    SEMESTER: 'semester',
+    FACULTY: 'faculty',
+    SUBJECT: 'subjects',
+    UNIQUE_SUB_DEGREE: 'unique_sub_degree',
+    UNIQUE_SUB_DIPLOMA: 'unique_sub_diploma',
+    ASSIGN_SUBJECT: 'assign_subject',
+    COMPONENT_WEIGHTAGE: 'component_weightage',
+    COMPONENT_MARKS: 'component_marks',
+    STUDENT: 'students',
+    GETTED_MARKS: 'getted_marks',
+    SUBJECT_WISE_GRADES: 'subject_wise_grades',
+    PARTICIPATION_TYPE: 'participation_types',
+    EVENT_MASTER: 'event_master'
+};
 
-// const CoCurricularActivity = require('./cocurricularActivity');
-// const ExtraCurricularActivity = require('./extraCurricularActivity');
-// const CoCurricularActivities = require('./coCurricularActivity');
-
-const syncDB = async () => {
-    try {
-        console.log('Starting database synchronization...');
-
-        // First check if tables exist
-        const tables = await sequelize.query('SHOW TABLES', { type: sequelize.QueryTypes.SELECT });
-        const tableNames = tables.map(table => Object.values(table)[0]);
-
-        // If no tables exist, create them
-        if (tableNames.length === 0) {
-            console.log('No tables found. Creating all tables...');
-            await sequelize.sync({ force: true });
-        } else {
-            // If tables exist, sync with alter option
-            console.log('Tables found. Synchronizing with alter option...');
-            await sequelize.sync({ alter: true });
+// Database operations for each table
+const db = {
+    users: {
+        getAll: async () => {
+            const { data, error } = await supabase.from(TABLES.USERS).select('*');
+            if (error) throw error;
+            return data;
+        },
+        getById: async (id) => {
+            const { data, error } = await supabase.from(TABLES.USERS).select('*').eq('id', id).single();
+            if (error) throw error;
+            return data;
         }
+        // Add more operations as needed
+    },
+    // Add similar operations for other tables as needed
+};
 
-        console.log('Database synchronization completed successfully.');
+// Health check function
+const checkDBConnection = async () => {
+    try {
+        const { data, error } = await supabase.from(TABLES.USERS).select('count').single();
+        if (error) throw error;
+        console.log('Supabase connection verified successfully');
+        return true;
     } catch (error) {
-        console.error('Error during database synchronization:', error);
-        throw error;
+        console.error('Supabase connection check failed:', error.message);
+        return false;
     }
 };
 
-module.exports = { User, Batch, Semester, Faculty, Subject, UniqueSubDegree, UniqueSubDiploma, AssignSubject, ComponentWeightage, ComponentMarks, Student, Gettedmarks, ParticipationType,SubjectWiseGrades, syncDB };
+module.exports = {
+    db,
+    TABLES,
+    checkDBConnection: testConnection,  // Use the testConnection function from db.js
+    supabase
+};

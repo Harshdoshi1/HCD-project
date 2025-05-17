@@ -1,11 +1,5 @@
 const bcrypt = require('bcrypt');
-const AssignSubject = require("../models/assignSubject");
-const Batch = require("../models/batch");
-const Semester = require("../models/semester");
-const Faculty = require("../models/faculty");
-const UniqueSubDegree = require("../models/uniqueSubDegree");
-const UniqueSubDiploma = require("../models/uniqueSubDiploma");
-const User = require("../models/users");
+const { supabase } = require('../config/db');
 
 const createAssignSubject = async (req, res) => {
     try {
@@ -15,38 +9,49 @@ const createAssignSubject = async (req, res) => {
         const semester = req.body.semester.value;
         const subject = req.body.subject.value;
         const faculty = req.body.faculty.label;
-        console.log("assigned received: ",batch,"--",semester,"--",subject,"--",faculty)
-        // Find Batch ID & Course Type (Degree/Diploma)
-        const batchRecord = await Batch.findOne({ where: { batchName: batch } });
-        if (!batchRecord) return res.status(400).json({ error: "Batch not found" });
+        console.log("assigned received: ", batch, "--", semester, "--", subject, "--", faculty);
+
+        // Find Batch ID & Course Type
+        const { data: batchRecord, error: batchError } = await supabase
+            .from('batches')
+            .select('id, program')
+            .eq('name', batch)
+            .single();
+
+        if (batchError || !batchRecord) {
+            return res.status(400).json({ error: "Batch not found" });
+        }
         console.log("Batch Found:", batchRecord);
 
-        const courseType = batchRecord.courseType;
+        // Find Subject based on program type
+        const tableName = batchRecord.program === 'Degree' ? 'unique_sub_degree' : 'unique_sub_diploma';
+        const { data: subjectRecord, error: subjectError } = await supabase
+            .from(tableName)
+            .select('sub_code')
+            .eq('sub_name', subject)
+            .single();
 
-        // Find Semester ID
-        const semesterRecord = await Semester.findOne({ where: { semesterNumber: semester, batchId: batchRecord.id } });
-        if (!semesterRecord) return res.status(400).json({ error: "Semester not found" });
-        console.log("Semester Found:", semesterRecord);
-
-        // Find Subject Code based on Course Type
-        let subjectRecord;
-        if (courseType === "Degree") {
-            subjectRecord = await UniqueSubDegree.findOne({ where: { sub_name: subject } });
-        } else if (courseType === "Diploma") {
-            subjectRecord = await UniqueSubDiploma.findOne({ where: { sub_name: subject } });
+        if (subjectError || !subjectRecord) {
+            return res.status(400).json({ error: "Subject not found" });
         }
-
-        if (!subjectRecord) return res.status(400).json({ error: "Subject not found" });
         console.log("Subject Found:", subjectRecord);
 
-        // Assign Subject
-        const assignSubject = await AssignSubject.create({
-            batchId: batchRecord.id,
-            // semesterId: semesterRecord.id,
-            semesterId:semester,
-            facultyName: faculty,
-            subjectCode: subjectRecord.sub_code,
-        });
+        // Create assignment
+        const { data: assignSubject, error: assignError } = await supabase
+            .from('assign_subjects')
+            .insert({
+                batch_id: batchRecord.id,
+                semester_id: semester,
+                faculty_name: faculty,
+                subject_code: subjectRecord.sub_code
+            })
+            .select()
+            .single();
+
+        if (assignError) {
+            console.error("Error assigning subject:", assignError);
+            return res.status(500).json({ error: assignError.message });
+        }
 
         console.log("Assigned Subject:", assignSubject);
         res.status(201).json(assignSubject);
@@ -59,11 +64,24 @@ const createAssignSubject = async (req, res) => {
 // Get all AssignSubject entries
 const getAllAssignSubjects = async (req, res) => {
     try {
-        const assignSubjects = await AssignSubject.findAll({
-            include: [Batch, Semester, Faculty, UniqueSubDegree, UniqueSubDiploma]
-        });
+        const { data: assignSubjects, error } = await supabase
+            .from('assign_subjects')
+            .select(`
+                *,
+                batches!inner(*),
+                semesters!inner(*),
+                unique_sub_degree(*),
+                unique_sub_diploma(*)
+            `);
+
+        if (error) {
+            console.error('Error fetching assign subjects:', error);
+            return res.status(500).json({ error: error.message });
+        }
+
         res.status(200).json(assignSubjects);
     } catch (error) {
+        console.error('Server error:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -71,14 +89,25 @@ const getAllAssignSubjects = async (req, res) => {
 // Get a single AssignSubject entry by ID
 const getAssignSubjectById = async (req, res) => {
     try {
-        const assignSubject = await AssignSubject.findByPk(req.params.id, {
-            include: [Batch, Semester, Faculty, UniqueSubDegree, UniqueSubDiploma]
-        });
-        if (!assignSubject) {
+        const { data: assignSubject, error } = await supabase
+            .from('assign_subjects')
+            .select(`
+                *,
+                batches!inner(*),
+                semesters!inner(*),
+                unique_sub_degree(*),
+                unique_sub_diploma(*)
+            `)
+            .eq('id', req.params.id)
+            .single();
+
+        if (error || !assignSubject) {
             return res.status(404).json({ message: 'AssignSubject not found' });
         }
+
         res.status(200).json(assignSubject);
     } catch (error) {
+        console.error('Server error:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -86,33 +115,44 @@ const getAssignSubjectById = async (req, res) => {
 // Update an AssignSubject entry
 const updateAssignSubject = async (req, res) => {
     try {
-        const { batchId, semesterId, facultyId, subjectId } = req.body;
-        const assignSubject = await AssignSubject.findByPk(req.params.id);
-        if (!assignSubject) {
-            return res.status(404).json({ message: 'AssignSubject not found' });
+        const { batch_id, semester_id, faculty_name, subject_code } = req.body;
+
+        const { data: assignSubject, error } = await supabase
+            .from('assign_subjects')
+            .update({ 
+                batch_id, 
+                semester_id, 
+                faculty_name, 
+                subject_code 
+            })
+            .eq('id', req.params.id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error updating assign subject:', error);
+            return res.status(404).json({ message: 'Failed to update AssignSubject' });
         }
-        await assignSubject.update({ batchId, semesterId, facultyId, subjectId });
+
         res.status(200).json(assignSubject);
     } catch (error) {
+        console.error('Server error:', error);
         res.status(500).json({ error: error.message });
     }
 };
 
 // Delete an AssignSubject entry
-const deleteAssignSubject = async (req, res) => {
-    try {
-        const assignSubject = await AssignSubject.findByPk(req.params.id);
-        if (!assignSubject) {
-            return res.status(404).json({ message: 'AssignSubject not found' });
-        }
-        await assignSubject.destroy();
-        res.status(204).send();
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
+// const deleteAssignSubject = async (req, res) => {
+//     try {
+//         const { error } = await supabase
+//             .from('assign_subjects')
+//             .delete()
+//             .eq('id', req.params.id);
 
-// Get subjects assigned to a specific faculty
+//         if (error) {
+//             console.error('Error deleting assign subject:', error);
+//             return res.status(404).json({ message: 'Failed to delete AssignSubject' });
+//         }
 // const getSubjectsByFaculty = async (req, res) => {
 //     try {
 //         const { facultyId } = req.params;
@@ -175,36 +215,38 @@ const getSubjectsByFaculty = async (req, res) => {
         console.log("Requested facultyId:", facultyId);
 
         // Find faculty name using ID
-        const faculty = await User.findOne({ where: { id: facultyId } });
-        if (!faculty) {
+        const { data: faculty, error: facultyError } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', facultyId)
+            .single();
+
+        if (facultyError || !faculty) {
             return res.status(404).json({ error: 'Faculty not found' });
         }
 
-        const assignSubjects = await AssignSubject.findAll({
-            where: { facultyName: faculty.name },  // Match faculty name in AssignSubject
-            include: [
-                {
-                    model: Batch,
-                    attributes: ['batchName', 'courseType']
-                },
-                {
-                    model: UniqueSubDegree,
-                    attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level'],
-                    required: false
-                },
-                {
-                    model: UniqueSubDiploma,
-                    attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level'],
-                    required: false
-                }
-            ]
-        });
+        // Get assigned subjects with related data
+        const { data: assignSubjects, error: subjectsError } = await supabase
+            .from('assign_subjects')
+            .select(`
+                id,
+                semester_id,
+                batches!inner(name, program),
+                unique_sub_degree(sub_code, sub_name, sub_credit, sub_level),
+                unique_sub_diploma(sub_code, sub_name, sub_credit, sub_level)
+            `)
+            .eq('faculty_name', faculty.name);
 
-        console.log("Fetched assignSubjects:", assignSubjects.length);
+        if (subjectsError) {
+            console.error('Error fetching subjects:', subjectsError);
+            return res.status(500).json({ error: subjectsError.message });
+        }
+
+        console.log("Fetched assignSubjects:", assignSubjects?.length || 0);
 
         // Format results
         const formattedSubjects = assignSubjects.map(assignSubject => {
-            const subject = assignSubject.UniqueSubDegree || assignSubject.UniqueSubDiploma;
+            const subject = assignSubject.unique_sub_degree || assignSubject.unique_sub_diploma;
             return {
                 id: assignSubject.id,
                 name: subject?.sub_name || 'N/A',
@@ -212,9 +254,9 @@ const getSubjectsByFaculty = async (req, res) => {
                 credits: subject?.sub_credit || 'N/A',
                 type: subject?.sub_level || 'N/A',
                 description: subject?.sub_name || 'N/A',
-                department: assignSubject.Batch.courseType,
-                batch: assignSubject.Batch.batchName,
-                semesterId: assignSubject.semesterId  // added here
+                department: assignSubject.batches.program,
+                batch: assignSubject.batches.name,
+                semesterId: assignSubject.semester_id
             };
         });
 
@@ -229,42 +271,136 @@ const addFaculty = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
-console.log("dsfsd",req.body);
-        if (role !== 'Faculty') {
+        if (role.toLowerCase() !== 'faculty') {
             return res.status(400).json({ message: 'Invalid role. Only faculty can be added.' });
         }
 
         // Check if faculty already exists
-        const userExists = await User.findOne({ where: { email } });
-        if (userExists) {
+        const { data: existingUser } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .single();
+
+        if (existingUser) {
             return res.status(400).json({ message: 'Faculty already exists' });
         }
 
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        // Try to sign in first to check if user exists in auth
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
 
-        // Create faculty user
-        const newUser = await User.create({ name, email, password: hashedPassword, role });
+        let authUser;
+
+        if (signInError && signInError.status !== 400) {
+            // If error is not 'Invalid login credentials', then it's an unexpected error
+            console.error('Sign in error:', signInError);
+            return res.status(500).json({
+                message: 'Registration failed',
+                error: signInError.message
+            });
+        }
+
+        if (signInData?.user) {
+            // User exists in auth system
+            authUser = signInData.user;
+        } else {
+            // User doesn't exist, create new auth user
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        name,
+                        role: 'faculty'
+                    }
+                }
+            });
+
+            if (authError) {
+                console.error('Auth error:', authError);
+                return res.status(400).json({
+                    message: 'Registration failed',
+                    error: authError.message
+                });
+            }
+
+            if (!authData?.user) {
+                return res.status(400).json({
+                    message: 'Registration failed',
+                    error: 'User creation failed'
+                });
+            }
+
+            authUser = authData.user;
+        }
+
+        // Create user record in users table
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .insert({
+                auth_id: authUser.id,
+                name,
+                email,
+                role: 'faculty'
+            })
+            .select()
+            .single();
+
+        if (userError) {
+            console.error('Database error:', userError);
+            // Clean up auth user if db insert fails
+            await supabase.auth.admin.deleteUser(authUser.id);
+            return res.status(500).json({
+                message: 'Registration failed',
+                error: userError.message
+            });
+        }
 
         // Create faculty record
-        const newFaculty = await Faculty.create({ userId: newUser.id });
+        const { data: facultyData, error: facultyError } = await supabase
+            .from('faculty')
+            .insert({
+                user_id: userData.id
+            })
+            .select()
+            .single();
+
+        if (facultyError) {
+            console.error('Faculty error:', facultyError);
+            // Clean up user and auth records if faculty creation fails
+            await supabase
+                .from('users')
+                .delete()
+                .eq('id', userData.id);
+            await supabase.auth.admin.deleteUser(authUser.id);
+            return res.status(500).json({
+                message: 'Registration failed',
+                error: facultyError.message
+            });
+        }
+
+        // Automatically confirm the email
+        await supabase.rpc('confirm_user', { user_id: authUser.id });
 
         res.status(201).json({
             message: 'Faculty registered successfully',
-            user: newUser,
-            facultyId: newFaculty.id
+            user: userData,
+            faculty: facultyData
         });
-
     } catch (error) {
+        console.error('Registration error:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
-module.exports = {  updateAssignSubject,
-                    getAssignSubjectById, 
-                    createAssignSubject, 
-                    addFaculty, 
-                    deleteAssignSubject, 
-                    getAllAssignSubjects, 
-                    getSubjectsByFaculty 
-                };
+module.exports = {
+    updateAssignSubject,
+    getAssignSubjectById,
+    createAssignSubject,
+    addFaculty,
+    // deleteAssignSubject,
+    getAllAssignSubjects,
+    getSubjectsByFaculty
+};
