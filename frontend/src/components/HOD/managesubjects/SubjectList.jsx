@@ -6,30 +6,61 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
     semesterId: "",
   });
   const [subjects, setSubjects] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [semesters, setSemesters] = useState([]);
   const [newSubject, setNewSubject] = useState({
     id: "",
     subjectName: "",
     semesterId: "",
     batchId: "",
   });
+  const [error, setError] = useState("");
 
-  const batches = [
-    { id: 1, name: "2022-2026" },
-    { id: 2, name: "2021-2025" },
-    { id: 3, name: "2020-2024" },
-    { id: 4, name: "2019-2023" },
-  ];
+  const fetchBatches = async () => {
+    try {
+      console.log("Fetching batches...");
+      const response = await fetch(
+        "http://localhost:5001/api/auth/getAllBatches"
+      );
 
-  const semesters = [
-    { id: 1, name: "Semester 1" },
-    { id: 2, name: "Semester 2" },
-    { id: 3, name: "Semester 3" },
-    { id: 4, name: "Semester 4" },
-    { id: 5, name: "Semester 5" },
-    { id: 6, name: "Semester 6" },
-    { id: 7, name: "Semester 7" },
-    { id: 8, name: "Semester 8" },
-  ];
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch batches");
+      }
+
+      const data = await response.json();
+      console.log("Received batches:", data);
+
+      if (!Array.isArray(data)) {
+        console.error("Expected array of batches but got:", typeof data);
+        throw new Error("Invalid data format received from server");
+      }
+
+      setBatches(data);
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+      setError(error.message);
+    }
+  };
+
+  const fetchSemesters = async (batchName) => {
+    if (!batchName) {
+      setSemesters([]);
+      return;
+    }
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/auth/getSemestersByBatch/${batchName}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch semesters");
+      }
+      const data = await response.json();
+      setSemesters(data);
+    } catch (error) {
+      console.error("Error fetching semesters:", error);
+    }
+  };
 
   const fetchSubjects = async () => {
     try {
@@ -42,7 +73,7 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
         `http://localhost:5001/api/subjects?${queryParams.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json"},
+          headers: { "Content-Type": "application/json" },
         }
       );
 
@@ -58,6 +89,21 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
   };
 
   useEffect(() => {
+    fetchBatches();
+  }, []);
+
+  useEffect(() => {
+    if (filters.batchId) {
+      const selectedBatch = batches.find(
+        (b) => b.id === parseInt(filters.batchId)
+      );
+      if (selectedBatch) {
+        fetchSemesters(selectedBatch.batchName);
+      }
+    }
+  }, [filters.batchId, batches]);
+
+  useEffect(() => {
     fetchSubjects();
   }, [filters.batchId, filters.semesterId]);
 
@@ -67,7 +113,6 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
 
   const handleAddSubject = async () => {
     try {
-
       if (
         !newSubject.id ||
         !newSubject.subjectName ||
@@ -112,6 +157,7 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
       alert(error.message);
     }
   };
+
   return (
     <div className="subject-list">
       <div className="filters">
@@ -122,18 +168,19 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
           <option value="">All Batches</option>
           {batches.map((batch) => (
             <option key={batch.id} value={batch.id}>
-              {batch.name}
+              {batch.batchName}
             </option>
           ))}
         </select>
         <select
           value={filters.semesterId}
           onChange={(e) => handleFilterChange("semesterId", e.target.value)}
+          disabled={!filters.batchId}
         >
           <option value="">All Semesters</option>
           {semesters.map((sem) => (
             <option key={sem.id} value={sem.id}>
-              {sem.name}
+              Semester {sem.semesterNumber}
             </option>
           ))}
         </select>
@@ -171,15 +218,25 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
             <label>Batch:</label>
             <select
               value={newSubject.batchId}
-              onChange={(e) =>
-                setNewSubject({ ...newSubject, batchId: e.target.value })
-              }
+              onChange={(e) => {
+                setNewSubject({
+                  ...newSubject,
+                  batchId: e.target.value,
+                  semesterId: "",
+                });
+                const selectedBatch = batches.find(
+                  (b) => b.id === parseInt(e.target.value)
+                );
+                if (selectedBatch) {
+                  fetchSemesters(selectedBatch.batchName);
+                }
+              }}
               required
             >
               <option value="">Select Batch</option>
               {batches.map((batch) => (
                 <option key={batch.id} value={batch.id}>
-                  {batch.name}
+                  {batch.batchName}
                 </option>
               ))}
             </select>
@@ -192,11 +249,12 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
                 setNewSubject({ ...newSubject, semesterId: e.target.value })
               }
               required
+              disabled={!newSubject.batchId}
             >
               <option value="">Select Semester</option>
               {semesters.map((sem) => (
                 <option key={sem.id} value={sem.id}>
-                  {sem.name}
+                  Semester {sem.semesterNumber}
                 </option>
               ))}
             </select>
@@ -217,10 +275,15 @@ const SubjectList = ({ onSelectSubject, showAddForm, setShowAddForm }) => {
           >
             <h3>{subject.subjectName}</h3>
             <p>Code: {subject.id}</p>
-            <p>Batch: {batches.find((b) => b.id === subject.batchId)?.name}</p>
+            <p>
+              Batch: {batches.find((b) => b.id === subject.batchId)?.batchName}
+            </p>
             <p>
               Semester:{" "}
-              {semesters.find((s) => s.id === subject.semesterId)?.name}
+              {
+                semesters.find((s) => s.id === subject.semesterId)
+                  ?.semesterNumber
+              }
             </p>
           </div>
         ))}

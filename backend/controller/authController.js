@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 const { supabase } = require("../config/supabaseClient");
+const { Batch } = require("../models/batch");
 
 // ✅ Add Subject (Check if already assigned to batch & semester)
 const assignSubject = async (req, res) => {
@@ -194,10 +195,24 @@ const getSubjectsByBatchAndSemester = async (req, res) => {
 // @access  Admin (HOD)
 const getAllBatches = async (req, res) => {
   try {
-    const batches = await Batch.findAll(); // Sequelize equivalent of find()
+    console.log("Fetching all batches...");
+    const { data: batches, error } = await Batch.findAll();
+    
+    if (error) {
+      console.error("Error fetching batches:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (!batches || batches.length === 0) {
+      console.log("No batches found");
+      return res.status(200).json([]);
+    }
+
+    console.log("Batches fetched successfully:", batches);
     res.status(200).json(batches);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error in getAllBatches:", error);
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -483,17 +498,26 @@ const getSemestersByBatch = async (req, res) => {
     }
 
     console.log(`🔍 Searching for batch: ${batchName}`);
-    const batch = await Batch.findOne({ where: { batchName } });
+    const { data: batch, error: batchError } = await Batch.findOne({
+      batchName,
+    });
 
-    if (!batch) {
+    if (batchError || !batch) {
       console.log(`❌ Batch '${batchName}' not found in DB.`);
       return res.status(404).json({ message: "Batch not found." });
     }
 
     console.log(`✅ Found batch with ID: ${batch.id}, fetching semesters...`);
-    const semesters = await Semester.findAll({ where: { batchId: batch.id } });
+    const { data: semesters, error: semestersError } = await Semester.findAll({
+      batchId: batch.id,
+    });
 
-    if (!semesters.length) {
+    if (semestersError) {
+      console.error("Error fetching semesters:", semestersError);
+      return res.status(500).json({ message: "Error fetching semesters" });
+    }
+
+    if (!semesters || !semesters.length) {
       console.log(`⚠️ No semesters found for batch ID: ${batch.id}`);
       return res
         .status(404)
@@ -522,9 +546,9 @@ const addFaculty = async (req, res) => {
 
     // Check if user already exists
     const { data: existingUser } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
+      .from("users")
+      .select("*")
+      .eq("email", email)
       .single();
 
     if (existingUser) {
@@ -537,21 +561,23 @@ const addFaculty = async (req, res) => {
 
     // Create new user
     const { data: newUser, error } = await supabase
-      .from('users')
+      .from("users")
       .insert([
         {
           name,
           email,
           password: hashedPassword,
-          role: role || 'Faculty'
-        }
+          role: role || "Faculty",
+        },
       ])
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating user:', error);
-      return res.status(500).json({ message: "Error creating user", error: error.message });
+      console.error("Error creating user:", error);
+      return res
+        .status(500)
+        .json({ message: "Error creating user", error: error.message });
     }
 
     res.status(201).json({
@@ -560,11 +586,11 @@ const addFaculty = async (req, res) => {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        role: newUser.role
-      }
+        role: newUser.role,
+      },
     });
   } catch (error) {
-    console.error('Error in addFaculty:', error);
+    console.error("Error in addFaculty:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

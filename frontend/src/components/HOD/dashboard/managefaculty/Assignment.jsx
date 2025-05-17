@@ -16,23 +16,40 @@ const FacultyAssignment = ({ selectedFaculty }) => {
   const [semesters, setSemesters] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [faculties, setFaculties] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchBatches = async () => {
       try {
+        console.log("Fetching batches...");
         const response = await fetch(
           "http://localhost:5001/api/auth/getAllBatches"
         );
-        if (!response.ok) throw new Error("Failed to fetch batches");
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch batches");
+        }
+
         const data = await response.json();
-        setBatches(
-          data.map((batch) => ({
-            value: batch.batchName,
-            label: batch.batchName,
-          }))
-        );
+        console.log("Raw batch data:", data);
+
+        if (!Array.isArray(data)) {
+          console.error("Expected array of batches but got:", typeof data);
+          throw new Error("Invalid data format received from server");
+        }
+
+        const formattedBatches = data.map((batch) => ({
+          value: batch.id,
+          label: batch.batchName,
+        }));
+
+        console.log("Formatted batches:", formattedBatches);
+        setBatches(formattedBatches);
       } catch (error) {
         console.error("Error fetching batches:", error);
+        setError(error.message);
       }
     };
     fetchBatches();
@@ -49,7 +66,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         setFaculties(
           data
             .filter((user) => user.role === "Faculty")
-            .map((f) => ({ value: f._id, label: f.name }))
+            .map((f) => ({ value: f.id, label: f.name }))
         );
       } catch (error) {
         console.error("Error fetching faculty members:", error);
@@ -63,10 +80,11 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     const fetchSemesters = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5001/api/auth/getSemestersByBatch/${assignment.batch.value}`
+          `http://localhost:5001/api/auth/getSemestersByBatch/${assignment.batch.label}`
         );
         if (!response.ok) throw new Error("Failed to fetch semesters");
         const data = await response.json();
+        console.log("Fetched semesters:", data); // Debug log
         setSemesters(
           data.map((sem) => ({
             value: sem.semesterNumber,
@@ -89,6 +107,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         );
         if (!response.ok) throw new Error("Failed to fetch subjects");
         const data = await response.json();
+        console.log("Fetched subjects:", data); // Debug log
         setSubjects(
           data.map((subject) => ({
             value: subject.subjectName,
@@ -137,10 +156,10 @@ const FacultyAssignment = ({ selectedFaculty }) => {
 
       // Reset form after successful submission
       setAssignment({
-        batch: "",
-        semester: "",
-        subject: "",
-        faculty: selectedFaculty?.id || "",
+        batch: null,
+        semester: null,
+        subject: null,
+        faculty: selectedFaculty?.id || null,
       });
     } catch (error) {
       console.error("Error assigning faculty:", error);
@@ -156,6 +175,9 @@ const FacultyAssignment = ({ selectedFaculty }) => {
           Please select the faculty member and the subject they will be assigned
           to.
         </p>
+        {error && (
+          <p style={{ color: "red", marginTop: "10px" }}>Error: {error}</p>
+        )}
         <br />
       </header>
       <form onSubmit={handleSubmit} className="assignment-form">
@@ -169,6 +191,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
               options={batches}
               placeholder="Select Batch"
               isSearchable
+              noOptionsMessage={() => "No batches available"}
             />
           </div>
 

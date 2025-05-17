@@ -45,7 +45,7 @@ const FacultyList = ({ searchTerm, onSelectFaculty }) => {
         {filteredFaculty.length > 0 ? (
           filteredFaculty.map((faculty) => (
             <FacultyCard
-              key={faculty._id}
+              key={faculty.id}
               faculty={faculty}
               onClick={() => onSelectFaculty(faculty)}
             />
