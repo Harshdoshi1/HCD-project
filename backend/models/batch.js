@@ -1,5 +1,6 @@
 const { supabase } = require("../config/supabaseClient");
 
+<<<<<<< HEAD
 const Batch = {
   tableName: "batches",
 
@@ -32,6 +33,25 @@ const Batch = {
       return { error };
     }
   },
+=======
+const Batch = sequelize.define('Batch', {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    batchName: { type: DataTypes.STRING, allowNull: false },
+    batchStart: { type: DataTypes.DATE, allowNull: false },
+    batchEnd: { type: DataTypes.DATE, allowNull: false },
+    currentSemester: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    courseType: {
+        type: DataTypes.ENUM('Degree', 'Diploma'),
+        allowNull: false
+    }
+}, {
+    tableName: 'Batches',
+    timestamps: false
+});
+>>>>>>> 41bcf10cc980c47716367a6d8012822c23d622b4
 
   async findOne(conditions) {
     try {

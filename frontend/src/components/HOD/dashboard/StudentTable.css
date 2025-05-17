@@ -1,0 +1,159 @@
+.student-table-container {
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.table-filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-dropdown label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.dropdown-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.dropdown-buttons button {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  color: #333;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.dropdown-buttons button:hover {
+  background: #f5f5f5;
+  border-color: #3674B5;
+  color: #3674B5;
+}
+
+.dropdown-buttons button.active {
+  background-color: #3674B5;
+  color: white;
+  border-color: #3674B5;
+}
+
+.table-responsive {
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.student-table th {
+  background: #f0f0f0;
+  color: #000000;
+  padding: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: 600;
+}
+
+.student-table th:hover {
+  background: linear-gradient(135deg, #aeaeae 0%, #5c5c5c 100%);
+}
+
+.student-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+  color: #444;
+}
+
+.student-table tr:hover {
+  background-color: rgba(54, 116, 181, 0.05);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 4px;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.progress-fill.curricular {
+  background-color: #3674B5;
+}
+
+.progress-fill.co-curricular {
+  background-color: #4a8bc5;
+}
+
+.progress-fill.extra-curricular {
+  background-color: #5ea2d5;
+}
+
+.progress-bar span {
+  position: absolute;
+  right: 0;
+  top: -18px;
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+}
+
+.dashboard-HOD-btn-view {
+  padding: 6px 12px;
+  background-color: #3674B5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.dashboard-HOD-btn-view:hover {
+  background-color: #2c5d91;
+  transform: translateY(-1px);
+}
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}

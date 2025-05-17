@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
@@ -312,6 +313,13 @@ const addBatch = async (req, res) => {
 // @desc    Register a new user
 // @route   POST /api/users/register
 // @access  Public
+=======
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { User } = require('../models'); // Import models
+const { Op } = require("sequelize"); // Ensure Op is imported
+
+>>>>>>> 41bcf10cc980c47716367a6d8012822c23d622b4
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -353,6 +361,7 @@ const registerUser = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 // Login User
 const loginUser = async (req, res) => {
   try {
@@ -362,6 +371,68 @@ const loginUser = async (req, res) => {
       return res
         .status(400)
         .json({ message: "Please provide email and password" });
+=======
+
+const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        console.log("emaio",email)
+
+        if (!email || !password) {
+            return res.status(400).json({ 
+                message: 'Email and password are required',
+                error: 'Missing required fields'
+            });
+        }
+
+        // Log the received email (for debugging)
+        console.log('Login attempt for email:', email);
+
+        // Check if user exists
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            console.log('User not found for email:', email);
+            return res.status(400).json({ 
+                message: 'Invalid email or password',
+                error: 'User not found'
+            });
+        }
+
+        // Validate password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            console.log('Invalid password for email:', email);
+            return res.status(400).json({ 
+                message: 'Invalid email or password',
+                error: 'Invalid password'
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET || 'your_secret_key',
+            { expiresIn: '1h' }
+        );
+
+        console.log('Login successful for email:', email);
+        res.status(200).json({ 
+            message: 'Login successful', 
+            token, 
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ 
+            message: 'Server Error', 
+            error: error.message 
+        });
+>>>>>>> 41bcf10cc980c47716367a6d8012822c23d622b4
     }
 
     // Get user from Supabase
@@ -429,9 +500,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-// @desc    Get all users (Admin only)
-// @route   GET /api/users
-// @access  Private (Requires Admin Role)
 const getAllUsers = async (req, res) => {
   try {
     const { data: users, error } = await supabase.from("users").select();
@@ -450,6 +518,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 // @desc    Add a semester to a batch
 // @route   POST /api/semesters
 // @access  Admin (HOD)
@@ -611,4 +680,11 @@ module.exports = {
   getDropdownData,
   assignSubject,
   addFaculty,
+=======
+module.exports = {
+    registerUser,
+    loginUser,
+    getAllUsers,
+
+>>>>>>> 41bcf10cc980c47716367a6d8012822c23d622b4
 };

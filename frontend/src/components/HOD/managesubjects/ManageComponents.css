@@ -1,0 +1,155 @@
+.manage-weightage-container {
+    background: #f8f8f8;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    height: 100vh;
+}
+
+.filters-container-manage-component {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+}
+
+.form-button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 0;
+}
+
+.cancel-button {
+    padding: 0.8rem 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background: white;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.last-button {
+    text-align: end;
+}
+
+.cancel-button:hover {
+    background-color: var(--light-gray);
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.subject-form {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.form-inputs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+    width: 100%;
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.subject-input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    width: 100%;
+}
+
+.manage-subjct-container-bottom {
+    background: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.weightage-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.weightage-table th,
+.weightage-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.weightage-table th {
+    background-color: #f0f0f0;
+}
+
+.component-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.weightage-input,
+.marks-input {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 60px;
+    text-align: center;
+}
+
+.weightage-input:disabled,
+.marks-input:disabled {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+}
+
+.addsubbtn {
+    display: flex;
+    justify-content: end;
+}
+
+.save-weightage-btn {
+    padding: 10px 15px;
+    background: #4CAF50;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.save-weightage-btn:hover {
+    background: #45a049;
+}
+
+.save-weightage-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.weightage-summary {
+    margin-top: 15px;
+    font-weight: bold;
+    text-align: right;
+}
+
+.weightage-ok {
+    color: #4CAF50;
+}
+
+.weightage-error {
+    color: #f44336;
+}

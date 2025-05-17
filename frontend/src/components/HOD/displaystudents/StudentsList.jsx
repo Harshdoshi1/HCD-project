@@ -1,151 +1,274 @@
-import React, { useState } from 'react';
-import './StudentsList.css';
+import React, { useState, useEffect } from 'react';
+import { UserRoundPlus } from "lucide-react";
+import { FaPlus, FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp, FaUserGraduate } from 'react-icons/fa';
 import Select from 'react-select';
+import StudentModal from './StudentModal';
+import StudentGradesExcell from './StudentGradesExcell';
+import './StudentsList.css';
 
 const StudentsList = ({ onStudentSelect }) => {
     const [selectedBatch, setSelectedBatch] = useState('');
-    const [selectedSemester, setSelectedSemester] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCPIModalOpen, setIsCPIModalOpen] = useState(false);
+    const [sortField, setSortField] = useState('name');
+    const [sortDirection, setSortDirection] = useState('asc');
+    const [isLoading, setIsLoading] = useState(true);
+    const [showFilters, setShowFilters] = useState(false);
+    const [students, setStudents] = useState([]);
+    const [batches, setBatches] = useState([]);
 
-    const batches = ['2022-2026', '2023-2027', '2024-2028'];
-    const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
-    const students = [
-        {
-            id: 1,
-            name: 'ritesh',
-            enrollmentNo: '92200133001',
-            batch: '2022-2026',
-            semester: 1,
-            image: 'https://via.placeholder.com/50'
-        },
-        {
-            id: 2,
-            name: 'harsh',
-            enrollmentNo: '92200133002',
-            batch: '2022-2026',
-            semester: 1,
-            image: 'https://via.placeholder.com/50'
-        },
-        {
-            id: 3,
-            name: 'prashant',
-            enrollmentNo: '92200133003',
-            batch: '2022-2026',
-            semester: 1,
-            image: 'https://via.placeholder.com/50'
-        },
-        {
-            id: 5,
-            name: 'shyama',
-            enrollmentNo: '92200133005',
-            batch: '2022-2026',
-            semester: 1,
-            image: 'https://via.placeholder.com/50'
-        },
-        {
-            id: 6,
-            name: 'rishit',
-            enrollmentNo: '92100133027',
-            batch: '2021-2025',
-            semester: 1,
-            image: 'https://avatars.githubusercontent.com/u/29489915?v=4'
-        },
+    useEffect(() => {
+        fetchStudents();
+    }, []);
 
-    ];
+    const fetchStudents = async () => {
+        try {
+            const response = await fetch('http://localhost:5001/api/students/getAllStudents');
+            if (!response.ok) {
+                throw new Error('Failed to fetch students');
+            }
+            const data = await response.json();
+            // Add a unique ID to each student record
+            const studentsWithIds = data.map((student, index) => ({
+                ...student,
+                uniqueId: `${student.enrollmentNumber}-${index}`
+            }));
+            setStudents(studentsWithIds);
 
-    const handleBatchChange = (e) => {
-        setSelectedBatch(e.target.value);
-    };
-
-    const handleSemesterChange = (e) => {
-        setSelectedSemester(e.target.value);
-    };
-
-    const handleSearchChange = (e) => {
-        setSearchQuery(e.target.value);
+            // Extract unique batches from students data
+            const uniqueBatches = [...new Set(studentsWithIds.map(student => student.Batch.batchName))];
+            setBatches(uniqueBatches);
+            setSelectedBatch(uniqueBatches[0]); // Set the first batch as default
+            setIsLoading(false);
+        } catch (error) {
+            console.error('Error fetching students:', error);
+            setIsLoading(false);
+        }
     };
 
     const batchesOptions = batches.map(batch => ({ value: batch, label: batch }));
-    const semestersOptions = semesters.map(sem => ({ value: sem, label: `Semester ${sem}` }));
 
-    const filteredStudents = students.filter(student => {
-        const batchMatch = !selectedBatch || student.batch === selectedBatch;
-        const semesterMatch = !selectedSemester || student.semester === parseInt(selectedSemester);
-        const searchMatch = !searchQuery ||
-            student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            student.enrollmentNo.toLowerCase().includes(searchQuery.toLowerCase());
+    const toggleSort = (field) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
 
-        return batchMatch && semesterMatch && searchMatch;
+    const sortedStudents = [...students].sort((a, b) => {
+        let comparison = 0;
+        if (a[sortField] < b[sortField]) {
+            comparison = -1;
+        } else if (a[sortField] > b[sortField]) {
+            comparison = 1;
+        }
+        return sortDirection === 'asc' ? comparison : -comparison;
     });
 
+    const filteredStudents = sortedStudents.filter(student => {
+        const batchMatch = selectedBatch ? student.Batch.batchName === selectedBatch : true;
+        const searchMatch = !searchQuery ||
+            student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            student.enrollmentNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            student.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+        return batchMatch && searchMatch;
+    });
+
+    const handleOpenModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        fetchStudents(); // Refresh the list after adding a new student
+    };
+
+    const handleOpenCPIModal = () => {
+        setIsCPIModalOpen(true);
+    };
+
+    const handleCloseCPIModal = () => {
+        setIsCPIModalOpen(false);
+        fetchStudents(); // Refresh the list after potentially updating CPI/SPI data
+    };
+
+    const toggleFilters = () => {
+        setShowFilters(!showFilters);
+    };
+
+    const customSelectStyles = {
+        control: (provided) => ({
+            ...provided,
+            borderRadius: '8px',
+            borderColor: '#e0e0e0',
+            boxShadow: 'none',
+            '&:hover': {
+                borderColor: '#9b87f5',
+            }
+        }),
+        option: (provided, state) => ({
+            ...provided,
+            backgroundColor: state.isSelected ? '#9b87f5' : state.isFocused ? '#f0ebff' : null,
+            color: state.isSelected ? 'white' : '#333',
+        }),
+    };
+
+    const SortIcon = ({ field }) => (
+        <button
+            className="sort-button"
+            onClick={() => toggleSort(field)}
+            title={`Sort by ${field}`}
+        >
+            {sortField === field ? (
+                sortDirection === 'asc' ? <FaSortAmountUp /> : <FaSortAmountDown />
+            ) : (
+                <FaSortAmountDown className="sort-icon-inactive" />
+            )}
+        </button>
+    );
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
     return (
-        <div className="students-container">
-            <div className="filters-section-std">
-                <div className="filter-group">
-                    <Select
-                        value={selectedBatch ? { value: selectedBatch, label: selectedBatch } : null}
-                        onChange={option => setSelectedBatch(option ? option.value : '')}
-                        options={batchesOptions}
-                        placeholder="Select Batch"
-                        isSearchable
-                    />
+        <div className="students-list-container">
+            <div className="students-list-header">
+                <div className="header-left">
+                    <button className="add-student-btn" onClick={handleOpenModal}>
+                        <UserRoundPlus />
+                        <span>Add Student</span>
+                    </button>
+                    <button className="cpi-btn" onClick={handleOpenCPIModal}>
+                        <FaUserGraduate />
+                        <span>CPI</span>
+                    </button>
+                </div>
 
-                    <Select
-                        value={selectedSemester ? { value: selectedSemester, label: `Semester ${selectedSemester}` } : null}
-                        onChange={option => setSelectedSemester(option ? option.value : '')}
-                        options={semestersOptions}
-                        placeholder="Select Semester"
-                        isSearchable
-                        isDisabled={!selectedBatch}
-                    />
-
-                    <input
-                        type="text"
-                        placeholder="Search by name or enrollment..."
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        className="search-input"
-                    />
+                <div className="header-actions">
+                    <button
+                        className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
+                        onClick={toggleFilters}
+                    >
+                        <FaFilter />
+                        <span>Filters</span>
+                    </button>
+                    <div className="search-container">
+                        <FaSearch className="search-icon" style={{ marginLeft: "5px" }} />
+                        <input
+                            type="text"
+                            placeholder="Search students..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="search-input"
+                        />
+                    </div>
                 </div>
             </div>
 
-            <div className="students-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>Enrollment No.</th>
+            {showFilters && (
+                <div className="filters-panel">
+                    <div className="filters-grid">
+                        <div className="filter-item">
+                            <label>Batch</label>
+                            <Select
+                                value={selectedBatch ? { value: selectedBatch, label: selectedBatch } : null}
+                                onChange={option => setSelectedBatch(option ? option.value : '')}
+                                options={batchesOptions}
+                                placeholder="Select Batch"
+                                isClearable
+                                styles={customSelectStyles}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+            <div className="students-data-container">
+                {
 
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredStudents.map(student => (
-                            <tr key={student.id}>
-                                <td>
-                                    <img
-                                        src={student.image}
-                                        alt={student.name}
-                                        className="student-image"
-                                    />
-                                </td>
-                                <td>{student.name}</td>
-                                <td>{student.enrollmentNo}</td>
-
-                                <td>
-                                    <button
-                                        className="view-details-btn"
-                                        onClick={() => onStudentSelect(student.id)}
-                                    >
-                                        View Details
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                    filteredStudents.length > 0 ? (
+                        <div className="students-table-wrapper">
+                            <table className="students-table">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <div className="th-content">
+                                                <span>Name</span>
+                                                <SortIcon field="name" />
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div className="th-content">
+                                                <span>Enrollment No.</span>
+                                                <SortIcon field="enrollmentNo" />
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div className="th-content">
+                                                <span>Batch</span>
+                                                <SortIcon field="batch" />
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div className="th-content">
+                                                <span>Email ID</span>
+                                            </div>
+                                        </th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredStudents.map(student => (
+                                        <tr key={student.uniqueId}>
+                                            <td>{student.name}</td>
+                                            <td>{student.enrollmentNumber}</td>
+                                            <td>{student.Batch.batchName}</td>
+                                            <td>{student.email}</td>
+                                            <td>
+                                                <button
+                                                    className="view-details-btn"
+                                                    onClick={() => onStudentSelect && onStudentSelect(student.enrollmentNumber)}
+                                                >
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="no-results">
+                            <div className="no-results-icon">
+                                <FaSearch />
+                            </div>
+                            <h3>No students found</h3>
+                            <p>Try adjusting your search or filter criteria</p>
+                        </div>
+                    )}
             </div>
+
+            <div className="students-list-footer">
+                <p>Showing {filteredStudents.length} of {students.length} students</p>
+            </div>
+
+            {isModalOpen && (
+                <StudentModal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                />
+            )}
+
+            {isCPIModalOpen && (
+                <StudentGradesExcell
+                    isOpen={isCPIModalOpen}
+                    onClose={handleCloseCPIModal}
+                />
+            )}
         </div>
     );
 };

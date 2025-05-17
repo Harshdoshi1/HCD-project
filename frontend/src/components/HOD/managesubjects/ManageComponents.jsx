@@ -1,203 +1,231 @@
-
 import React, { useState } from 'react';
-import './Subject.css';
+import './ManageComponents.css';
 
 const ManageComponents = ({ selectedSubject }) => {
-    const [filters, setFilters] = useState({
-        program: 'all',
-        batch: 'all',
-        semester: 'all',
-        subject: 'all'
+    const [newSubject, setNewSubject] = useState({
+        code: '',
+        name: '',
+        credits: '',
+        type: 'central'
     });
-    const batches = ['2022-2026', '2021-2025', '2020-2024', '2019-2023'];
-    const semesters = Array.from({ length: 8 }, (_, i) => (i + 1).toString());
-
-    const [selectedSubjects, setSelectedSubjects] = useState([]);
-
-    const handleFilterChange = (filterType, value) => {
-        setFilters(prev => ({ ...prev, [filterType]: value }));
-    };
 
     const [totalWeightage, setTotalWeightage] = useState(0);
     const [weightages, setWeightages] = useState({
-        CA: 0,
-        ESE: 0,
-        IA: 0,
-        TW: 0,
-        VIVA: 0,
+        CA: { enabled: false, weightage: 0, totalMarks: 0 },
+        ESE: { enabled: false, weightage: 0, totalMarks: 0 },
+        IA: { enabled: false, weightage: 0, totalMarks: 0 },
+        TW: { enabled: false, weightage: 0, totalMarks: 0 },
+        VIVA: { enabled: false, weightage: 0, totalMarks: 0 }
     });
-    const allSubjects = [
-        { id: 1, code: 'CS101', name: 'Introduction to Programming', credits: 4 },
-        { id: 2, code: 'CS102', name: 'Data Structures', credits: 4 },
-        { id: 3, code: 'CS201', name: 'Database Management Systems', credits: 3 },
-        { id: 4, code: 'CS202', name: 'Operating Systems', credits: 4 },
-        { id: 5, code: 'CS301', name: 'Computer Networks', credits: 3 },
-        { id: 6, code: 'CS302', name: 'Software Engineering', credits: 4 },
-        { id: 7, code: 'CS401', name: 'Artificial Intelligence', credits: 3 },
-        { id: 8, code: 'CS402', name: 'Web Development', credits: 4 },
-        { id: 9, code: 'CS501', name: 'Machine Learning', credits: 4 },
-        { id: 10, code: 'CS502', name: 'Cloud Computing', credits: 3 },
-        { id: 11, code: 'CS601', name: 'Cybersecurity', credits: 4 },
-        { id: 12, code: 'CS602', name: 'Mobile App Development', credits: 3 },
-        { id: 13, code: 'CS701', name: 'Big Data Analytics', credits: 4 },
-        { id: 14, code: 'CS702', name: 'Internet of Things', credits: 3 },
-        { id: 15, code: 'CS801', name: 'Blockchain Technology', credits: 4 }
-    ];
-    const handleWeightageChange = (component, value) => {
-        const newValue = parseInt(value) || 0;
+
+    const handleSubjectChange = (field, value) => {
+        setNewSubject(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleWeightageChange = (component, field, value) => {
         setWeightages(prev => {
-            const updated = { ...prev, [component]: newValue };
-            const total = Object.values(updated).reduce((a, b) => a + b, 0);
+            const updated = { ...prev };
+            if (field === 'enabled') {
+                updated[component] = { ...updated[component], enabled: value };
+            } else if (field === 'weightage') {
+                const newValue = parseInt(value) || 0;
+                updated[component] = { ...updated[component], weightage: newValue };
+            } else if (field === 'totalMarks') {
+                const newValue = parseInt(value) || 0;
+                updated[component] = { ...updated[component], totalMarks: newValue };
+            }
+
+            const total = Object.values(updated)
+                .filter(comp => comp.enabled)
+                .reduce((a, b) => a + b.weightage, 0);
             setTotalWeightage(total);
             return updated;
         });
     };
 
-    const handleSave = () => {
-        if (totalWeightage !== 100) {
-            alert('Total weightage must equal 100%');
+    const handleSave = async () => {
+        if (!newSubject.code || !newSubject.name || !newSubject.credits) {
+            alert('Please fill in all subject details');
             return;
         }
-        console.log('Saving components...', weightages);
-        alert('Components saved successfully!');
+
+        // Prepare the data to be sent to the API
+        const componentsWeightage = [];
+        const componentsMarks = [];
+
+        Object.entries(weightages).forEach(([component, data]) => {
+            if (data.enabled) {
+                componentsWeightage.push({
+                    name: component,
+                    weightage: data.weightage
+                });
+                componentsMarks.push({
+                    name: component,
+                    value: data.totalMarks
+                });
+            }
+        });
+
+        try {
+            console.log('Sending data:', {
+                subject: newSubject.code,
+                name: newSubject.name,
+                credits: Number(newSubject.credits),
+                type: newSubject.type,
+                componentsWeightage,
+                componentsMarks
+            });
+
+            // Call the new API endpoint to add subject with components
+            const response = await fetch('http://localhost:5001/api/subjects/addSubjectWithComponents', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subject: newSubject.code,
+                    name: newSubject.name,
+                    credits: Number(newSubject.credits),
+                    type: newSubject.type,
+                    componentsWeightage,
+                    componentsMarks
+                })
+            });
+
+            const data = await response.json();
+            console.log('API Response:', data);
+
+            if (response.ok) {
+                alert('Subject and components added successfully!');
+
+                // Reset form
+                setNewSubject({
+                    code: '',
+                    name: '',
+                    credits: '',
+                    type: 'central'
+                });
+                setWeightages({
+                    CA: { enabled: false, weightage: 0, totalMarks: 0 },
+                    ESE: { enabled: false, weightage: 0, totalMarks: 0 },
+                    IA: { enabled: false, weightage: 0, totalMarks: 0 },
+                    TW: { enabled: false, weightage: 0, totalMarks: 0 },
+                    VIVA: { enabled: false, weightage: 0, totalMarks: 0 }
+                });
+                setTotalWeightage(0);
+            } else {
+                alert(`Failed to add subject: ${data.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error adding subject:', error);
+            alert(`Error adding subject: ${error.message}`);
+        }
     };
 
     return (
         <div className="manage-weightage-container">
-
-            <div className="filters-container">
-                <div className="filter-group">
+            <div className="subject-form">
+                <h3>Add New Subject</h3>
+                <div className="form-inputs">
+                    <input
+                        type="text"
+                        placeholder="Subject Code"
+                        value={newSubject.code}
+                        onChange={(e) => handleSubjectChange('code', e.target.value)}
+                        className="subject-input"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Subject Name"
+                        value={newSubject.name}
+                        onChange={(e) => handleSubjectChange('name', e.target.value)}
+                        className="subject-input"
+                    />
+                    <input
+                        type="number"
+                        placeholder="Credits"
+                        value={newSubject.credits}
+                        onChange={(e) => handleSubjectChange('credits', e.target.value)}
+                        className="subject-input"
+                    />
                     <select
-                        className="professional-filter"
-                        value={filters.program}
-                        onChange={(e) => handleFilterChange('program', e.target.value)}
+                        value={newSubject.type}
+                        onChange={(e) => handleSubjectChange('type', e.target.value)}
+                        className="subject-input"
                     >
-                        <option value="all">All Programs</option>
-                        <option value="degree">Degree</option>
-                        <option value="diploma">Diploma</option>
-                    </select>
-
-                    <select
-                        className="professional-filter"
-                        value={filters.batch}
-                        onChange={(e) => handleFilterChange('batch', e.target.value)}
-                    >
-                        <option value="all">All Batches</option>
-                        {batches.map(batch => (
-                            <option key={batch} value={batch}>{batch}</option>
-                        ))}
-                    </select>
-
-                    <select
-                        className="professional-filter"
-                        value={filters.semester}
-                        onChange={(e) => handleFilterChange('semester', e.target.value)}
-                    >
-                        <option value="all">All Semesters</option>
-                        {semesters.map(sem => (
-                            <option key={sem} value={sem}>Semester {sem}</option>
-                        ))}
-                    </select>
-
-                    <select
-                        className="professional-filter"
-                        value={filters.subject}
-                        onChange={(e) => handleFilterChange('subject', e.target.value)}
-                    >
-                        <option value="all">All Subjects</option>
-                        {allSubjects.map(subject => (
-                            <option key={subject.id} value={subject.code}>{subject.name}</option>
-                        ))}
+                        <option value="central">Central</option>
+                        <option value="departmental">Departmental</option>
                     </select>
                 </div>
             </div>
 
-            <div className="weightage-header">
-                <h3>Manage Component Weightage</h3>
-                <span className="total-weightage">Total: {totalWeightage}%</span>
+            <div className='manage-subjct-container-bottom'>
+                <h3>Subject Components</h3>
+                <table className="weightage-table">
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Component</th>
+                            <th>Weightage (%)</th>
+                            <th>Total Marks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Object.entries(weightages).map(([component, data]) => (
+                            <tr key={component}>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        className="component-checkbox"
+                                        checked={data.enabled}
+                                        onChange={(e) => handleWeightageChange(component, 'enabled', e.target.checked)}
+                                    />
+                                </td>
+                                <td>{component === 'CA' ? 'Continuous Assessment (CA)' :
+                                    component === 'ESE' ? 'End Semester Exam (ESE)' :
+                                        component === 'IA' ? 'Internal Assessment (IA)' :
+                                            component === 'TW' ? 'Term Work (TW)' :
+                                                'Viva'}</td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        className="weightage-input"
+                                        value={data.weightage}
+                                        disabled={!data.enabled}
+                                        onChange={(e) => handleWeightageChange(component, 'weightage', e.target.value)}
+                                    />
+                                </td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        className="marks-input"
+                                        value={data.totalMarks}
+                                        disabled={!data.enabled}
+                                        onChange={(e) => handleWeightageChange(component, 'totalMarks', e.target.value)}
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <div className="weightage-summary">
+                    <p>
+                        Total Weightage: {totalWeightage}%
+                    </p>
+                </div>
+                <div className="last-button">
+                    <button
+                        className="save-weightage-btn"
+                        onClick={handleSave}
+                    >
+                        Add Subject
+                    </button>
+                </div>
             </div>
-            <table className="weightage-table">
-                <thead>
-                    <tr>
-                        <th>Component</th>
-                        <th>Weightage (%)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Continuous Assessment (CA)</td>
-                        <td>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                className="weightage-input"
-                                value={weightages.CA}
-                                onChange={(e) => handleWeightageChange('CA', e.target.value)}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>End Semester Exam (ESE)</td>
-                        <td>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                className="weightage-input"
-                                value={weightages.ESE}
-                                onChange={(e) => handleWeightageChange('ESE', e.target.value)}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Internal Assessment (IA)</td>
-                        <td>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                className="weightage-input"
-                                value={weightages.IA}
-                                onChange={(e) => handleWeightageChange('IA', e.target.value)}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Term Work (TW)</td>
-                        <td>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                className="weightage-input"
-                                value={weightages.TW}
-                                onChange={(e) => handleWeightageChange('TW', e.target.value)}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Viva</td>
-                        <td>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                className="weightage-input"
-                                value={weightages.VIVA}
-                                onChange={(e) => handleWeightageChange('VIVA', e.target.value)}
-                            />
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <button
-                className="save-weightage-btn"
-                onClick={handleSave}
-                disabled={totalWeightage !== 100}
-            >
-                Save Weightage
-            </button>
         </div>
     );
 };
