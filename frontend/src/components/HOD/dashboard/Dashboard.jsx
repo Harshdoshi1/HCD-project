@@ -162,9 +162,7 @@ const DashboardHOD = () => {
                   </header>
 
                   <div className="dashboard-content">
-                    <div className="charts-row">
-                      <PerformanceOverview students={filteredStudents} />
-                    </div>
+                    
 
                     <div className="students-row">
                       <FilterSection
@@ -172,6 +170,9 @@ const DashboardHOD = () => {
                         selectedSemester={selectedSemester}
                         onFilterChange={handleFilterChange}
                       />
+                      <div className="charts-row">
+                      <PerformanceOverview students={filteredStudents} />
+                    </div>
                       <StudentTable
                         students={filteredStudents}
                         onPointsFilter={handlePointsFilter}
@@ -196,7 +197,6 @@ const DashboardHOD = () => {
                     />
                   )}
 
-                  {/* Use local StudentAnalysis component for the modal */}
                   {showAnalysisModal && selectedStudent && (
                     <StudentAnalysis
                       student={selectedStudent}
