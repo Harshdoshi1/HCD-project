@@ -17,6 +17,8 @@ const SubjectWiseGrade = sequelize.define('SubjectWiseGrade', {
             key: 'id'
         }
     },
+
+    
     subjectId: {
         type: DataTypes.STRING,
         allowNull: false,
