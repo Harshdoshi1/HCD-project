@@ -94,7 +94,7 @@ const PerformanceOverview = ({ students }) => {
 
   return (
     <div className="performance-overview">
-      <div className="overview-stats">
+      {/* <div className="overview-stats">
         <div className="stat-card">
           <h3>Average Points</h3>
           <div className="stat-value">{averages.total}</div>
@@ -105,7 +105,7 @@ const PerformanceOverview = ({ students }) => {
           <div className="stat-value">{students.length}</div>
           <div className="stat-label">Total Count</div>
         </div>
-      </div>
+      </div> */}
 
       <div className="charts-container">
         <div className="chart-box">
