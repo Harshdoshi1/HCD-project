@@ -1,23 +1,43 @@
-const ExtraCurricularActivity = require("../models/extraCurricularActivity");
-const Student = require("../models/students");
+const { supabase } = require('../config/db');
 
 // Get activities by enrollment number and semester
 const getActivitiesByEnrollmentAndSemester = async (req, res) => {
     try {
         const { enrollmentNumber, semesterId } = req.params;
 
-        const activities = await ExtraCurricularActivity.findAll({
-            where: { enrollmentNumber, semesterId },
-            include: [
-                {
-                    model: Student,
-                    attributes: ["name", "enrollmentNumber"],
-                    where: { enrollmentNumber }
-                }
-            ]
-        });
+        // First fetch the activities
+        const { data: activities, error: activitiesError } = await supabase
+            .from('extracurricular_activities')
+            .select('*')
+            .eq('enrollment_number', enrollmentNumber)
+            .eq('semester_id', semesterId);
 
-        res.status(200).json(activities);
+        if (activitiesError) {
+            throw activitiesError;
+        }
+
+        // If we need student details, fetch the student separately
+        if (activities && activities.length > 0) {
+            const { data: student, error: studentError } = await supabase
+                .from('students')
+                .select('name, enrollment_number')
+                .eq('enrollment_number', enrollmentNumber)
+                .single();
+
+            if (studentError) {
+                throw studentError;
+            }
+
+            // Combine the data
+            const activitiesWithStudent = activities.map(activity => ({
+                ...activity,
+                student: student
+            }));
+
+            res.status(200).json(activitiesWithStudent);
+        } else {
+            res.status(200).json([]);
+        }
     } catch (error) {
         console.error("Error fetching extracurricular activities:", error);
         res.status(500).json({ message: "Error fetching activities", error: error.message });
@@ -46,29 +66,39 @@ const addActivity = async (req, res) => {
             });
         }
 
-        // Check if student exists
-        const student = await Student.findOne({
-            where: { enrollmentNumber }
-        });
+        // Check if student exists using Supabase
+        const { data: student, error: studentError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('enrollment_number', enrollmentNumber)
+            .single();
 
-        if (!student) {
+        if (studentError || !student) {
             return res.status(404).json({
                 message: "Student not found",
                 enrollmentNumber
             });
         }
 
-        // Create new activity
-        const newActivity = await ExtraCurricularActivity.create({
-            enrollmentNumber,
-            semesterId,
-            activityName,
-            achievementLevel,
-            date: new Date(date),
-            description,
-            certificateUrl,
-            score
-        });
+        // Create new activity using Supabase
+        const { data: newActivity, error: activityError } = await supabase
+            .from('extracurricular_activities')
+            .insert({
+                enrollment_number: enrollmentNumber,
+                semester_id: semesterId,
+                activity_name: activityName,
+                achievement_level: achievementLevel,
+                date: new Date(date).toISOString(),
+                description,
+                certificate_url: certificateUrl,
+                score
+            })
+            .select()
+            .single();
+
+        if (activityError) {
+            throw activityError;
+        }
 
         res.status(201).json(newActivity);
     } catch (error) {
@@ -100,42 +130,59 @@ const updateActivity = async (req, res) => {
             });
         }
 
-        // Check if student exists
-        const student = await Student.findOne({
-            where: { enrollmentNumber }
-        });
+        // Check if student exists using Supabase
+        const { data: student, error: studentError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('enrollment_number', enrollmentNumber)
+            .single();
 
-        if (!student) {
+        if (studentError || !student) {
             return res.status(404).json({
                 message: "Student not found",
                 enrollmentNumber
             });
         }
 
-        // Update existing activity
-        const [updated] = await ExtraCurricularActivity.update({
-            enrollmentNumber,
-            semesterId,
-            activityName,
-            achievementLevel,
-            date: new Date(date),
-            description,
-            certificateUrl
-        }, {
-            where: { id }
-        });
+        // Update existing activity using Supabase
+        const { data: updated, error: updateError } = await supabase
+            .from('extracurricular_activities')
+            .update({
+                enrollment_number: enrollmentNumber,
+                semester_id: semesterId,
+                activity_name: activityName,
+                achievement_level: achievementLevel,
+                date: new Date(date).toISOString(),
+                description,
+                certificate_url: certificateUrl,
+                score
+            })
+            .eq('id', id)
+            .select();
 
-        if (updated) {
-            const updatedActivity = await ExtraCurricularActivity.findByPk(id, {
-                include: [
-                    {
-                        model: Student,
-                        attributes: ["name", "enrollmentNumber"],
-                        where: { enrollmentNumber }
-                    }
-                ]
-            });
-            res.status(200).json(updatedActivity);
+        if (updateError) {
+            throw updateError;
+        }
+
+        if (updated && updated.length > 0) {
+            // Fetch the student details to include with the response
+            const { data: studentDetails, error: studentDetailsError } = await supabase
+                .from('students')
+                .select('name, enrollment_number')
+                .eq('enrollment_number', enrollmentNumber)
+                .single();
+
+            if (studentDetailsError) {
+                throw studentDetailsError;
+            }
+
+            // Combine the activity with student details
+            const updatedActivityWithStudent = {
+                ...updated[0],
+                student: studentDetails
+            };
+
+            res.status(200).json(updatedActivityWithStudent);
         } else {
             res.status(404).json({ message: 'Activity not found' });
         }
@@ -149,15 +196,20 @@ const updateActivity = async (req, res) => {
 const deleteActivity = async (req, res) => {
     try {
         const { activityId } = req.params;
-        const deleted = await ExtraCurricularActivity.destroy({
-            where: { id: activityId }
-        });
+        
+        // Delete activity using Supabase
+        const { data, error } = await supabase
+            .from('extracurricular_activities')
+            .delete()
+            .eq('id', activityId);
 
-        if (deleted) {
-            res.status(200).json({ message: 'Activity deleted successfully' });
-        } else {
-            res.status(404).json({ message: 'Activity not found' });
+        if (error) {
+            throw error;
         }
+
+        // Supabase doesn't return the number of deleted rows by default
+        // We can check if the operation was successful by the absence of an error
+        res.status(200).json({ message: 'Activity deleted successfully' });
     } catch (error) {
         console.error("Error deleting extracurricular activity:", error);
         res.status(500).json({ message: "Error deleting activity", error: error.message });
@@ -170,18 +222,39 @@ const getStudentExtraCurricularActivities = async (req, res) => {
         const { enrollmentNumber } = req.params;
         console.log("Received enrollment number:", enrollmentNumber);
 
-        const activities = await ExtraCurricularActivity.findAll({
-            where: { enrollmentNumber },
-            order: [['date', 'DESC']],
-            include: [
-                {
-                    model: Student,
-                    attributes: ["name", "enrollmentNumber"]
-                }
-            ]
-        });
+        // Fetch activities using Supabase
+        const { data: activities, error: activitiesError } = await supabase
+            .from('extracurricular_activities')
+            .select('*')
+            .eq('enrollment_number', enrollmentNumber)
+            .order('date', { ascending: false });
 
-        res.status(200).json(activities);
+        if (activitiesError) {
+            throw activitiesError;
+        }
+
+        if (activities && activities.length > 0) {
+            // Fetch student details
+            const { data: student, error: studentError } = await supabase
+                .from('students')
+                .select('name, enrollment_number')
+                .eq('enrollment_number', enrollmentNumber)
+                .single();
+
+            if (studentError) {
+                throw studentError;
+            }
+
+            // Combine activities with student details
+            const activitiesWithStudent = activities.map(activity => ({
+                ...activity,
+                student: student
+            }));
+
+            res.status(200).json(activitiesWithStudent);
+        } else {
+            res.status(200).json([]);
+        }
     } catch (error) {
         console.error("Error fetching student's extracurricular activities:", error);
         res.status(500).json({ message: "Error fetching activities", error: error.message });
@@ -191,10 +264,18 @@ const getStudentExtraCurricularActivities = async (req, res) => {
 const getextraStudentActivities = async (req, res) => {
     try {
         const { enrollmentNumber } = req.body;
-        const activities = await ExtraCurricularActivity.findAll({
-            where: { enrollmentNumber }
-        });
-        res.status(200).json(activities);
+        
+        // Fetch activities using Supabase
+        const { data: activities, error } = await supabase
+            .from('extracurricular_activities')
+            .select('*')
+            .eq('enrollment_number', enrollmentNumber);
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(200).json(activities || []);
     } catch (error) {
         console.error("Error fetching student activities:", error);
         res.status(500).json({ message: "Error fetching activities", error: error.message });
@@ -212,11 +293,18 @@ const getextraStudentActivitieswithenrollmentandSemester = async (req, res) => {
             });
         }
 
-        const activities = await ExtraCurricularActivity.findAll({
-            where: { enrollmentNumber, semesterId }
-        });
+        // Fetch activities using Supabase
+        const { data: activities, error } = await supabase
+            .from('extracurricular_activities')
+            .select('*')
+            .eq('enrollment_number', enrollmentNumber)
+            .eq('semester_id', semesterId);
 
-        if (activities.length === 0) {
+        if (error) {
+            throw error;
+        }
+
+        if (!activities || activities.length === 0) {
             return res.status(200).json({ message: "No activities found for the given enrollment number and semester" });
         }
 

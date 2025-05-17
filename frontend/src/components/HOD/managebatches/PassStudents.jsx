@@ -21,14 +21,25 @@ const PassStudents = ({ isOpen, onClose }) => {
         }
     }, [isOpen]);
 
-    // Fetch batches
+    // Fetch batches from Supabase
     const fetchBatches = async () => {
         setLoading(true);
         try {
             const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
             if (!response.ok) throw new Error("Failed to fetch batches");
             const data = await response.json();
-            setBatches(data);
+            
+            // Format batches for display and selection
+            const formattedBatches = data.map(batch => ({
+                id: batch.id,
+                batchName: batch.name,
+                startDate: new Date(batch.start_date).toLocaleDateString(),
+                endDate: new Date(batch.end_date).toLocaleDateString(),
+                program: batch.program,
+                currentSemester: batch.current_semester
+            }));
+            
+            setBatches(formattedBatches);
         } catch (error) {
             console.error("Error fetching batches:", error);
             setError("Failed to fetch batches");
@@ -50,13 +61,18 @@ const PassStudents = ({ isOpen, onClose }) => {
     const fetchSemesters = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${selectedBatch.batchName}`);
-            if (!response.ok) throw new Error("Failed to fetch semesters");
-            const data = await response.json();
-            setSemesters(data);
+            // Generate semesters based on the batch's current semester
+            // This approach doesn't require a separate API call if we already have the batch info
+            if (selectedBatch) {
+                const currentSem = selectedBatch.currentSemester || 1;
+                const semesterArray = Array.from({ length: currentSem + 1 }, (_, i) => i + 1);
+                setSemesters(semesterArray);
+            } else {
+                setSemesters([]);
+            }
         } catch (error) {
-            console.error("Error fetching semesters:", error);
-            setError("Failed to fetch semesters");
+            console.error("Error generating semesters:", error);
+            setError("Failed to generate semesters");
             setSemesters([]);
         } finally {
             setLoading(false);
@@ -79,11 +95,22 @@ const PassStudents = ({ isOpen, onClose }) => {
             const response = await fetch(`http://localhost:5001/api/students/getStudentsByBatch/${selectedBatch.id}`);
             if (!response.ok) throw new Error("Failed to fetch students");
             const data = await response.json();
-            setStudents(data);
+            
+            // Format student data from Supabase response
+            const formattedStudents = data.map(student => ({
+                id: student.id,
+                name: student.name || 'Unknown',
+                enrollmentNumber: student.enrollment_number || student.enrollmentNumber || '',
+                email: student.email || '',
+                currentSemester: student.current_semester || student.currnetsemester || 1,
+                batchId: student.batch_id || student.batchId
+            }));
+            
+            setStudents(formattedStudents);
 
             // Initialize all students as selected
             const initialSelection = {};
-            data.forEach(student => {
+            formattedStudents.forEach(student => {
                 initialSelection[student.id] = true;
             });
             setSelectedStudents(initialSelection);
@@ -270,7 +297,7 @@ const PassStudents = ({ isOpen, onClose }) => {
                                                     </td>
                                                     <td>{student.name}</td>
                                                     <td>{student.enrollmentNumber}</td>
-                                                    <td>{student.currnetsemester}</td>
+                                                    <td>{student.currentSemester}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -284,9 +311,9 @@ const PassStudents = ({ isOpen, onClose }) => {
                                                 onChange={handleTargetSemesterChange}
                                             >
                                                 <option value="">Select target semester</option>
-                                                {semesters.map(semester => (
-                                                    <option key={semester.id} value={semester.semesterNumber}>
-                                                        Semester {semester.semesterNumber}
+                                                {semesters.map(semesterNumber => (
+                                                    <option key={semesterNumber} value={semesterNumber}>
+                                                        Semester {semesterNumber}
                                                     </option>
                                                 ))}
                                             </select>
