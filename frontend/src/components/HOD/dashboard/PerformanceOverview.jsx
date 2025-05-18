@@ -1,9 +1,16 @@
-
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer, LabelList } from 'recharts';
 import './PerformanceOverview.css';
 
 const PerformanceOverview = ({ students }) => {
+  const [animate, setAnimate] = useState(false);
+  
+  useEffect(() => {
+    // Trigger animation after component mounts
+    const timer = setTimeout(() => setAnimate(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   const calculateAverages = () => {
     if (students.length === 0) return { curricular: 0, coCurricular: 0, extraCurricular: 0, total: 0 };
 
@@ -85,87 +92,143 @@ const PerformanceOverview = ({ students }) => {
   const distribution = getPerformanceDistribution();
 
   const overallData = [
-    { name: 'Curricular', value: averages.curricular },
-    { name: 'Co-Curricular', value: averages.coCurricular },
-    { name: 'Extra-Curricular', value: averages.extraCurricular }
+    { name: 'Curricular', value: averages.curricular, color: '#9b87f5' },
+    { name: 'Co-Curricular', value: averages.coCurricular, color: '#1EAEDB' },
+    { name: 'Extra-Curricular', value: averages.extraCurricular, color: '#33C3F0' }
   ];
 
-  const COLORS = ['#3E92CC', '#4CAF50', '#e74c3c'];
+  const COLORS = ['#9b87f5', '#1EAEDB', '#33C3F0'];
 
   return (
     <div className="performance-overview">
-      {/* <div className="overview-stats">
-        <div className="stat-card">
-          <h3>Average Points</h3>
-          <div className="stat-value">{averages.total}</div>
-          <div className="stat-label">Overall Average</div>
-        </div>
-        <div className="stat-card">
-          <h3>Students</h3>
-          <div className="stat-value">{students.length}</div>
-          <div className="stat-label">Total Count</div>
-        </div>
-      </div> */}
-
       <div className="charts-container">
         <div className="chart-box">
           <h3>Points Distribution</h3>
-          <BarChart
-            width={260}
-            height={240}
-            data={distribution}
-            margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="curricular" name="Curricular" fill="#9b87f5" />
-            <Bar dataKey="coCurricular" name="Co-Curricular" fill="#1EAEDB" />
-            <Bar dataKey="extraCurricular" name="Extra-Curricular" fill="#33C3F0" />
-          </BarChart>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart
+              data={distribution}
+              margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+              animationBegin={300}
+              animationDuration={1500}
+              animationEasing="ease-out"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" tick={{ fill: '#666', fontSize: 12 }} />
+              <YAxis tick={{ fill: '#666', fontSize: 12 }} />
+              <Tooltip
+                contentStyle={{ 
+                  backgroundColor: '#fff', 
+                  borderRadius: '8px', 
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', 
+                  border: 'none'
+                }}
+              />
+              <Legend wrapperStyle={{ paddingTop: 10 }} />
+              <Bar dataKey="curricular" name="Curricular" fill="#9b87f5" radius={[4, 4, 0, 0]} animationDuration={1800} animationEasing="ease">
+                {animate && <LabelList dataKey="curricular" position="top" style={{ fontSize: '11px', fill: '#666' }} />}
+              </Bar>
+              <Bar dataKey="coCurricular" name="Co-Curricular" fill="#1EAEDB" radius={[4, 4, 0, 0]} animationDuration={1800} animationBegin={300} animationEasing="ease">
+                {animate && <LabelList dataKey="coCurricular" position="top" style={{ fontSize: '11px', fill: '#666' }} />}
+              </Bar>
+              <Bar dataKey="extraCurricular" name="Extra-Curricular" fill="#33C3F0" radius={[4, 4, 0, 0]} animationDuration={1800} animationBegin={600} animationEasing="ease">
+                {animate && <LabelList dataKey="extraCurricular" position="top" style={{ fontSize: '11px', fill: '#666' }} />}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
         <div className="chart-box">
           <h3>Category Averages</h3>
-          <PieChart width={260} height={240}>
-            <Pie
-              data={overallData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-              label={({ name, value }) => `${name}: ${value}`}
-            >
-              {overallData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={['#9b87f5', '#1EAEDB', '#33C3F0'][index % 3]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={overallData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, value }) => `${value}`}
+                animationBegin={300}
+                animationDuration={1500}
+                animationEasing="ease-out"
+              >
+                {overallData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.color} 
+                    stroke="#fff"
+                    strokeWidth={2}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{ 
+                  backgroundColor: '#fff', 
+                  borderRadius: '8px', 
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', 
+                  border: 'none'
+                }}
+                formatter={(value, name) => [`${value} points`, name]}
+              />
+              <Legend 
+                formatter={(value, entry) => (
+                  <span style={{ color: '#666', fontWeight: 500 }}>{value}</span>
+                )}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
 
         <div className="chart-box">
           <h3>Performance Trends</h3>
-          <LineChart
-            width={260}
-            height={240}
-            data={getCategoryTrends()}
-            margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="semester" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="curricular" stroke="#9b87f5" />
-            <Line type="monotone" dataKey="coCurricular" stroke="#1EAEDB" />
-            <Line type="monotone" dataKey="extraCurricular" stroke="#33C3F0" />
-          </LineChart>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart
+              data={getCategoryTrends()}
+              margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+              animationBegin={300}
+              animationDuration={1500}
+              animationEasing="ease-out"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="semester" tick={{ fill: '#666', fontSize: 12 }} />
+              <YAxis tick={{ fill: '#666', fontSize: 12 }} />
+              <Tooltip
+                contentStyle={{ 
+                  backgroundColor: '#fff', 
+                  borderRadius: '8px', 
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', 
+                  border: 'none'
+                }}
+              />
+              <Legend wrapperStyle={{ paddingTop: 10 }} />
+              <Line 
+                type="monotone" 
+                dataKey="curricular" 
+                stroke="#9b87f5" 
+                strokeWidth={2}
+                dot={{ r: 4, strokeWidth: 2, fill: '#fff' }}
+                activeDot={{ r: 6, strokeWidth: 0, fill: '#9b87f5' }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="coCurricular" 
+                stroke="#1EAEDB" 
+                strokeWidth={2}
+                dot={{ r: 4, strokeWidth: 2, fill: '#fff' }}
+                activeDot={{ r: 6, strokeWidth: 0, fill: '#1EAEDB' }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="extraCurricular" 
+                stroke="#33C3F0" 
+                strokeWidth={2}
+                dot={{ r: 4, strokeWidth: 2, fill: '#fff' }}
+                activeDot={{ r: 6, strokeWidth: 0, fill: '#33C3F0' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
 
       </div>

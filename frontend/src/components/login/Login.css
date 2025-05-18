@@ -1,9 +1,15 @@
 :root {
     --primary-color: #1e90ff;
     --primary-light: #47a3ff;
+    --secondary-color: #6C63FF;
+    --success-color: #4CAF50;
     --error-color: #ff4444;
     --text-color: #333;
+    --text-light: #666;
     --background-light: #f5f9ff;
+    --shadow-soft: rgba(149, 157, 165, 0.15) 0px 8px 24px;
+    --shadow-medium: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    --transition-standard: all 0.3s ease-in-out;
 }
 
 .login-container {
@@ -14,15 +20,17 @@
     background: linear-gradient(135deg, var(--background-light) 0%, #e6f0ff 100%);
     position: relative;
     overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .background-effect {
     position: absolute;
     width: 1000px;
     height: 1000px;
-    background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
+    background: radial-gradient(circle, var(--secondary-color) 0%, transparent 70%);
     opacity: 0.1;
     animation: pulse 8s infinite;
+    pointer-events: none;
 }
 
 @keyframes pulse {
@@ -45,21 +53,22 @@
 /* Login Box Styles */
 .login-box {
     background: white;
-    padding: 2.5rem;
-    border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 2.8rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-medium);
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     position: relative;
     z-index: 1;
     opacity: 0;
-    animation: fadeIn 0.5s ease-out forwards;
+    animation: fadeIn 0.6s ease-out forwards;
+    transition: var(--transition-standard);
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(24px);
     }
 
     to {
@@ -75,12 +84,13 @@
 }
 
 .department-logo {
-    width: 120px;
-    height: 120px;
-    border-radius: 60px;
+    width: 130px;
+    height: 130px;
+    border-radius: 65px;
     object-fit: cover;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
     animation: float 6s ease-in-out infinite;
+    border: 4px solid white;
 }
 
 @keyframes float {
@@ -102,8 +112,9 @@ h1 {
     color: var(--text-color);
     text-align: center;
     margin-bottom: 2rem;
-    font-size: 1.8rem;
+    font-size: 1.9rem;
     font-weight: 600;
+    letter-spacing: -0.5px;
 }
 
 /* Form Elements */
@@ -123,11 +134,12 @@ h1 {
 
 .input-group input {
     width: 100%;
-    padding: 12px 12px 12px 40px;
-    border: 1px solid #c4d7e0;
-    border-radius: 8px;
+    padding: 14px 14px 14px 42px;
+    border: 1px solid #e0e7ee;
+    border-radius: 10px;
     font-size: 15px;
-    transition: all 0.3s ease;
+    transition: var(--transition-standard);
+    background-color: #fbfcfd;
 }
 
 .input-icon {
@@ -140,21 +152,6 @@ h1 {
     z-index: 1;
 }
 
-.input-group .phosphor-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    pointer-events: none;
-    z-index: 1;
-    font-size: 18px;
-}
-
-/* .input-group input::placeholder {
-    padding-left: 10px;
-} */
-
 input.error {
     border-color: var(--error-color);
 }
@@ -162,7 +159,8 @@ input.error {
 .input-group input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 8px rgba(30, 144, 255, 0.3);
+    box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+    background-color: white;
 }
 
 /* Password Toggle Button */
@@ -173,7 +171,7 @@ input.error {
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #666;
+    color: var(--primary-light);
     cursor: pointer;
     padding: 0;
 }
@@ -182,75 +180,35 @@ input.error {
     color: var(--primary-color);
 }
 
-/* Error Message */
-.error-message {
-    color: var(--error-color);
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    text-align: center;
-}
-
-/* Options Row */
-.options-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-/* Remember Me Checkbox */
-.remember-me {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #666;
-    cursor: pointer;
-}
-
-.remember-me input[type="checkbox"] {
-    width: auto;
-    margin: 0;
-    cursor: pointer;
-}
-
-/* Forgot Password Link */
-.forgot-password {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.3s ease;
-}
-
-.forgot-password:hover {
-    color: var(--primary-light);
-    text-decoration: underline;
-}
-
 /* Login Button */
 .login-button {
     width: 100%;
-    padding: 12px;
-    background: var(--primary-color);
+    padding: 14px;
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: 10px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: var(--transition-standard);
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 48px;
+    height: 48px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 6px rgba(30, 144, 255, 0.2);
 }
 
 .login-button:hover {
-    background: var(--primary-light);
-    transform: scale(1.02);
+    background-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px rgba(30, 144, 255, 0.25);
 }
 
 .login-button:active {
-    transform: scale(0.98);
+    transform: translateY(0);
+    box-shadow: 0 4px 6px rgba(30, 144, 255, 0.2);
 }
 
 .login-button:disabled {

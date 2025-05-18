@@ -148,64 +148,25 @@ const DashboardHOD = () => {
           <div className="dashboard-content">
             {activeItem === 'dashboard' && (
               <>
-                <div className="dashboard-container">
-                  <header className="dashboard-header">
-                    <h1>HOD Dashboard</h1>
-                    <div className="dashboard-actions">
-                      <button className="btn-primary" onClick={handleEmailModalOpen}>
-                        Send Email Notifications
-                      </button>
-                      <button className="btn-secondary" onClick={handleReportModalOpen}>
-                        Generate Reports
-                      </button>
-                    </div>
-                  </header>
-
-                  <div className="dashboard-content">
-                    
-
-                    <div className="students-row">
-                      <FilterSection
-                        selectedBatch={selectedBatch}
-                        selectedSemester={selectedSemester}
-                        onFilterChange={handleFilterChange}
-                      />
-                      <div className="charts-row">
-                      <PerformanceOverview students={filteredStudents} />
-                    </div>
-                      <StudentTable
-                        students={filteredStudents}
-                        onPointsFilter={handlePointsFilter}
-                        onStudentSelect={handleStudentSelect}
-                      />
-                    </div>
+                <header className="dashboard-header">
+                  <h1>HOD Dashboard</h1>
+                  <div className="dashboard-actions">
+                    <button className="btn-primary" onClick={handleEmailModalOpen}>
+                      Send Email Notifications
+                    </button>
+                    <button className="btn-secondary" onClick={handleReportModalOpen}>
+                      Generate Reports
+                    </button>
                   </div>
+                </header>
 
-                  {showEmailModal && (
-                    <EmailNotification
-                      students={filteredStudents}
-                      onClose={() => setShowEmailModal(false)}
-                    />
-                  )}
-
-                  {showReportModal && (
-                    <ReportGenerator
-                      students={filteredStudents}
-                      selectedBatch={selectedBatch}
-                      selectedSemester={selectedSemester}
-                      onClose={() => setShowReportModal(false)}
-                    />
-                  )}
-
-                  {showAnalysisModal && selectedStudent && (
-                    <StudentAnalysis
-                      student={selectedStudent}
-                      onClose={() => {
-                        setShowAnalysisModal(false);
-                        setSelectedStudent(null);
-                      }}
-                    />
-                  )}
+                <div className="charts-row">
+                  <FilterSection
+                    selectedBatch={selectedBatch}
+                    selectedSemester={selectedSemester}
+                    onFilterChange={handleFilterChange}
+                  />
+                  <PerformanceOverview students={filteredStudents} />
                 </div>
               </>
             )}
