@@ -236,39 +236,74 @@ const getSubjects = async (req, res) => {
 const getSubjectsByBatchAndSemester = async (req, res) => {
     try {
         const { batchName, semesterNumber } = req.params;
+        console.log(`Fetching subjects for batch: ${batchName}, semester: ${semesterNumber}`);
 
-        // Find batch ID from batchName
-        const batch = await Batch.findOne({ where: { batchName } });
-        if (!batch) {
+        // Find batch ID from batchName using Supabase
+        const { data: batch, error: batchError } = await supabase
+            .from('batches')
+            .select('id')
+            .eq('name', batchName)
+            .single();
+
+        if (batchError || !batch) {
+            console.log(`Batch not found: ${batchName}`);
             return res.status(404).json({ message: "Batch not found" });
         }
 
-        // Find semester where batchId matches
-        const semester = await Semester.findOne({ where: { semesterNumber, batchId: batch.id } });
-        if (!semester) {
+        console.log(`Found batch with ID: ${batch.id}`);
+
+        // Find semester where batch_id matches using Supabase
+        const { data: semester, error: semesterError } = await supabase
+            .from('semesters')
+            .select('id')
+            .eq('semester_number', semesterNumber)
+            .eq('batch_id', batch.id)
+            .single();
+
+        if (semesterError || !semester) {
+            console.log(`Semester ${semesterNumber} not found for batch ID: ${batch.id}`);
             return res.status(404).json({ message: "Semester not found for this batch" });
         }
 
-        // Fetch subjects for the given batch and semester
-        const subjects = await Subject.findAll({ where: { semesterId: semester.id, batchId: batch.id } });
+        console.log(`Found semester with ID: ${semester.id}`);
 
-        if (subjects.length === 0) {
+        // Fetch subjects for the given batch and semester using Supabase
+        const { data: subjects, error: subjectsError } = await supabase
+            .from('subjects')
+            .select('*')
+            .eq('semester_id', semester.id)
+            .eq('batch_id', batch.id);
+
+        if (subjectsError) {
+            throw subjectsError;
+        }
+
+        if (!subjects || subjects.length === 0) {
+            console.log(`No subjects found for semester ID: ${semester.id} and batch ID: ${batch.id}`);
             return res.status(404).json({ message: "No subjects found for this semester and batch" });
         }
 
-        // Get subject names from subjects
-        const subjectNames = subjects.map(s => s.subjectName);
+        console.log(`Found ${subjects.length} subjects`);
 
-        // Fetch sub_code and sub_level from UniqueSubDegree using sub_name
-        const uniqueSubs = await UniqueSubDegree.findAll({
-            where: { sub_name: { [Op.in]: subjectNames } },
-            attributes: ["sub_name", "sub_code", "sub_level"], // Fetch only required attributes
-        });
+        // Get subject names from subjects
+        const subjectNames = subjects.map(s => s.subject_name);
+
+        // Fetch details from unique_sub_degrees using sub_name using Supabase
+        const { data: uniqueSubs, error: uniqueSubsError } = await supabase
+            .from('unique_sub_degrees')
+            .select('sub_name, sub_code, sub_level')
+            .in('sub_name', subjectNames);
+
+        if (uniqueSubsError) {
+            throw uniqueSubsError;
+        }
+
+        console.log(`Found ${uniqueSubs ? uniqueSubs.length : 0} unique subjects`);
 
         // Send the response properly formatted
         res.status(200).json({
             subjects,
-            uniqueSubjects: uniqueSubs
+            uniqueSubjects: uniqueSubs || []
         });
     } catch (error) {
         console.error("Error fetching subjects:", error);
@@ -353,16 +388,7 @@ const getSubjectsByBatchSemesterandFaculty = async (req, res) => {
 
 const addSubjectWithComponents = async (req, res) => {
     try {
-        const {
-            subject, // subject code (from frontend)
-            name,    // subject name
-            credits, // subject credits
-            type,    // subject type (central or departmental)
-            componentsWeightage, // array of component weightages
-            componentsMarks      // array of component marks
-        } = req.body;
-
-        console.log('Received data:', req.body);
+        const { subject, name, credits, type, componentsWeightage, componentsMarks } = req.body;
 
         // Validate input
         if (!subject || !name || !credits) {
@@ -379,64 +405,102 @@ const addSubjectWithComponents = async (req, res) => {
             });
         }
 
-        // Create subject with required fields
-        // Default semester to 1 and program to 'Degree' if not provided
-        const subjectRecord = await UniqueSubDegree.create({
+        // Check if subject exists in UniqueSubDegree
+        const { data: existingSubject, error: subjectError } = await supabase
+            .from('unique_sub_degree')
+            .select('*')
+            .eq('sub_code', subject)
+            .single();
+
+        if (subjectError && subjectError.code !== 'PGRST116') throw subjectError;
+
+        // Create or update subject
+        const subjectData = {
             sub_code: subject,
             sub_name: name,
             sub_credit: credits,
-            sub_level: type || 'central', // Use type from request or default to 'central'
-            semester: 1,                  // Default semester
-            program: 'Degree'             // Default program
-        });
-
-        // Map component names from frontend to database
-        const componentMap = {
-            'CA': 'cse',   // Continuous Assessment maps to CSE in DB
-            'ESE': 'ese',  // End Semester Exam
-            'IA': 'ia',    // Internal Assessment
-            'TW': 'tw',    // Term Work
-            'VIVA': 'viva' // Viva
+            sub_level: type || 'central',
+            program: 'Degree'
         };
 
-        // Prepare weightage and marks data
-        const weightageData = { subjectId: subject };
-        const marksData = { subjectId: subject };
+        const { data: subjectRecord, error: upsertError } = await supabase
+            .from('unique_sub_degree')
+            .upsert(subjectData)
+            .select()
+            .single();
 
-        // Process weightage components
-        componentsWeightage.forEach(component => {
-            const dbField = componentMap[component.name];
-            if (dbField) {
-                weightageData[dbField] = component.weightage;
+        if (upsertError) throw upsertError;
+
+        // Prepare mapping helper
+        function mapComponents(components) {
+            const map = { ESE: 0, CSE: 0, IA: 0, TW: 0, VIVA: 0 };
+            if (Array.isArray(components)) {
+                components.forEach(comp => {
+                    if (comp.name && typeof comp.value === 'number') {
+                        const key = comp.name.toUpperCase();
+                        if (map.hasOwnProperty(key)) {
+                            map[key] = comp.value;
+                        }
+                    } else if (comp.name && typeof comp.weightage === 'number') {
+                        // fallback for weightage
+                        const key = comp.name.toUpperCase();
+                        if (map.hasOwnProperty(key)) {
+                            map[key] = comp.weightage;
+                        }
+                    }
+                });
             }
-        });
+            return map;
+        }
 
-        // Process marks components
-        componentsMarks.forEach(component => {
-            const dbField = componentMap[component.name];
-            if (dbField) {
-                marksData[dbField] = component.value;
-            }
-        });
+        // Map weightages and marks
+        const weightageMap = mapComponents(componentsWeightage);
+        const marksMap = mapComponents(componentsMarks);
 
-        // Create weightage and marks records
-        const weightage = await ComponentWeightage.create(weightageData);
-        const marks = await ComponentMarks.create(marksData);
+        // Upsert into ComponentWeightage
+        const weightageData = {
+            subject_id: subject,
+            ese: weightageMap.ESE,
+            cse: weightageMap.CSE,
+            ia: weightageMap.IA,
+            tw: weightageMap.TW,
+            viva: weightageMap.VIVA
+        };
+
+        const { data: weightage, error: weightageError } = await supabase
+            .from('component_weightage')
+            .upsert(weightageData)
+            .select()
+            .single();
+
+        if (weightageError) throw weightageError;
+
+        // Upsert into ComponentMarks
+        const marksData = {
+            subject_id: subject,
+            ese: marksMap.ESE,
+            cse: marksMap.CSE,
+            ia: marksMap.IA,
+            tw: marksMap.TW,
+            viva: marksMap.VIVA
+        };
+
+        const { data: marks, error: marksError } = await supabase
+            .from('component_marks')
+            .upsert(marksData)
+            .select()
+            .single();
+
+        if (marksError) throw marksError;
 
         res.status(201).json({
             subject: subjectRecord,
             weightage,
-            marks,
-            message: 'Subject and components added successfully'
+            marks
         });
-
     } catch (error) {
-        console.error('Error adding subject with components:', error);
-        res.status(500).json({
-            error: error.message,
-            type: error.name,
-            details: error.errors?.map(e => e.message) || []
-        });
+        console.error("Error adding subject with components:", error);
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -476,7 +540,13 @@ const getSubjectComponentsWithSubjectCode = async (req, res) => {
 // Get all unique subjects from UniqueSubDegrees
 const getAllUniqueSubjects = async (req, res) => {
     try {
-        const subjects = await UniqueSubDegree.findAll();
+        // Fetch unique subjects using Supabase
+        const { data: subjects, error } = await supabase
+            .from('unique_sub_degrees')
+            .select('*');
+        
+        if (error) throw error;
+        
         console.log(`Found ${subjects.length} unique subjects`);
         return res.status(200).json({ subjects });
     } catch (error) {
@@ -491,24 +561,46 @@ const getSubjectsByBatch = async (req, res) => {
         const { batchName } = req.params;
         console.log(`Fetching subjects for batch: ${batchName}`);
         
-        // First get the batch ID
-        const batch = await Batch.findOne({ where: { batchName } });
-        if (!batch) {
+        // First get the batch ID using Supabase
+        const { data: batch, error: batchError } = await supabase
+            .from('batches')
+            .select('id')
+            .eq('name', batchName)
+            .single();
+            
+        if (batchError || !batch) {
+            console.log(`Batch not found: ${batchName}`);
             return res.status(404).json({ message: "Batch not found" });
         }
         
-        // Get all subjects assigned to this batch
-        const subjects = await Subject.findAll({
-            where: { batchId: batch.id },
-            attributes: ['id', 'subjectName', 'batchId', 'semesterId']
-        });
+        console.log(`Found batch with ID: ${batch.id}`);
         
-        // Get the unique subject codes from UniqueSubDegree that match these subjects
-        const uniqueSubjects = await UniqueSubDegree.findAll();
+        // Get all subjects assigned to this batch using Supabase
+        const { data: subjects, error: subjectsError } = await supabase
+            .from('subjects')
+            .select('id, subject_name, batch_id, semester_id')
+            .eq('batch_id', batch.id);
+            
+        if (subjectsError) {
+            throw subjectsError;
+        }
+        
+        console.log(`Found ${subjects ? subjects.length : 0} subjects for batch ID: ${batch.id}`);
+        
+        // Get all unique subjects from unique_sub_degrees using Supabase
+        const { data: uniqueSubjects, error: uniqueSubjectsError } = await supabase
+            .from('unique_sub_degrees')
+            .select('*');
+            
+        if (uniqueSubjectsError) {
+            throw uniqueSubjectsError;
+        }
+        
+        console.log(`Found ${uniqueSubjects ? uniqueSubjects.length : 0} unique subjects`);
         
         return res.status(200).json({ 
-            subjects,
-            uniqueSubjects
+            subjects: subjects || [],
+            uniqueSubjects: uniqueSubjects || []
         });
     } catch (error) {
         console.error('Error fetching subjects by batch:', error);

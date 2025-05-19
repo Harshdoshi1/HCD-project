@@ -1,7 +1,4 @@
-const ComponentWeightage = require("../models/componentWeightage");
-const Batch = require("../models/batch");
-const Semester = require("../models/semester");
-const UniqueSubDegree = require("../models/uniqueSubDegree");
+const { supabase } = require('../config/db');
 
 // ✅ Create Component Weightage
 exports.createComponentWeightage = async (req, res) => {
@@ -9,21 +6,32 @@ exports.createComponentWeightage = async (req, res) => {
     console.log("Received request body:", req.body);
     const { subject, ese, cse, ia, tw, viva } = req.body;
 
-
     // Fetch Subject ID
-    const subjectRecord = await UniqueSubDegree.findOne({ where: { sub_code: subject } });
-    if (!subjectRecord) return res.status(400).json({ error: "Subject not found" });
+    const { data: subjectRecord, error: subjectError } = await supabase
+      .from('unique_sub_degree')
+      .select('id')
+      .eq('sub_code', subject)
+      .single();
+
+    if (subjectError || !subjectRecord) {
+      return res.status(400).json({ error: "Subject not found" });
+    }
 
     // Create Component Weightage
-    const newWeightage = await ComponentWeightage.create({
+    const { data: newWeightage, error: createError } = await supabase
+      .from('component_weightage')
+      .insert({
+        subject_id: subjectRecord.id,
+        ese,
+        cse,
+        ia,
+        tw,
+        viva
+      })
+      .select()
+      .single();
 
-      subjectId: subjectRecord.sub_code,
-      ese,
-      cse,
-      ia,
-      tw,
-      viva,
-    });
+    if (createError) throw createError;
 
     console.log("Created Component Weightage:", newWeightage);
     res.status(201).json(newWeightage);
@@ -36,13 +44,16 @@ exports.createComponentWeightage = async (req, res) => {
 // ✅ Get All Component Weightages
 exports.getAllComponentWeightages = async (req, res) => {
   try {
-    const weightages = await ComponentWeightage.findAll({
-      include: [
-        { model: Batch, attributes: ["batchName"] },
-        { model: Semester, attributes: ["semesterNumber"] },
-        { model: UniqueSubDegree, attributes: ["sub_name"] },
-      ],
-    });
+    const { data: weightages, error } = await supabase
+      .from('component_weightage')
+      .select(`
+        *,
+        batches:batch_id (name),
+        semesters:semester_id (semester_number),
+        unique_sub_degree:subject_id (sub_name)
+      `);
+
+    if (error) throw error;
 
     res.status(200).json(weightages);
   } catch (error) {
@@ -55,15 +66,23 @@ exports.getAllComponentWeightages = async (req, res) => {
 exports.getComponentWeightageById = async (req, res) => {
   try {
     const { id } = req.params;
-    const weightage = await ComponentWeightage.findByPk(id, {
-      include: [
-        { model: Batch, attributes: ["batchName"] },
-        { model: Semester, attributes: ["semesterNumber"] },
-        { model: UniqueSubDegree, attributes: ["sub_name"] },
-      ],
-    });
+    const { data: weightage, error } = await supabase
+      .from('component_weightage')
+      .select(`
+        *,
+        batches:batch_id (name),
+        semesters:semester_id (semester_number),
+        unique_sub_degree:subject_id (sub_name)
+      `)
+      .eq('id', id)
+      .single();
 
-    if (!weightage) return res.status(404).json({ error: "Component Weightage not found" });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: "Component Weightage not found" });
+      }
+      throw error;
+    }
 
     res.status(200).json(weightage);
   } catch (error) {
@@ -78,14 +97,29 @@ exports.updateComponentWeightage = async (req, res) => {
     const { id } = req.params;
     const { ese, cse, ia, tw, viva } = req.body;
 
-    const weightage = await ComponentWeightage.findByPk(id);
-    if (!weightage) return res.status(404).json({ error: "Component Weightage not found" });
+    // Check if weightage exists
+    const { data: existingWeightage, error: checkError } = await supabase
+      .from('component_weightage')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (checkError || !existingWeightage) {
+      return res.status(404).json({ error: "Component Weightage not found" });
+    }
 
     // Update values
-    await weightage.update({ ese, cse, ia, tw, viva });
+    const { data: updatedWeightage, error: updateError } = await supabase
+      .from('component_weightage')
+      .update({ ese, cse, ia, tw, viva })
+      .eq('id', id)
+      .select()
+      .single();
 
-    console.log("Updated Component Weightage:", weightage);
-    res.status(200).json(weightage);
+    if (updateError) throw updateError;
+
+    console.log("Updated Component Weightage:", updatedWeightage);
+    res.status(200).json(updatedWeightage);
   } catch (error) {
     console.error("Error in updateComponentWeightage:", error);
     res.status(500).json({ error: error.message });
@@ -97,12 +131,26 @@ exports.deleteComponentWeightage = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const weightage = await ComponentWeightage.findByPk(id);
-    if (!weightage) return res.status(404).json({ error: "Component Weightage not found" });
+    // Check if weightage exists
+    const { data: existingWeightage, error: checkError } = await supabase
+      .from('component_weightage')
+      .select('id')
+      .eq('id', id)
+      .single();
 
-    await weightage.destroy();
+    if (checkError || !existingWeightage) {
+      return res.status(404).json({ error: "Component Weightage not found" });
+    }
 
-    console.log("Deleted Component Weightage:", weightage);
+    // Delete weightage
+    const { error: deleteError } = await supabase
+      .from('component_weightage')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) throw deleteError;
+
+    console.log("Deleted Component Weightage:", existingWeightage);
     res.status(200).json({ message: "Component Weightage deleted successfully" });
   } catch (error) {
     console.error("Error in deleteComponentWeightage:", error);
