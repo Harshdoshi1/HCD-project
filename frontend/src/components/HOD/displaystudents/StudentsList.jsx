@@ -37,15 +37,9 @@ const StudentsList = ({ onStudentSelect }) => {
             setStudents(studentsWithIds);
 
             // Extract unique batches from students data
-            const uniqueBatches = [...new Set(studentsWithIds
-                .filter(student => student.batches)  // Filter out students without batch data
-                .map(student => student.batches.name)  // Access batch name from the joined data
-            )];
-            
+            const uniqueBatches = [...new Set(studentsWithIds.map(student => student.Batch.batchName))];
             setBatches(uniqueBatches);
-            if (uniqueBatches.length > 0) {
-                setSelectedBatch(uniqueBatches[0]); // Set the first batch as default
-            }
+            setSelectedBatch(uniqueBatches[0]); // Set the first batch as default
             setIsLoading(false);
         } catch (error) {
             console.error('Error fetching students:', error);
@@ -75,7 +69,7 @@ const StudentsList = ({ onStudentSelect }) => {
     });
 
     const filteredStudents = sortedStudents.filter(student => {
-        const batchMatch = selectedBatch ? student.batches?.name === selectedBatch : true;
+        const batchMatch = selectedBatch ? student.Batch.batchName === selectedBatch : true;
         const searchMatch = !searchQuery ||
             student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             student.enrollmentNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -232,7 +226,7 @@ const StudentsList = ({ onStudentSelect }) => {
                                         <tr key={student.uniqueId}>
                                             <td>{student.name}</td>
                                             <td>{student.enrollmentNumber}</td>
-                                            <td>{student.batches?.name || 'N/A'}</td>
+                                            <td>{student.Batch.batchName}</td>
                                             <td>{student.email}</td>
                                             <td>
                                                 <button

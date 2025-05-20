@@ -20,18 +20,9 @@ const ManageBatches = () => {
         setIsLoading(true);
         try {
             const response = await fetch('http://localhost:5001/api/batches/getAllBatches');
+            if (!response.ok) throw new Error('Failed to fetch batches');
             const data = await response.json();
-            // Map the Supabase response to match our frontend structure
-            const mappedBatches = data.map(batch => ({
-                batchName: batch.name,
-                batchStart: batch.start_date,
-                batchEnd: batch.end_date,
-                courseType: batch.program,
-                currentSemester: batch.current_semester,
-                id: batch.id,
-                semesters: batch.semesters || []
-            }));
-            setBatches(mappedBatches);
+            setBatches(data);
         } catch (error) {
             setError(error.message);
             alert('Error fetching batches: ' + error.message);
@@ -55,12 +46,7 @@ const ManageBatches = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newBatch)
             });
-
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to add batch');
-            }
+            if (!response.ok) throw new Error('Failed to add batch');
 
             await fetchBatches();
             setNewBatch({ batchName: '', batchStart: '', batchEnd: '', courseType: '' });
@@ -207,16 +193,13 @@ const ManageBatches = () => {
 
                                     <div className="form-group" style={{ flex: '1' }}>
                                         <label htmlFor="courseType">Course Type</label>
-                                        <select
+                                        <input
                                             id="courseType"
                                             className="input"
+                                            placeholder="e.g., BTech, MTech, PhD"
                                             value={newBatch.courseType}
                                             onChange={(e) => setNewBatch({ ...newBatch, courseType: e.target.value })}
-                                        >
-                                            <option value="">Select Course Type</option>
-                                            <option value="Degree">Degree</option>
-                                            <option value="Diploma">Diploma</option>
-                                        </select>
+                                        />
                                     </div>
                                     <div className="card-footer">
                                         <button
@@ -290,7 +273,7 @@ const ManageBatches = () => {
                                             <option value="">Select a batch</option>
                                             {batches.map(batch => (
                                                 <option key={batch.batchName} value={batch.batchName}>
-                                                    {batch.batchName} ({batch.courseType || batch.program})
+                                                    {batch.batchName} ({batch.courseType})
                                                 </option>
                                             ))}
                                         </select>
