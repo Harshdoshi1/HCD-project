@@ -18,7 +18,7 @@ exports.uploadStudentCPI = async (req, res) => {
         }
 
         // Validate required columns
-        const requiredColumns = ['Batch', 'Semester', 'EnrollmentNumber', 'CPI', 'SPI', 'Rank'];
+        const requiredColumns = ['BatchId', 'SemesterId', 'EnrollmentNumber', 'CPI', 'SPI'];
         const missingColumns = requiredColumns.filter(col => !data[0].hasOwnProperty(col));
 
         if (missingColumns.length > 0) {
@@ -36,50 +36,92 @@ exports.uploadStudentCPI = async (req, res) => {
 
         for (const row of data) {
             try {
-                // Find batch by name
-                const { data: batch, error: batchError } = await supabase
+                        // Check if BatchId is a number or a name
+                let batchId = row.BatchId;
+                let batchQuery = supabase
                     .from('batches')
-                    .select('id')
-                    .eq('name', row.Batch)
-                    .single();
+                    .select('id, name');
+
+                // If BatchId is a number, search by ID, otherwise search by name
+                if (!isNaN(batchId)) {
+                    batchQuery = batchQuery.eq('id', parseInt(batchId));
+                } else {
+                    batchQuery = batchQuery.eq('name', batchId.toString().trim());
+                }
+
+                const { data: batch, error: batchError } = await batchQuery.single();
 
                 if (batchError || !batch) {
                     results.failed++;
-                    results.errors.push(`Batch not found: ${row.Batch} for enrollment ${row.EnrollmentNumber}`);
+                    results.errors.push(`Batch not found: "${row.BatchId}" for enrollment ${row.EnrollmentNumber}`);
                     continue;
                 }
 
-                // Find semester by number and batch
+                
+                batchId = batch.id; // Use the resolved batch ID
+
+                // Handle semester (can be ID or semester number)
+                let semesterId = row.SemesterId;
+                let semesterQuery = supabase
+                    .from('semesters')
+                    .select('id, semester_number')
+                    .eq('batch_id', batchId);
+
+                // If semesterId is a number, check if it's a semester number or ID
+                if (!isNaN(semesterId)) {
+                    const semesterNum = parseInt(semesterId);
+                    // First try to match by semester number
+                    const { data: semesterByNumber } = await semesterQuery
+                        .eq('semester_number', semesterNum)
+                        .single();
+                        
+                    if (semesterByNumber) {
+                        semesterId = semesterByNumber.id;
+                    } else {
+                        // If not found by number, try by ID
+                        const { data: semesterById } = await supabase
+                            .from('semesters')
+                            .select('id')
+                            .eq('id', semesterNum)
+                            .single();
+                        if (semesterById) {
+                            semesterId = semesterById.id;
+                        }
+                    }
+                }
+
+
+                // Verify semester exists
                 const { data: semester, error: semesterError } = await supabase
                     .from('semesters')
                     .select('id')
-                    .eq('batch_id', batch.id)
-                    .eq('semester_number', row.Semester)
+                    .eq('id', semesterId)
                     .single();
 
                 if (semesterError || !semester) {
                     results.failed++;
-                    results.errors.push(`Semester ${row.Semester} not found for batch ${row.Batch}`);
+                    results.errors.push(`Semester not found with ID: ${semesterId}`);
                     continue;
                 }
 
                 // Check if record already exists
                 const { data: existingRecord, error: existingError } = await supabase
-                    .from('student_cpi')
+                    .from('StudentCPIs')
                     .select('id')
-                    .eq('batch_id', batch.id)
-                    .eq('semester_id', semester.id)
+                    .eq('batch_id', batchId)
+                    .eq('semester_id', semesterId)
                     .eq('enrollment_number', row.EnrollmentNumber)
                     .single();
 
                 if (existingRecord) {
                     // Update existing record
                     const { error: updateError } = await supabase
-                        .from('student_cpi')
+                        .from('StudentCPIs')
                         .update({
                             cpi: row.CPI,
                             spi: row.SPI,
-                            rank: row.Rank
+                            rank: row.Rank || null,
+                            updated_at: new Date().toISOString()
                         })
                         .eq('id', existingRecord.id);
 
@@ -87,14 +129,14 @@ exports.uploadStudentCPI = async (req, res) => {
                 } else {
                     // Create new record
                     const { error: insertError } = await supabase
-                        .from('student_cpi')
+                        .from('StudentCPIs')
                         .insert({
-                            batch_id: batch.id,
-                            semester_id: semester.id,
+                            batch_id: batchId,
+                            semester_id: semesterId,
                             enrollment_number: row.EnrollmentNumber,
                             cpi: row.CPI,
                             spi: row.SPI,
-                            rank: row.Rank
+                            rank: row.Rank || null
                         });
 
                     if (insertError) throw insertError;
@@ -121,7 +163,7 @@ exports.uploadStudentCPI = async (req, res) => {
 exports.getAllStudentCPI = async (req, res) => {
     try {
         const { data: studentCPIs, error } = await supabase
-            .from('student_cpi')
+            .from('StudentCPIs')
             .select(`
                 *,
                 batches:batch_id (*),
@@ -142,7 +184,7 @@ exports.getStudentCPIByBatch = async (req, res) => {
     try {
         const { batchId } = req.params;
         const { data: studentCPIs, error } = await supabase
-            .from('student_cpi')
+            .from('StudentCPIs')
             .select(`
                 *,
                 batches:batch_id (*),
@@ -166,7 +208,7 @@ exports.getStudentCPIByEnrollment = async (req, res) => {
         console.log(`Searching for student CPI data with enrollment number: ${enrollmentNumber}`);
 
         const { data: studentCPIs, error } = await supabase
-            .from('student_cpi')
+            .from('StudentCPIs')
             .select(`
                 *,
                 batches:batch_id (*),
@@ -182,7 +224,7 @@ exports.getStudentCPIByEnrollment = async (req, res) => {
         if (!studentCPIs || studentCPIs.length === 0) {
             // If no records found, let's check if the enrollment number exists in the database
             const { data: allEnrollments, error: enrollmentError } = await supabase
-                .from('student_cpi')
+                .from('StudentCPIs')
                 .select('enrollment_number')
                 .limit(100); // Limit to avoid too many results
 
