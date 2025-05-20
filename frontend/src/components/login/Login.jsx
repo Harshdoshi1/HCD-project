@@ -4,15 +4,6 @@ import './Login.css';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { PulseLoader } from 'react-spinners';
 
-// Fix for Chrome extension error: Cannot read properties of undefined (reading 'lsB_matchId')
-// This adds a dummy property to prevent the error
-if (typeof window !== 'undefined') {
-  // Create a deep object structure to prevent errors
-  window.lsB_matchId = window.lsB_matchId || {};
-  window.lsB = window.lsB || {};
-  window.lsB.matchId = window.lsB.matchId || {};
-}
-
 function Login() {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
@@ -62,8 +53,36 @@ function Login() {
         e.preventDefault();
         setError('');
         setIsLoading(true);
+        
+        console.log('Login attempt with:', { email, password });
 
         try {
+            // Check for demo credentials
+            if (email === 'faculty@example.com' && password === 'password') {
+                console.log('Using demo faculty credentials');
+                localStorage.setItem('token', 'demo-token');
+                localStorage.setItem('user', JSON.stringify({
+                    id: 'demo-faculty-id',
+                    email: 'faculty@example.com',
+                    role: 'FACULTY',
+                    name: 'Demo Faculty'
+                }));
+                navigate('/dashboardFaculty');
+                return;
+            } else if (email === 'hod@example.com' && password === 'password') {
+                console.log('Using demo HOD credentials');
+                localStorage.setItem('token', 'demo-token');
+                localStorage.setItem('user', JSON.stringify({
+                    id: 'demo-hod-id',
+                    email: 'hod@example.com',
+                    role: 'HOD',
+                    name: 'Demo HOD'
+                }));
+                navigate('/dashboardHOD');
+                return;
+            }
+            
+            // If not using demo credentials, try API
             const response = await fetch('http://localhost:5001/api/users/login', {
                 method: 'POST',
                 headers: {
@@ -126,8 +145,8 @@ function Login() {
     if (!pageLoaded) {
         return (
             <div className="login-container">
-                <div className="login-box fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <PulseLoader color="#4361ee" size={15} />
+                <div className="login-box" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <PulseLoader color="#1e90ff" size={15} />
                 </div>
             </div>
         );
@@ -137,7 +156,7 @@ function Login() {
         <div className="login-container">
             <div className="background-effect"></div>
 
-            <div className="login-box fade-in">
+            <div className="login-box">
                 <div className="logo-container">
                     <img
                         src="https://images.unsplash.com/photo-1562774053-701939374585?w=150&h=150&fit=crop"
@@ -153,11 +172,14 @@ function Login() {
                         <Mail className="input-icon" size={20} />
                         <input
                             type="email"
+                            id="email"
+                            name="email"
                             placeholder="Email Address"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className={error ? 'error' : ''}
                             required
+                            autoComplete="username"
                         />
                     </div>
 
@@ -165,11 +187,14 @@ function Login() {
                         <Lock className="input-icon" size={20} />
                         <input
                             type={showPassword ? 'text' : 'password'}
+                            id="password"
+                            name="password"
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className={error ? 'error' : ''}
                             required
+                            autoComplete="current-password"
                         />
                         <button
                             type="button"
@@ -186,6 +211,8 @@ function Login() {
                         <label className="remember-me">
                             <input
                                 type="checkbox"
+                                id="rememberMe"
+                                name="rememberMe"
                                 checked={rememberMe}
                                 onChange={(e) => setRememberMe(e.target.checked)}
                             />
