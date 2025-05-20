@@ -37,9 +37,9 @@ const StudentsList = ({ onStudentSelect }) => {
             setStudents(studentsWithIds);
 
             // Extract unique batches from students data
-            const uniqueBatches = [...new Set(studentsWithIds.map(student => student.Batch.batchName))];
+            const uniqueBatches = [...new Set(studentsWithIds.filter(student => student.Batch).map(student => student.Batch.batchName))];
             setBatches(uniqueBatches);
-            setSelectedBatch(uniqueBatches[0]); // Set the first batch as default
+            setSelectedBatch(uniqueBatches.length > 0 ? uniqueBatches[0] : ''); // Set the first batch as default
             setIsLoading(false);
         } catch (error) {
             console.error('Error fetching students:', error);
@@ -69,11 +69,11 @@ const StudentsList = ({ onStudentSelect }) => {
     });
 
     const filteredStudents = sortedStudents.filter(student => {
-        const batchMatch = selectedBatch ? student.Batch.batchName === selectedBatch : true;
+        const batchMatch = selectedBatch ? student.Batch?.batchName === selectedBatch : true;
         const searchMatch = !searchQuery ||
-            student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            student.enrollmentNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            student.email.toLowerCase().includes(searchQuery.toLowerCase());
+            student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            student.enrollmentNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            student.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
         return batchMatch && searchMatch;
     });
@@ -226,7 +226,7 @@ const StudentsList = ({ onStudentSelect }) => {
                                         <tr key={student.uniqueId}>
                                             <td>{student.name}</td>
                                             <td>{student.enrollmentNumber}</td>
-                                            <td>{student.Batch.batchName}</td>
+                                            <td>{student.Batch?.batchName || 'N/A'}</td>
                                             <td>{student.email}</td>
                                             <td>
                                                 <button

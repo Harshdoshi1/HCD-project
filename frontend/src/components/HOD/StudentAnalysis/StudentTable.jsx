@@ -58,8 +58,8 @@ const StudentTable = ({
         aValue = a.enrollmentNumber;
         bValue = b.enrollmentNumber;
       } else if (sortConfig.key === 'totalScore') {
-        aValue = a.Batch.currentSemester;
-        bValue = b.Batch.currentSemester;
+        aValue = a.Batch?.currentSemester || 0;
+        bValue = b.Batch?.currentSemester || 0;
       } else if (sortConfig.key === 'ranking') {
         aValue = parseInt(a.id, 10);
         bValue = parseInt(b.id, 10);
@@ -142,7 +142,7 @@ const StudentTable = ({
                 <tr key={`${student.id}-${index}`}>
                   <td>{student.name}</td>
                   <td>{student.enrollmentNumber}</td>
-                  <td>{student.Batch.currentSemester}</td>
+                  <td>{student.Batch?.currentSemester || 'N/A'}</td>
                   <td>{student.id}</td>
                   <td>
                     <button

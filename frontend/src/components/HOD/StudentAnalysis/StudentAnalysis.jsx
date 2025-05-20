@@ -47,7 +47,7 @@ const StudentAnalysis = () => {
               <select
                 value={selectedBatch}
                 onChange={(e) => setSelectedBatch(e.target.value)}
-                Performance Analytics style={{ width: '100px' }}
+                style={{ width: '100px' }}
               >
                 <option value="2022-26">2022-26</option>
                 <option value="2023-27">2023-27</option>
