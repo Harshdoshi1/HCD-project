@@ -1,15 +1,19 @@
+/* Login page specific variables that inherit from global variables */
 :root {
-    --primary-color: #1e90ff;
-    --primary-light: #47a3ff;
-    --secondary-color: #6C63FF;
-    --success-color: #4CAF50;
-    --error-color: #ff4444;
-    --text-color: #333;
-    --text-light: #666;
-    --background-light: #f5f9ff;
-    --shadow-soft: rgba(149, 157, 165, 0.15) 0px 8px 24px;
-    --shadow-medium: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
-    --transition-standard: all 0.3s ease-in-out;
+    --login-primary: #4361ee; /* Blue theme to match sidebar */
+    --login-primary-light: #4895ef;
+    --login-secondary: #3f37c9;
+    --login-accent: #4cc9f0;
+    --login-text: #333333;
+    --login-text-light: #666666;
+    --login-bg: #ffffff;
+    --login-bg-light: #f8f9fa;
+    --login-error: #e53e3e;
+    --login-success: #38a169;
+    --login-shadow-soft: rgba(67, 97, 238, 0.15) 0px 8px 24px;
+    --login-shadow-medium: rgba(67, 97, 238, 0.2) 0px 7px 29px 0px;
+    --login-transition: all 0.3s ease-in-out;
+    --login-radius: 10px;
 }
 
 .login-container {
@@ -17,20 +21,21 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, var(--background-light) 0%, #e6f0ff 100%);
+    background-color: #f5f7ff; /* Light blue background */
     position: relative;
     overflow: hidden;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .background-effect {
     position: absolute;
     width: 1000px;
     height: 1000px;
-    background: radial-gradient(circle, var(--secondary-color) 0%, transparent 70%);
-    opacity: 0.1;
+    background: radial-gradient(circle, var(--login-primary) 0%, transparent 70%);
+    opacity: 0.15;
     animation: pulse 8s infinite;
     pointer-events: none;
+    z-index: 0;
 }
 
 @keyframes pulse {
@@ -52,17 +57,18 @@
 
 /* Login Box Styles */
 .login-box {
-    background: white;
+    background: var(--login-bg);
     padding: 2.8rem;
-    border-radius: 16px;
-    box-shadow: var(--shadow-medium);
+    border-radius: var(--login-radius);
+    box-shadow: 0 10px 30px rgba(67, 97, 238, 0.15), 0 5px 15px rgba(0, 0, 0, 0.05);
     width: 100%;
     max-width: 420px;
     position: relative;
     z-index: 1;
     opacity: 0;
     animation: fadeIn 0.6s ease-out forwards;
-    transition: var(--transition-standard);
+    transition: var(--login-transition);
+    border: 1px solid rgba(67, 97, 238, 0.1);
 }
 
 @keyframes fadeIn {
@@ -88,9 +94,14 @@
     height: 130px;
     border-radius: 65px;
     object-fit: cover;
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 20px rgba(67, 97, 238, 0.2);
     animation: float 6s ease-in-out infinite;
     border: 4px solid white;
+    transition: transform 0.3s ease;
+}
+
+.department-logo:hover {
+    transform: scale(1.05);
 }
 
 @keyframes float {
@@ -109,12 +120,24 @@
 
 /* Typography */
 h1 {
-    color: var(--text-color);
+    color: var(--login-primary);
     text-align: center;
     margin-bottom: 2rem;
     font-size: 1.9rem;
     font-weight: 600;
     letter-spacing: -0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.error-message {
+    color: var(--login-error);
+    font-size: 14px;
+    margin-bottom: 1rem;
+    text-align: center;
+    padding: 10px;
+    background-color: rgba(229, 62, 62, 0.1);
+    border-radius: var(--login-radius);
+    border-left: 3px solid var(--login-error);
 }
 
 /* Form Elements */
@@ -127,7 +150,7 @@ h1 {
 .input-group label {
     display: block;
     margin-bottom: 6px;
-    color: var(--text-color);
+    color: var(--login-text);
     font-size: 14px;
     font-weight: 600;
 }
@@ -135,11 +158,12 @@ h1 {
 .input-group input {
     width: 100%;
     padding: 14px 14px 14px 42px;
-    border: 1px solid #e0e7ee;
-    border-radius: 10px;
+    border: 1px solid rgba(67, 97, 238, 0.2);
+    border-radius: var(--login-radius);
     font-size: 15px;
-    transition: var(--transition-standard);
-    background-color: #fbfcfd;
+    transition: var(--login-transition);
+    background-color: var(--login-bg-light);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .input-icon {
@@ -153,14 +177,15 @@ h1 {
 }
 
 input.error {
-    border-color: var(--error-color);
+    border-color: var(--login-error);
 }
 
 .input-group input:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
-    background-color: white;
+    border-color: var(--login-primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    background-color: var(--login-bg);
+    transform: translateY(-1px);
 }
 
 /* Password Toggle Button */
@@ -171,44 +196,61 @@ input.error {
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: var(--primary-light);
+    color: var(--login-primary-light);
     cursor: pointer;
     padding: 0;
 }
 
 .toggle-password:hover {
-    color: var(--primary-color);
+    color: var(--login-primary);
 }
 
 /* Login Button */
 .login-button {
     width: 100%;
     padding: 14px;
-    background-color: var(--primary-color);
+    background-color: var(--login-primary);
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: var(--login-radius);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: var(--transition-standard);
+    transition: var(--login-transition);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 48px;
     letter-spacing: 0.3px;
-    box-shadow: 0 4px 6px rgba(30, 144, 255, 0.2);
+    box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.login-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
+}
+
+.login-button:hover::before {
+    left: 100%;
 }
 
 .login-button:hover {
-    background-color: var(--primary-light);
+    background-color: var(--login-primary-light);
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px rgba(30, 144, 255, 0.25);
+    box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
 }
 
 .login-button:active {
     transform: translateY(0);
-    box-shadow: 0 4px 6px rgba(30, 144, 255, 0.2);
+    box-shadow: var(--login-shadow-soft);
 }
 
 .login-button:disabled {
@@ -230,5 +272,19 @@ input.error {
 
     h1 {
         font-size: 1.5rem;
+    }
+    
+    .input-group {
+        margin-bottom: 16px;
+    }
+    
+    .input-group input {
+        padding: 12px 12px 12px 36px;
+        font-size: 14px;
+    }
+    
+    .login-button {
+        height: 44px;
+        font-size: 15px;
     }
 }

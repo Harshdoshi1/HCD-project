@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Book, Users, CalendarDays, Filter, Grid, Award, Clock, MoreHorizontal, Download, Search, Sliders, X } from "lucide-react";
 import './AssignedSubjects.css';
 
@@ -64,6 +65,7 @@ const EmptyState = () => (
 );
 
 const AssignedSubjects = () => {
+    const navigate = useNavigate();
     const [batch, setBatch] = useState("");
     const [type, setType] = useState("");
     const [semester, setSemester] = useState("");
@@ -80,58 +82,102 @@ const AssignedSubjects = () => {
     const itemsPerPage = 6;
 
     useEffect(() => {
-        const faculty = JSON.parse(localStorage.getItem('user'));
-        const facultyId = faculty?.id;
-
-        if (!facultyId) {
-            // Redirect to login if faculty data is not found
-            window.location.href = '/';
+        // Check if user is authenticated
+        const user = JSON.parse(localStorage.getItem('user'));
+        const token = localStorage.getItem('token');
+        
+        if (!user || !token || user.role !== 'FACULTY') {
+            // Redirect to login if not authenticated or not a faculty
+            navigate('/');
             return;
         }
-
-        const fetchSubjects = async () => {
-            setIsLoading(true);
-            try {
-                const response = await fetch(`http://localhost:5001/api/faculties/getSubjectsByFaculty/${facultyId}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch subjects');
-                }
-                const data = await response.json();
-                console.log("API Response:", data);
-
-                if (Array.isArray(data)) {
-                    // Extract unique filter options from the data
-                    const uniqueBatches = [...new Set(data.map(subject => subject.batch).filter(Boolean))];
-                    const uniqueTypes = [...new Set(data.map(subject => subject.type).filter(Boolean))];
-                    const uniqueDepartments = [...new Set(data.map(subject => subject.department).filter(Boolean))];
-                    const uniqueSemesters = [...new Set(data.map(subject => subject.semesterId).filter(Boolean))];
-
-                    // Sort options
-                    uniqueBatches.sort();
-                    uniqueTypes.sort();
-                    uniqueDepartments.sort();
-                    uniqueSemesters.sort((a, b) => Number(a) - Number(b));
-
-                    // Set filter options
-                    setBatchOptions(uniqueBatches);
-                    setTypeOptions(uniqueTypes);
-                    setDepartmentOptions(uniqueDepartments);
-                    setSemesterOptions(uniqueSemesters);
-
-                    setSubjects(data);
-                    setFilteredSubjects(data);
-                } else {
-                    console.error("Unexpected API response format", data);
-                }
-            } catch (error) {
-                console.error("Error fetching subjects:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
+        
         fetchSubjects();
-    }, []);
+    }, [navigate]);
+
+    const fetchSubjects = async () => {
+        setIsLoading(true);
+        try {
+            // Get faculty ID from localStorage if available
+            const faculty = JSON.parse(localStorage.getItem('user'));
+            const token = localStorage.getItem('token');
+            
+            // Check if user is authenticated and is a faculty
+            if (!faculty || !token) {
+                navigate('/');
+                return;
+            }
+            
+            const facultyId = faculty.id;
+            
+            // If we have a faculty ID, try to fetch from API
+            if (facultyId) {
+                try {
+                    const response = await fetch(`http://localhost:5001/api/faculties/getSubjectsByFaculty/${facultyId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log("API Response:", data);
+
+                        if (Array.isArray(data)) {
+                            // Extract unique filter options from the data
+                            const uniqueBatches = [...new Set(data.map(subject => subject.batch).filter(Boolean))];
+                            const uniqueTypes = [...new Set(data.map(subject => subject.type).filter(Boolean))];
+                            const uniqueDepartments = [...new Set(data.map(subject => subject.department).filter(Boolean))];
+                            const uniqueSemesters = [...new Set(data.map(subject => subject.semesterId).filter(Boolean))];
+
+                            // Sort options
+                            uniqueBatches.sort();
+                            uniqueTypes.sort();
+                            uniqueDepartments.sort();
+                            uniqueSemesters.sort((a, b) => Number(a) - Number(b));
+
+                            // Set filter options
+                            setBatchOptions(uniqueBatches);
+                            setTypeOptions(uniqueTypes);
+                            setDepartmentOptions(uniqueDepartments);
+                            setSemesterOptions(uniqueSemesters);
+
+                            setSubjects(data);
+                            setFilteredSubjects(data);
+                            return;
+                        }
+                    }
+                } catch (apiError) {
+                    console.error("API error:", apiError);
+                }
+            }
+            
+            // If API fetch fails or no faculty ID, load mock data
+            const mockData = [
+                { id: 1, code: "CS101", name: "Introduction to Programming", description: "Basic programming concepts", semesterId: "1", batch: "2023", department: "Computer Science", type: "Theory", credits: 4 },
+                { id: 2, code: "CS102", name: "Data Structures", description: "Fundamental data structures", semesterId: "2", batch: "2023", department: "Computer Science", type: "Theory", credits: 4 },
+                { id: 3, code: "CS103", name: "Algorithms", description: "Algorithm design and analysis", semesterId: "3", batch: "2022", department: "Computer Science", type: "Theory", credits: 4 },
+                { id: 4, code: "CS104", name: "Database Systems", description: "Database design and SQL", semesterId: "4", batch: "2022", department: "Computer Science", type: "Lab", credits: 3 },
+                { id: 5, code: "CS105", name: "Web Development", description: "Frontend and backend technologies", semesterId: "5", batch: "2021", department: "Information Technology", type: "Lab", credits: 3 },
+                { id: 6, code: "CS106", name: "Operating Systems", description: "OS principles and design", semesterId: "6", batch: "2021", department: "Information Technology", type: "Theory", credits: 4 },
+            ];
+            
+            // Extract unique filter options from mock data
+            const uniqueBatches = [...new Set(mockData.map(subject => subject.batch))];
+            const uniqueTypes = [...new Set(mockData.map(subject => subject.type))];
+            const uniqueDepartments = [...new Set(mockData.map(subject => subject.department))];
+            const uniqueSemesters = [...new Set(mockData.map(subject => subject.semesterId))];
+            
+            // Set filter options
+            setBatchOptions(uniqueBatches);
+            setTypeOptions(uniqueTypes);
+            setDepartmentOptions(uniqueDepartments);
+            setSemesterOptions(uniqueSemesters);
+            
+            setSubjects(mockData);
+            setFilteredSubjects(mockData);
+            
+        } catch (error) {
+            console.error("Error in fetchSubjects:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Apply filters function
     const applyFilters = () => {

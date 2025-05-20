@@ -1,10 +1,17 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { PulseLoader } from 'react-spinners';
+
+// Fix for Chrome extension error: Cannot read properties of undefined (reading 'lsB_matchId')
+// This adds a dummy property to prevent the error
+if (typeof window !== 'undefined') {
+  // Create a deep object structure to prevent errors
+  window.lsB_matchId = window.lsB_matchId || {};
+  window.lsB = window.lsB || {};
+  window.lsB.matchId = window.lsB.matchId || {};
+}
 
 function Login() {
     const navigate = useNavigate();
@@ -14,19 +21,40 @@ function Login() {
     const [rememberMe, setRememberMe] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [pageLoaded, setPageLoaded] = useState(false);
 
     useEffect(() => {
-        // Check if user is already logged in
-        const token = localStorage.getItem('token');
-        const user = JSON.parse(localStorage.getItem('user'));
-
-        if (token && user) {
-            // Redirect based on role
-            if (user.role === 'HOD') {
-                navigate('/dashboardHOD');
-            } else if (user.role === 'Faculty') {
-                navigate('/dashboardFaculty');
+        try {
+            // Check if user is already logged in
+            const token = localStorage.getItem('token');
+            let user = null;
+            
+            // Safely parse user JSON
+            try {
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    user = JSON.parse(userStr);
+                }
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+                // Clear corrupted data
+                localStorage.removeItem('user');
             }
+
+            if (token && user) {
+                // Redirect based on role
+                const role = user.role?.toUpperCase();
+                if (role === 'HOD') {
+                    navigate('/dashboardHOD');
+                } else if (role === 'FACULTY') {
+                    navigate('/dashboardFaculty');
+                }
+            }
+        } catch (e) {
+            console.error('Error in login check:', e);
+        } finally {
+            // Mark page as loaded regardless of outcome
+            setPageLoaded(true);
         }
     }, [navigate]);
 
@@ -44,22 +72,37 @@ function Login() {
                 body: JSON.stringify({ email, password }),
             });
 
-            const data = await response.json();
-            console.log("data", data);
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Login failed');
+            let data;
+            try {
+                data = await response.json();
+                console.log("Login response data:", data);
+            } catch (jsonError) {
+                console.error("Error parsing JSON response:", jsonError);
+                throw new Error('Server response error. Please try again.');
             }
 
-            // Explicitly remove old local storage items before storing new ones
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('email');
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed. Please check your credentials.');
+            }
 
-            // Store new values
-            localStorage.setItem('token', data.session.access_token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('email', data.user.email);
+            if (!data.session?.access_token || !data.user) {
+                throw new Error('Invalid server response. Missing authentication data.');
+            }
+
+            try {
+                // Explicitly remove old local storage items before storing new ones
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('email');
+
+                // Store new values
+                localStorage.setItem('token', data.session.access_token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('email', data.user.email);
+            } catch (storageError) {
+                console.error("Error storing auth data:", storageError);
+                throw new Error('Could not store login information. Please try again.');
+            }
 
             // Redirect based on role
             const role = data.user.role.toUpperCase();
@@ -71,12 +114,24 @@ function Login() {
                 throw new Error('Invalid user role');
             }
         } catch (error) {
-            setError(error.message);
+            console.error("Login error:", error);
+            setError(error.message || 'An unexpected error occurred. Please try again.');
         } finally {
             setIsLoading(false);
         }
     };
 
+
+    // Show loading state until page is fully loaded
+    if (!pageLoaded) {
+        return (
+            <div className="login-container">
+                <div className="login-box fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <PulseLoader color="#4361ee" size={15} />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="login-container">

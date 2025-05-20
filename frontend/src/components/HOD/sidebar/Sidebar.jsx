@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { LayoutDashboard, Users, GraduationCap, Settings, Menu, User, LogOut, BarChart2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { LayoutDashboard, Users, GraduationCap, Settings, Menu, User, LogOut, BarChart2, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import ProfileModal from './ProfileModal';
 import Logout from './Logout';
 import './Sidebar.css';
@@ -8,9 +8,11 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isLogoutOpen, setIsLogoutOpen] = useState(false);
     const userRole = localStorage.getItem('userRole') || 'faculty';
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 576);
+    const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
     // On component mount, restore the active section from localStorage
-    React.useEffect(() => {
+    useEffect(() => {
         const savedActiveItem = localStorage.getItem('activeSection');
         if (savedActiveItem) {
             setActiveItem(savedActiveItem);
@@ -19,6 +21,35 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
             setActiveItem(userRole === 'faculty' ? 'faculty' : 'dashboard');
         }
     }, []);
+    
+    // Handle window resize
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth <= 576;
+            setIsMobile(mobile);
+            
+            // If transitioning from mobile to desktop, ensure sidebar is visible
+            if (!mobile && isCollapsed) {
+                setIsCollapsed(false);
+            }
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [isCollapsed, setIsCollapsed]);
+    
+    // Toggle mobile sidebar
+    const toggleMobileSidebar = () => {
+        setShowMobileSidebar(!showMobileSidebar);
+        if (isCollapsed) {
+            setIsCollapsed(false);
+        }
+    };
+    
+    // Close sidebar when clicking outside on mobile
+    const handleOverlayClick = () => {
+        setShowMobileSidebar(false);
+    };
 
     const handleLogout = async () => {
         try {
@@ -53,10 +84,22 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
 
     return (
         <>
-            <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+            {/* Mobile toggle button */}
+            {isMobile && (
+                <button className="mobile-toggle" onClick={toggleMobileSidebar}>
+                    {showMobileSidebar ? <X size={24} /> : <Menu size={24} />}
+                </button>
+            )}
+            
+            {/* Sidebar overlay for mobile */}
+            {isMobile && showMobileSidebar && (
+                <div className="sidebar-overlay active" onClick={handleOverlayClick}></div>
+            )}
+            
+            <div className={`sidebar ${isCollapsed ? "collapsed" : ""} ${isMobile && showMobileSidebar ? "expanded" : ""}`}>
                 <div className="sidebar-header">
                     <button className="toggle-button" onClick={() => setIsCollapsed(!isCollapsed)}>
-                        <Menu size={24} />
+                        {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                     </button>
                 </div>
                 <div className="sidebar-menu">
