@@ -32,78 +32,29 @@ const DashboardHOD = () => {
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setTimeout(() => {
-        const mockStudents = generateMockStudentData();
-        setStudents(mockStudents);
-        setFilteredStudents(mockStudents);
-        setLoading(false);
-      }, 1000);
-    };
-
-    fetchData();
+    // Set initial loading state to false since we're not pre-loading data anymore
+    setLoading(false);
   }, []);
-
-  const generateMockStudentData = () => {
-    const batches = ['2020', '2021', '2022', '2023'];
-    const semesters = ['1', '2', '3', '4', '5', '6', '7', '8'];
-
-    return Array(50).fill().map((_, index) => ({
-      id: index + 1,
-      name: `Student ${index + 1}`,
-      rollNo: `CS${2000 + index}`,
-      batch: batches[Math.floor(Math.random() * batches.length)],
-      semester: semesters[Math.floor(Math.random() * semesters.length)],
-      email: `student${index + 1}@university.edu`,
-      parentEmail: `parent${index + 1}@gmail.com`,
-      points: {
-        curricular: Math.floor(Math.random() * 100),
-        coCurricular: Math.floor(Math.random() * 100),
-        extraCurricular: Math.floor(Math.random() * 100)
-      },
-      history: Array(4).fill().map((_, i) => ({
-        semester: `${parseInt(semesters[Math.floor(Math.random() * semesters.length)]) - i}`,
-        points: {
-          curricular: Math.floor(Math.random() * 100),
-          coCurricular: Math.floor(Math.random() * 100),
-          extraCurricular: Math.floor(Math.random() * 100)
-        },
-        events: {
-          curricular: Math.random() > 0.5,
-          coCurricular: Math.random() > 0.5,
-          extraCurricular: Math.random() > 0.5
-        }
-      })).filter((item) => parseInt(item.semester) > 0)
-    }));
-  };
+  
 
   const handleFilterChange = (batchValue, semesterValue) => {
+    console.log('Dashboard: Filter changed to:', { batchValue, semesterValue });
+    
+    // Update state with the new filter values
     setSelectedBatch(batchValue);
     setSelectedSemester(semesterValue);
-
-    let filtered = [...students];
-
-    if (batchValue !== 'all') {
-      filtered = filtered.filter(student => student.batch === batchValue);
-    }
-
-    if (semesterValue !== 'all') {
-      filtered = filtered.filter(student => student.semester === semesterValue);
-    }
-
-    setFilteredStudents(filtered);
+    
+    // Clear filtered students since we're now fetching directly in the StudentTable
+    setFilteredStudents([]);
+    
+    // The StudentTable component will fetch filtered data directly from the API
+    // based on these values because we pass selectedBatch and selectedSemester as props
   };
 
+  // This function is now handled directly in the StudentTable component
   const handlePointsFilter = (category, order) => {
-    let sorted = [...filteredStudents];
-
-    if (order === 'high') {
-      sorted.sort((a, b) => b.points[category] - a.points[category]);
-    } else {
-      sorted.sort((a, b) => a.points[category] - b.points[category]);
-    }
-
-    setFilteredStudents(sorted);
+    console.log('Points filter:', { category, order });
+    // The sorting is now handled in the StudentTable component
   };
 
   const handleStudentSelect = (student) => {
@@ -171,10 +122,14 @@ const DashboardHOD = () => {
                         onFilterChange={handleFilterChange}
                       />
                       <div className="charts-row">
-                      <PerformanceOverview students={filteredStudents} />
-                    </div>
+                        <PerformanceOverview 
+                          selectedBatch={selectedBatch}
+                          selectedSemester={selectedSemester}
+                        />
+                      </div>
                       <StudentTable
-                        students={filteredStudents}
+                        selectedBatch={selectedBatch}
+                        selectedSemester={selectedSemester}
                         onPointsFilter={handlePointsFilter}
                         onStudentSelect={handleStudentSelect}
                       />
@@ -183,14 +138,14 @@ const DashboardHOD = () => {
 
                   {showEmailModal && (
                     <EmailNotification
-                      students={filteredStudents}
+                      selectedBatch={selectedBatch}
+                      selectedSemester={selectedSemester}
                       onClose={() => setShowEmailModal(false)}
                     />
                   )}
 
                   {showReportModal && (
                     <ReportGenerator
-                      students={filteredStudents}
                       selectedBatch={selectedBatch}
                       selectedSemester={selectedSemester}
                       onClose={() => setShowReportModal(false)}

@@ -1,11 +1,93 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import './PerformanceOverview.css';
 
-const PerformanceOverview = ({ students }) => {
+const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Fetch students based on selected batch and semester
+  useEffect(() => {
+    fetchStudents();
+  }, [selectedBatch, selectedSemester]);
+  
+  const fetchStudents = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('PerformanceOverview: Fetching students with filters:', { batch: selectedBatch, semester: selectedSemester });
+      let response;
+      let url = '';
+      
+      // Different API calls based on filter selections
+      if (selectedBatch === 'all' && selectedSemester === 'all') {
+        // Fetch all students
+        url = 'http://localhost:5001/api/students/getAllStudents';
+        response = await axios.get(url);
+      } else if (selectedBatch !== 'all' && selectedSemester === 'all') {
+        // Fetch students by batch only
+        url = `http://localhost:5001/api/students/getStudentsByBatch/${selectedBatch}`;
+        response = await axios.get(url);
+      } else if (selectedBatch !== 'all' && selectedSemester !== 'all') {
+        // Fetch students by both batch and semester
+        url = `http://localhost:5001/api/marks/students/${selectedBatch}/${selectedSemester}`;
+        response = await axios.get(url);
+      } else {
+        // Invalid filter combination (all batches but specific semester)
+        setError('Please select a specific batch when filtering by semester');
+        setStudents([]);
+        setLoading(false);
+        return;
+      }
+      
+      if (response && response.data) {
+        let dataToProcess = response.data;
+        
+        // If the data is not an array, try to extract it from common response structures
+        if (!Array.isArray(dataToProcess)) {
+          if (dataToProcess.students) {
+            dataToProcess = dataToProcess.students;
+          } else if (dataToProcess.data && Array.isArray(dataToProcess.data)) {
+            dataToProcess = dataToProcess.data;
+          }
+        }
+        
+        // Process student data to match the expected format
+        const formattedStudents = Array.isArray(dataToProcess) ? dataToProcess.map(student => {
+          return {
+            id: student.id || Math.random().toString(36).substr(2, 9),
+            name: student.name || student.studentName || 'Unknown',
+            rollNo: student.enrollmentNumber || student.rollNo || 'N/A',
+            batch: student.batchName || (student.Batch ? student.Batch.batchName : selectedBatch),
+            semester: student.semesterNumber || student.currnetsemester || selectedSemester,
+            points: {
+              curricular: parseInt(student.curricular || student.totalCurricular || 0),
+              coCurricular: parseInt(student.coCurricular || student.totalCocurricular || 0),
+              extraCurricular: parseInt(student.extraCurricular || student.totalExtracurricular || 0)
+            },
+            // Add empty history array for new API data that might not have history
+            history: student.history || []
+          };
+        }) : [];
+        
+        setStudents(formattedStudents);
+      } else {
+        setStudents([]);
+      }
+    } catch (err) {
+      console.error('Error fetching students for performance overview:', err);
+      setError('Failed to load students for charts');
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   const calculateAverages = () => {
-    if (students.length === 0) return { curricular: 0, coCurricular: 0, extraCurricular: 0, total: 0 };
+    if (!students || students.length === 0) return { curricular: 0, coCurricular: 0, extraCurricular: 0, total: 0 };
 
     const totals = students.reduce((acc, student) => {
       return {
@@ -32,6 +114,8 @@ const PerformanceOverview = ({ students }) => {
       { name: '76-100', curricular: 0, coCurricular: 0, extraCurricular: 0 }
     ];
 
+    if (!students || students.length === 0) return ranges;
+    
     students.forEach(student => {
       const categorizePoints = (points, category) => {
         if (points <= 25) ranges[0][category]++;
@@ -49,7 +133,10 @@ const PerformanceOverview = ({ students }) => {
   };
 
   const getCategoryTrends = () => {
+    if (!students || students.length === 0) return [];
+    
     const semesters = [...new Set(students.flatMap(s => s.history?.map(h => h.semester) || []))].sort();
+    if (semesters.length === 0) return [];
     return semesters.map(sem => ({
       semester: sem,
       curricular: students.reduce((acc, s) => {
@@ -68,6 +155,8 @@ const PerformanceOverview = ({ students }) => {
   };
 
   const getParticipationRate = () => {
+    if (!students || students.length === 0) return [];
+    
     return students.map(student => {
       const total = student.history?.reduce((acc, h) => {
         return acc + (h.events.curricular ? 1 : 0) +
@@ -94,7 +183,10 @@ const PerformanceOverview = ({ students }) => {
 
   return (
     <div className="performance-overview">
-      {/* <div className="overview-stats">
+      {loading && <div className="loading-overlay">Loading charts...</div>}
+      {error && <div className="error-message">{error}</div>}
+
+      <div className="overview-stats">
         <div className="stat-card">
           <h3>Average Points</h3>
           <div className="stat-value">{averages.total}</div>
@@ -102,10 +194,10 @@ const PerformanceOverview = ({ students }) => {
         </div>
         <div className="stat-card">
           <h3>Students</h3>
-          <div className="stat-value">{students.length}</div>
+          <div className="stat-value">{students ? students.length : 0}</div>
           <div className="stat-label">Total Count</div>
         </div>
-      </div> */}
+      </div>
 
       <div className="charts-container">
         <div className="chart-box">
