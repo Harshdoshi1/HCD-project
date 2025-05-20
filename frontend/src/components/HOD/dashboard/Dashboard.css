@@ -4,8 +4,8 @@
   transition: margin-left 0.3s ease-in-out;
   padding: 2rem;
   background-color: #f8f9fa;
-  margin-top: -2rem;
-  
+  margin-top: 0;
+
 }
 
 .main-content {
@@ -22,7 +22,7 @@
   max-width: 100%;
   box-sizing: border-box;
   flex-direction: column;
-  margin-left: -7vw;
+
 }
 
 .dashboard-header {
@@ -34,9 +34,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-left: -7vw;
-
-  width: 77vw;
+  margin-left: 0;
+  width: 113%;
+  margin-left: -235px;
 }
 
 .dashboard-header h1 {
@@ -89,15 +89,16 @@
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
-  width: 80vw;
+  width: 100%;
 }
 
 .students-row {
   background-color: #fff;
   padding: 1.5rem;
   border-radius: 10px;
-  width: 77vw;
+  width: 110%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-left: -235px;
 }
 
 .filters-section {
@@ -139,6 +140,7 @@
   width: calc(100% - 14vw);
   display: flex;
   flex-direction: column;
+  padding-left: 1rem;
 }
 
 .dashboard-container.collapsed {

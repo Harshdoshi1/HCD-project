@@ -6,7 +6,9 @@
     flex-direction: column;
     position: relative;
     background: #f8f8f8;
-
+    padding-left: 1rem;
+    margin-left: 10px;
+    
 }
 
 .faculty-header {
