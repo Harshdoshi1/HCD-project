@@ -1,6 +1,116 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const { supabase } = require('../config/db');
+
+// JWT Secret Key - In production, this should be in an environment variable
+const JWT_SECRET = 'your_jwt_secret_key_here'; // TODO: Move to environment variables
+
+// Student login
+const loginStudent = async (req, res) => {
+    try {
+        const { email, enrollmentNumber } = req.body;
+
+        // Validate input
+        if (!email || !enrollmentNumber) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email and enrollment number are required'
+            });
+        }
+
+        console.log('Login attempt for:', { email, enrollmentNumber });
+        
+        // First, check if there are multiple accounts with the same email or enrollment number
+        const { data: students, error: checkError } = await supabase
+            .from('students')
+            .select('*')
+            .or(`email.eq.${email},enrollment_number.eq.${enrollmentNumber}`);
+
+        if (checkError) {
+            console.error('Database error:', checkError);
+            return res.status(500).json({
+                success: false,
+                error: 'Database query failed',
+                details: checkError.message,
+                code: 'DB_QUERY_ERROR'
+            });
+        }
+
+        console.log('Found students:', students);
+
+        // If no students found with either email or enrollment number
+        if (!students || students.length === 0) {
+            console.log('No student found with these credentials');
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid credentials',
+                code: 'INVALID_CREDENTIALS',
+                details: 'No account found with the provided email or enrollment number'
+            });
+        }
+
+        // Find exact match for both email and enrollment number
+        const student = students.find(s => {
+            const match = s.email === email && s.enrollment_number.toString() === enrollmentNumber.toString();
+            console.log('Checking student:', { 
+                id: s.id, 
+                emailMatch: s.email === email,
+                enrollmentMatch: s.enrollment_number.toString() === enrollmentNumber.toString(),
+                isMatch: match
+            });
+            return match;
+        });
+
+        if (!student) {
+            console.log('No exact match found for both email and enrollment number');
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid credentials',
+                code: 'INVALID_CREDENTIALS',
+                details: 'No account found with both the provided email and enrollment number'
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            {
+                id: student.id,
+                email: student.email,
+                enrollmentNumber: student.enrollment_number,
+                role: 'student'
+            },
+            JWT_SECRET,
+            { expiresIn: '24h' } // Token expires in 24 hours
+        );
+
+        console.log('Login successful for student:', student.id);
+        
+        // Return success response with token and user data
+        return res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            token: token,
+            user: {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                enrollmentNumber: student.enrollment_number,
+                batchId: student.batch_id,
+                currentSemester: student.current_semester,
+                role: 'student'
+            }
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            details: error.message
+        });
+    }
+};
 
 // Create a new student
 const createStudent = async (req, res) => {
@@ -250,8 +360,9 @@ module.exports = {
     updateStudent, 
     getStudentById, 
     getAllStudents, 
-    createStudents, 
-    createStudent,
+    createStudent, 
+    createStudents,
     updateStudentSemesters,
-    getStudentsByBatch
+    getStudentsByBatch,
+    loginStudent
 };
