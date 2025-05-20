@@ -47,6 +47,7 @@
 
 .toggle-button:hover {
   transform: rotate(90deg);
+  background-color: #3674b5;
 }
 
 .sidebar-menu {
@@ -88,7 +89,7 @@
 
 .sidebar-item:hover {
   background-color: #A1E3F9;
-  color: #3674B5;
+  color: #3674b5;
   transform: scale(1.05);
 }
 
