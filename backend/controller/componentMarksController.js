@@ -188,7 +188,7 @@ const addSubjectWithComponents = async (req, res) => {
     // Prepare mapping helper
     function mapComponents(components) {
       const map = { ESE: 0, CSE: 0, IA: 0, TW: 0, VIVA: 0 };
-      if (Array.isArray(components)) {
+      if (  Array.isArray(components)) {
         components.forEach(comp => {
           if (comp.name && typeof comp.value === 'number') {
             const key = comp.name.toUpperCase();

@@ -28,11 +28,13 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                         return;
                     }
 
+                    console.log("Fetched batches:", data); // Debug log
+
                     setBatches(data.map(batch => ({
                         id: batch.id,
-                        batchName: batch.batchName,
-                        batchStart: batch.batchStart,
-                        batchEnd: batch.batchEnd
+                        batchName: batch.name,
+                        batchStart: batch.start_date,
+                        batchEnd: batch.end_date
                     })));
                 } catch (error) {
                     console.error("Error fetching batches:", error);
@@ -135,8 +137,17 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const selectedBatch = batches.find(b => b.id === parseInt(studentData.batchID));
+        console.log('All batches:', batches);
+        console.log('Selected batch ID:', studentData.batchID, 'Type:', typeof studentData.batchID);
+        console.log('Batch IDs:', batches.map(b => ({
+            id: b.id,
+            type: typeof b.id,
+            name: b.batchName
+        })));
+        
+        const selectedBatch = batches.find(b => b.id === studentData.batchID);
         if (!selectedBatch) {
+            console.error('No matching batch found for ID:', studentData.batchID);
             alert('Please select a valid batch');
             return;
         }
@@ -153,17 +164,20 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                 name: studentData.name,
                 email: studentData.email,
                 enrollment: studentData.enrollment,
-                batchID: selectedBatch.batchName,
+                batchID: selectedBatch.batchName, // Using batchName instead of ID
                 currentSemester: currentSem
             });
 
             const response = await fetch('http://localhost:5001/api/students/createStudent', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                     name: studentData.name,
                     email: studentData.email,
                     enrollment: studentData.enrollment,
-                    batchID: selectedBatch.batchName,
+                    batchID: selectedBatch.batchName, // Changed from selectedBatch.id to selectedBatch.batchName
                     currentSemester: currentSem
                 }),
                 headers: {

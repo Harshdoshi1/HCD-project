@@ -16,33 +16,44 @@ const createStudent = async (req, res) => {
             });
         }
 
-        // Validate batch ID
-        const batch = await Batch.findOne({
-            where: { batchName: batchID },
-            attributes: ['id', 'batchName']
-        });
+        // Validate batch exists using Supabase
+        const { data: batch, error: batchError } = await supabase
+            .from('batches')
+            .select('id, name')
+            .eq('name', batchID)
+            .single();
 
-        if (!batch) {
-            console.error("Batch not found:", batchID);
+        if (batchError || !batch) {
+            console.error("Batch not found:", batchID, batchError);
             return res.status(400).json({
                 error: "Batch not found",
                 receivedBatchName: batchID
             });
         }
 
-        console.log("Found batch:", batch.toJSON());
+        console.log("Found batch:", batch);
 
-        // Create student
-        const student = await Student.create({
-            name,
-            email,
-            batchId: batch.id,
-            enrollmentNumber: enrollment,
-            currnetsemester: currentSemester // Note: using the field name as defined in the model
-        });
+        // Create student using Supabase
+        const { data: student, error: insertError } = await supabase
+            .from('students')
+            .insert([
+                {
+                    name,
+                    email,
+                    batch_id: batch.id,
+                    enrollment_number: enrollment,
+                    current_semester: currentSemester
+                }
+            ])
+            .select();
 
-        console.log("Created student:", student.toJSON());
-        res.status(201).json(student);
+        if (insertError) {
+            console.error("Error creating student:", insertError);
+            throw insertError;
+        }
+
+        console.log("Created student:", student);
+        res.status(201).json(student[0]);
     } catch (error) {
         console.error("Error creating student:", error);
         res.status(500).json({
