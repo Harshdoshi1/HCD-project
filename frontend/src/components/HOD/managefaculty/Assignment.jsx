@@ -18,10 +18,29 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
+                console.log('Fetching batches...');
                 const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
-                if (!response.ok) throw new Error("Failed to fetch batches");
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || "Failed to fetch batches");
+                }
                 const data = await response.json();
-                setBatches(data.map(batch => ({ value: batch.batchName, label: batch.batchName })));
+                console.log('Received batch data:', data);
+                
+                if (!Array.isArray(data)) {
+                    console.error('Expected array of batches but got:', typeof data);
+                    throw new Error('Invalid data format received from server');
+                }
+
+                const mappedBatches = data
+                    .filter(batch => batch && (batch.name || batch.batchName)) // Filter out invalid entries
+                    .map(batch => ({
+                        value: batch.name || batch.batchName,
+                        label: batch.name || batch.batchName
+                    }));
+
+                console.log('Mapped batches:', mappedBatches);
+                setBatches(mappedBatches);
             } catch (error) {
                 console.error("Error fetching batches:", error);
             }
@@ -48,15 +67,26 @@ const FacultyAssignment = ({ selectedFaculty }) => {
 
 
     useEffect(() => {
-        if (!assignment.batch) return;
         const fetchSemesters = async () => {
+            // Clear semesters if no batch is selected
+            if (!assignment.batch || !assignment.batch.value) {
+                setSemesters([]);
+                return;
+            }
+
             try {
-                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${assignment.batch.value}`);
-                if (!response.ok) throw new Error("Failed to fetch semesters");
+                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${encodeURIComponent(assignment.batch.value)}`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch semesters");
+                }
                 const data = await response.json();
-                setSemesters(data.map(sem => ({ value: sem.semesterNumber, label: `Semester ${sem.semesterNumber}` })));
+                setSemesters(data.map(sem => ({
+                    value: sem.semester_number,
+                    label: `Semester ${sem.semester_number}`
+                })));
             } catch (error) {
                 console.error("Error fetching semesters:", error);
+                setSemesters([]);
             }
         };
         fetchSemesters();
@@ -66,35 +96,48 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         if (!assignment.batch || !assignment.semester) return;
         const fetchSubjects = async () => {
             try {
+                if (!assignment.batch?.value || !assignment.semester?.value) {
+                    console.log('Batch or semester not selected');
+                    setSubjects([]);
+                    return;
+                }
+
                 console.log('Fetching subjects with:', {
                     batch: assignment.batch.value,
                     semester: assignment.semester.value
                 });
-                const response = await fetch(`http://localhost:5001/api/subjects/getSubjects/${assignment.batch.value}/${assignment.semester.value}`);
-                if (!response.ok) throw new Error("Failed to fetch subjects");
+
+                const response = await fetch(
+                    `http://localhost:5001/api/subjects/getSubjectsByBatchAndSemesterWithDetails/${encodeURIComponent(assignment.batch.value)}/${assignment.semester.value}`
+                );
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.log('No subjects found for this batch and semester');
+                        setSubjects([]);
+                        return;
+                    }
+                    throw new Error(`Failed to fetch subjects: ${response.statusText}`);
+                }
+
                 const data = await response.json();
                 console.log('Subject API Response:', data);
 
-                // Extract subjects from the response
-                const subjectList = data.subjects || [];
-                const uniqueSubjects = data.uniqueSubjects || [];
-
-                // Map subjects with additional info from uniqueSubjects
-                const mappedSubjects = subjectList.map(subject => {
-                    const uniqueInfo = uniqueSubjects.find(u => u.sub_name === subject.subjectName);
-                    return {
-                        value: subject.subjectName,
-                        label: uniqueInfo ?
-                            `${subject.subjectName} (${uniqueInfo.sub_code})` :
-                            subject.subjectName
-                    };
-                });
+                // Map subjects with their details
+                const mappedSubjects = data.subjects.map(subject => ({
+                    value: subject.subject_name,
+                    label: subject.sub_code ?
+                        `${subject.subject_name} (${subject.sub_code})` :
+                        subject.subject_name
+                }));
 
                 console.log('Mapped subjects:', mappedSubjects);
                 setSubjects(mappedSubjects);
             } catch (error) {
                 console.error("Error fetching subjects:", error);
                 setSubjects([]);
+                // Show error to user
+                alert(`Failed to fetch subjects: ${error.message}`);
             }
         };
         fetchSubjects();

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./AssignSubject.css";
 
 const AssignSubject = () => {
+    // State for filters and data
     const [filters, setFilters] = useState({
         batch: "all",
         semester: "all"
@@ -164,7 +165,17 @@ const AssignSubject = () => {
                 
                 const data = await response.json();
                 console.log(`Fetched ${data.length} semesters for batch: ${filters.batch}`, data);
-                setSemesters(data);
+                
+                // Handle Supabase response format and sort semesters by semester_number
+                if (Array.isArray(data)) {
+                    const sortedSemesters = [...data].sort((a, b) => 
+                        (a.semester_number || 0) - (b.semester_number || 0)
+                    );
+                    setSemesters(sortedSemesters);
+                } else {
+                    console.error("Unexpected semester data format:", data);
+                    setSemesters([]);
+                }
             } catch (error) {
                 console.error("Error fetching semesters:", error);
                 setSemesters([]);
@@ -201,7 +212,17 @@ const AssignSubject = () => {
                 
                 const data = await response.json();
                 console.log(`Fetched ${data.length} semesters for assigned batch: ${assignFilters.batch}`, data);
-                setAssignSemesters(data);
+                
+                // Handle Supabase response format and sort semesters by semester_number
+                if (Array.isArray(data)) {
+                    const sortedSemesters = [...data].sort((a, b) => 
+                        (a.semester_number || 0) - (b.semester_number || 0)
+                    );
+                    setAssignSemesters(sortedSemesters);
+                } else {
+                    console.error("Unexpected semester data format for assignment:", data);
+                    setAssignSemesters([]);
+                }
             } catch (error) {
                 console.error("Error fetching semesters for assignment:", error);
                 setAssignSemesters([]);
@@ -344,19 +365,16 @@ const AssignSubject = () => {
                     <span>Assigned</span>&nbsp; <span> Subjects</span>
                     <div className="filters-container-assign-subject-one">
                         <div className="filter-group-assign-subject-one">
-
-
                             <select
                                 className="professional-filter"
                                 name="batch-to-assign"
                                 value={assignFilters.batch}
                                 onChange={handleAssignFiltersChange}
-
                                 required
                             >
                                 <option value="all">Batch</option>
                                 {batches.map((batch, index) => (
-                                    <option key={batch._id || index} value={batch.batchName}>
+                                    <option key={batch.id || index} value={batch.batchName}>
                                         {batch.batchName}
                                     </option>
                                 ))}
@@ -367,13 +385,12 @@ const AssignSubject = () => {
                                 name="semester-to-assign"
                                 value={assignFilters.semester}
                                 onChange={handleAssignFiltersChange}
-                                // onClick={alert("sndoisc")}
                                 required
                             >
                                 <option value="all">Semester</option>
                                 {assignSemesters.map((sem, index) => (
-                                    <option key={sem._id || index} value={sem.semesterNumber}>
-                                        Semester {sem.semesterNumber}
+                                    <option key={sem.id || index} value={sem.semester_number}>
+                                        Semester {sem.semester_number}
                                     </option>
                                 ))}
                             </select>
@@ -386,7 +403,7 @@ const AssignSubject = () => {
                             <div key={subject.sub_code || index} className="subject-item" style={{ flexDirection: "row" }}>
                                 <div className="spantag">
                                     <span>
-                                        {subject.sub_code} - {subject.sub_name || subject.subjectName} ({subject.sub_credit} )
+                                        {subject.sub_code} - {subject.sub_name || subject.subjectName} ({subject.sub_credit})
                                     </span>
                                 </div>
                                 <div className="canceltag">
@@ -397,6 +414,16 @@ const AssignSubject = () => {
                             </div>
                         ))}
                     </div>
+                </div>
+                <div className="credits-summary">
+                    <p>Total Credits: <strong>{totalCredits}</strong></p>
+                    <button 
+                        className="save-subjects-btn" 
+                        onClick={handleSaveSubjects}
+                        disabled={selectedSubjects.length === 0 || assignFilters.batch === "all" || assignFilters.semester === "all"}
+                    >
+                        {loading ? "Saving..." : "Save Subjects"}
+                    </button>
                 </div>
             </div>
 
@@ -413,7 +440,7 @@ const AssignSubject = () => {
                             >
                                 <option value="all">All Batches</option>
                                 {batches.map((batch, index) => (
-                                    <option key={batch._id || index} value={batch.batchName}>
+                                    <option key={batch.id || index} value={batch.batchName}>
                                         {batch.batchName}
                                     </option>
                                 ))}
@@ -424,11 +451,12 @@ const AssignSubject = () => {
                                 name="semester"
                                 value={filters.semester}
                                 onChange={handleChange}
+                                required
                             >
-                                <option value="all">All Semesters</option>
+                                <option value="all">Semester</option>
                                 {semesters.map((sem, index) => (
-                                    <option key={sem._id || index} value={sem.semesterNumber}>
-                                        Semester {sem.semesterNumber}
+                                    <option key={sem.id || index} value={sem.semester_number}>
+                                        Semester {sem.semester_number}
                                     </option>
                                 ))}
                             </select>
@@ -451,33 +479,34 @@ const AssignSubject = () => {
                         </div>
                     </div>
                 </div>
-                <div className="all-subjects-section">
-                    {error && <div className="error-message">{error}</div>}
+                <div className="available-subjects-container">
                     {loading ? (
                         <div className="loading-message">Loading subjects...</div>
+                    ) : error ? (
+                        <div className="error-message">{error}</div>
+                    ) : availableSubjects.length === 0 ? (
+                        <div className="no-subjects-message">
+                            {isFiltering ? "No subjects found for the selected filters." : "No subjects available."}
+                        </div>
                     ) : (
-                        <div className="all-subjects-container">
-                            {availableSubjects.length > 0 ? (
-                                availableSubjects.map((subject, index) => (
-                                    <div key={subject.id || subject.sub_code || index} className="subject-item" onClick={() => handleSubjectSelect(subject)}>
-                                        <span>
-                                            {subject.sub_code} - {subject.sub_name}
-                                        </span>
-                                        <span className="subject-credits">{subject.sub_credit} credits</span>
+                        <div className="subjects-grid">
+                            {availableSubjects.map((subject, index) => (
+                                <div
+                                    key={subject.sub_code || index}
+                                    className="subject-card"
+                                    onClick={() => handleSubjectSelect(subject)}
+                                >
+                                    <div className="subject-code">{subject.sub_code}</div>
+                                    <div className="subject-name">{subject.sub_name}</div>
+                                    <div className="subject-details">
+                                        <div><strong>Credits:</strong> {subject.sub_credit}</div>
+                                        <div><strong>Type:</strong> {subject.sub_level}</div>
                                     </div>
-                                ))
-                            ) : (
-                                <p>No subjects available for the selected criteria.</p>
-                            )}
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
-            </div>
-
-            <div className="save-subjects-section">
-                <button className="save-subjects-btn-final" onClick={handleSaveSubjects}>
-                    Save Selected Subjects
-                </button>
             </div>
         </div>
     );

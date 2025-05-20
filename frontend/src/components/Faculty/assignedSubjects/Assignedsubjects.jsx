@@ -17,7 +17,7 @@ const SubjectCard = ({ subject }) => {
             <div className="card-content-asff">
                 <div className="content-row-asff">
                     <span className="content-label-asff">Semester:</span>
-                    <span className="content-value-asff">{subject.semesterId || 'Not assigned'}</span>
+                    <span className="content-value-asff">{`Semester ${subject.semesterId}` || 'Not assigned'}</span>
                 </div>
                 <div className="content-row-asff">
                     <span className="content-label-asff">Batch:</span>
@@ -67,6 +67,7 @@ const AssignedSubjects = () => {
     const [batch, setBatch] = useState("");
     const [type, setType] = useState("");
     const [semester, setSemester] = useState("");
+    const getSemesterNumber = (formattedSem) => formattedSem ? formattedSem.replace('Semester ', '') : '';
     const [department, setDepartment] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -112,11 +113,14 @@ const AssignedSubjects = () => {
                     uniqueDepartments.sort();
                     uniqueSemesters.sort((a, b) => Number(a) - Number(b));
 
+                    // Format semester options with "Semester" prefix
+                    const formattedSemesters = uniqueSemesters.map(sem => `Semester ${sem}`);
+
                     // Set filter options
                     setBatchOptions(uniqueBatches);
                     setTypeOptions(uniqueTypes);
                     setDepartmentOptions(uniqueDepartments);
-                    setSemesterOptions(uniqueSemesters);
+                    setSemesterOptions(formattedSemesters);
 
                     setSubjects(data);
                     setFilteredSubjects(data);
@@ -158,7 +162,7 @@ const AssignedSubjects = () => {
         }
 
         if (semester) {
-            filtered = filtered.filter(subject => String(subject.semesterId) === semester);
+            filtered = filtered.filter(subject => subject.semesterId === getSemesterNumber(semester));
         }
 
         setFilteredSubjects(filtered);

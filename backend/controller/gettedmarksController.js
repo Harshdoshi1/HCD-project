@@ -57,7 +57,7 @@ exports.getStudentMarksByBatchAndSubject1 = async (req, res) => {
         const { data: batch, error: batchError } = await supabase
             .from('batches')
             .select('id')
-            .eq('batch_name', batchId)
+            .eq('name', batchId)
             .single();
 
         if (batchError) throw batchError;
@@ -200,7 +200,7 @@ exports.getBatchIdfromName = async (req, res) => {
         const { data: batch, error } = await supabase
             .from('batches')
             .select('id')
-            .eq('batch_name', batchName)
+            .eq('name', batchName)
             .single();
 
         if (error) throw error;

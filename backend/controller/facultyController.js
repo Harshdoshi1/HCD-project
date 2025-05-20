@@ -3,13 +3,24 @@ const { supabase } = require('../config/db');
 
 const createAssignSubject = async (req, res) => {
     try {
-        console.log("Received request body:", req.body);
+        console.log("Received request body:", JSON.stringify(req.body, null, 2));
+
+        // Input validation
+        if (!req.body.batch?.value || !req.body.semester?.value || !req.body.subject?.value || !req.body.faculty?.value) {
+            console.error("Missing required fields:", {
+                batch: req.body.batch?.value,
+                semester: req.body.semester?.value,
+                subject: req.body.subject?.value,
+                faculty: req.body.faculty?.value
+            });
+            return res.status(400).json({ error: "Missing required fields" });
+        }
 
         const batch = req.body.batch.value;
-        const semester = req.body.semester.value;
+        const semesterNumber = req.body.semester.value;
         const subject = req.body.subject.value;
-        const faculty = req.body.faculty.label;
-        console.log("assigned received: ", batch, "--", semester, "--", subject, "--", faculty);
+        const facultyId = req.body.faculty.value;
+        console.log("Inputs validated:", { batch, semesterNumber, subject, facultyId });
 
         // Find Batch ID & Course Type
         const { data: batchRecord, error: batchError } = await supabase
@@ -18,46 +29,128 @@ const createAssignSubject = async (req, res) => {
             .eq('name', batch)
             .single();
 
-        if (batchError || !batchRecord) {
-            return res.status(400).json({ error: "Batch not found" });
+        if (batchError) {
+            console.error("Batch error:", batchError);
+            return res.status(500).json({ error: "Error finding batch", details: batchError.message });
+        }
+        if (!batchRecord) {
+            console.error("Batch not found:", batch);
+            return res.status(404).json({ error: "Batch not found" });
         }
         console.log("Batch Found:", batchRecord);
 
+        // Find Semester ID
+        const { data: semesterRecord, error: semesterError } = await supabase
+            .from('semesters')
+            .select('id')
+            .eq('semester_number', semesterNumber)
+            .eq('batch_id', batchRecord.id)
+            .single();
+
+        if (semesterError) {
+            console.error("Semester error:", semesterError);
+            return res.status(500).json({ error: "Error finding semester", details: semesterError.message });
+        }
+        if (!semesterRecord) {
+            console.error("Semester not found:", { semesterNumber, batchId: batchRecord.id });
+            return res.status(404).json({ error: "Semester not found" });
+        }
+        console.log("Semester Found:", semesterRecord);
+
         // Find Subject based on program type
-        const tableName = batchRecord.program === 'Degree' ? 'unique_sub_degree' : 'unique_sub_diploma';
+        const tableName = batchRecord.program === 'Degree' ? 'unique_sub_degrees' : 'unique_sub_diplomas';
+        console.log("Looking for subject in table:", tableName);
         const { data: subjectRecord, error: subjectError } = await supabase
             .from(tableName)
             .select('sub_code')
             .eq('sub_name', subject)
             .single();
 
-        if (subjectError || !subjectRecord) {
-            return res.status(400).json({ error: "Subject not found" });
+        if (subjectError) {
+            console.error("Subject error:", subjectError);
+            return res.status(500).json({ error: "Error finding subject", details: subjectError.message });
+        }
+        if (!subjectRecord) {
+            console.error("Subject not found:", { subject, tableName });
+            return res.status(404).json({ error: "Subject not found" });
         }
         console.log("Subject Found:", subjectRecord);
+
+        // Get faculty details from users and faculty tables
+        const { data: facultyUser, error: facultyUserError } = await supabase
+            .from('users')
+            .select('id, name')
+            .eq('id', facultyId)
+            .single();
+
+        if (facultyUserError) {
+            console.error("Faculty user error:", facultyUserError);
+            return res.status(500).json({ error: "Error finding faculty user", details: facultyUserError.message });
+        }
+        if (!facultyUser) {
+            console.error("Faculty user not found:", facultyId);
+            return res.status(404).json({ error: "Faculty user not found" });
+        }
+        console.log("Faculty User Found:", facultyUser);
+
+        // Get faculty UUID
+        const { data: facultyRecord, error: facultyError } = await supabase
+            .from('faculty')
+            .select('id')
+            .eq('user_id', facultyUser.id)
+            .maybeSingle();
+
+        if (facultyError) {
+            console.error("Faculty error:", facultyError);
+            return res.status(500).json({ error: "Error finding faculty record", details: facultyError.message });
+        }
+        if (!facultyRecord) {
+            console.error("Faculty record not found for user:", facultyId);
+            return res.status(404).json({ error: "Faculty record not found" });
+        }
+        console.log("Faculty Record Found:", facultyRecord);
+
+        // Check if assignment already exists
+        const { data: existingAssignment, error: checkError } = await supabase
+            .from('assign_subjects')
+            .select('id')
+            .eq('batch_id', batchRecord.id)
+            .eq('semester_id', semesterRecord.id)
+            .eq('subject_id', subjectRecord.sub_code)
+            .single();
+
+        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is the "not found" error code
+            console.error("Error checking existing assignment:", checkError);
+            return res.status(500).json({ error: "Error checking existing assignment", details: checkError.message });
+        }
+
+        if (existingAssignment) {
+            console.error("Assignment already exists:", existingAssignment);
+            return res.status(409).json({ error: "Subject is already assigned" });
+        }
 
         // Create assignment
         const { data: assignSubject, error: assignError } = await supabase
             .from('assign_subjects')
             .insert({
                 batch_id: batchRecord.id,
-                semester_id: semester,
-                faculty_name: faculty,
-                subject_code: subjectRecord.sub_code
+                semester_id: semesterRecord.id,
+                faculty_id: facultyRecord.id,
+                subject_id: subjectRecord.sub_code
             })
             .select()
             .single();
 
         if (assignError) {
             console.error("Error assigning subject:", assignError);
-            return res.status(500).json({ error: assignError.message });
+            return res.status(500).json({ error: "Error assigning subject", details: assignError.message });
         }
 
-        console.log("Assigned Subject:", assignSubject);
+        console.log("Successfully assigned subject:", assignSubject);
         res.status(201).json(assignSubject);
     } catch (error) {
-        console.error("Error in createAssignSubject:", error);
-        res.status(500).json({ error: error.message });
+        console.error("Unexpected error in createAssignSubject:", error);
+        res.status(500).json({ error: "Unexpected error", details: error.message });
     }
 };
 

@@ -88,6 +88,7 @@ const addBatch = async (req, res) => {
 // Get all batches
 const getAllBatches = async (req, res) => {
     try {
+        console.log('Fetching all batches...');
         const { data: batches, error } = await supabase
             .from('batches')
             .select('*')
@@ -101,6 +102,7 @@ const getAllBatches = async (req, res) => {
             });
         }
 
+        console.log('Batches fetched:', batches);
         res.status(200).json(batches);
     } catch (error) {
         console.error('Server error:', error);

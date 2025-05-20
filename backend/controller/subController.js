@@ -104,45 +104,114 @@ const assignSubject = async (req, res) => {
             return res.status(400).json({ message: "Invalid or empty subjects array" });
         }
 
+        // Log all incoming subject data
+        console.log("Processing subjects:", JSON.stringify(subjects, null, 2));
+
         for (const subject of subjects) {
             const { subjectName, semesterNumber, batchName } = subject;
+            console.log("Processing subject:", { subjectName, semesterNumber, batchName });
 
             if (!subjectName || !semesterNumber || !batchName) {
-                return res.status(400).json({ message: "Missing subjectName, semesterNumber, or batchName" });
+                console.error("Missing required fields:", { subjectName, semesterNumber, batchName });
+                return res.status(400).json({ 
+                    message: "Missing subjectName, semesterNumber, or batchName",
+                    receivedData: { subjectName, semesterNumber, batchName }
+                });
             }
 
-            // Get batch
-            const { data: batch, error: batchError } = await supabase
+            // Get batch - case insensitive search
+            const { data: batches, error: batchError } = await supabase
                 .from('batches')
-                .select('id')
-                .eq('batch_name', batchName)
-                .single();
+                .select('id, name');
 
-            if (batchError || !batch) {
-                return res.status(404).json({ message: `Batch '${batchName}' not found` });
+            if (batchError) {
+                console.error('Error fetching batch:', batchError);
+                return res.status(500).json({ message: 'Error fetching batch', error: batchError.message });
             }
+
+            console.log('All batches from DB:', batches);
+
+            // Find batch with case-insensitive comparison
+            const batch = batches.find(b => 
+                b.name.toLowerCase() === batchName.toLowerCase() ||
+                b.name.toLowerCase().replace(/\s+/g, '') === batchName.toLowerCase().replace(/\s+/g, '')
+            );
+
+            if (!batch) {
+                console.error('No batch found with name:', batchName);
+                return res.status(404).json({ 
+                    message: `Batch '${batchName}' not found`,
+                    availableBatches: batches.map(b => b.name),
+                    searchedFor: batchName
+                });
+            }
+
+            console.log('Found matching batch:', batch);
 
             // Get semester
             const { data: semester, error: semesterError } = await supabase
                 .from('semesters')
-                .select('id')
+                .select('id, semester_number, batch_id')
                 .eq('semester_number', semesterNumber)
                 .eq('batch_id', batch.id)
                 .single();
 
-            if (semesterError || !semester) {
-                return res.status(404).json({ message: `Semester '${semesterNumber}' not found for batch '${batchName}'` });
+            if (semesterError) {
+                console.error('Error fetching semester:', semesterError);
+                return res.status(500).json({ 
+                    message: 'Error fetching semester', 
+                    error: semesterError.message,
+                    details: { semesterNumber, batchId: batch.id }
+                });
             }
 
-            const existingSubject = await Subject.findOne({
-                where: { subjectName, semesterId: semester.id, batchId: batch.id }
-            });
+            if (!semester) {
+                console.error('Semester not found:', { semesterNumber, batchId: batch.id });
+                // Fetch available semesters for this batch for debugging
+                const { data: availableSemesters } = await supabase
+                    .from('semesters')
+                    .select('semester_number')
+                    .eq('batch_id', batch.id);
+                
+                return res.status(404).json({ 
+                    message: `Semester '${semesterNumber}' not found for batch '${batchName}'`,
+                    availableSemesters: availableSemesters?.map(s => s.semester_number) || []
+                });
+            }
+
+            // Check if subject already exists for this batch and semester
+            const { data: existingSubject, error: existingSubjectError } = await supabase
+                .from('subjects')
+                .select('*')
+                .eq('batch_id', batch.id)
+                .eq('semester_id', semester.id)
+                .eq('subject_name', subjectName)
+                .single();
 
             if (existingSubject) {
-                return res.status(400).json({ message: `Subject '${subjectName}' already assigned to this batch and semester` });
+                return res.status(400).json({
+                    message: `Subject '${subjectName}' is already assigned to batch '${batchName}' semester ${semesterNumber}`,
+                });
             }
 
-            await Subject.create({ subjectName, semesterId: semester.id, batchId: batch.id });
+            // Insert new subject
+            const { data: newSubject, error: insertError } = await supabase
+                .from('subjects')
+                .insert({
+                    subject_name: subjectName,
+                    batch_id: batch.id,
+                    semester_id: semester.id,
+                })
+                .select()
+                .single();
+
+            if (insertError) {
+                console.error('Error inserting subject:', insertError);
+                return res.status(500).json({
+                    message: 'Error assigning subject',
+                    error: insertError.message
+                });
+            }
         }
 
         res.status(201).json({ message: "Subjects assigned successfully" });
@@ -236,39 +305,74 @@ const getSubjects = async (req, res) => {
 const getSubjectsByBatchAndSemester = async (req, res) => {
     try {
         const { batchName, semesterNumber } = req.params;
+        console.log(`Fetching subjects for batch: ${batchName}, semester: ${semesterNumber}`);
 
-        // Find batch ID from batchName
-        const batch = await Batch.findOne({ where: { batchName } });
-        if (!batch) {
+        // Find batch ID from batchName using Supabase
+        const { data: batch, error: batchError } = await supabase
+            .from('batches')
+            .select('id')
+            .eq('name', batchName)
+            .single();
+
+        if (batchError || !batch) {
+            console.log(`Batch not found: ${batchName}`);
             return res.status(404).json({ message: "Batch not found" });
         }
 
-        // Find semester where batchId matches
-        const semester = await Semester.findOne({ where: { semesterNumber, batchId: batch.id } });
-        if (!semester) {
+        console.log(`Found batch with ID: ${batch.id}`);
+
+        // Find semester where batch_id matches using Supabase
+        const { data: semester, error: semesterError } = await supabase
+            .from('semesters')
+            .select('id')
+            .eq('semester_number', semesterNumber)
+            .eq('batch_id', batch.id)
+            .single();
+
+        if (semesterError || !semester) {
+            console.log(`Semester ${semesterNumber} not found for batch ID: ${batch.id}`);
             return res.status(404).json({ message: "Semester not found for this batch" });
         }
 
-        // Fetch subjects for the given batch and semester
-        const subjects = await Subject.findAll({ where: { semesterId: semester.id, batchId: batch.id } });
+        console.log(`Found semester with ID: ${semester.id}`);
 
-        if (subjects.length === 0) {
+        // Fetch subjects for the given batch and semester using Supabase
+        const { data: subjects, error: subjectsError } = await supabase
+            .from('subjects')
+            .select('*')
+            .eq('semester_id', semester.id)
+            .eq('batch_id', batch.id);
+
+        if (subjectsError) {
+            throw subjectsError;
+        }
+
+        if (!subjects || subjects.length === 0) {
+            console.log(`No subjects found for semester ID: ${semester.id} and batch ID: ${batch.id}`);
             return res.status(404).json({ message: "No subjects found for this semester and batch" });
         }
 
-        // Get subject names from subjects
-        const subjectNames = subjects.map(s => s.subjectName);
+        console.log(`Found ${subjects.length} subjects`);
 
-        // Fetch sub_code and sub_level from UniqueSubDegree using sub_name
-        const uniqueSubs = await UniqueSubDegree.findAll({
-            where: { sub_name: { [Op.in]: subjectNames } },
-            attributes: ["sub_name", "sub_code", "sub_level"], // Fetch only required attributes
-        });
+        // Get subject names from subjects
+        const subjectNames = subjects.map(s => s.subject_name);
+
+        // Fetch details from unique_sub_degrees using sub_name using Supabase
+        const { data: uniqueSubs, error: uniqueSubsError } = await supabase
+            .from('unique_sub_degrees')
+            .select('sub_name, sub_code, sub_level')
+            .in('sub_name', subjectNames);
+
+        if (uniqueSubsError) {
+            throw uniqueSubsError;
+        }
+
+        console.log(`Found ${uniqueSubs ? uniqueSubs.length : 0} unique subjects`);
 
         // Send the response properly formatted
         res.status(200).json({
             subjects,
-            uniqueSubjects: uniqueSubs
+            uniqueSubjects: uniqueSubs || []
         });
     } catch (error) {
         console.error("Error fetching subjects:", error);
@@ -505,7 +609,13 @@ const getSubjectComponentsWithSubjectCode = async (req, res) => {
 // Get all unique subjects from UniqueSubDegrees
 const getAllUniqueSubjects = async (req, res) => {
     try {
-        const subjects = await UniqueSubDegree.findAll();
+        // Fetch unique subjects using Supabase
+        const { data: subjects, error } = await supabase
+            .from('unique_sub_degrees')
+            .select('*');
+        
+        if (error) throw error;
+        
         console.log(`Found ${subjects.length} unique subjects`);
         return res.status(200).json({ subjects });
     } catch (error) {
@@ -520,24 +630,46 @@ const getSubjectsByBatch = async (req, res) => {
         const { batchName } = req.params;
         console.log(`Fetching subjects for batch: ${batchName}`);
         
-        // First get the batch ID
-        const batch = await Batch.findOne({ where: { batchName } });
-        if (!batch) {
+        // First get the batch ID using Supabase
+        const { data: batch, error: batchError } = await supabase
+            .from('batches')
+            .select('id')
+            .eq('name', batchName)
+            .single();
+            
+        if (batchError || !batch) {
+            console.log(`Batch not found: ${batchName}`);
             return res.status(404).json({ message: "Batch not found" });
         }
         
-        // Get all subjects assigned to this batch
-        const subjects = await Subject.findAll({
-            where: { batchId: batch.id },
-            attributes: ['id', 'subjectName', 'batchId', 'semesterId']
-        });
+        console.log(`Found batch with ID: ${batch.id}`);
         
-        // Get the unique subject codes from UniqueSubDegree that match these subjects
-        const uniqueSubjects = await UniqueSubDegree.findAll();
+        // Get all subjects assigned to this batch using Supabase
+        const { data: subjects, error: subjectsError } = await supabase
+            .from('subjects')
+            .select('id, subject_name, batch_id, semester_id')
+            .eq('batch_id', batch.id);
+            
+        if (subjectsError) {
+            throw subjectsError;
+        }
+        
+        console.log(`Found ${subjects ? subjects.length : 0} subjects for batch ID: ${batch.id}`);
+        
+        // Get all unique subjects from unique_sub_degrees using Supabase
+        const { data: uniqueSubjects, error: uniqueSubjectsError } = await supabase
+            .from('unique_sub_degrees')
+            .select('*');
+            
+        if (uniqueSubjectsError) {
+            throw uniqueSubjectsError;
+        }
+        
+        console.log(`Found ${uniqueSubjects ? uniqueSubjects.length : 0} unique subjects`);
         
         return res.status(200).json({ 
-            subjects,
-            uniqueSubjects
+            subjects: subjects || [],
+            uniqueSubjects: uniqueSubjects || []
         });
     } catch (error) {
         console.error('Error fetching subjects by batch:', error);
@@ -658,20 +790,29 @@ const getSubjectsByBatchWithDetails = async (req, res) => {
 const getSubjectsByBatchAndSemesterWithDetails = async (req, res) => {
     try {
         const { batchName, semesterNumber } = req.params;
+        console.log('Fetching subjects for:', { batchName, semesterNumber });
         
         // Find batch ID from batchName
-        const batch = await Batch.findOne({ where: { batchName } });
+        const { data: batch, error: batchError } = await supabase
+            .from('batches')
+            .select('id')
+            .ilike('name', batchName)
+            .single();
+
+        if (batchError) throw batchError;
         if (!batch) {
             return res.status(404).json({ message: "Batch not found" });
         }
         
         // Find semester ID from semesterNumber and batchId
-        const semester = await Semester.findOne({ 
-            where: { 
-                semesterNumber: parseInt(semesterNumber), 
-                batchId: batch.id 
-            } 
-        });
+        const { data: semester, error: semesterError } = await supabase
+            .from('semesters')
+            .select('id')
+            .eq('semester_number', parseInt(semesterNumber))
+            .eq('batch_id', batch.id)
+            .single();
+
+        if (semesterError) throw semesterError;
         if (!semester) {
             return res.status(404).json({ message: "Semester not found for this batch" });
         }
@@ -689,22 +830,23 @@ const getSubjectsByBatchAndSemesterWithDetails = async (req, res) => {
             return res.status(404).json({ message: "No subjects found for this batch and semester" });
         }
         
-        // Get the unique subject codes and names from UniqueSubDegree
-        const subjectNames = subjects.map(s => s.subjectName);
-        const uniqueSubjectsInfo = await UniqueSubDegree.findAll({
-            where: { sub_name: { [Op.in]: subjectNames } },
-            attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level', 'program']
-        });
+        // Get the unique subject codes and names from unique_sub_degrees
+        const { data: uniqueSubjectsInfo, error: uniqueSubjectsError } = await supabase
+            .from('unique_sub_degrees')
+            .select('*')
+            .in('sub_name', subjects.map(s => s.subject_name));
+
+        if (uniqueSubjectsError) throw uniqueSubjectsError;
         
         // Map the unique subject info to each subject
         const subjectsWithDetails = subjects.map(subject => {
-            const uniqueInfo = uniqueSubjectsInfo.find(u => u.sub_name === subject.subjectName);
+            const uniqueInfo = uniqueSubjectsInfo?.find(u => u.sub_name === subject.subject_name);
             return {
                 id: subject.id,
-                subjectName: subject.subjectName,
-                batchId: subject.batchId,
-                semesterId: subject.semesterId,
-                semesterNumber: parseInt(semesterNumber),
+                subject_name: subject.subject_name,
+                batch_id: subject.batch_id,
+                semester_id: subject.semester_id,
+                semester_number: parseInt(semesterNumber),
                 sub_code: uniqueInfo ? uniqueInfo.sub_code : null,
                 sub_credit: uniqueInfo ? uniqueInfo.sub_credit : null,
                 sub_level: uniqueInfo ? uniqueInfo.sub_level : null,
