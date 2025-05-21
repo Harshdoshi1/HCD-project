@@ -8,6 +8,9 @@ const StudentAnalysis = ({ student, onClose }) => {
   const [semesterPoints, setSemesterPoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedSemester, setSelectedSemester] = useState(null);
+  const [activityList, setActivityList] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);
   
   // For debugging
   console.log('Student data received:', student);
@@ -80,6 +83,12 @@ const StudentAnalysis = ({ student, onClose }) => {
         
         console.log('All semester points collected:', allSemesterPoints);
         setSemesterPoints(allSemesterPoints);
+        
+        // Set the default selected semester to the current semester
+        setSelectedSemester(currentSemester);
+        
+        // Fetch activities for the current semester by default
+        fetchActivitiesBySemester(enrollmentNumber, currentSemester);
       } catch (err) {
         console.error('Error in semester points fetching process:', err);
         setError('Failed to load semester points data');
@@ -91,6 +100,83 @@ const StudentAnalysis = ({ student, onClose }) => {
     
     fetchSemesterPoints();
   }, [student]);
+  
+  // Function to fetch activities for a specific semester
+  const fetchActivitiesBySemester = async (enrollmentNumber, semester) => {
+    if (!enrollmentNumber || !semester) return;
+    
+    setLoadingActivities(true);
+    try {
+      // Fetch student points for the selected semester
+      const response = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+        enrollmentNumber,
+        semester: semester.toString()
+      });
+      
+      console.log(`Activities for semester ${semester}:`, response.data);
+      
+      if (response.data && Array.isArray(response.data)) {
+        // Extract event IDs from the response
+        const eventIds = [];
+        response.data.forEach(item => {
+          if (item.eventId) {
+            // Split the comma-separated event IDs and add them to our array
+            const ids = item.eventId.split(',').map(id => id.trim()).filter(id => id);
+            eventIds.push(...ids);
+          }
+        });
+        
+        console.log('Extracted event IDs:', eventIds);
+        
+        if (eventIds.length > 0) {
+          // Convert the array of event IDs to a comma-separated string as required by the API
+          const eventIdsString = eventIds.join(',');
+          console.log('Sending event IDs as string:', eventIdsString);
+          
+          // Fetch event details from EventMaster table
+          const eventDetailsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsByIds', {
+            eventIds: eventIdsString
+          });
+          
+          console.log('Event details response:', eventDetailsResponse.data);
+          
+          if (eventDetailsResponse.data && eventDetailsResponse.data.success && Array.isArray(eventDetailsResponse.data.data)) {
+            // Process event details and create activity list
+            const activities = eventDetailsResponse.data.data.map(event => ({
+              id: event.id,
+              name: event.eventName || 'Unknown Event',
+              position: event.position || 'Participant',
+              points: event.points || 0,
+              type: event.eventType || 'Unknown Type'
+            }));
+            
+            setActivityList(activities);
+          } else {
+            console.warn('Unexpected event details format:', eventDetailsResponse.data);
+            setActivityList([]);
+          }
+        } else {
+          console.log('No event IDs found for this semester');
+          setActivityList([]);
+        }
+      } else {
+        console.warn('Unexpected response format for activities:', response.data);
+        setActivityList([]);
+      }
+    } catch (err) {
+      console.error('Error fetching activities:', err);
+      setActivityList([]);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+  
+  // Handle semester selection change
+  const handleSemesterChange = (semester) => {
+    setSelectedSemester(semester);
+    fetchActivitiesBySemester(student.rollNo, semester);
+  };
+  
   // If no student is provided, show a default view for the StudentAnalysis page
   if (!student) {
     return (
@@ -322,6 +408,7 @@ const StudentAnalysis = ({ student, onClose }) => {
 
           <div className="analysis-section">
             <h3>Performance Trends</h3>
+            
             <div className="chart-container">
               {loading ? (
                 <div className="loading-message">
@@ -369,6 +456,59 @@ const StudentAnalysis = ({ student, onClose }) => {
               ) : (
                 <div className="no-data-message">
                   <p>No performance history data available</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Activity List Section */}
+          <div className="analysis-section">
+            <h3>Activity List</h3>
+            
+            {/* Semester Filter */}
+            <div className="semester-filter">
+              <label>Select Semester: </label>
+              <div className="semester-buttons">
+                {semesterPoints.map(point => (
+                  <button 
+                    key={point.semester}
+                    className={selectedSemester === point.semester ? 'active' : ''}
+                    onClick={() => handleSemesterChange(point.semester)}
+                  >
+                    Semester {point.semester}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="activity-list-container">
+              {loadingActivities ? (
+                <div className="loading-message">
+                  <p>Loading activities...</p>
+                </div>
+              ) : activityList && activityList.length > 0 ? (
+                <table className="activity-table">
+                  <thead>
+                    <tr>
+                      <th>Activity Name</th>
+                      <th>Type</th>
+                      <th>Position</th>
+                      <th>Points</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activityList.map(activity => (
+                      <tr key={activity.id}>
+                        <td>{activity.name}</td>
+                        <td>{activity.type}</td>
+                        <td>{activity.position}</td>
+                        <td>{activity.points}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="no-data-message">
+                  <p>No activities found for semester {selectedSemester}</p>
                 </div>
               )}
             </div>
