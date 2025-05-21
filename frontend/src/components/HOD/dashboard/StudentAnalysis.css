@@ -135,49 +135,164 @@
 
 .insights-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
 
 .insight-card {
   background-color: #f9f9f9;
-  border-radius: 6px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 20px;
   position: relative;
   min-height: 150px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+  border-top: 4px solid #3674B5;
+}
+
+.insight-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .insight-card h4 {
   margin-top: 0;
-  margin-bottom: 12px;
-  font-size: 14px;
-  color: #444;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #3674B5;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.insight-card h4::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background-color: #3674B5;
+  border-radius: 3px;
 }
 
 .insight-card p {
   margin-top: 0;
+  margin-bottom: 12px;
   font-size: 14px;
   color: #555;
+  line-height: 1.5;
+}
+
+.insight-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.insight-header {
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 12px;
+}
+
+.insight-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.insight-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.insight-item:last-child {
+  border-bottom: none;
+}
+
+.category-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.participation-status {
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+}
+
+.participation-status.no-participation {
+  background-color: #f5f5f5;
+  color: #757575;
+  border: 1px solid #e0e0e0;
+}
+
+.participation-status.no-participation::before {
+  content: '✕';
+  margin-right: 4px;
+  font-size: 10px;
+}
+
+.insight-card div p {
+  margin-bottom: 8px;
+  padding-right: 70px;
 }
 
 .points-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
   font-weight: 600;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insight-item .points-badge {
+  position: relative;
+  top: 0;
+  right: 0;
+}
+
+/* For the old format where badges are absolute positioned */
+.insight-card>div>div .points-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }
 
 .points-badge.strength {
   background-color: #e6f7e6;
   color: #2e7d32;
+  border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+.points-badge.strength::before {
+  content: '↑';
+  margin-right: 4px;
+  font-size: 16px;
 }
 
 .points-badge.weakness {
   background-color: #feecec;
   color: #c62828;
+  border: 1px solid rgba(198, 40, 40, 0.2);
+}
+
+.points-badge.weakness::before {
+  content: '↓';
+  margin-right: 4px;
+  font-size: 16px;
 }
 
 .pattern-list,
