@@ -43,6 +43,94 @@
   background-color: #f9f9f9;
   border-radius: 6px;
   padding: 16px;
+  margin-top: 16px;
+}
+
+/* Semester Filter Styles */
+.semester-filter {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.semester-filter label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3674B5;
+}
+
+.semester-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.semester-buttons button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  color: #333;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.semester-buttons button:hover {
+  background: #f5f5f5;
+  border-color: #3674B5;
+  color: #3674B5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(54, 116, 181, 0.15);
+}
+
+.semester-buttons button.active {
+  background-color: #3674B5;
+  color: white;
+  border-color: #3674B5;
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(54, 116, 181, 0.25);
+}
+
+/* Activity List Styles */
+.activity-list-container {
+  margin-top: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f9f9f9;
+}
+
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.activity-table th {
+  background: linear-gradient(to bottom, #3674B5, #2c5d91);
+  color: white;
+  padding: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-size: 13px;
+  text-align: left;
+  font-weight: 600;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.activity-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+  color: #444;
+}
+
+.activity-table tr:hover {
+  background-color: rgba(54, 116, 181, 0.05);
 }
 
 .insights-grid {
