@@ -3,12 +3,14 @@ import { UserRoundPlus } from "lucide-react";
 import { FaPlus, FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp, FaUserGraduate } from 'react-icons/fa';
 import Select from 'react-select';
 import StudentModal from './StudentModal';
+import StudentGradesExcell from './StudentGradesExcell';
 import './StudentsList.css';
 
 const StudentsList = ({ onStudentSelect }) => {
     const [selectedBatch, setSelectedBatch] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCPIModalOpen, setIsCPIModalOpen] = useState(false);
     const [sortField, setSortField] = useState('name');
     const [sortDirection, setSortDirection] = useState('asc');
     const [isLoading, setIsLoading] = useState(true);
@@ -85,6 +87,15 @@ const StudentsList = ({ onStudentSelect }) => {
         fetchStudents(); // Refresh the list after adding a new student
     };
 
+    const handleOpenCPIModal = () => {
+        setIsCPIModalOpen(true);
+    };
+
+    const handleCloseCPIModal = () => {
+        setIsCPIModalOpen(false);
+        fetchStudents(); // Refresh the list after potentially updating CPI/SPI data
+    };
+
     const toggleFilters = () => {
         setShowFilters(!showFilters);
     };
@@ -131,6 +142,10 @@ const StudentsList = ({ onStudentSelect }) => {
                     <button className="add-student-btn" onClick={handleOpenModal}>
                         <UserRoundPlus />
                         <span>Add Student</span>
+                    </button>
+                    <button className="cpi-btn" onClick={handleOpenCPIModal}>
+                        <FaUserGraduate />
+                        <span>CPI</span>
                     </button>
                 </div>
 
@@ -241,7 +256,19 @@ const StudentsList = ({ onStudentSelect }) => {
                 <p>Showing {filteredStudents.length} of {students.length} students</p>
             </div>
 
-            <StudentModal isOpen={isModalOpen} onClose={handleCloseModal} />
+            {isModalOpen && (
+                <StudentModal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                />
+            )}
+
+            {isCPIModalOpen && (
+                <StudentGradesExcell
+                    isOpen={isCPIModalOpen}
+                    onClose={handleCloseCPIModal}
+                />
+            )}
         </div>
     );
 };

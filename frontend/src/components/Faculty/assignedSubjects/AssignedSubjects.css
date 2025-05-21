@@ -392,6 +392,7 @@
     background-color: var(--secondary-bg);
     border-radius: var(--card-radius);
 }
+
 .filters-container-asff {
     display: flex;
     flex-wrap: wrap;
@@ -444,6 +445,7 @@
         margin-top: 16px;
     }
 }
+
 .empty-state-icon-asff {
     font-size: 3rem;
     color: var(--secondary-text);

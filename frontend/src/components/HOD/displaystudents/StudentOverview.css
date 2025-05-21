@@ -2,6 +2,7 @@
     display: grid;
     gap: 2rem;
     padding: 1rem;
+
 }
 
 .overview-card-sdp {
@@ -88,6 +89,10 @@
     border-radius: 4px;
     position: relative;
     transition: height 0.3s ease;
+}
+
+.spi-bar {
+    background: #ff6b6b;
 }
 
 .gpa-value {
@@ -179,7 +184,12 @@
 .cgpa-fill {
     height: 100%;
     background: #4361ee;
+    border-radius: 4px;
     transition: width 0.3s ease;
+}
+
+.spi-fill {
+    background: #ff6b6b;
 }
 
 .achievements-list {

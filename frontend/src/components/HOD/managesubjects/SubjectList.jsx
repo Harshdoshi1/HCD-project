@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import "./SubjectList.css";
+
 const SubjectList = ({ onSelectSubject }) => {
     const [filters, setFilters] = useState({
         program: 'degree',
-        batch: 'all',
-        semester: 'all'
+        batch: 'Degree 22-26',
+        semester: '1'
     });
 
     const [batches, setBatches] = useState([]);
     const [semesters, setSemesters] = useState([]);
     const [subjects, setSubjects] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchBatches = async () => {
@@ -20,6 +23,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 setBatches(data);
             } catch (error) {
                 console.error("Error fetching batches:", error);
+                setError("Failed to fetch batches");
             }
         };
         fetchBatches();
@@ -32,13 +36,27 @@ const SubjectList = ({ onSelectSubject }) => {
                     setSemesters([]);
                     return;
                 }
-                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${filters.batch}`);
-                if (!response.ok) throw new Error("Failed to fetch semesters");
+                
+                const encodedBatchName = encodeURIComponent(filters.batch);
+                console.log(`Fetching semesters for batch: ${filters.batch} (encoded: ${encodedBatchName})`);
+                
+                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${encodedBatchName}`);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.log(`No semesters found for batch: ${filters.batch}`);
+                        setSemesters([]);
+                        return;
+                    }
+                    throw new Error(`Failed to fetch semesters: ${response.status} ${response.statusText}`);
+                }
+                
                 const data = await response.json();
-                console.log("dasada", data);
+                console.log(`Fetched ${data.length} semesters for batch: ${filters.batch}`, data);
                 setSemesters(data);
             } catch (error) {
                 console.error("Error fetching semesters:", error);
+                setSemesters([]);
+                setError(`Failed to fetch semesters: ${error.message}`);
             }
         };
         fetchSemesters();
@@ -46,26 +64,45 @@ const SubjectList = ({ onSelectSubject }) => {
 
     useEffect(() => {
         const fetchSubjects = async () => {
+            setLoading(true);
+            setError(null);
+            
             try {
                 if (filters.batch === "all" || filters.semester === "all") {
                     setSubjects([]);
                     return;
                 }
+                
+                const encodedBatchName = encodeURIComponent(filters.batch);
+                console.log(`Fetching subjects for batch: ${filters.batch} and semester: ${filters.semester}`);
+                
                 const response = await fetch(
-                    `http://localhost:5001/api/subjects/getSubjects/${encodeURIComponent(filters.batch)}/${filters.semester}`
+                    `http://localhost:5001/api/subjects/getSubjects/${encodedBatchName}/${filters.semester}`
                 );
+                
                 if (!response.ok) {
+                    if (response.status === 404) {
+                        console.log(`No subjects found for batch: ${filters.batch} and semester: ${filters.semester}`);
+                        setSubjects([]);
+                        return;
+                    }
                     const errorData = await response.json();
                     console.error('API Error:', errorData);
                     throw new Error(errorData.message || "Failed to fetch subjects");
                 }
+                
                 const data = await response.json();
                 console.log('Subjects API Response:', data);
                 setSubjects(data.uniqueSubjects || data.subjects || []);
             } catch (error) {
                 console.error("Error fetching subjects:", error);
+                setError(`Failed to fetch subjects: ${error.message}`);
+                setSubjects([]);
+            } finally {
+                setLoading(false);
             }
         };
+        
         fetchSubjects();
     }, [filters.batch, filters.semester]);
 

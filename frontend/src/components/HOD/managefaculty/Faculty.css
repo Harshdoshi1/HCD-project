@@ -6,7 +6,9 @@
     flex-direction: column;
     position: relative;
     background: #f8f8f8;
-
+    padding-left: 1rem;
+    margin-left: 10px;
+    
 }
 
 .faculty-header {
@@ -18,7 +20,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    flex-shrink: 0;
+    flex-shrink: 0; 
     height: 8%;
 }
 
