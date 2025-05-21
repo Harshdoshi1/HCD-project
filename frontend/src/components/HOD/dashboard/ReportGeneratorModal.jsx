@@ -6,6 +6,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 // Import Chart.js
 import Chart from 'chart.js/auto';
+// Import email service
+import emailService from '../../../services/emailService';
 import './ReportGeneratorModal.css';
 
 const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetails, activityList, categoryData, performanceInsights, chartData }) => {
@@ -21,12 +23,18 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
     performanceInsights: true,
     academicDetails: true
   });
-  
+
   const [selectedSemesters, setSelectedSemesters] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [batchName, setBatchName] = useState(student.batchName || 'N/A');
-  
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailData, setEmailData] = useState({
+    email: student.email || '',
+    subject: 'Student Performance Report',
+    description: ''
+  });
+
   // Handle batch name display without relying on a specific API endpoint
   useEffect(() => {
     // Extract batch information from student data if available
@@ -37,7 +45,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
         setBatchName(student.batchName);
         return;
       }
-      
+
       // If student has a batchId property, use that to create a batch name
       if (student && student.batchId) {
         const formattedBatchName = `Batch ${student.batchId}`;
@@ -45,7 +53,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
         setBatchName(formattedBatchName);
         return;
       }
-      
+
       // If we have enrollment number, extract batch year from it
       if (student && student.rollNo) {
         // Most enrollment numbers start with year code (e.g., 92200133022 - where 92 is the year)
@@ -59,12 +67,12 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           return;
         }
       }
-      
+
       // Default fallback
       console.log('Using default batch name');
       setBatchName('ICT Undergraduate');
     };
-    
+
     determineBatchName();
   }, [student]);
 
@@ -75,17 +83,17 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
       if (performanceTrendsChartInstance.current) {
         performanceTrendsChartInstance.current.destroy();
       }
-      
+
       const ctx = performanceTrendsChartRef.current.getContext('2d');
-      
+
       // Sort chart data by semester
       const sortedData = [...chartData].sort((a, b) => a.semester - b.semester);
-      
+
       // Extract labels and datasets
       const labels = sortedData.map(item => `Sem ${item.semester}`);
       const coCurricularData = sortedData.map(item => item.coCurricular);
       const extraCurricularData = sortedData.map(item => item.extraCurricular);
-      
+
       // Create chart
       performanceTrendsChartInstance.current = new Chart(ctx, {
         type: 'line',
@@ -147,7 +155,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
       });
     }
   }, [chartData]);
-  
+
   // Initialize selected semesters with all available semesters
   useEffect(() => {
     if (semesterPoints && semesterPoints.length > 0) {
@@ -184,6 +192,100 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
     setSelectedSemesters([]);
   };
 
+  const toggleEmailForm = () => {
+    setShowEmailForm(prev => !prev);
+  };
+
+  const handleEmailInputChange = (e) => {
+    const { name, value } = e.target;
+    setEmailData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  const handleSendEmail = async () => {
+    if (isSendingEmail) return;
+
+    try {
+      setIsSendingEmail(true);
+
+      // First generate the PDF
+      const pdfDoc = await generatePDFForEmail();
+      const pdfBlob = pdfDoc.output('blob');
+
+      // Send the email with the PDF attachment
+      const response = await emailService.sendEmailWithPdf(emailData, pdfBlob);
+
+      // Show success message
+      alert(response.message || 'Email sent successfully!');
+      setShowEmailForm(false);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert(error.message || 'Failed to send email. Please try again.');
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  // Generate PDF for email without displaying it
+  const generatePDFForEmail = async () => {
+    if (selectedSemesters.length === 0) {
+      throw new Error("Please select at least one semester");
+    }
+
+    // Create a new PDF document
+    const doc = new jsPDF();
+    let yPos = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Function to add a new page
+    const addNewPage = () => {
+      doc.addPage();
+      yPos = 20;
+    };
+
+    // Add title
+    doc.setFontSize(18);
+    doc.setTextColor(10, 36, 99); // #0A2463
+    doc.text("Student Performance Report", pageWidth / 2, yPos, { align: "center" });
+    yPos += 10;
+
+    // Add student details
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Name: ${student.name || 'N/A'}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Enrollment Number: ${student.rollNo || 'N/A'}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Batch: ${batchName}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Department: ICT - Information and Communication Technology`, 20, yPos);
+    yPos += 7;
+    doc.text(`Current Semester: ${student.semester || 'N/A'}`, 20, yPos);
+    yPos += 7;
+
+    // Add date of generation
+    const today = new Date();
+    doc.text(`Report Generated: ${today.toLocaleDateString()}`, 20, yPos);
+    yPos += 15;
+
+    // Add a divider
+    doc.setDrawColor(54, 116, 181); // #3674B5
+    doc.line(20, yPos, pageWidth - 20, yPos);
+    yPos += 15;
+
+    // Add selected semesters
+    doc.setFontSize(12);
+    doc.text(`Selected Semesters: ${selectedSemesters.sort((a, b) => a - b).join(', ')}`, 20, yPos);
+    yPos += 15;
+
+    return doc;
+  };
+
   const generatePDF = async () => {
     if (selectedSemesters.length === 0) {
       setError("Please select at least one semester");
@@ -199,13 +301,13 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
       let yPos = 20;
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      
+
       // Function to add a new page
       const addNewPage = () => {
         doc.addPage();
         yPos = 20;
       };
-      
+
       // Add title
       doc.setFontSize(18);
       doc.setTextColor(10, 36, 99); // #0A2463
@@ -225,7 +327,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
       yPos += 7;
       doc.text(`Current Semester: ${student.semester || 'N/A'}`, 20, yPos);
       yPos += 7;
-      
+
       // Add date of generation
       const today = new Date();
       doc.text(`Report Generated: ${today.toLocaleDateString()}`, 20, yPos);
@@ -254,22 +356,22 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
         if (selectedOptions.performanceTrends && chartData && chartData.length > 0) {
           // Filter chart data for this semester
           const semesterData = chartData.filter(point => point.semester <= semester);
-          
+
           if (semesterData.length > 0) {
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
             doc.text("Performance Trends", 20, yPos);
             yPos += 7;
-            
+
             // Sort data by semester
             const sortedData = [...semesterData].sort((a, b) => a.semester - b.semester);
-            
+
             // Create a visually appealing representation of the data
             doc.setFontSize(14);
             doc.setTextColor(54, 116, 181); // #3674B5
             doc.text("Performance Trends Chart", pageWidth / 2, yPos, { align: "center" });
             yPos += 15;
-            
+
             // Draw chart axes
             const chartStartX = 50;
             const chartEndX = pageWidth - 50;
@@ -277,23 +379,23 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             const chartEndY = yPos + 120;
             const chartWidth = chartEndX - chartStartX;
             const chartHeight = chartEndY - chartStartY;
-            
+
             // Draw axes
             doc.setDrawColor(100, 100, 100);
             doc.setLineWidth(0.5);
             doc.line(chartStartX, chartStartY, chartStartX, chartEndY); // Y-axis
             doc.line(chartStartX, chartEndY, chartEndX, chartEndY); // X-axis
-            
+
             // Find max value for scaling
             const allValues = sortedData.flatMap(item => [item.coCurricular, item.extraCurricular]);
             const maxValue = Math.max(...allValues, 10); // Ensure at least 10 for scale
-            
+
             // Draw Y-axis labels and grid lines
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
             doc.setDrawColor(200, 200, 200);
             doc.setLineWidth(0.2);
-            
+
             const ySteps = 5;
             for (let i = 0; i <= ySteps; i++) {
               const yValue = maxValue * (1 - i / ySteps);
@@ -301,71 +403,71 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
               doc.text(yValue.toFixed(0), chartStartX - 10, y + 2);
               doc.line(chartStartX, y, chartEndX, y); // Grid line
             }
-            
+
             // Draw X-axis labels
             const xStepWidth = chartWidth / (sortedData.length + 1);
             sortedData.forEach((item, index) => {
               const x = chartStartX + (index + 1) * xStepWidth;
               doc.text(`Sem ${item.semester}`, x, chartEndY + 10, { align: "center" });
             });
-            
+
             // Plot Co-Curricular data
             doc.setDrawColor(0, 196, 159); // #00C49F
             doc.setFillColor(0, 196, 159);
             doc.setLineWidth(2);
-            
+
             let prevX, prevY;
             sortedData.forEach((item, index) => {
               const x = chartStartX + (index + 1) * xStepWidth;
               const y = chartEndY - (item.coCurricular / maxValue) * chartHeight;
-              
+
               // Draw point
               doc.circle(x, y, 3, 'F');
-              
+
               // Connect with line if not first point
               if (index > 0) {
                 doc.line(prevX, prevY, x, y);
               }
-              
+
               prevX = x;
               prevY = y;
             });
-            
+
             // Plot Extra-Curricular data
             doc.setDrawColor(255, 187, 40); // #FFBB28
             doc.setFillColor(255, 187, 40);
-            
+
             sortedData.forEach((item, index) => {
               const x = chartStartX + (index + 1) * xStepWidth;
               const y = chartEndY - (item.extraCurricular / maxValue) * chartHeight;
-              
+
               // Draw point
               doc.circle(x, y, 3, 'F');
-              
+
               // Connect with line if not first point
               if (index > 0) {
                 doc.line(prevX, prevY, x, y);
               }
-              
+
               prevX = x;
               prevY = y;
             });
-            
+
             // Add legend
             yPos = chartEndY + 25;
-            
+
             // Co-Curricular legend
             doc.setFillColor(0, 196, 159);
             doc.rect(chartStartX, yPos, 10, 10, 'F');
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(10);
             doc.text('Co-Curricular', chartStartX + 15, yPos + 7);
-            
+
             // Extra-Curricular legend
             doc.setFillColor(255, 187, 40);
             doc.rect(chartStartX + 100, yPos, 10, 10, 'F');
             doc.text('Extra-Curricular', chartStartX + 115, yPos + 7);
-            
+
             yPos += 40;
           }
         }
@@ -382,7 +484,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           try {
             // Check if we have cached activities for this semester
             let semesterActivities = [];
-            
+
             if (cachedActivities[semester]) {
               console.log(`Using cached activities for semester ${semester}`);
               semesterActivities = cachedActivities[semester];
@@ -393,15 +495,15 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
               // Make the API call to fetch activities - using the same approach as StudentAnalysis component
               try {
                 console.log(`Fetching activities for semester ${semester} - Step 1: Get event IDs`);
-                
+
                 // Step 1: Fetch events by enrollment and semester
                 const response = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
                   enrollmentNumber: student.rollNo,
                   semester: semester.toString()
                 });
-                
+
                 console.log(`Response for semester ${semester}:`, response.data);
-                
+
                 if (response.data && Array.isArray(response.data)) {
                   // Extract event IDs from the response - exactly like StudentAnalysis does
                   const eventIds = [];
@@ -412,21 +514,21 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                       eventIds.push(...ids);
                     }
                   });
-                  
+
                   console.log(`Extracted event IDs for semester ${semester}:`, eventIds);
-                  
+
                   if (eventIds.length > 0) {
                     // Convert the array of event IDs to a comma-separated string as required by the API
                     const eventIdsString = eventIds.join(',');
                     console.log(`Fetching activities for semester ${semester} - Step 2: Get event details for IDs: ${eventIdsString}`);
-                    
+
                     // Step 2: Fetch event details from EventMaster table
                     const eventDetailsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsByIds', {
                       eventIds: eventIdsString
                     });
-                    
+
                     console.log(`Event details response for semester ${semester}:`, eventDetailsResponse.data);
-                    
+
                     if (eventDetailsResponse.data && eventDetailsResponse.data.success && Array.isArray(eventDetailsResponse.data.data)) {
                       // Process event details and create activity list - exactly like StudentAnalysis does
                       semesterActivities = eventDetailsResponse.data.data.map(event => ({
@@ -437,9 +539,9 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                         type: event.eventType || 'Unknown Type',
                         category: event.eventCategory || 'Unknown Category'
                       }));
-                      
+
                       console.log(`Processed ${semesterActivities.length} activities for semester ${semester}`);
-                      
+
                       // Cache these activities
                       setCachedActivities(prev => ({
                         ...prev,
@@ -460,13 +562,13 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 console.error(`Error fetching activities for semester ${semester}:`, fetchError);
               }
             }
-            
+
             if (semesterActivities.length > 0) {
               doc.setFontSize(12);
               doc.setTextColor(0, 0, 0);
               doc.text("Activity List", 20, yPos);
               yPos += 7;
-              
+
               // Create a table for activities
               const activityHeaders = [["Activity Name", "Type", "Position", "Points"]];
               const activityData = semesterActivities.map(activity => [
@@ -475,7 +577,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 activity.position || 'N/A',
                 activity.points?.toString() || '0'
               ]);
-              
+
               autoTable(doc, {
                 startY: yPos,
                 head: activityHeaders,
@@ -484,7 +586,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 headStyles: { fillColor: [54, 116, 181], textColor: [255, 255, 255] },
                 margin: { left: 20, right: 20 }
               });
-              
+
               yPos = doc.lastAutoTable.finalY + 10;
             } else {
               doc.setFontSize(12);
@@ -513,23 +615,23 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           doc.setTextColor(0, 0, 0);
           doc.text("Performance Breakdown", 20, yPos);
           yPos += 7;
-          
+
           // Calculate breakdown based on total points (co-curricular + extra-curricular)
           // Get the data for the current semester
           const semesterData = chartData.find(data => data.semester === semester) || { coCurricular: 0, extraCurricular: 0 };
-          
+
           // Calculate total points
           const totalPoints = semesterData.coCurricular + semesterData.extraCurricular;
           console.log(`Total points for semester ${semester}: ${totalPoints}`);
-          
+
           // Calculate percentages
           let coCurricularPercentage = 0;
           let extraCurricularPercentage = 0;
-          
+
           if (totalPoints > 0) {
             coCurricularPercentage = Math.round((semesterData.coCurricular / totalPoints) * 100);
             extraCurricularPercentage = Math.round((semesterData.extraCurricular / totalPoints) * 100);
-            
+
             // Adjust to ensure they add up to 100%
             if (coCurricularPercentage + extraCurricularPercentage !== 100) {
               // If rounding caused the sum to not be 100, adjust the larger value
@@ -540,9 +642,9 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
               }
             }
           }
-          
+
           console.log(`Breakdown for semester ${semester}: Co-Curricular: ${coCurricularPercentage}%, Extra-Curricular: ${extraCurricularPercentage}%`);
-          
+
           // Create a table for the category data
           const categoryHeaders = [["Category", "Points", "Percentage"]];
           const categoryTableData = [
@@ -550,7 +652,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             ["Extra-Curricular", semesterData.extraCurricular.toString(), `${extraCurricularPercentage}%`],
             ["Total", totalPoints.toString(), "100%"]
           ];
-          
+
           autoTable(doc, {
             startY: yPos,
             head: categoryHeaders,
@@ -559,7 +661,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             headStyles: { fillColor: [54, 116, 181], textColor: [255, 255, 255] },
             margin: { left: 20, right: 20 }
           });
-          
+
           yPos = doc.lastAutoTable.finalY + 10;
         }
 
@@ -575,52 +677,52 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           doc.setTextColor(0, 0, 0);
           doc.text("Performance Insights", 20, yPos);
           yPos += 7;
-          
+
           // Strengths
           if (performanceInsights.strengths && performanceInsights.strengths.length > 0) {
             doc.setFontSize(11);
             doc.text("Strengths:", 20, yPos);
             yPos += 5;
-            
+
             performanceInsights.strengths.forEach(strength => {
               doc.text(`• ${strength.category}: ${strength.points} points`, 25, yPos);
               yPos += 5;
             });
             yPos += 5;
           }
-          
+
           // Areas for Improvement
           if (performanceInsights.areasForImprovement && performanceInsights.areasForImprovement.length > 0) {
             doc.setFontSize(11);
             doc.text("Areas for Improvement:", 20, yPos);
             yPos += 5;
-            
+
             performanceInsights.areasForImprovement.forEach(area => {
               doc.text(`• ${area.category}: ${area.points} points`, 25, yPos);
               yPos += 5;
             });
             yPos += 5;
           }
-          
+
           // Participation Pattern
           if (performanceInsights.participationPattern) {
             doc.setFontSize(11);
             doc.text("Participation Pattern:", 20, yPos);
             yPos += 5;
-            
+
             // Split long text into multiple lines
             const pattern = performanceInsights.participationPattern;
             const splitText = doc.splitTextToSize(pattern, pageWidth - 40);
             doc.text(splitText, 25, yPos);
             yPos += splitText.length * 5 + 5;
           }
-          
+
           // Trend Analysis
           if (performanceInsights.trendAnalysis) {
             doc.setFontSize(11);
             doc.text("Trend Analysis:", 20, yPos);
             yPos += 5;
-            
+
             // Split long text into multiple lines
             const trend = performanceInsights.trendAnalysis;
             const splitText = doc.splitTextToSize(trend, pageWidth - 40);
@@ -646,24 +748,24 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             } else {
               // Otherwise fetch it
               const response = await axios.get(`http://localhost:5001/api/academic-details/student/${student.rollNo}/semester/${semester}`);
-              
+
               if (response.data && response.data.success) {
                 semesterAcademics = response.data.data;
               }
             }
-            
+
             if (semesterAcademics && semesterAcademics.subjects && semesterAcademics.subjects.length > 0) {
               doc.setFontSize(12);
               doc.setTextColor(0, 0, 0);
               doc.text("Academic Details", 20, yPos);
               yPos += 7;
-              
+
               // Add SPI/CPI if available
               if (semesterAcademics.semesterInfo) {
                 doc.text(`SPI: ${semesterAcademics.semesterInfo.spi || 'N/A'}   CPI: ${semesterAcademics.semesterInfo.cpi || 'N/A'}`, 20, yPos);
                 yPos += 7;
               }
-              
+
               // Create a table for academic details
               const academicHeaders = [["Subject", "Code", "ESE", "CSE", "IA", "TW", "Viva", "Grade"]];
               const academicData = semesterAcademics.subjects.map(subject => [
@@ -676,7 +778,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 `${subject.studentMarks.viva || 0}/${subject.componentMarks.viva || 0}`,
                 subject.studentMarks.grades || 'N/A'
               ]);
-              
+
               autoTable(doc, {
                 startY: yPos,
                 head: academicHeaders,
@@ -685,9 +787,9 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 headStyles: { fillColor: [54, 116, 181], textColor: [255, 255, 255] },
                 margin: { left: 20, right: 20 }
               });
-              
+
               yPos = doc.lastAutoTable.finalY + 10;
-              
+
               // Add component legend
               doc.setFontSize(10);
               doc.text("ESE: End Semester Exam | CSE: Continuous Semester Evaluation | IA: Internal Assessment | TW: Term Work | Viva: Viva Voce", 20, yPos, { maxWidth: pageWidth - 40 });
@@ -746,7 +848,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           <div className="modal-content">
             {/* Hidden canvas for chart rendering */}
             <canvas ref={performanceTrendsChartRef} className="hidden-chart-canvas" width="600" height="300"></canvas>
-            
+
             <div className="student-info-section">
               <h3>Student Information</h3>
               <div className="student-info">
@@ -768,81 +870,81 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 </div>
               </div>
             </div>
-            
+
             <div className="report-options-section">
               <h3>Report Content</h3>
               <p className="section-description">Select the sections to include in the report:</p>
-              
+
               <div className="options-container">
                 <div className="option-item">
-                  <input 
-                    type="checkbox" 
-                    id="performanceTrends" 
-                    checked={selectedOptions.performanceTrends} 
+                  <input
+                    type="checkbox"
+                    id="performanceTrends"
+                    checked={selectedOptions.performanceTrends}
                     onChange={() => handleOptionChange('performanceTrends')}
                   />
                   <label htmlFor="performanceTrends">Performance Trends Graph</label>
                 </div>
-                
+
                 <div className="option-item">
-                  <input 
-                    type="checkbox" 
-                    id="activityList" 
-                    checked={selectedOptions.activityList} 
+                  <input
+                    type="checkbox"
+                    id="activityList"
+                    checked={selectedOptions.activityList}
                     onChange={() => handleOptionChange('activityList')}
                   />
                   <label htmlFor="activityList">Activity List</label>
                 </div>
-                
+
                 <div className="option-item">
-                  <input 
-                    type="checkbox" 
-                    id="performanceBreakdown" 
-                    checked={selectedOptions.performanceBreakdown} 
+                  <input
+                    type="checkbox"
+                    id="performanceBreakdown"
+                    checked={selectedOptions.performanceBreakdown}
                     onChange={() => handleOptionChange('performanceBreakdown')}
                   />
                   <label htmlFor="performanceBreakdown">Current Performance Breakdown</label>
                 </div>
-                
+
                 <div className="option-item">
-                  <input 
-                    type="checkbox" 
-                    id="performanceInsights" 
-                    checked={selectedOptions.performanceInsights} 
+                  <input
+                    type="checkbox"
+                    id="performanceInsights"
+                    checked={selectedOptions.performanceInsights}
                     onChange={() => handleOptionChange('performanceInsights')}
                   />
                   <label htmlFor="performanceInsights">Performance Insights</label>
                 </div>
-                
+
                 <div className="option-item">
-                  <input 
-                    type="checkbox" 
-                    id="academicDetails" 
-                    checked={selectedOptions.academicDetails} 
+                  <input
+                    type="checkbox"
+                    id="academicDetails"
+                    checked={selectedOptions.academicDetails}
                     onChange={() => handleOptionChange('academicDetails')}
                   />
                   <label htmlFor="academicDetails">Academic Details</label>
                 </div>
               </div>
             </div>
-            
+
             <div className="semester-selection-section">
               <h3>Semester Selection</h3>
               <p className="section-description">Select the semesters to include in the report:</p>
-              
-              <div className="semester-actions">
+
+              <div className="semester-actions-btns">
                 <button className="select-all-btn" onClick={selectAllSemesters}>Select All</button>
                 <button className="deselect-all-btn" onClick={deselectAllSemesters}>Deselect All</button>
               </div>
-              
+
               <div className="semesters-container">
                 {semesterPoints && semesterPoints.length > 0 ? (
                   semesterPoints.map(point => (
                     <div className="semester-item" key={point.semester}>
-                      <input 
-                        type="checkbox" 
-                        id={`semester-${point.semester}`} 
-                        checked={selectedSemesters.includes(point.semester)} 
+                      <input
+                        type="checkbox"
+                        id={`semester-${point.semester}`}
+                        checked={selectedSemesters.includes(point.semester)}
                         onChange={() => handleSemesterChange(point.semester)}
                       />
                       <label htmlFor={`semester-${point.semester}`}>Semester {point.semester}</label>
@@ -852,16 +954,87 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                   <p className="no-data-message">No semester data available</p>
                 )}
               </div>
+
+              {showEmailForm && (
+                <div className="email-form-section-send-email">
+                  <h3>Send Report via Email</h3>
+                  <div className="email-form-send-email">
+                    <div className="form-group-send-email">
+                      <label htmlFor="email">Email:</label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={emailData.email}
+                        onChange={handleEmailInputChange}
+                        placeholder="Recipient email address"
+                        className="input-send-email"
+                      />
+                    </div>
+                    <div className="form-group-send-email">
+                      <label htmlFor="subject">Subject:</label>
+                      <input
+                        type="text"
+                        id="subject"
+                        name="subject"
+                        value={emailData.subject}
+                        onChange={handleEmailInputChange}
+                        placeholder="Email subject"
+                        className="input-send-email"
+                      />
+                    </div>
+                    <div className="form-group-send-email">
+                      <label htmlFor="description">Description:</label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={emailData.description}
+                        onChange={handleEmailInputChange}
+                        placeholder="Enter email message"
+                        rows="4"
+                        className="textarea-send-email"
+                      ></textarea>
+                      <div className="email-buttons-container-send-email">
+                        <button className="cancel-email-btn-send-email" onClick={toggleEmailForm}>
+                          <i className="fas fa-times"></i> Cancel Email
+                        </button>
+                        <button
+                          className="send-email-btn-send-email"
+                          onClick={handleSendEmail}
+                          disabled={isSendingEmail}
+                        >
+                          {isSendingEmail ? (
+                            <>
+                              <i className="fas fa-spinner fa-spin"></i> Sending...
+                            </>
+                          ) : (
+                            <>
+                              <i className="fas fa-paper-plane"></i> Send Email
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            
+
             {error && <div className="error-message">{error}</div>}
           </div>
-          
+
           <div className="modal-footer">
             <button className="cancel-btn" onClick={onClose}>Cancel</button>
-            <button 
-              className="generate-btn" 
-              onClick={generatePDF} 
+            <button
+              className="send-report-btn"
+              onClick={toggleEmailForm}
+              disabled={isGenerating || selectedSemesters.length === 0}
+            >
+              Send Report
+            </button>
+            <button
+              className="generate-btn"
+              onClick={generatePDF}
               disabled={isGenerating || selectedSemesters.length === 0}
             >
               {isGenerating ? 'Generating...' : 'Generate Report'}

@@ -8,21 +8,21 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Fetch students based on selected batch and semester
   useEffect(() => {
     fetchStudents();
   }, [selectedBatch, selectedSemester]);
-  
+
   const fetchStudents = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       console.log('PerformanceOverview: Fetching students with filters:', { batch: selectedBatch, semester: selectedSemester });
       let response;
       let url = '';
-      
+
       // Different API calls based on filter selections
       if (selectedBatch === 'all' && selectedSemester === 'all') {
         // Fetch all students
@@ -34,10 +34,10 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
           // Get all batches
           const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
           console.log('Batches response:', batchesResponse.data);
-          
+
           // Find the batch ID for the selected batch name
           const selectedBatchObj = batchesResponse.data.find(batch => batch.batchName === selectedBatch);
-          
+
           if (selectedBatchObj && selectedBatchObj.id) {
             // Fetch students by batch ID
             url = `http://localhost:5001/api/students/getStudentsByBatch/${selectedBatchObj.id}`;
@@ -64,10 +64,10 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         setLoading(false);
         return;
       }
-      
+
       if (response && response.data) {
         let dataToProcess = response.data;
-        
+
         // If the data is not an array, try to extract it from common response structures
         if (!Array.isArray(dataToProcess)) {
           if (dataToProcess.students) {
@@ -76,7 +76,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
             dataToProcess = dataToProcess.data;
           }
         }
-        
+
         // Process student data to match the expected format
         const formattedStudents = Array.isArray(dataToProcess) ? await Promise.all(dataToProcess.map(async student => {
           // Initialize points object with curricular as 0
@@ -85,20 +85,20 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
             coCurricular: 0,
             extraCurricular: 0
           };
-          
+
           // Fetch co-curricular and extra-curricular points from student_points table
           try {
             const enrollmentNumber = student.enrollmentNumber || student.rollNo;
             const semester = student.currnetsemester || selectedSemester;
-            
+
             if (enrollmentNumber && semester) {
               const pointsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
                 enrollmentNumber,
                 semester
               });
-              
+
               console.log('Student points response in PerformanceOverview:', pointsResponse.data);
-              
+
               if (pointsResponse.data && Array.isArray(pointsResponse.data)) {
                 // Sum up all co-curricular and extra-curricular points
                 pointsResponse.data.forEach(activity => {
@@ -115,7 +115,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
             console.error('Error fetching student points in PerformanceOverview:', error);
             // Keep the default values if there's an error
           }
-          
+
           return {
             id: student.id || Math.random().toString(36).substr(2, 9),
             name: student.name || student.studentName || 'Unknown',
@@ -127,7 +127,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
             history: student.history || []
           };
         })) : [];
-        
+
         setStudents(formattedStudents);
       } else {
         setStudents([]);
@@ -169,7 +169,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
     ];
 
     if (!students || students.length === 0) return ranges;
-    
+
     students.forEach(student => {
       const categorizePoints = (points, category) => {
         if (points <= 25) ranges[0][category]++;
@@ -188,7 +188,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
 
   const getCategoryTrends = () => {
     if (!students || students.length === 0) return [];
-    
+
     const semesters = [...new Set(students.flatMap(s => s.history?.map(h => h.semester) || []))].sort();
     if (semesters.length === 0) return [];
     return semesters.map(sem => ({
@@ -210,7 +210,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
 
   const getParticipationRate = () => {
     if (!students || students.length === 0) return [];
-    
+
     return students.map(student => {
       const total = student.history?.reduce((acc, h) => {
         return acc + (h.events.curricular ? 1 : 0) +
