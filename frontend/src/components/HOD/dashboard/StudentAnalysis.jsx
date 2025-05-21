@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './StudentAnalysis.css';
+import ReportGeneratorModal from './ReportGeneratorModal';
 
 const StudentAnalysis = ({ student, onClose }) => {
   // State for storing semester points data
@@ -14,6 +15,7 @@ const StudentAnalysis = ({ student, onClose }) => {
   const [academicDetails, setAcademicDetails] = useState(null);
   const [loadingAcademics, setLoadingAcademics] = useState(false);
   const [academicError, setAcademicError] = useState(null);
+  const [showReportGenerator, setShowReportGenerator] = useState(false);
   const [performanceInsights, setPerformanceInsights] = useState({
     strengths: [],
     areasForImprovement: [],
@@ -563,6 +565,10 @@ const StudentAnalysis = ({ student, onClose }) => {
     onClose();
   };
 
+  const toggleReportGenerator = () => {
+    setShowReportGenerator(!showReportGenerator);
+  };
+
   return (
     <div className="modal-backdrop">
       <div className="modal-container analysis-modal">
@@ -993,9 +999,25 @@ const StudentAnalysis = ({ student, onClose }) => {
 
         <div className="modal-footer">
           <button className="btn-cancel" onClick={onClose}>Close</button>
+          <button className="btn-generate-report" onClick={toggleReportGenerator}>
+            Generate Report
+          </button>
           <button className="btn-share" onClick={handleSendAnalysis}>
             Share Analysis with Student & Parents
           </button>
+          
+          {showReportGenerator && (
+            <ReportGeneratorModal
+              student={student}
+              onClose={toggleReportGenerator}
+              semesterPoints={semesterPoints}
+              academicDetails={academicDetails}
+              activityList={activityList}
+              categoryData={categoryData}
+              performanceInsights={performanceInsights}
+              chartData={chartData}
+            />
+          )}
         </div>
       </div>
     </div>
