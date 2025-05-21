@@ -12,23 +12,17 @@
     align-items: center;
     min-height: 100vh;
     background: linear-gradient(135deg, var(--background-light) 0%, #e6f0ff 100%);
-    position: fixed; /* Keep container fixed */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: relative;
     overflow: hidden;
-    z-index: 0;
 }
 
 .background-effect {
-    position: fixed;
+    position: absolute;
     width: 1000px;
     height: 1000px;
     background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
-    opacity: 0.15;
+    opacity: 0.1;
     animation: pulse 8s infinite;
-    pointer-events: none; /* Prevent interaction with background */
 }
 
 @keyframes pulse {
@@ -53,23 +47,15 @@
     background: white;
     padding: 2.5rem;
     border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
-    position: fixed; /* Fixed positioning */
-    top: 50%; /* Center vertically */
-    left: 50%; /* Center horizontally */
-    transform: translate(-50%, -50%); /* Perfect centering */
-    z-index: 10; /* Higher z-index to ensure visibility */
-    opacity: 1;
-    border: 1px solid #e0e0e0;
-    user-select: text; /* Allow text selection but prevent dragging */
-    pointer-events: auto; /* Enable interaction with the form */
-    -webkit-user-drag: none; /* Prevent dragging in webkit browsers */
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out forwards;
 }
 
-/* Remove problematic animation */
-/*
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -81,7 +67,6 @@
         transform: translateY(0);
     }
 }
-*/
 
 /* Logo Styles */
 .logo-container {
@@ -94,11 +79,8 @@
     height: 120px;
     border-radius: 60px;
     object-fit: cover;
-    box-shadow: 0 6px 15px rgba(30, 144, 255, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     animation: float 6s ease-in-out infinite;
-    border: 3px solid white;
-    pointer-events: none; /* Prevent dragging of logo */
-    -webkit-user-drag: none;
 }
 
 @keyframes float {
@@ -117,7 +99,7 @@
 
 /* Typography */
 h1 {
-    color: #1e90ff; /* Blue color to match theme */
+    color: var(--text-color);
     text-align: center;
     margin-bottom: 2rem;
     font-size: 1.8rem;
@@ -153,7 +135,7 @@ h1 {
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #1e90ff; /* Blue color to match theme */
+    color: #666;
     pointer-events: none;
     z-index: 1;
 }
@@ -163,7 +145,7 @@ h1 {
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #1e90ff; /* Blue color to match theme */
+    color: #666;
     pointer-events: none;
     z-index: 1;
     font-size: 18px;
@@ -191,7 +173,7 @@ input.error {
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #1e90ff; /* Blue color to match theme */
+    color: #666;
     cursor: pointer;
     padding: 0;
 }
@@ -221,7 +203,7 @@ input.error {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #333; /* Darker text for better readability */
+    color: #666;
     cursor: pointer;
 }
 
@@ -260,8 +242,6 @@ input.error {
     justify-content: center;
     align-items: center;
     min-height: 48px;
-    box-shadow: 0 4px 8px rgba(30, 144, 255, 0.2);
-    margin-top: 10px;
 }
 
 .login-button:hover {

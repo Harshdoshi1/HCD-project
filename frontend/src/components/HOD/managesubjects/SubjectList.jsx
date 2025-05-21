@@ -20,13 +20,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
-                // Map Supabase response to match frontend structure
-                const mappedBatches = data.map(batch => ({
-                    batchName: batch.name,
-                    courseType: batch.program,
-                    id: batch.id
-                }));
-                setBatches(mappedBatches);
+                setBatches(data);
             } catch (error) {
                 console.error("Error fetching batches:", error);
                 setError("Failed to fetch batches");
@@ -58,18 +52,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 
                 const data = await response.json();
                 console.log(`Fetched ${data.length} semesters for batch: ${filters.batch}`, data);
-                
-                // Make sure we're handling the Supabase response format correctly
-                if (Array.isArray(data)) {
-                    // Sort semesters by semester_number
-                    const sortedSemesters = [...data].sort((a, b) => 
-                        (a.semester_number || 0) - (b.semester_number || 0)
-                    );
-                    setSemesters(sortedSemesters);
-                } else {
-                    console.error("Unexpected semester data format:", data);
-                    setSemesters([]);
-                }
+                setSemesters(data);
             } catch (error) {
                 console.error("Error fetching semesters:", error);
                 setSemesters([]);
@@ -110,21 +93,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 
                 const data = await response.json();
                 console.log('Subjects API Response:', data);
-                
-                // Handle Supabase response format
-                if (Array.isArray(data)) {
-                    // Direct array of subjects
-                    setSubjects(data);
-                } else if (data.uniqueSubjects && Array.isArray(data.uniqueSubjects)) {
-                    // Object with uniqueSubjects array
-                    setSubjects(data.uniqueSubjects);
-                } else if (data.subjects && Array.isArray(data.subjects)) {
-                    // Object with subjects array
-                    setSubjects(data.subjects);
-                } else {
-                    console.error("Unexpected subjects data format:", data);
-                    setSubjects([]);
-                }
+                setSubjects(data.uniqueSubjects || data.subjects || []);
             } catch (error) {
                 console.error("Error fetching subjects:", error);
                 setError(`Failed to fetch subjects: ${error.message}`);
@@ -139,29 +108,11 @@ const SubjectList = ({ onSelectSubject }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        
-        // Special handling for batch and semester
-        if (name === "batch") {
-            // When batch changes, reset semester to "all"
-            setFilters(prev => ({
-                ...prev,
-                [name]: value,
-                semester: "all"
-            }));
-        } else if (name === "semester") {
-            // For semester, ensure we're using the correct value format
-            setFilters(prev => ({
-                ...prev,
-                [name]: value
-            }));
-        } else {
-            // For other filters
-            setFilters(prev => ({
-                ...prev,
-                [name]: value
-            }));
-        }
-        
+        setFilters(prev => ({
+            ...prev,
+            [name]: value,
+            ...(name === "batch" ? { semester: "all" } : {}),
+        }));
         // Clear subjects immediately on filter change
         setSubjects([]);
     };
@@ -173,7 +124,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 <select className="professional-filter-ds" name="batch" value={filters.batch} onChange={handleChange} required>
                     <option value="all">Batch</option>
                     {batches.map((batch, index) => (
-                        <option key={batch.id || index} value={batch.batchName}>
+                        <option key={batch._id || index} value={batch.batchName}>
                             {batch.batchName}
                         </option>
                     ))}
@@ -181,8 +132,8 @@ const SubjectList = ({ onSelectSubject }) => {
                 <select className="professional-filter-ds" name="semester" value={filters.semester} onChange={handleChange} required>
                     <option value="all">Semester</option>
                     {semesters.map((sem, index) => (
-                        <option key={sem.id || index} value={sem.semester_number}>
-                            Semester {sem.semester_number}
+                        <option key={sem._id || index} value={sem.semesterNumber}>
+                            Semester {sem.semesterNumber}
                         </option>
                     ))}
                 </select>
@@ -194,7 +145,7 @@ const SubjectList = ({ onSelectSubject }) => {
                         const code = subject.sub_code || subject.subjectCode || subject.code;
                         const name = subject.sub_name || subject.subjectName || subject.name;
                         return (
-                            <div key={subject.id || code || index} className="subject-card" onClick={() => onSelectSubject(subject)}>
+                            <div key={subject._id || code || index} className="subject-card" onClick={() => onSelectSubject(subject)}>
                                 {code && (
                                     <div className="subject-code">{code}</div>
                                 )}
