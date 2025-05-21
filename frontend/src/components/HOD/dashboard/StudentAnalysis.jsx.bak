@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import ReportGeneratorModal from './ReportGeneratorModal';
 import './StudentAnalysis.css';
 
 const StudentAnalysis = ({ student, onClose }) => {
@@ -14,6 +15,7 @@ const StudentAnalysis = ({ student, onClose }) => {
   const [academicDetails, setAcademicDetails] = useState(null);
   const [loadingAcademics, setLoadingAcademics] = useState(false);
   const [academicError, setAcademicError] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [performanceInsights, setPerformanceInsights] = useState({
     strengths: [],
     areasForImprovement: [],
@@ -545,26 +547,24 @@ const StudentAnalysis = ({ student, onClose }) => {
   const formatCategoryName = (category) => {
     switch (category) {
       case 'curricular':
-        return 'Curricular';
-      case 'coCurricular':
-        return 'Co-Curricular';
-      case 'extraCurricular':
-        return 'Extra-Curricular';
-      default:
-        return category;
-    }
-  };
 
-  const handleSendAnalysis = () => {
-    // In a real app, this would make an API call to send the analysis
-    console.log('Sending analysis for student:', student.name);
-
-    alert(`Analysis for ${student.name} would be shared with the student and parents in a real application.`);
-    onClose();
-  };
-
-  return (
-    <div className="modal-backdrop">
+const formatCategoryName = (category) => {
+  switch (category) {
+    case 'curricular':
+      return 'Curricular';
+    case 'coCurricular':
+      return 'Co-Curricular';
+    case 'extraCurricular':
+      return 'Extra-Curricular';
+    default:
+      return category;
+  }
+  case 'extraCurricular':
+    return 'Extra-Curricular';
+  default:
+    return category;
+}
+};
       <div className="modal-container analysis-modal">
         <div className="modal-header">
           <h2>Student Analysis: {student.name}</h2>
@@ -993,10 +993,23 @@ const StudentAnalysis = ({ student, onClose }) => {
 
         <div className="modal-footer">
           <button className="btn-cancel" onClick={onClose}>Close</button>
+          <button className="btn-report" onClick={handleOpenReportModal}>
+            Generate Report
+          </button>
           <button className="btn-share" onClick={handleSendAnalysis}>
             Share Analysis with Student & Parents
           </button>
         </div>
+        
+        {showReportModal && (
+          <ReportGeneratorModal 
+            student={student}
+            onClose={handleCloseReportModal}
+            semesterPoints={semesterPoints}
+            academicDetails={academicDetails}
+            activityList={activityList}
+          />
+        )}
       </div>
     </div>
   );

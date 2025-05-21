@@ -282,18 +282,7 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
         <h3 className="table-title">Student Performance {loading && <span className="loading-indicator">Loading...</span>}</h3>
         
         <div className="batch-stats">
-          <div className="stat-item">
-            <span className="stat-label">Total Students:</span>
-            <span className="stat-value">{batchStats.totalStudents}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Avg. Points:</span>
-            <div className="stat-points">
-              <span className="curricular" title="Curricular">{batchStats.averageCurricular}</span>
-              <span className="co-curricular" title="Co-Curricular">{batchStats.averageCoCurricular}</span>
-              <span className="extra-curricular" title="Extra-Curricular">{batchStats.averageExtraCurricular}</span>
-            </div>
-          </div>
+          <span className="stat-item">Total Students: <span className="stat-value">{batchStats.totalStudents}</span></span>
         </div>
         
         <div className="table-filters">
