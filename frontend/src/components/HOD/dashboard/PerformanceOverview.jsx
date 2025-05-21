@@ -186,18 +186,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
       {loading && <div className="loading-overlay">Loading charts...</div>}
       {error && <div className="error-message">{error}</div>}
 
-      <div className="overview-stats">
-        <div className="stat-card">
-          <h3>Average Points</h3>
-          <div className="stat-value">{averages.total}</div>
-          <div className="stat-label">Overall Average</div>
-        </div>
-        <div className="stat-card">
-          <h3>Students</h3>
-          <div className="stat-value">{students ? students.length : 0}</div>
-          <div className="stat-label">Total Count</div>
-        </div>
-      </div>
+      {/* Overview stats section removed as requested */}
 
       <div className="charts-container">
         <div className="chart-box">
