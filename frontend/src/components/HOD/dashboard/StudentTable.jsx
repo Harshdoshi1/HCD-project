@@ -5,6 +5,12 @@ import './StudentTable.css';
 
 const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStudentSelect }) => {
   const [students, setStudents] = useState([]);
+  const [batchStats, setBatchStats] = useState({
+    totalStudents: 0,
+    averageCurricular: 0,
+    averageCoCurricular: 0,
+    averageExtraCurricular: 0
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({
@@ -28,6 +34,13 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
   const fetchStudents = async () => {
     setLoading(true);
     setError(null);
+    // Reset batch stats
+    setBatchStats({
+      totalStudents: 0,
+      averageCurricular: 0,
+      averageCoCurricular: 0,
+      averageExtraCurricular: 0
+    });
     
     try {
       console.log('Fetching students with filters:', { batch: selectedBatch, semester: selectedSemester });
@@ -153,7 +166,32 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
         })) : [];
         
         console.log('Formatted students:', formattedStudents);
-        setStudents(formattedStudents);
+        const processedStudents = formattedStudents;
+        
+        // Process and set the students data
+        console.log('Setting students state with:', processedStudents);
+        setStudents(processedStudents);
+        
+        // Calculate batch statistics
+        if (processedStudents.length > 0) {
+          const totalCurricular = processedStudents.reduce((sum, student) => sum + (student.points?.curricular || 0), 0);
+          const totalCoCurricular = processedStudents.reduce((sum, student) => sum + (student.points?.coCurricular || 0), 0);
+          const totalExtraCurricular = processedStudents.reduce((sum, student) => sum + (student.points?.extraCurricular || 0), 0);
+          
+          setBatchStats({
+            totalStudents: processedStudents.length,
+            averageCurricular: Math.round(totalCurricular / processedStudents.length),
+            averageCoCurricular: Math.round(totalCoCurricular / processedStudents.length),
+            averageExtraCurricular: Math.round(totalExtraCurricular / processedStudents.length)
+          });
+        } else {
+          setBatchStats({
+            totalStudents: 0,
+            averageCurricular: 0,
+            averageCoCurricular: 0,
+            averageExtraCurricular: 0
+          });
+        }
       } else {
         console.log('No data in response');
         setStudents([]);
@@ -241,7 +279,22 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
     <div className="student-table-container">
       {error && <div className="error-message">{error}</div>}
       <div className="table-header">
-        <h3>Student Performance {loading && <span className="loading-indicator">Loading...</span>}</h3>
+        <h3 className="table-title">Student Performance {loading && <span className="loading-indicator">Loading...</span>}</h3>
+        
+        <div className="batch-stats">
+          <div className="stat-item">
+            <span className="stat-label">Total Students:</span>
+            <span className="stat-value">{batchStats.totalStudents}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Avg. Points:</span>
+            <div className="stat-points">
+              <span className="curricular" title="Curricular">{batchStats.averageCurricular}</span>
+              <span className="co-curricular" title="Co-Curricular">{batchStats.averageCoCurricular}</span>
+              <span className="extra-curricular" title="Extra-Curricular">{batchStats.averageExtraCurricular}</span>
+            </div>
+          </div>
+        </div>
         
         <div className="table-filters">
           {/* Curricular Points Filter */}

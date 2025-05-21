@@ -13,16 +13,81 @@
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid #eaeaea;
+  flex-wrap: nowrap;
+}
+
+.table-title {
+  white-space: nowrap;
+  margin: 0;
+  min-width: 200px;
+}
+
+.batch-stats {
+  display: flex;
+  gap: 20px;
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  margin: 0 auto;
+  flex: 1;
+  justify-content: center;
+  max-width: 500px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3674B5;
+}
+
+.stat-points {
+  display: flex;
+  gap: 10px;
+}
+
+.stat-points span {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  color: white;
+}
+
+.stat-points span.curricular {
+  background-color: #9b87f5;
+}
+
+.stat-points span.co-curricular {
+  background-color: #1EAEDB;
+}
+
+.stat-points span.extra-curricular {
+  background-color: #33C3F0;
 }
 
 .table-filters {
   display: flex;
   gap: 16px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   background-color: #f8f9fa;
   padding: 12px;
   border-radius: 6px;
   border: 1px solid #e9ecef;
+  min-width: 250px;
 }
 
 .filter-dropdown {
@@ -148,15 +213,15 @@
 }
 
 .points-bar.curricular {
-  background-color: #3674B5;
+  background-color: #9b87f5;
 }
 
 .points-bar.co-curricular {
-  background-color: #3674B5;
+  background-color: #1EAEDB;
 }
 
 .points-bar.extra-curricular {
-  background-color: #3674B5;
+  background-color: #33C3F0;
 }
 
 .dashboard-HOD-btn-view {
