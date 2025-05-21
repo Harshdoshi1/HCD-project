@@ -93,9 +93,46 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
         }
         
         // Process student data to match the expected format
-        const formattedStudents = Array.isArray(dataToProcess) ? dataToProcess.map(student => {
+        const formattedStudents = Array.isArray(dataToProcess) ? await Promise.all(dataToProcess.map(async student => {
           console.log('Processing student:', student);
-          // Fetch student points data or use default values
+          
+          // Initialize points object with curricular as 0
+          let points = {
+            curricular: 0, // Keep curricular points as zero as requested
+            coCurricular: 0,
+            extraCurricular: 0
+          };
+          
+          // Fetch co-curricular and extra-curricular points from student_points table
+          try {
+            const enrollmentNumber = student.enrollmentNumber || student.rollNo;
+            const semester = student.currnetsemester || selectedSemester;
+            
+            if (enrollmentNumber && semester) {
+              const pointsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+                enrollmentNumber,
+                semester
+              });
+              
+              console.log('Student points response:', pointsResponse.data);
+              
+              if (pointsResponse.data && Array.isArray(pointsResponse.data)) {
+                // Sum up all co-curricular and extra-curricular points
+                pointsResponse.data.forEach(activity => {
+                  points.coCurricular += parseInt(activity.totalCocurricular || 0);
+                  points.extraCurricular += parseInt(activity.totalExtracurricular || 0);
+                });
+              } else if (pointsResponse.data && pointsResponse.data.totalCocurricular) {
+                // If it's a single object with the totals
+                points.coCurricular = parseInt(pointsResponse.data.totalCocurricular || 0);
+                points.extraCurricular = parseInt(pointsResponse.data.totalExtracurricular || 0);
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching student points:', error);
+            // Keep the default values if there's an error
+          }
+          
           return {
             id: student.id || Math.random().toString(36).substr(2, 9),
             name: student.name || student.studentName || 'Unknown',
@@ -104,14 +141,9 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
             semester: student.semesterNumber || student.currnetsemester || selectedSemester,
             email: student.email || 'N/A',
             parentEmail: student.parentEmail || 'N/A',
-            points: {
-              // Use actual points if available, otherwise use defaults
-              curricular: parseInt(student.curricular || student.totalCurricular || 0),
-              coCurricular: parseInt(student.coCurricular || student.totalCocurricular || 0),
-              extraCurricular: parseInt(student.extraCurricular || student.totalExtracurricular || 0)
-            }
+            points: points
           };
-        }) : [];
+        })) : [];
         
         console.log('Formatted students:', formattedStudents);
         setStudents(formattedStudents);
