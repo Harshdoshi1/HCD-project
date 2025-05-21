@@ -212,13 +212,84 @@ const getStudentsByBatch = async (req, res) => {
     }
 };
 
+// Student login functionality
+const loginStudent = async (req, res) => {
+    try {
+        const { email, enrollmentNumber } = req.body;
+
+        console.log('Login attempt:', { email, enrollmentNumber });
+
+        // Input validation
+        if (!email || !enrollmentNumber) {
+            return res.status(400).json({ 
+                message: 'Email and enrollment number are required',
+                error: 'Missing required fields'
+            });
+        }
+
+        // Find student by email
+        const student = await Student.findOne({ 
+            where: { email },
+            include: [{ model: Batch, attributes: ['batchName'] }]
+        });
+
+        if (!student) {
+            console.log('Student not found for email:', email);
+            return res.status(400).json({ 
+                message: 'Invalid email or enrollment number',
+                error: 'Student not found'
+            });
+        }
+
+        // Verify enrollment number
+        if (student.enrollmentNumber !== enrollmentNumber) {
+            console.log('Invalid enrollment number for email:', email);
+            return res.status(400).json({ 
+                message: 'Invalid email or enrollment number',
+                error: 'Invalid enrollment number'
+            });
+        }
+
+        // Generate JWT token
+        const jwt = require('jsonwebtoken');
+        const token = jwt.sign(
+            { id: student.id, email: student.email },
+            process.env.JWT_SECRET || 'your_secret_key',
+            { expiresIn: '1h' }
+        );
+
+        console.log('Login successful for email:', email);
+        res.status(200).json({ 
+            message: 'Login successful', 
+            token, 
+            user: {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                enrollmentNumber: student.enrollmentNumber,
+                currentSemester: student.currnetsemester,
+                hardwarePoints: student.hardwarePoints,
+                softwarePoints: student.softwarePoints,
+                batch: student.Batch ? student.Batch.batchName : null
+            }
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ 
+            message: 'Server Error', 
+            error: error.message 
+        });
+    }
+};
+
 module.exports = { 
     deleteStudent, 
     updateStudent, 
     getStudentById, 
-    getAllStudents, 
-    createStudents, 
+    getAllStudents,
     createStudent,
+    createStudents,
     updateStudentSemesters,
-    getStudentsByBatch
+    getStudentsByBatch,
+    loginStudent
 };

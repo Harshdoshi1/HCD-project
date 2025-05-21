@@ -1,8 +1,307 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './StudentAnalysis.css';
 
 const StudentAnalysis = ({ student, onClose }) => {
+  // State for storing semester points data
+  const [semesterPoints, setSemesterPoints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedSemester, setSelectedSemester] = useState(null);
+  const [activityList, setActivityList] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+  const [performanceInsights, setPerformanceInsights] = useState({
+    strengths: [],
+    areasForImprovement: [],
+    participationPattern: '',
+    trendAnalysis: ''
+  });
+
+  // For debugging
+  console.log('Student data received:', student);
+
+  // Fetch semester points data from student_points table
+  useEffect(() => {
+    const fetchSemesterPoints = async () => {
+      if (!student || !student.rollNo) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Get the enrollment number
+        const enrollmentNumber = student.rollNo;
+        console.log('Fetching semester points for enrollment number:', enrollmentNumber);
+
+        // Get the current semester
+        const currentSemester = parseInt(student.semester) || 1;
+
+        // Create an array to store all semester points
+        const allSemesterPoints = [];
+
+        // Fetch points for each semester from 1 to current semester
+        for (let semester = 1; semester <= currentSemester; semester++) {
+          try {
+            // Use the existing fetchEventsbyEnrollandSemester endpoint
+            const response = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+              enrollmentNumber,
+              semester: semester.toString()
+            });
+
+            console.log(`Semester ${semester} points response:`, response.data);
+
+            // If we got data, add it to our collection
+            if (response.data && Array.isArray(response.data)) {
+              // Calculate total points for this semester
+              let semesterTotalCoCurricular = 0;
+              let semesterTotalExtraCurricular = 0;
+
+              response.data.forEach(item => {
+                semesterTotalCoCurricular += parseInt(item.totalCocurricular || 0);
+                semesterTotalExtraCurricular += parseInt(item.totalExtracurricular || 0);
+              });
+
+              // Add semester data to our collection
+              allSemesterPoints.push({
+                semester,
+                totalCocurricular: semesterTotalCoCurricular,
+                totalExtracurricular: semesterTotalExtraCurricular
+              });
+            } else if (response.data && !Array.isArray(response.data) && response.data.message) {
+              // If no activities found, still add the semester with zero points
+              allSemesterPoints.push({
+                semester,
+                totalCocurricular: 0,
+                totalExtracurricular: 0
+              });
+            }
+          } catch (semesterError) {
+            console.warn(`Error fetching semester ${semester} points:`, semesterError);
+            // Still add the semester with zero points on error
+            allSemesterPoints.push({
+              semester,
+              totalCocurricular: 0,
+              totalExtracurricular: 0
+            });
+          }
+        }
+
+        console.log('All semester points collected:', allSemesterPoints);
+        setSemesterPoints(allSemesterPoints);
+
+        // Set the default selected semester to the current semester
+        setSelectedSemester(currentSemester);
+
+        // Fetch activities for the current semester by default
+        fetchActivitiesBySemester(enrollmentNumber, currentSemester);
+      } catch (err) {
+        console.error('Error in semester points fetching process:', err);
+        setError('Failed to load semester points data');
+        setSemesterPoints([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSemesterPoints();
+  }, [student]);
+
+  // Function to fetch activities for a specific semester
+  const fetchActivitiesBySemester = async (enrollmentNumber, semester) => {
+    if (!enrollmentNumber || !semester) return;
+
+    setLoadingActivities(true);
+    try {
+      // Fetch student points for the selected semester
+      const response = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+        enrollmentNumber,
+        semester: semester.toString()
+      });
+
+      console.log(`Activities for semester ${semester}:`, response.data);
+
+      if (response.data && Array.isArray(response.data)) {
+        // Extract event IDs from the response
+        const eventIds = [];
+        response.data.forEach(item => {
+          if (item.eventId) {
+            // Split the comma-separated event IDs and add them to our array
+            const ids = item.eventId.split(',').map(id => id.trim()).filter(id => id);
+            eventIds.push(...ids);
+          }
+        });
+
+        console.log('Extracted event IDs:', eventIds);
+
+        if (eventIds.length > 0) {
+          // Convert the array of event IDs to a comma-separated string as required by the API
+          const eventIdsString = eventIds.join(',');
+          console.log('Sending event IDs as string:', eventIdsString);
+
+          // Fetch event details from EventMaster table
+          const eventDetailsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsByIds', {
+            eventIds: eventIdsString
+          });
+
+          console.log('Event details response:', eventDetailsResponse.data);
+
+          if (eventDetailsResponse.data && eventDetailsResponse.data.success && Array.isArray(eventDetailsResponse.data.data)) {
+            // Process event details and create activity list
+            const activities = eventDetailsResponse.data.data.map(event => ({
+              id: event.id,
+              name: event.eventName || 'Unknown Event',
+              position: event.position || 'Participant',
+              points: event.points || 0,
+              type: event.eventType || 'Unknown Type',
+              category: event.eventCategory || 'Unknown Category'
+            }));
+
+            setActivityList(activities);
+
+            // Generate performance insights based on the activities
+            generatePerformanceInsights(activities);
+          } else {
+            console.warn('Unexpected event details format:', eventDetailsResponse.data);
+            setActivityList([]);
+          }
+        } else {
+          console.log('No event IDs found for this semester');
+          setActivityList([]);
+        }
+      } else {
+        console.warn('Unexpected response format for activities:', response.data);
+        setActivityList([]);
+      }
+    } catch (err) {
+      console.error('Error fetching activities:', err);
+      setActivityList([]);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  // Generate performance insights based on activities
+  const generatePerformanceInsights = (activities) => {
+    if (!activities || activities.length === 0) {
+      setPerformanceInsights({
+        strengths: [],
+        areasForImprovement: [],
+        participationPattern: 'No participation data available for this semester.',
+        trendAnalysis: 'Insufficient data to analyze trends.'
+      });
+      return;
+    }
+
+    // Define all possible event categories
+    const allCategories = [
+      'Art and Craft', 'Dance', 'Debate', 'Expert Talk', 'Hackathon',
+      'Seminar', 'Sports', 'Tech Competition', 'Workshop'
+    ];
+
+    // Count participation by category
+    const categoryCounts = {};
+    allCategories.forEach(category => {
+      categoryCounts[category] = 0;
+    });
+
+    // Count total points by category
+    const categoryPoints = {};
+    allCategories.forEach(category => {
+      categoryPoints[category] = 0;
+    });
+
+    // Process each activity
+    activities.forEach(activity => {
+      const category = activity.category;
+      if (category && allCategories.includes(category)) {
+        categoryCounts[category] += 1;
+        categoryPoints[category] += (activity.points || 0);
+      }
+    });
+
+    console.log('Category participation counts:', categoryCounts);
+    console.log('Category points:', categoryPoints);
+
+    // Find categories with highest and lowest participation
+    const sortedCategories = Object.entries(categoryCounts)
+      .sort((a, b) => b[1] - a[1]);
+
+    // Get unique participation counts (sorted high to low)
+    const uniqueCounts = [...new Set(sortedCategories.map(([_, count]) => count))].sort((a, b) => b - a);
+
+    // Get top participation count
+    const topCount = uniqueCounts[0] || 0;
+
+    // Get categories with highest participation
+    const strengthCategories = sortedCategories
+      .filter(([_, count]) => count > 0 && count === topCount)
+      .map(([category]) => category);
+
+    // Create strengths array from top categories
+    const strengths = strengthCategories.map(category => ({
+      category,
+      count: categoryCounts[category],
+      points: categoryPoints[category]
+    }));
+
+    // Identify categories that have zero participation
+    const zeroParticipationCategories = sortedCategories
+      .filter(([_, count]) => count === 0)
+      .map(([category]) => category);
+
+    // Identify categories with low participation (not in strengths, but participated)
+    const lowParticipationCategories = sortedCategories
+      .filter(([category, count]) => count > 0 && !strengthCategories.includes(category))
+      .map(([category]) => category);
+
+    // Combine zero and low participation categories, prioritize zero
+    // Make sure we don't include any categories that are already in strengths
+    const improvementCategories = [...zeroParticipationCategories, ...lowParticipationCategories]
+      .filter(category => !strengthCategories.includes(category));
+
+    // Create areas for improvement array
+    const areasForImprovement = improvementCategories.map(category => ({
+      category,
+      count: categoryCounts[category],
+      points: categoryPoints[category]
+    }));
+
+    // Generate participation pattern description
+    let participationPattern = '';
+    if (strengths.length > 0) {
+      const topCategories = strengths.map(s => s.category).join(', ');
+      participationPattern = `Shows strong interest in ${topCategories} activities.`;
+    } else {
+      participationPattern = 'No clear participation pattern detected.';
+    }
+
+    // Generate trend analysis
+    let trendAnalysis = '';
+    const totalActivities = activities.length;
+    if (totalActivities > 3) {
+      trendAnalysis = 'Actively participates in a variety of events.';
+    } else if (totalActivities > 0) {
+      trendAnalysis = 'Limited participation in events this semester.';
+    } else {
+      trendAnalysis = 'No participation in events this semester.';
+    }
+
+    // Set the performance insights
+    setPerformanceInsights({
+      strengths,
+      areasForImprovement,
+      participationPattern,
+      trendAnalysis
+    });
+  };
+
+  // Handle semester selection change
+  const handleSemesterChange = (semester) => {
+    setSelectedSemester(semester);
+    fetchActivitiesBySemester(student.rollNo, semester);
+  };
+
   // If no student is provided, show a default view for the StudentAnalysis page
   if (!student) {
     return (
@@ -23,35 +322,49 @@ const StudentAnalysis = ({ student, onClose }) => {
 
   // Prepare data for the line chart
   const prepareChartData = () => {
-    if (!student.history || student.history.length === 0) {
-      return [
-        {
-          semester: student.semester,
-          curricular: student.points.curricular,
-          coCurricular: student.points.coCurricular,
-          extraCurricular: student.points.extraCurricular,
-        }
-      ];
+    // If we have fetched semester points data from the API, use that
+    if (semesterPoints && semesterPoints.length > 0) {
+      console.log('Using fetched semester points data for chart:', semesterPoints);
+
+      // Map the semester points data to the format expected by the chart
+      const chartData = semesterPoints.map(point => ({
+        semester: point.semester,
+        coCurricular: point.totalCocurricular || 0,
+        extraCurricular: point.totalExtracurricular || 0
+      }));
+
+      // Sort by semester
+      chartData.sort((a, b) => a.semester - b.semester);
+
+      console.log('Chart data prepared from API data:', chartData);
+      return chartData;
     }
 
-    // Sort history by semester (ascending)
-    const sortedHistory = [...student.history].sort((a, b) => parseInt(a.semester) - parseInt(b.semester));
+    // Fallback to using student data if API data is not available
+    console.log('Falling back to student object data for chart');
 
-    // Add current semester data
-    return [
-      ...sortedHistory.map(item => ({
-        semester: item.semester,
-        curricular: item.points.curricular,
-        coCurricular: item.points.coCurricular,
-        extraCurricular: item.points.extraCurricular,
-      })),
-      {
-        semester: student.semester,
-        curricular: student.points.curricular,
-        coCurricular: student.points.coCurricular,
-        extraCurricular: student.points.extraCurricular,
-      }
-    ];
+    // Get current semester as a number
+    const currentSemester = parseInt(student.semester) || 1;
+
+    // Create a default data point for current semester
+    const currentSemesterData = {
+      semester: currentSemester,
+      coCurricular: student.points?.coCurricular || 0,
+      extraCurricular: student.points?.extraCurricular || 0,
+    };
+
+    // Create data points for all semesters from 1 to current
+    const fallbackChartData = [];
+    for (let i = 1; i <= currentSemester; i++) {
+      fallbackChartData.push({
+        semester: i,
+        coCurricular: i === currentSemester ? currentSemesterData.coCurricular : 0,
+        extraCurricular: i === currentSemester ? currentSemesterData.extraCurricular : 0,
+      });
+    }
+
+    console.log('Fallback chart data:', fallbackChartData);
+    return fallbackChartData;
   };
 
   const generateAnalysis = () => {
@@ -158,14 +471,39 @@ const StudentAnalysis = ({ student, onClose }) => {
   };
 
   const prepareCategoryData = () => {
+    // If activities are loaded for the current semester, use that data
+    if (activityList && activityList.length > 0) {
+      // Initialize point counters for each category
+      let coCurricularPoints = 0;
+      let extraCurricularPoints = 0;
+
+      // Calculate points from current activities
+      activityList.forEach(activity => {
+        if (activity.type === 'co-curricular') {
+          coCurricularPoints += (activity.points || 0);
+        } else if (activity.type === 'extra-curricular') {
+          extraCurricularPoints += (activity.points || 0);
+        }
+      });
+
+      return [
+        { name: 'Curricular', value: 0 }, // As per requirements, curricular is set to 0
+        { name: 'Co-Curricular', value: coCurricularPoints },
+        { name: 'Extra-Curricular', value: extraCurricularPoints }
+      ];
+    }
+
+    // Fallback to student overall points if no activities are loaded
     return [
-      { name: 'Curricular', value: student.points.curricular },
+      { name: 'Curricular', value: 0 }, // As per requirements, curricular is set to 0
       { name: 'Co-Curricular', value: student.points.coCurricular },
       { name: 'Extra-Curricular', value: student.points.extraCurricular }
     ];
   };
 
+  // Initialize chart data
   const chartData = prepareChartData();
+  console.log('Prepared chart data:', chartData);
   const analysis = generateAnalysis();
   const suggestions = generateSuggestions(analysis);
   const categoryData = prepareCategoryData();
@@ -218,19 +556,109 @@ const StudentAnalysis = ({ student, onClose }) => {
 
           <div className="analysis-section">
             <h3>Performance Trends</h3>
+
             <div className="chart-container">
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="semester" label={{ value: 'Semester', position: 'insideBottomRight', offset: -10 }} />
-                  <YAxis label={{ value: 'Points', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="curricular" stroke="#0088FE" name="Curricular" />
-                  <Line type="monotone" dataKey="coCurricular" stroke="#00C49F" name="Co-Curricular" />
-                  <Line type="monotone" dataKey="extraCurricular" stroke="#FFBB28" name="Extra-Curricular" />
-                </LineChart>
-              </ResponsiveContainer>
+              {loading ? (
+                <div className="loading-message">
+                  <p>Loading semester points data...</p>
+                </div>
+              ) : error ? (
+                <div className="error-message">
+                  <p>{error}</p>
+                </div>
+              ) : chartData && chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="semester"
+                      label={{ value: 'Semester', position: 'insideBottomRight', offset: -10 }}
+                      tickCount={10}
+                      type="number"
+                      domain={[1, 'dataMax']}
+                      allowDecimals={false}
+                    />
+                    <YAxis label={{ value: 'Points', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip formatter={(value) => [`${value} points`, undefined]} />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="coCurricular"
+                      stroke="#00C49F"
+                      name="Co-Curricular"
+                      strokeWidth={2}
+                      dot={{ r: 6 }}
+                      activeDot={{ r: 8 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="extraCurricular"
+                      stroke="#FFBB28"
+                      name="Extra-Curricular"
+                      strokeWidth={2}
+                      dot={{ r: 6 }}
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="no-data-message">
+                  <p>No performance history data available</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Activity List Section */}
+          <div className="analysis-section">
+            <h3>Activity List</h3>
+
+            {/* Semester Filter */}
+            <div className="semester-filter">
+              <label>Select Semester: </label>
+              <div className="semester-buttons">
+                {semesterPoints.map(point => (
+                  <button
+                    key={point.semester}
+                    className={selectedSemester === point.semester ? 'active' : ''}
+                    onClick={() => handleSemesterChange(point.semester)}
+                  >
+                    Semester {point.semester}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="activity-list-container">
+              {loadingActivities ? (
+                <div className="loading-message">
+                  <p>Loading activities...</p>
+                </div>
+              ) : activityList && activityList.length > 0 ? (
+                <table className="activity-table">
+                  <thead>
+                    <tr>
+                      <th>Activity Name</th>
+                      <th>Type</th>
+                      <th>Position</th>
+                      <th>Points</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activityList.map(activity => (
+                      <tr key={activity.id}>
+                        <td>{activity.name}</td>
+                        <td>{activity.type}</td>
+                        <td>{activity.position}</td>
+                        <td>{activity.points}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="no-data-message">
+                  <p>No activities found for semester {selectedSemester}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -263,63 +691,72 @@ const StudentAnalysis = ({ student, onClose }) => {
 
           <div className="analysis-section">
             <h3>Performance Insights</h3>
+            {loadingActivities ? (
+              <div className="loading-message">
+                <p>Analyzing performance data...</p>
+              </div>
+            ) : (
+              <div className="insights-grid">
+                {/* Strengths Card */}
+                <div className="insight-card">
+                  <h4>Strengths</h4>
+                  {performanceInsights.strengths.length > 0 ? (
+                    <div className="insight-list">
+                      <p className="insight-header">Strong performance in:</p>
+                      <ul>
+                        {performanceInsights.strengths.map((strength, index) => (
+                          <li key={index} className="insight-item">
+                            <span className="category-name">{strength.category}</span>
+                            <span className="points-badge strength">{strength.points} pts</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p>No specific strengths identified in this semester.</p>
+                  )}
+                </div>
 
-            <div className="insights-grid">
-              <div className="insight-card">
-                <h4>Strengths</h4>
-                <p>
-                  {analysis.strength ?
-                    `Strong performance in ${formatCategoryName(analysis.strength)} activities.` :
-                    'No significant strengths identified yet.'}
-                </p>
-                <div className="points-badge strength">
-                  {analysis.strength && student.points[analysis.strength]} pts
+                {/* Areas for Improvement Card */}
+                <div className="insight-card">
+                  <h4>Areas for Improvement</h4>
+                  {performanceInsights.areasForImprovement.length > 0 ? (
+                    <div className="insight-list">
+                      <p className="insight-header">Suggested areas to explore:</p>
+                      <ul>
+                        {performanceInsights.areasForImprovement.slice(0, 4).map((area, index) => (
+                          <li key={index} className="insight-item">
+                            <span className="category-name">{area.category}</span>
+                            {area.count === 0 ? (
+                              <span className="participation-status no-participation">Not participated</span>
+                            ) : (
+                              <span className="points-badge weakness">{area.points} pts</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p>No specific areas for improvement identified.</p>
+                  )}
+                </div>
+
+                {/* Participation Pattern Card */}
+                <div className="insight-card">
+                  <h4>Participation Pattern</h4>
+                  <p>{performanceInsights.participationPattern}</p>
+                </div>
+
+                {/* Trend Analysis Card */}
+                <div className="insight-card">
+                  <h4>Trend Analysis</h4>
+                  <p>{performanceInsights.trendAnalysis}</p>
                 </div>
               </div>
-
-              <div className="insight-card">
-                <h4>Areas for Improvement</h4>
-                <p>
-                  {analysis.weakness ?
-                    `Could improve participation in ${formatCategoryName(analysis.weakness)} activities.` :
-                    'No specific areas for improvement identified.'}
-                </p>
-                <div className="points-badge weakness">
-                  {analysis.weakness && student.points[analysis.weakness]} pts
-                </div>
-              </div>
-
-              <div className="insight-card">
-                <h4>Participation Pattern</h4>
-                <ul className="pattern-list">
-                  {Object.entries(analysis.participationPatterns).map(([category, rate]) => (
-                    <li key={category}>
-                      <span className="pattern-category">{formatCategoryName(category)}:</span>
-                      <span className="pattern-value">
-                        {Math.round(rate * 100)}% participation rate
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="insight-card">
-                <h4>Trend Analysis</h4>
-                <ul className="trend-list">
-                  {Object.entries(analysis.trends).map(([category, trend]) => (
-                    <li key={category}>
-                      <span className="trend-category">{formatCategoryName(category)}:</span>
-                      <span className={`trend-value ${trend.direction}`}>
-                        {trend.direction === 'increasing' ? '↑' :
-                          trend.direction === 'decreasing' ? '↓' : '→'}
-                        {trend.change} points ({trend.direction})
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            )}
           </div>
+
+
 
           <div className="analysis-section">
             <h3>Improvement Suggestions</h3>
@@ -329,7 +766,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                   <li key={index} className="suggestion-item">{suggestion}</li>
                 ))}
               </ul>
-              
+
               <div className="action-plan">
                 <h4>Recommended Action Plan</h4>
                 <div className="action-steps">
@@ -337,26 +774,26 @@ const StudentAnalysis = ({ student, onClose }) => {
                     <div className="step-number">1</div>
                     <div className="step-content">
                       <h5>Short-term (Next 1-2 months)</h5>
-                      <p>{analysis.weakness === 'curricular' 
-                        ? 'Schedule weekly study sessions focusing on weaker subjects' 
-                        : analysis.weakness === 'coCurricular' 
-                        ? 'Join at least one technical club or workshop this month' 
-                        : 'Participate in at least one extracurricular event this month'}</p>
+                      <p>{analysis.weakness === 'curricular'
+                        ? 'Schedule weekly study sessions focusing on weaker subjects'
+                        : analysis.weakness === 'coCurricular'
+                          ? 'Join at least one technical club or workshop this month'
+                          : 'Participate in at least one extracurricular event this month'}</p>
                     </div>
                   </div>
-                  
+
                   <div className="action-step">
                     <div className="step-number">2</div>
                     <div className="step-content">
                       <h5>Mid-term (Next 3-4 months)</h5>
-                      <p>{analysis.weakness === 'curricular' 
-                        ? 'Aim for 10% improvement in academic scores by next assessment' 
-                        : analysis.weakness === 'coCurricular' 
-                        ? 'Contribute to a technical project or competition' 
-                        : 'Take on a specific role in an extracurricular activity'}</p>
+                      <p>{analysis.weakness === 'curricular'
+                        ? 'Aim for 10% improvement in academic scores by next assessment'
+                        : analysis.weakness === 'coCurricular'
+                          ? 'Contribute to a technical project or competition'
+                          : 'Take on a specific role in an extracurricular activity'}</p>
                     </div>
                   </div>
-                  
+
                   <div className="action-step">
                     <div className="step-number">3</div>
                     <div className="step-content">
