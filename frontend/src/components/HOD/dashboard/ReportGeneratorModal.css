@@ -155,10 +155,11 @@
   user-select: none;
 }
 
-.report-generator-modal .semester-actions {
+.report-generator-modal .semester-actions-btns {
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
+
 }
 
 .report-generator-modal .select-all-btn,
@@ -169,6 +170,7 @@
   border-radius: 4px;
   background-color: #f9f9f9;
   cursor: pointer;
+  color: black;
   transition: all 0.2s;
 }
 
@@ -176,6 +178,7 @@
 .report-generator-modal .deselect-all-btn:hover {
   background-color: #eaeaea;
   border-color: #ccc;
+  color: black;
 }
 
 .report-generator-modal .semesters-container {
@@ -221,6 +224,10 @@
   border-left: 3px solid #c62828;
 }
 
+.select-all-btn {
+  color: black;
+}
+
 .report-generator-modal .no-data-message {
   color: #666;
   font-style: italic;
@@ -228,7 +235,8 @@
 }
 
 .report-generator-modal .cancel-btn,
-.report-generator-modal .generate-btn {
+.report-generator-modal .generate-btn,
+.report-generator-modal .send-report-btn {
   padding: 8px 16px;
   border-radius: 4px;
   font-size: 14px;
@@ -260,10 +268,132 @@
   border-color: #2c5d91;
 }
 
-.report-generator-modal .generate-btn:disabled {
+.report-generator-modal .generate-btn:disabled,
+.report-generator-modal .send-report-btn:disabled {
   background-color: #b0bec5;
   border-color: #b0bec5;
   cursor: not-allowed;
+}
+
+.report-generator-modal .send-report-btn {
+  background-color: #4caf50;
+  border: 1px solid #4caf50;
+  color: white;
+  margin-right: 12px;
+}
+
+.report-generator-modal .send-report-btn:hover {
+  background-color: #388e3c;
+  border-color: #388e3c;
+}
+
+/* Email form styles with -send-email suffix */
+.email-form-section-send-email {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed #ddd;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.email-form-send-email {
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.form-group-send-email {
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-group-send-email label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.input-send-email,
+.textarea-send-email {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.input-send-email:focus,
+.textarea-send-email:focus {
+  border-color: #3674B5;
+  outline: none;
+}
+
+.email-form-actions-send-email {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.email-buttons-container-send-email {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-top: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cancel-email-btn-send-email {
+  background-color: #f44336;
+  border: 1px solid #f44336;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cancel-email-btn-send-email:hover {
+  background-color: #d32f2f;
+  border-color: #d32f2f;
+}
+
+.send-email-btn-send-email {
+  background-color: #4caf50;
+  border: 1px solid #4caf50;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.send-email-btn-send-email:hover {
+  background-color: #388e3c;
+  border-color: #388e3c;
 }
 
 .hidden-chart-canvas {
@@ -280,23 +410,24 @@
     width: 95%;
     max-height: 95vh;
   }
-  
+
   .report-generator-modal .student-info {
     grid-template-columns: 1fr;
   }
-  
+
   .report-generator-modal .options-container,
   .report-generator-modal .semesters-container {
     grid-template-columns: 1fr;
   }
-  
+
   .report-generator-modal .modal-footer {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .report-generator-modal .cancel-btn,
-  .report-generator-modal .generate-btn {
+  .report-generator-modal .generate-btn,
+  .report-generator-modal .send-report-btn {
     width: 100%;
     margin-right: 0;
   }
