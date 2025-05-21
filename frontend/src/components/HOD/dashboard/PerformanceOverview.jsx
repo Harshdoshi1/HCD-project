@@ -78,22 +78,55 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         }
         
         // Process student data to match the expected format
-        const formattedStudents = Array.isArray(dataToProcess) ? dataToProcess.map(student => {
+        const formattedStudents = Array.isArray(dataToProcess) ? await Promise.all(dataToProcess.map(async student => {
+          // Initialize points object with curricular as 0
+          let points = {
+            curricular: 0, // Keep curricular points as zero as requested
+            coCurricular: 0,
+            extraCurricular: 0
+          };
+          
+          // Fetch co-curricular and extra-curricular points from student_points table
+          try {
+            const enrollmentNumber = student.enrollmentNumber || student.rollNo;
+            const semester = student.currnetsemester || selectedSemester;
+            
+            if (enrollmentNumber && semester) {
+              const pointsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+                enrollmentNumber,
+                semester
+              });
+              
+              console.log('Student points response in PerformanceOverview:', pointsResponse.data);
+              
+              if (pointsResponse.data && Array.isArray(pointsResponse.data)) {
+                // Sum up all co-curricular and extra-curricular points
+                pointsResponse.data.forEach(activity => {
+                  points.coCurricular += parseInt(activity.totalCocurricular || 0);
+                  points.extraCurricular += parseInt(activity.totalExtracurricular || 0);
+                });
+              } else if (pointsResponse.data && pointsResponse.data.totalCocurricular) {
+                // If it's a single object with the totals
+                points.coCurricular = parseInt(pointsResponse.data.totalCocurricular || 0);
+                points.extraCurricular = parseInt(pointsResponse.data.totalExtracurricular || 0);
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching student points in PerformanceOverview:', error);
+            // Keep the default values if there's an error
+          }
+          
           return {
             id: student.id || Math.random().toString(36).substr(2, 9),
             name: student.name || student.studentName || 'Unknown',
             rollNo: student.enrollmentNumber || student.rollNo || 'N/A',
             batch: student.batchName || (student.Batch ? student.Batch.batchName : selectedBatch),
             semester: student.semesterNumber || student.currnetsemester || selectedSemester,
-            points: {
-              curricular: parseInt(student.curricular || student.totalCurricular || 0),
-              coCurricular: parseInt(student.coCurricular || student.totalCocurricular || 0),
-              extraCurricular: parseInt(student.extraCurricular || student.totalExtracurricular || 0)
-            },
+            points: points,
             // Add empty history array for new API data that might not have history
             history: student.history || []
           };
-        }) : [];
+        })) : [];
         
         setStudents(formattedStudents);
       } else {
