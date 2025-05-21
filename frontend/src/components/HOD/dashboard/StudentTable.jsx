@@ -12,6 +12,13 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
     direction: 'ascending'
   });
   
+  // State for points filters
+  const [pointsFilters, setPointsFilters] = useState({
+    curricular: null,
+    coCurricular: null,
+    extraCurricular: null
+  });
+  
   // Fetch students based on selected batch and semester
   useEffect(() => {
     console.log('Filter values changed, fetching students with:', { selectedBatch, selectedSemester });
@@ -172,14 +179,33 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
 
   // Handle points filtering internally
   const handlePointsFilterInternal = (category, order) => {
-    console.log('Filtering points by:', category, order);
-    setSortConfig({
-      key: `points.${category}`,
-      direction: order === 'high' ? 'descending' : 'ascending'
-    });
+    // Check if the button is already selected (toggle functionality)
+    const isAlreadySelected = pointsFilters[category] === order;
     
-    // Still call the parent handler for any additional logic
-    onPointsFilter(category, order);
+    // Update the points filters state - if already selected, set to null (unselected)
+    setPointsFilters(prev => ({
+      ...prev,
+      [category]: isAlreadySelected ? null : order
+    }));
+    
+    // Call the parent component's filter handler if provided
+    if (onPointsFilter) {
+      // Pass null as order if toggling off, otherwise pass the order
+      onPointsFilter(category, isAlreadySelected ? null : order);
+    }
+    
+    // Update local sort config - if already selected, clear the sort
+    if (isAlreadySelected) {
+      setSortConfig({
+        key: null,
+        direction: 'ascending'
+      });
+    } else {
+      setSortConfig({
+        key: `points.${category}`,
+        direction: order === 'high' ? 'descending' : 'ascending'
+      });
+    }
   };
 
   const getSortedStudents = () => {
@@ -213,40 +239,63 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
 
   return (
     <div className="student-table-container">
+      {error && <div className="error-message">{error}</div>}
       <div className="table-header">
-        <h2>Student List {loading && <span className="loading-indicator">Loading...</span>}</h2>
+        <h3>Student Performance {loading && <span className="loading-indicator">Loading...</span>}</h3>
+        
         <div className="table-filters">
+          {/* Curricular Points Filter */}
           <div className="filter-dropdown">
             <label>Curricular Points:</label>
             <div className="dropdown-buttons">
-              <button onClick={() => handlePointsFilterInternal('curricular', 'high')}>
+              <button 
+                className={pointsFilters.curricular === 'high' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('curricular', 'high')}
+              >
                 High to Low
               </button>
-              <button onClick={() => handlePointsFilterInternal('curricular', 'low')}>
+              <button 
+                className={pointsFilters.curricular === 'low' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('curricular', 'low')}
+              >
                 Low to High
               </button>
             </div>
           </div>
-
+          
+          {/* Co-curricular Points Filter */}
           <div className="filter-dropdown">
             <label>Co-curricular Points:</label>
             <div className="dropdown-buttons">
-              <button onClick={() => handlePointsFilterInternal('coCurricular', 'high')}>
+              <button 
+                className={pointsFilters.coCurricular === 'high' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('coCurricular', 'high')}
+              >
                 High to Low
               </button>
-              <button onClick={() => handlePointsFilterInternal('coCurricular', 'low')}>
+              <button 
+                className={pointsFilters.coCurricular === 'low' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('coCurricular', 'low')}
+              >
                 Low to High
               </button>
             </div>
           </div>
-
+          
+          {/* Extra-curricular Points Filter */}
           <div className="filter-dropdown">
             <label>Extra-curricular Points:</label>
             <div className="dropdown-buttons">
-              <button onClick={() => handlePointsFilterInternal('extraCurricular', 'high')}>
+              <button 
+                className={pointsFilters.extraCurricular === 'high' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('extraCurricular', 'high')}
+              >
                 High to Low
               </button>
-              <button onClick={() => handlePointsFilterInternal('extraCurricular', 'low')}>
+              <button 
+                className={pointsFilters.extraCurricular === 'low' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('extraCurricular', 'low')}
+              >
                 Low to High
               </button>
             </div>
