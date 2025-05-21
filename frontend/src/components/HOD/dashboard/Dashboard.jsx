@@ -37,7 +37,9 @@ const DashboardHOD = () => {
       ]
     },
     {
+
       id: 2,
+
       name: 'Jane Smith',
       rollNo: 'CS002',
       batch: '2022',
@@ -77,7 +79,8 @@ const DashboardHOD = () => {
 
     // Update state with the new filter values
     setSelectedBatch(batchValue);
-    setSelectedSemester(semesterValue);
+    // Always use 'all' for semester since we removed the semester filter
+    setSelectedSemester('all');
 
     // Clear filtered students since we're now fetching directly in the StudentTable
     setFilteredStudents([]);
@@ -155,7 +158,6 @@ const DashboardHOD = () => {
                     <div className="students-row">
                       <FilterSection
                         selectedBatch={selectedBatch}
-                        selectedSemester={selectedSemester}
                         onFilterChange={handleFilterChange}
                       />
                       <div className="charts-row">

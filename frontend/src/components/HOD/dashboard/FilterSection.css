@@ -1,6 +1,6 @@
 .filter-section {
   background-color: white;
-  padding: 20px;
+  padding: 12px 20px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
@@ -9,29 +9,26 @@
 
 .filter-container {
   display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .filter-group {
   display: flex;
-  flex-direction: column;
-  min-width: 200px;
+  align-items: center;
+  gap: 10px;
 }
 
-.filter-group label {
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
-}
+
 
 .filter-select {
-  padding: 10px;
+  padding: 8px 12px;
   border-radius: 4px;
   border: 1px solid #ccc;
   background-color: white;
   font-size: 14px;
   transition: border-color 0.3s, box-shadow 0.3s;
+  width: 150px;
 }
 
 .filter-select:focus {
@@ -40,16 +37,19 @@
   box-shadow: 0 0 0 2px rgba(54, 116, 181, 0.1);
 }
 
-.filter-summary {
-  margin-top: 16px;
+.filter-button {
+  background-color: #3674B5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
   font-size: 14px;
-  color: #666;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.filter-value {
-  font-weight: 500;
-  color: #3674B5;
-  margin: 0 4px;
+.filter-button:hover {
+  background-color: #2c5d91;
 }
 
 .loading-text {
@@ -71,11 +71,11 @@
 
 @media (max-width: 768px) {
   .filter-container {
-    flex-direction: column;
-    gap: 16px;
+    justify-content: flex-start;
   }
   
   .filter-group {
     width: 100%;
+    justify-content: flex-start;
   }
 }
