@@ -10,8 +10,12 @@ const {
     createStudents,
     updateStudentSemesters,
     getStudentsByBatch,
-    loginStudent
+    loginStudent,
+    getCurrentSemesterPoints,
+    getAllStudentsCurrentSemesterPoints
 } = require('../controller/studentController');
+
+router.post('/login', loginStudent);
 
 router.post('/createStudent', createStudent);
 router.get('/getStudentById', getStudentById);
@@ -21,8 +25,10 @@ router.delete('/deleteStudent', deleteStudent);
 router.post('/bulkUpload', createStudents);
 router.post('/updateStudentSemesters', updateStudentSemesters);
 router.get('/getStudentsByBatch/:batchId', getStudentsByBatch);
-// Student login route
-router.post('/login', loginStudent);
+
+// Student points routes
+router.get('/points/:enrollmentNumber/:semester', getCurrentSemesterPoints);
+router.get('/points/allStudents/currentSemester', getAllStudentsCurrentSemesterPoints);
 
 
 module.exports = router;

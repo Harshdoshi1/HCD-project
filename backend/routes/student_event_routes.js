@@ -11,7 +11,8 @@ const {
     fetchEventsbyEnrollandSemester,
     fetchEventsIDsbyEnroll,
     fetchEventsByIds,
-    fetchEventsByEventIds
+    fetchEventsByEventIds,
+    fetchTotalActivityPoints
 } = require('../controller/StudentEventController');
 
 // Add new event
@@ -30,6 +31,7 @@ router.post('/fetchEventsbyEnrollandSemester', fetchEventsbyEnrollandSemester);
 router.post('/fetchEventsIDsbyEnroll', fetchEventsIDsbyEnroll);
 router.post('/fetchEventsByIds', fetchEventsByIds);
 router.post('/fetchEventsByEventIds', fetchEventsByEventIds);
+router.post('/fetchTotalActivityPoints', fetchTotalActivityPoints);
 // Insert fetched students into database
 router.post('/students', insertFetchedStudents);
 module.exports = router;

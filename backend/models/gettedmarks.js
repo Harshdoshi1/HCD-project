@@ -147,6 +147,10 @@ const Gettedmarks = sequelize.define(
         max: 10,
       },
     },
+    grades: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   { timestamps: false }
 );

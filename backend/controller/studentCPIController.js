@@ -2,6 +2,11 @@ const StudentCPI = require('../models/studentCPI');
 const Batch = require('../models/batch');
 const Semester = require('../models/semester');
 const Student = require('../models/students');
+const Subject = require('../models/subjects');
+const UniqueSubDegree = require('../models/uniqueSubDegree');
+const ComponentMarks = require('../models/componentMarks');
+const ComponentWeightage = require('../models/componentWeightage');
+const Gettedmarks = require('../models/gettedmarks');
 const xlsx = require('xlsx');
 const { Op } = require('sequelize');
 
@@ -264,7 +269,12 @@ exports.getStudentCPIByEmail = async (req, res) => {
                 where: {
                     EnrollmentNumber: enrollmentNumber
                 },
-
+                include: [{
+                    model: Semester,
+                    attributes: ['semesterNumber'],
+                    required: true
+                }],
+                order: [['SemesterId', 'ASC']]
             });
 
             if (studentCPIs.length === 0) {
@@ -279,8 +289,22 @@ exports.getStudentCPIByEmail = async (req, res) => {
                 });
             }
 
-            // Return all CPI records for this student
-            return res.status(200).json(studentCPIs);
+            // Transform the response to include semester number
+            const transformedCPIs = studentCPIs.map(cpi => ({
+                id: cpi.id,
+                BatchId: cpi.BatchId,
+                SemesterId: cpi.SemesterId,
+                semesterNumber: cpi.Semester.semesterNumber,
+                EnrollmentNumber: cpi.EnrollmentNumber,
+                CPI: cpi.CPI,
+                SPI: cpi.SPI,
+                Rank: cpi.Rank,
+                createdAt: cpi.createdAt,
+                updatedAt: cpi.updatedAt
+            }));
+
+            // Return all CPI records for this student with semester numbers
+            return res.status(200).json(transformedCPIs);
 
         } catch (error) {
             console.error('Error fetching student CPI data by enrollment:', error);
@@ -288,6 +312,151 @@ exports.getStudentCPIByEmail = async (req, res) => {
         }
     } catch (error) {
         console.error('Error fetching student CPI data by email:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+
+exports.getStudentComponentMarksAndSubjectsByEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        // Find student by email
+        const student = await Student.findOne({
+            where: { email },
+            include: [{ model: Batch }]
+        });
+        
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found with this email' });
+        }
+        
+        // Get all semesters for the student's batch
+        const semesters = await Semester.findAll({
+            where: { batchId: student.batchId },
+            order: [['semesterNumber', 'ASC']]
+        });
+        
+        if (!semesters || semesters.length === 0) {
+            return res.status(404).json({ message: 'No semesters found for this student' });
+        }
+        
+        // Get all student CPI records
+        const cpiRecords = await StudentCPI.findAll({
+            where: { enrollmentNumber: student.enrollmentNumber },
+            include: [{ model: Semester }],
+            order: [[Semester, 'semesterNumber', 'ASC']]
+        });
+        
+        // Prepare response data
+        const semesterData = [];
+        
+        for (const semester of semesters) {
+            // Find subjects for this semester and batch
+            const subjects = await Subject.findAll({
+                where: {
+                    semesterId: semester.id,
+                    batchId: student.batchId
+                }
+            });
+            
+            const subjectsWithMarks = [];
+            
+            // Log the subjects for debugging
+            console.log('Subjects found:', subjects);
+            
+            for (const subject of subjects) {
+                // Check if we have all required fields
+                if (!subject || !subject.subjectName) {
+                    console.log('Invalid subject data:', subject);
+                    continue;
+                }
+                
+                // Try to find matching unique subject 
+                // Note: We're using a direct query instead of relying on a foreign key relationship
+                const uniqueSubjects = await UniqueSubDegree.findAll();
+                const uniqueSubject = uniqueSubjects.find(us => 
+                    us.sub_name.toLowerCase() === subject.subjectName.toLowerCase());
+                
+                if (!uniqueSubject) {
+                    console.log(`No matching UniqueSubDegree found for subject: ${subject.subjectName}`);
+                    continue;
+                }
+                
+                const subCode = uniqueSubject.sub_code;
+                console.log(`Found matching subject code: ${subCode} for subject: ${subject.subjectName}`);
+                
+                // Get component marks for this subject and student
+                const componentMarks = await ComponentMarks.findAll({
+                    where: { subjectId: subCode }
+                });
+                
+                // Get student's specific marks
+                const studentMarks = await Gettedmarks.findOne({
+                    where: {
+                        studentId: student.id,
+                        subjectId: subCode
+                    }
+                });
+                
+                // Get component weightage
+                const componentWeightage = await ComponentWeightage.findOne({
+                    where: { subjectId: subCode }
+                });
+                
+                subjectsWithMarks.push({
+                    subjectId: subject.id,
+                    subjectCode: uniqueSubject.sub_code,
+                    subjectName: uniqueSubject.sub_name,
+                    credits: uniqueSubject.sub_credit, // Using the correct field name from UniqueSubDegree model
+                    componentMarks: studentMarks ? {
+                        ese: studentMarks.ese,
+                        cse: studentMarks.cse,
+                        ia: studentMarks.ia,
+                        tw: studentMarks.tw,
+                        viva: studentMarks.viva
+                    } : null,
+                    componentWeightage: componentWeightage ? {
+                        ese: componentWeightage.ese,
+                        cse: componentWeightage.cse,
+                        ia: componentWeightage.ia,
+                        tw: componentWeightage.tw,
+                        viva: componentWeightage.viva
+                    } : null,
+                    grades: studentMarks ? studentMarks.grades : null // Include grades from gettedmarks
+                });
+            }
+            
+            // Find CPI/SPI for this semester
+            const semesterCPI = cpiRecords.find(record => record.semesterId === semester.id);
+            
+            semesterData.push({
+                semesterId: semester.id,
+                semesterNumber: semester.semesterNumber,
+                startDate: semester.startDate,
+                endDate: semester.endDate,
+                cpi: semesterCPI ? semesterCPI.cpi : null,
+                spi: semesterCPI ? semesterCPI.spi : null,
+                rank: semesterCPI ? semesterCPI.rank : null,
+                subjects: subjectsWithMarks
+            });
+        }
+        
+        return res.status(200).json({
+            student: {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                enrollmentNumber: student.enrollmentNumber,
+                batch: student.Batch.batchName,
+                hardwarePoints: student.hardwarePoints,
+                softwarePoints: student.softwarePoints
+            },
+            semesters: semesterData
+        });
+        
+    } catch (error) {
+        console.error('Error fetching student component marks and subjects:', error);
         return res.status(500).json({ message: 'Server error', error: error.message });
     }
 };

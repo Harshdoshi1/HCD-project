@@ -13,4 +13,6 @@ router.get('/all', studentCPIController.getAllStudentCPI);
 router.get('/batch/:batchName', studentCPIController.getStudentCPIByBatch);
 router.get('/enrollment/:enrollmentNumber', studentCPIController.getStudentCPIByEnrollment);
 router.get('/email/:email', studentCPIController.getStudentCPIByEmail);
+router.post('/getStudentComponentMarksAndSubjectsByEmail', studentCPIController.getStudentComponentMarksAndSubjectsByEmail);
+
 module.exports = router;

@@ -3,6 +3,7 @@ const StudentPoints = require('../models/StudentPoints');
 const Batch = require('../models/batch');
 const Student = require('../models/students');
 const ParticipationType = require('../models/participationTypes');
+const sequelize = require('../config/db');
 
 // Create new event
 const createEvent = async (req, res) => {
@@ -344,23 +345,111 @@ const fetchEventsbyEnrollandSemester = async (req, res) => {
   try {
     const { enrollmentNumber, semester } = req.body;
 
-    if (!enrollmentNumber || !semester) {
+    if (!enrollmentNumber) {
       return res.status(400).json({
-        message: "Missing required fields",
-        required: ["enrollmentNumber", "semester"]
+        message: "Missing required field: enrollmentNumber",
+        required: ["enrollmentNumber"]
       });
     }
 
-    const activities = await StudentPoints.findAll({
-      where: { enrollmentNumber, semester },
-      attributes: ['eventId', 'totalCocurricular', 'totalExtracurricular']
-    });
+    // Build the SQL query based on whether semester is 'all' or specific
+    let query;
+    let replacements = { enrollmentNumber };
 
-    if (activities.length === 0) {
-      return res.status(200).json({ message: "No activities found for the given enrollment number and semester" });
+    // Base query to retrieve student points with event details
+    if (semester && semester !== 'all') {
+      // For specific semester
+      query = `
+        SELECT 
+          sp.id, 
+          sp.enrollmentNumber, 
+          sp.semester, 
+          sp.eventId, 
+          sp.totalCocurricular, 
+          sp.totalExtracurricular, 
+          sp.participationTypeId,
+          em.eventName, 
+          em.eventType, 
+          em.eventCategory, 
+          em.date as eventDate,
+          pt.types as participationType
+        FROM 
+          student_points sp
+        LEFT JOIN 
+          EventMaster em ON sp.eventId = em.eventId
+        LEFT JOIN 
+          participation_types pt ON sp.participationTypeId = pt.id
+        WHERE 
+          sp.enrollmentNumber = :enrollmentNumber AND sp.semester = :semester
+      `;
+      replacements.semester = semester;
+    } else {
+      // For all semesters
+      query = `
+        SELECT 
+          sp.id, 
+          sp.enrollmentNumber, 
+          sp.semester, 
+          sp.eventId, 
+          sp.totalCocurricular, 
+          sp.totalExtracurricular, 
+          sp.participationTypeId,
+          em.eventName, 
+          em.eventType, 
+          em.eventCategory, 
+          em.date as eventDate,
+          pt.types as participationType
+        FROM 
+          student_points sp
+        LEFT JOIN 
+          EventMaster em ON sp.eventId = em.eventId
+        LEFT JOIN 
+          participation_types pt ON sp.participationTypeId = pt.id
+        WHERE 
+          sp.enrollmentNumber = :enrollmentNumber
+      `;
     }
 
-    res.status(200).json(activities);
+    console.log('Executing SQL:', query, replacements);
+
+    // Execute the query
+    const [results] = await sequelize.query(query, {
+      replacements,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    if (!results || results.length === 0) {
+      // Check if the student exists
+      const student = await Student.findOne({
+        where: { enrollmentNumber }
+      });
+
+      if (!student) {
+        return res.status(404).json({ message: "Student not found with this enrollment number" });
+      }
+
+      // If semester was provided, get all points for that student regardless of semester
+      if (semester && semester !== 'all') {
+        const allPoints = await StudentPoints.findAll({
+          where: { enrollmentNumber }
+        });
+
+        if (allPoints.length > 0) {
+          return res.status(200).json({ 
+            message: `Student has activities but none in semester ${semester}`,
+            hasSomeActivities: true,
+            otherSemesters: [...new Set(allPoints.map(p => p.semester))]
+          });
+        }
+      }
+
+      return res.status(200).json({ message: "No activities found for the given enrollment number" });
+    }
+
+    // Format the results
+    const formattedResults = Array.isArray(results) ? results : [results];
+
+    res.status(200).json(formattedResults);
   } catch (error) {
     console.error("Error fetching student activities with enrollment and semester:", error);
     res.status(500).json({ message: "Error fetching activities", error: error.message });
@@ -461,6 +550,79 @@ const fetchEventsByEventIds = async (req, res) => {
     });
   }
 };
+const fetchTotalActivityPoints = async (req, res) => {
+  try {
+    const { enrollmentNumber } = req.body;
+
+    if (!enrollmentNumber) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required field: enrollmentNumber",
+        required: ["enrollmentNumber"]
+      });
+    }
+
+    // Check if the student exists
+    const student = await Student.findOne({
+      where: { enrollmentNumber }
+    });
+
+    if (!student) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Student not found with this enrollment number" 
+      });
+    }
+
+    // Query to sum the total points from student_points table
+    const query = `
+      SELECT 
+        SUM(totalCocurricular) as totalCocurricular, 
+        SUM(totalExtracurricular) as totalExtracurricular
+      FROM 
+        student_points
+      WHERE 
+        enrollmentNumber = :enrollmentNumber
+    `;
+
+    const [results] = await sequelize.query(query, {
+      replacements: { enrollmentNumber },
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    // If no points found, return zeros
+    if (!results) {
+      return res.status(200).json({
+        success: true,
+        totalCocurricular: 0,
+        totalExtracurricular: 0
+      });
+    }
+
+    // Convert NULL values to 0
+    const totalCocurricular = results.totalCocurricular || 0;
+    const totalExtracurricular = results.totalExtracurricular || 0;
+
+    return res.status(200).json({
+      success: true,
+      totalCocurricular,
+      totalExtracurricular,
+      activities: {
+        coCurricular: totalCocurricular,
+        extraCurricular: totalExtracurricular,
+        total: totalCocurricular + totalExtracurricular
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching total activity points:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching total activity points',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createEvent,
   insertFetchedStudents,
@@ -472,5 +634,6 @@ module.exports = {
   fetchEventsbyEnrollandSemester,
   fetchEventsIDsbyEnroll,
   fetchEventsByIds,
-  fetchEventsByEventIds
+  fetchEventsByEventIds,
+  fetchTotalActivityPoints
 };

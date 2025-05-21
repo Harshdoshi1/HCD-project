@@ -3,6 +3,9 @@ const express = require('express');
 const cors = require('cors');
 const { syncDB } = require('./models');
 
+// Import model associations
+require('./models/associations');
+
 const userRoutes = require('./routes/auth_routes');
 const facultyRoutes = require('./routes/faculty_routes');
 const componentRoutes = require('./routes/component_marks_routes');
@@ -17,6 +20,7 @@ const semesterRoutes = require("./routes/semester_routes");
 const studentEventRoutes = require("./routes/student_event_routes");
 const facultysideRoutes = require("./routes/facultyside_router");
 const studentCPIRoutes = require('./routes/studentCPI_routes');
+const gradesRoutes = require('./routes/grades_routes');
 const app = express();
 
 // Enable CORS
@@ -69,11 +73,14 @@ app.use((req, res) => {
 
 // Start Server
 const PORT = process.env.PORT || 5001;
+const HOST = '0.0.0.0'; // Listen on all network interfaces
 
 // Synchronize database before starting the server
 syncDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+    app.listen(PORT, HOST, () => {
+        console.log(`Server running on ${HOST}:${PORT}`);
+        console.log(`For local access, use: http://localhost:${PORT}`);
+        console.log(`For access from other devices, use your computer's IP address`);
     });
 }).catch(error => {
     console.error('Failed to start server:', error);

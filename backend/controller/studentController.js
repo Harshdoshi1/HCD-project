@@ -1,7 +1,8 @@
 const express = require('express');
-const router = express.Router();
+const { Op } = require('sequelize');
 const Student = require('../models/students');
 const Batch = require('../models/batch');
+const jwt = require('jsonwebtoken');
 
 // Create a new student
 const createStudent = async (req, res) => {
@@ -212,20 +213,10 @@ const getStudentsByBatch = async (req, res) => {
     }
 };
 
-// Student login functionality
+// Login student
 const loginStudent = async (req, res) => {
     try {
         const { email, enrollmentNumber } = req.body;
-
-        console.log('Login attempt:', { email, enrollmentNumber });
-
-        // Input validation
-        if (!email || !enrollmentNumber) {
-            return res.status(400).json({ 
-                message: 'Email and enrollment number are required',
-                error: 'Missing required fields'
-            });
-        }
 
         // Find student by email
         const student = await Student.findOne({ 
@@ -282,6 +273,148 @@ const loginStudent = async (req, res) => {
     }
 };
 
+// Get current semester points for a student
+const getCurrentSemesterPoints = async (req, res) => {
+    try {
+        const { enrollmentNumber, semester } = req.params;
+        
+        if (!enrollmentNumber || !semester) {
+            return res.status(400).json({ 
+                message: 'Enrollment number and semester are required' 
+            });
+        }
+
+        // Require the StudentPoints model
+        const StudentPoints = require('../models/StudentPoints');
+        
+        // Find points for the specified student and semester
+        const points = await StudentPoints.findAll({
+            where: { 
+                enrollmentNumber,
+                semester: parseInt(semester)
+            },
+            attributes: [
+                'enrollmentNumber',
+                'semester',
+                'totalCocurricular',
+                'totalExtracurricular'
+            ]
+        });
+        
+        // If no points records found
+        if (!points || points.length === 0) {
+            return res.status(200).json({ 
+                enrollmentNumber,
+                semester: parseInt(semester),
+                totalCocurricular: 0,
+                totalExtracurricular: 0
+            });
+        }
+        
+        // Calculate total points if multiple records exist
+        let totalCocurricular = 0;
+        let totalExtracurricular = 0;
+        
+        points.forEach(point => {
+            totalCocurricular += point.totalCocurricular;
+            totalExtracurricular += point.totalExtracurricular;
+        });
+        
+        res.status(200).json({
+            enrollmentNumber,
+            semester: parseInt(semester),
+            totalCocurricular,
+            totalExtracurricular
+        });
+        
+    } catch (error) {
+        console.error('Error fetching current semester points:', error);
+        res.status(500).json({ 
+            message: 'Failed to fetch current semester points', 
+            error: error.message 
+        });
+    }
+};
+
+// Get current semester points for all students
+const getAllStudentsCurrentSemesterPoints = async (req, res) => {
+    try {
+        // Require the StudentPoints model and Student model
+        const StudentPoints = require('../models/StudentPoints');
+        const Student = require('../models/students');
+        
+        // Get all students to find their current semesters
+        const students = await Student.findAll({
+            attributes: ['id', 'name', 'enrollmentNumber', 'currnetsemester', 'email']
+        });
+        
+        if (!students || students.length === 0) {
+            return res.status(404).json({ message: 'No students found' });
+        }
+        
+        // Create a map to store semester by enrollment number
+        const studentSemesters = {};
+        students.forEach(student => {
+            studentSemesters[student.enrollmentNumber] = {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                semester: student.currnetsemester
+            };
+        });
+        
+        // Get enrollment numbers
+        const enrollmentNumbers = students.map(s => s.enrollmentNumber);
+        
+        // Fetch points for all students
+        const pointsRecords = await StudentPoints.findAll({
+            where: {
+                enrollmentNumber: enrollmentNumbers
+            }
+        });
+        
+        // Process points by student and semester
+        const resultMap = {};
+        
+        // Initialize result with zero points for all students
+        enrollmentNumbers.forEach(enrollment => {
+            const student = studentSemesters[enrollment];
+            resultMap[enrollment] = {
+                studentId: student.id,
+                name: student.name,
+                email: student.email,
+                enrollmentNumber: enrollment,
+                semester: student.semester,
+                totalCocurricular: 0,
+                totalExtracurricular: 0
+            };
+        });
+        
+        // Add up points for current semester
+        pointsRecords.forEach(point => {
+            const enrollment = point.enrollmentNumber;
+            const studentInfo = studentSemesters[enrollment];
+            
+            // Only add points for the student's current semester
+            if (studentInfo && point.semester === studentInfo.semester) {
+                resultMap[enrollment].totalCocurricular += point.totalCocurricular;
+                resultMap[enrollment].totalExtracurricular += point.totalExtracurricular;
+            }
+        });
+        
+        // Convert map to array for response
+        const results = Object.values(resultMap);
+        
+        res.status(200).json(results);
+    } catch (error) {
+        console.error('Error fetching all students current semester points:', error);
+        res.status(500).json({ 
+            message: 'Failed to fetch students points', 
+            error: error.message 
+        });
+    }
+};
+
 module.exports = { 
     deleteStudent, 
     updateStudent, 
@@ -291,5 +424,7 @@ module.exports = {
     createStudents,
     updateStudentSemesters,
     getStudentsByBatch,
-    loginStudent
+    loginStudent,
+    getCurrentSemesterPoints,
+    getAllStudentsCurrentSemesterPoints
 };
