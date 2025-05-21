@@ -29,7 +29,7 @@
 }
 
 .analysis-section {
-  margin-bottom: 32px;
+  margin-bottom: 30px;
 }
 
 .analysis-section h3 {
@@ -370,6 +370,160 @@
   cursor: pointer;
 }
 
+/* Academic Details Styles */
+.academic-details-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-top: 15px;
+}
+
+.semester-performance {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.performance-metric {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.metric-label {
+  font-weight: 600;
+  color: #555;
+  font-size: 16px;
+}
+
+.metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #3674B5;
+  background-color: #f0f7fb;
+  padding: 5px 12px;
+  border-radius: 4px;
+}
+
+.subjects-table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.subjects-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.subjects-table th {
+  background-color: #3674B5;
+  color: white;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.subjects-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.subjects-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.marks-display {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 80px;
+}
+
+.marks-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.marks-total {
+  font-size: 12px;
+  color: #777;
+}
+
+.marks-bar-container {
+  height: 6px;
+  background-color: #eee;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.marks-bar {
+  height: 100%;
+  background-color: #3674B5;
+  border-radius: 3px;
+}
+
+.grade-display {
+  font-weight: 700;
+  font-size: 16px;
+  color: #3674B5;
+  background-color: #f0f7fb;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.component-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 3px solid #3674B5;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-label {
+  font-weight: 600;
+  color: #3674B5;
+}
+
+.legend-value {
+  color: #555;
+}
+
+.no-data-message, .loading-indicator, .error-message {
+  padding: 20px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.loading-indicator {
+  color: #3674B5;
+}
+
+.error-message {
+  color: #d32f2f;
+  background-color: #ffebee;
+  border-left: 3px solid #d32f2f;
+}
+
 @media (max-width: 768px) {
   .insights-grid {
     grid-template-columns: 1fr;
@@ -382,5 +536,15 @@
 
   .detail-item {
     min-width: unset;
+  }
+  
+  .semester-performance {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .component-legend {
+    flex-direction: column;
+    gap: 10px;
   }
 }
