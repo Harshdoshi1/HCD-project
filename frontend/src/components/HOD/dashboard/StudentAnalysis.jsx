@@ -100,7 +100,7 @@ const StudentAnalysis = ({ student, onClose }) => {
 
         // Fetch activities for the current semester by default
         fetchActivitiesBySemester(enrollmentNumber, currentSemester);
-        
+
         // Fetch academic details for the current semester by default
         fetchAcademicDetails(enrollmentNumber, currentSemester);
       } catch (err) {
@@ -315,13 +315,13 @@ const StudentAnalysis = ({ student, onClose }) => {
   const fetchAcademicDetails = async (enrollmentNumber, semester) => {
     setLoadingAcademics(true);
     setAcademicError(null);
-    
+
     try {
       console.log(`Fetching academic details for ${enrollmentNumber}, semester ${semester}`);
       const response = await axios.get(`http://localhost:5001/api/academic-details/student/${enrollmentNumber}/semester/${semester}`);
-      
+
       console.log('Academic details response:', response.data);
-      
+
       if (response.data && response.data.success) {
         setAcademicDetails(response.data.data);
       } else {
@@ -815,7 +815,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="subjects-table-container">
                   <table className="subjects-table">
                     <thead>
@@ -838,14 +838,14 @@ const StudentAnalysis = ({ student, onClose }) => {
                         const iaTotal = subject.componentMarks.ia;
                         const twTotal = subject.componentMarks.tw;
                         const vivaTotal = subject.componentMarks.viva;
-                        
+
                         // Calculate percentages
                         const esePercent = eseTotal > 0 ? Math.round((subject.studentMarks.ese / eseTotal) * 100) : 0;
                         const csePercent = cseTotal > 0 ? Math.round((subject.studentMarks.cse / cseTotal) * 100) : 0;
                         const iaPercent = iaTotal > 0 ? Math.round((subject.studentMarks.ia / iaTotal) * 100) : 0;
                         const twPercent = twTotal > 0 ? Math.round((subject.studentMarks.tw / twTotal) * 100) : 0;
                         const vivaPercent = vivaTotal > 0 ? Math.round((subject.studentMarks.viva / vivaTotal) * 100) : 0;
-                        
+
                         return (
                           <tr key={index}>
                             <td>{subject.name}</td>
@@ -855,8 +855,8 @@ const StudentAnalysis = ({ student, onClose }) => {
                                 <span className="marks-value">{subject.studentMarks.ese}</span>
                                 <span className="marks-total">/ {eseTotal}</span>
                                 <div className="marks-bar-container">
-                                  <div 
-                                    className="marks-bar" 
+                                  <div
+                                    className="marks-bar"
                                     style={{ width: `${esePercent}%` }}
                                   ></div>
                                 </div>
@@ -867,8 +867,8 @@ const StudentAnalysis = ({ student, onClose }) => {
                                 <span className="marks-value">{subject.studentMarks.cse}</span>
                                 <span className="marks-total">/ {cseTotal}</span>
                                 <div className="marks-bar-container">
-                                  <div 
-                                    className="marks-bar" 
+                                  <div
+                                    className="marks-bar"
                                     style={{ width: `${csePercent}%` }}
                                   ></div>
                                 </div>
@@ -879,8 +879,8 @@ const StudentAnalysis = ({ student, onClose }) => {
                                 <span className="marks-value">{subject.studentMarks.ia}</span>
                                 <span className="marks-total">/ {iaTotal}</span>
                                 <div className="marks-bar-container">
-                                  <div 
-                                    className="marks-bar" 
+                                  <div
+                                    className="marks-bar"
                                     style={{ width: `${iaPercent}%` }}
                                   ></div>
                                 </div>
@@ -891,8 +891,8 @@ const StudentAnalysis = ({ student, onClose }) => {
                                 <span className="marks-value">{subject.studentMarks.tw}</span>
                                 <span className="marks-total">/ {twTotal}</span>
                                 <div className="marks-bar-container">
-                                  <div 
-                                    className="marks-bar" 
+                                  <div
+                                    className="marks-bar"
                                     style={{ width: `${twPercent}%` }}
                                   ></div>
                                 </div>
@@ -903,8 +903,8 @@ const StudentAnalysis = ({ student, onClose }) => {
                                 <span className="marks-value">{subject.studentMarks.viva}</span>
                                 <span className="marks-total">/ {vivaTotal}</span>
                                 <div className="marks-bar-container">
-                                  <div 
-                                    className="marks-bar" 
+                                  <div
+                                    className="marks-bar"
                                     style={{ width: `${vivaPercent}%` }}
                                   ></div>
                                 </div>
@@ -919,7 +919,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                     </tbody>
                   </table>
                 </div>
-                
+
                 <div className="component-legend">
                   <div className="legend-item">
                     <span className="legend-label">ESE:</span>
@@ -948,7 +948,7 @@ const StudentAnalysis = ({ student, onClose }) => {
             )}
           </div>
 
-          <div className="analysis-section">
+          {/* <div className="analysis-section">
             <h3>Improvement Suggestions</h3>
             <div className="suggestions-container">
               <ul className="suggestions-list">
@@ -994,7 +994,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </div>*/}
         </div>
 
         <div className="modal-footer">
@@ -1005,7 +1005,7 @@ const StudentAnalysis = ({ student, onClose }) => {
           <button className="btn-share" onClick={handleSendAnalysis}>
             Share Analysis with Student & Parents
           </button>
-          
+
           {showReportGenerator && (
             <ReportGeneratorModal
               student={student}

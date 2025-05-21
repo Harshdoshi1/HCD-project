@@ -9,6 +9,8 @@ import Chart from 'chart.js/auto';
 import './ReportGeneratorModal.css';
 
 const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetails, activityList, categoryData, performanceInsights, chartData }) => {
+  // Store cached activities by semester
+  const [cachedActivities, setCachedActivities] = useState({});
   // Create refs for chart canvases
   const performanceTrendsChartRef = useRef(null);
   const performanceTrendsChartInstance = useRef(null);
@@ -23,6 +25,48 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
   const [selectedSemesters, setSelectedSemesters] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
+  const [batchName, setBatchName] = useState(student.batchName || 'N/A');
+  
+  // Handle batch name display without relying on a specific API endpoint
+  useEffect(() => {
+    // Extract batch information from student data if available
+    const determineBatchName = () => {
+      // If student already has a batchName property that's not N/A, use it
+      if (student && student.batchName && student.batchName !== 'N/A') {
+        console.log('Using existing batch name:', student.batchName);
+        setBatchName(student.batchName);
+        return;
+      }
+      
+      // If student has a batchId property, use that to create a batch name
+      if (student && student.batchId) {
+        const formattedBatchName = `Batch ${student.batchId}`;
+        console.log('Using batch ID to create batch name:', formattedBatchName);
+        setBatchName(formattedBatchName);
+        return;
+      }
+      
+      // If we have enrollment number, extract batch year from it
+      if (student && student.rollNo) {
+        // Most enrollment numbers start with year code (e.g., 92200133022 - where 92 is the year)
+        const enrollmentStr = student.rollNo.toString();
+        if (enrollmentStr.length >= 2) {
+          const yearCode = enrollmentStr.substring(0, 2);
+          const fullYear = yearCode >= '90' ? `19${yearCode}` : `20${yearCode}`;
+          const batchName = `Batch of ${fullYear}`;
+          console.log('Derived batch name from enrollment number:', batchName);
+          setBatchName(batchName);
+          return;
+        }
+      }
+      
+      // Default fallback
+      console.log('Using default batch name');
+      setBatchName('ICT Undergraduate');
+    };
+    
+    determineBatchName();
+  }, [student]);
 
   // Create the performance trends chart
   useEffect(() => {
@@ -154,6 +198,13 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
       const doc = new jsPDF();
       let yPos = 20;
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      
+      // Function to add a new page
+      const addNewPage = () => {
+        doc.addPage();
+        yPos = 20;
+      };
       
       // Add title
       doc.setFontSize(18);
@@ -168,7 +219,9 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
       yPos += 7;
       doc.text(`Enrollment Number: ${student.rollNo || 'N/A'}`, 20, yPos);
       yPos += 7;
-      doc.text(`Batch: ${student.batchName || 'N/A'}`, 20, yPos);
+      doc.text(`Batch: ${batchName}`, 20, yPos);
+      yPos += 7;
+      doc.text(`Department: ICT - Information and Communication Technology`, 20, yPos);
       yPos += 7;
       doc.text(`Current Semester: ${student.semester || 'N/A'}`, 20, yPos);
       yPos += 7;
@@ -327,27 +380,84 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
         if (selectedOptions.activityList) {
           // We need to fetch activities for this specific semester
           try {
-            // Use the existing data if it's for the current semester
+            // Check if we have cached activities for this semester
             let semesterActivities = [];
-            if (activityList && selectedSemesters.includes(semester)) {
-              semesterActivities = activityList;
+            
+            if (cachedActivities[semester]) {
+              console.log(`Using cached activities for semester ${semester}`);
+              semesterActivities = cachedActivities[semester];
             } else {
-              // Otherwise fetch it
-              const response = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
-                enrollmentNumber: student.rollNo,
-                semester: semester.toString()
-              });
-              
-              if (response.data && Array.isArray(response.data)) {
-                // Format activities data
-                semesterActivities = response.data.flatMap(item => {
-                  return (item.activities || []).map(activity => ({
-                    name: activity.name,
-                    type: activity.type,
-                    position: activity.position,
-                    points: activity.points
-                  }));
+              // Always fetch activities for the specific semester
+              // This ensures we get the correct activities for each semester, regardless of which is selected in the Student Analysis model
+              console.log(`Fetching activities for semester ${semester}...`);
+              // Make the API call to fetch activities - using the same approach as StudentAnalysis component
+              try {
+                console.log(`Fetching activities for semester ${semester} - Step 1: Get event IDs`);
+                
+                // Step 1: Fetch events by enrollment and semester
+                const response = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+                  enrollmentNumber: student.rollNo,
+                  semester: semester.toString()
                 });
+                
+                console.log(`Response for semester ${semester}:`, response.data);
+                
+                if (response.data && Array.isArray(response.data)) {
+                  // Extract event IDs from the response - exactly like StudentAnalysis does
+                  const eventIds = [];
+                  response.data.forEach(item => {
+                    if (item.eventId) {
+                      // Split the comma-separated event IDs and add them to our array
+                      const ids = item.eventId.split(',').map(id => id.trim()).filter(id => id);
+                      eventIds.push(...ids);
+                    }
+                  });
+                  
+                  console.log(`Extracted event IDs for semester ${semester}:`, eventIds);
+                  
+                  if (eventIds.length > 0) {
+                    // Convert the array of event IDs to a comma-separated string as required by the API
+                    const eventIdsString = eventIds.join(',');
+                    console.log(`Fetching activities for semester ${semester} - Step 2: Get event details for IDs: ${eventIdsString}`);
+                    
+                    // Step 2: Fetch event details from EventMaster table
+                    const eventDetailsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsByIds', {
+                      eventIds: eventIdsString
+                    });
+                    
+                    console.log(`Event details response for semester ${semester}:`, eventDetailsResponse.data);
+                    
+                    if (eventDetailsResponse.data && eventDetailsResponse.data.success && Array.isArray(eventDetailsResponse.data.data)) {
+                      // Process event details and create activity list - exactly like StudentAnalysis does
+                      semesterActivities = eventDetailsResponse.data.data.map(event => ({
+                        id: event.id,
+                        name: event.eventName || 'Unknown Event',
+                        position: event.position || 'Participant',
+                        points: event.points || 0,
+                        type: event.eventType || 'Unknown Type',
+                        category: event.eventCategory || 'Unknown Category'
+                      }));
+                      
+                      console.log(`Processed ${semesterActivities.length} activities for semester ${semester}`);
+                      
+                      // Cache these activities
+                      setCachedActivities(prev => ({
+                        ...prev,
+                        [semester]: semesterActivities
+                      }));
+                    } else {
+                      console.warn(`Unexpected event details format for semester ${semester}:`, eventDetailsResponse.data);
+                    }
+                  } else {
+                    console.log(`No event IDs found for semester ${semester}`);
+                  }
+                } else if (response.data && response.data.message) {
+                  console.log(`API message for semester ${semester}: ${response.data.message}`);
+                } else {
+                  console.warn(`Unexpected response format for semester ${semester}:`, response.data);
+                }
+              } catch (fetchError) {
+                console.error(`Error fetching activities for semester ${semester}:`, fetchError);
               }
             }
             
@@ -398,18 +508,48 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
         }
 
         // 3. Performance Breakdown (if selected)
-        if (selectedOptions.performanceBreakdown && categoryData && categoryData.length > 0) {
+        if (selectedOptions.performanceBreakdown) {
           doc.setFontSize(12);
           doc.setTextColor(0, 0, 0);
           doc.text("Performance Breakdown", 20, yPos);
           yPos += 7;
           
+          // Calculate breakdown based on total points (co-curricular + extra-curricular)
+          // Get the data for the current semester
+          const semesterData = chartData.find(data => data.semester === semester) || { coCurricular: 0, extraCurricular: 0 };
+          
+          // Calculate total points
+          const totalPoints = semesterData.coCurricular + semesterData.extraCurricular;
+          console.log(`Total points for semester ${semester}: ${totalPoints}`);
+          
+          // Calculate percentages
+          let coCurricularPercentage = 0;
+          let extraCurricularPercentage = 0;
+          
+          if (totalPoints > 0) {
+            coCurricularPercentage = Math.round((semesterData.coCurricular / totalPoints) * 100);
+            extraCurricularPercentage = Math.round((semesterData.extraCurricular / totalPoints) * 100);
+            
+            // Adjust to ensure they add up to 100%
+            if (coCurricularPercentage + extraCurricularPercentage !== 100) {
+              // If rounding caused the sum to not be 100, adjust the larger value
+              if (semesterData.coCurricular > semesterData.extraCurricular) {
+                coCurricularPercentage = 100 - extraCurricularPercentage;
+              } else {
+                extraCurricularPercentage = 100 - coCurricularPercentage;
+              }
+            }
+          }
+          
+          console.log(`Breakdown for semester ${semester}: Co-Curricular: ${coCurricularPercentage}%, Extra-Curricular: ${extraCurricularPercentage}%`);
+          
           // Create a table for the category data
-          const categoryHeaders = [["Category", "Percentage"]];
-          const categoryTableData = categoryData.map(category => [
-            category.name,
-            `${Math.round(category.value * 100)}%`
-          ]);
+          const categoryHeaders = [["Category", "Points", "Percentage"]];
+          const categoryTableData = [
+            ["Co-Curricular", semesterData.coCurricular.toString(), `${coCurricularPercentage}%`],
+            ["Extra-Curricular", semesterData.extraCurricular.toString(), `${extraCurricularPercentage}%`],
+            ["Total", totalPoints.toString(), "100%"]
+          ];
           
           autoTable(doc, {
             startY: yPos,
