@@ -266,6 +266,15 @@
   cursor: not-allowed;
 }
 
+.hidden-chart-canvas {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  visibility: hidden;
+  width: 600px;
+  height: 300px;
+}
+
 @media (max-width: 768px) {
   .report-generator-modal .modal-container {
     width: 95%;

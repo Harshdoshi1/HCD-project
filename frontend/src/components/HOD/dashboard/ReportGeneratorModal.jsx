@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 // Import jsPDF correctly
 import jsPDF from 'jspdf';
 // Import autotable plugin
 import autoTable from 'jspdf-autotable';
+// Import Chart.js
+import Chart from 'chart.js/auto';
 import './ReportGeneratorModal.css';
 
 const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetails, activityList, categoryData, performanceInsights, chartData }) => {
+  // Create refs for chart canvases
+  const performanceTrendsChartRef = useRef(null);
+  const performanceTrendsChartInstance = useRef(null);
   const [selectedOptions, setSelectedOptions] = useState({
     performanceTrends: true,
     activityList: true,
@@ -19,6 +24,86 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
 
+  // Create the performance trends chart
+  useEffect(() => {
+    if (performanceTrendsChartRef.current && chartData && chartData.length > 0) {
+      // Destroy previous chart instance if it exists
+      if (performanceTrendsChartInstance.current) {
+        performanceTrendsChartInstance.current.destroy();
+      }
+      
+      const ctx = performanceTrendsChartRef.current.getContext('2d');
+      
+      // Sort chart data by semester
+      const sortedData = [...chartData].sort((a, b) => a.semester - b.semester);
+      
+      // Extract labels and datasets
+      const labels = sortedData.map(item => `Sem ${item.semester}`);
+      const coCurricularData = sortedData.map(item => item.coCurricular);
+      const extraCurricularData = sortedData.map(item => item.extraCurricular);
+      
+      // Create chart
+      performanceTrendsChartInstance.current = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Co-Curricular',
+              data: coCurricularData,
+              borderColor: '#00C49F',
+              backgroundColor: 'rgba(0, 196, 159, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              pointRadius: 5,
+              pointHoverRadius: 7
+            },
+            {
+              label: 'Extra-Curricular',
+              data: extraCurricularData,
+              borderColor: '#FFBB28',
+              backgroundColor: 'rgba(255, 187, 40, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              pointRadius: 5,
+              pointHoverRadius: 7
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Performance Trends Across Semesters',
+              font: {
+                size: 16
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Points'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Semester'
+              }
+            }
+          }
+        }
+      });
+    }
+  }, [chartData]);
+  
   // Initialize selected semesters with all available semesters
   useEffect(() => {
     if (semesterPoints && semesterPoints.length > 0) {
@@ -123,24 +208,112 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             doc.text("Performance Trends", 20, yPos);
             yPos += 7;
             
-            // Create a table for the trend data
-            const trendHeaders = [["Semester", "Co-Curricular Points", "Extra-Curricular Points"]];
-            const trendData = semesterData.map(point => [
-              point.semester.toString(),
-              point.coCurricular.toString(),
-              point.extraCurricular.toString()
-            ]);
+            // Sort data by semester
+            const sortedData = [...semesterData].sort((a, b) => a.semester - b.semester);
             
-            autoTable(doc, {
-              startY: yPos,
-              head: trendHeaders,
-              body: trendData,
-              theme: 'grid',
-              headStyles: { fillColor: [54, 116, 181], textColor: [255, 255, 255] },
-              margin: { left: 20, right: 20 }
+            // Create a visually appealing representation of the data
+            doc.setFontSize(14);
+            doc.setTextColor(54, 116, 181); // #3674B5
+            doc.text("Performance Trends Chart", pageWidth / 2, yPos, { align: "center" });
+            yPos += 15;
+            
+            // Draw chart axes
+            const chartStartX = 50;
+            const chartEndX = pageWidth - 50;
+            const chartStartY = yPos;
+            const chartEndY = yPos + 120;
+            const chartWidth = chartEndX - chartStartX;
+            const chartHeight = chartEndY - chartStartY;
+            
+            // Draw axes
+            doc.setDrawColor(100, 100, 100);
+            doc.setLineWidth(0.5);
+            doc.line(chartStartX, chartStartY, chartStartX, chartEndY); // Y-axis
+            doc.line(chartStartX, chartEndY, chartEndX, chartEndY); // X-axis
+            
+            // Find max value for scaling
+            const allValues = sortedData.flatMap(item => [item.coCurricular, item.extraCurricular]);
+            const maxValue = Math.max(...allValues, 10); // Ensure at least 10 for scale
+            
+            // Draw Y-axis labels and grid lines
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.2);
+            
+            const ySteps = 5;
+            for (let i = 0; i <= ySteps; i++) {
+              const yValue = maxValue * (1 - i / ySteps);
+              const y = chartStartY + (i / ySteps) * chartHeight;
+              doc.text(yValue.toFixed(0), chartStartX - 10, y + 2);
+              doc.line(chartStartX, y, chartEndX, y); // Grid line
+            }
+            
+            // Draw X-axis labels
+            const xStepWidth = chartWidth / (sortedData.length + 1);
+            sortedData.forEach((item, index) => {
+              const x = chartStartX + (index + 1) * xStepWidth;
+              doc.text(`Sem ${item.semester}`, x, chartEndY + 10, { align: "center" });
             });
             
-            yPos = doc.lastAutoTable.finalY + 10;
+            // Plot Co-Curricular data
+            doc.setDrawColor(0, 196, 159); // #00C49F
+            doc.setFillColor(0, 196, 159);
+            doc.setLineWidth(2);
+            
+            let prevX, prevY;
+            sortedData.forEach((item, index) => {
+              const x = chartStartX + (index + 1) * xStepWidth;
+              const y = chartEndY - (item.coCurricular / maxValue) * chartHeight;
+              
+              // Draw point
+              doc.circle(x, y, 3, 'F');
+              
+              // Connect with line if not first point
+              if (index > 0) {
+                doc.line(prevX, prevY, x, y);
+              }
+              
+              prevX = x;
+              prevY = y;
+            });
+            
+            // Plot Extra-Curricular data
+            doc.setDrawColor(255, 187, 40); // #FFBB28
+            doc.setFillColor(255, 187, 40);
+            
+            sortedData.forEach((item, index) => {
+              const x = chartStartX + (index + 1) * xStepWidth;
+              const y = chartEndY - (item.extraCurricular / maxValue) * chartHeight;
+              
+              // Draw point
+              doc.circle(x, y, 3, 'F');
+              
+              // Connect with line if not first point
+              if (index > 0) {
+                doc.line(prevX, prevY, x, y);
+              }
+              
+              prevX = x;
+              prevY = y;
+            });
+            
+            // Add legend
+            yPos = chartEndY + 25;
+            
+            // Co-Curricular legend
+            doc.setFillColor(0, 196, 159);
+            doc.rect(chartStartX, yPos, 10, 10, 'F');
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text('Co-Curricular', chartStartX + 15, yPos + 7);
+            
+            // Extra-Curricular legend
+            doc.setFillColor(255, 187, 40);
+            doc.rect(chartStartX + 100, yPos, 10, 10, 'F');
+            doc.text('Extra-Curricular', chartStartX + 115, yPos + 7);
+            
+            yPos += 40;
           }
         }
 
@@ -430,8 +603,10 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             <h2>Generate Student Report</h2>
             <button className="close-button" onClick={onClose}>×</button>
           </div>
-          
           <div className="modal-content">
+            {/* Hidden canvas for chart rendering */}
+            <canvas ref={performanceTrendsChartRef} className="hidden-chart-canvas" width="600" height="300"></canvas>
+            
             <div className="student-info-section">
               <h3>Student Information</h3>
               <div className="student-info">
