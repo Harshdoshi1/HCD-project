@@ -10,10 +10,14 @@ const {
     createStudents,
     updateStudentSemesters,
     getStudentsByBatch,
-    loginStudent
+    loginStudent,
+    getAcademicDataByEmail,
+    getSPIByEmail
 } = require('../controller/studentController');
 
 router.post('/createStudent', createStudent);
+router.get('/academicData/:email', getAcademicDataByEmail);
+router.get('/studentCPIemail/:email', getSPIByEmail);
 router.get('/getStudentById', getStudentById);
 router.get('/getAllStudents', getAllStudents);
 router.put('/updateStudent', updateStudent);

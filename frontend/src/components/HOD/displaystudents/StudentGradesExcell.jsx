@@ -107,8 +107,8 @@ const StudentGradesExcell = ({ isOpen, onClose }) => {
                         <h3>Instructions</h3>
                         <p>Please upload an Excel file with the following columns:</p>
                         <ul>
-                            <li>Batch - The batch name (must match existing batch)</li>
-                            <li>Semester - The semester number</li>
+                            <li>BatchId - The batch name (must match existing batch)</li>
+                            <li>SemesterId - The semester number</li>
                             <li>EnrollmentNumber - Student's enrollment number</li>
                             <li>CPI - Cumulative Performance Index (0-10)</li>
                             <li>SPI - Semester Performance Index (0-10)</li>
@@ -136,7 +136,7 @@ const StudentGradesExcell = ({ isOpen, onClose }) => {
                                 <p><strong>Size:</strong> {previewData.size}</p>
                                 <p><strong>Type:</strong> {previewData.type}</p>
                                 <div className="preview-actions">
-                                    <button 
+                                    <button
                                         className="upload-button"
                                         onClick={handleUpload}
                                         disabled={uploading}
@@ -144,7 +144,7 @@ const StudentGradesExcell = ({ isOpen, onClose }) => {
                                         {uploading ? 'Uploading...' : 'Upload File'}
                                         <FaUpload className="upload-icon" />
                                     </button>
-                                    <button 
+                                    <button
                                         className="reset-button"
                                         onClick={resetForm}
                                         disabled={uploading}
@@ -160,7 +160,7 @@ const StudentGradesExcell = ({ isOpen, onClose }) => {
                         <div className={`upload-status ${uploadStatus.success ? 'success' : 'error'}`}>
                             <h3>{uploadStatus.success ? 'Upload Successful' : 'Upload Failed'}</h3>
                             <p>{uploadStatus.message}</p>
-                            
+
                             {uploadStatus.details.errors && uploadStatus.details.errors.length > 0 && (
                                 <div className="error-details">
                                     <h4>Error Details:</h4>

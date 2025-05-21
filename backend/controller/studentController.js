@@ -355,6 +355,92 @@ const getStudentsByBatch = async (req, res) => {
     }
 };
 
+// Get student's academic data
+const getAcademicDataByEmail = async (req, res) => {
+    try {
+        const { email } = req.params;
+        
+        // First get student details
+        const { data: studentData, error: studentError } = await supabase
+            .from('students')
+            .select('enrollment_number, batch_id')
+            .eq('email', email)
+            .single();
+
+        if (studentError) throw studentError;
+
+        // Then get their grades
+        const { data: gradesData, error: gradesError } = await supabase
+            .from('student_grades')
+            .select('semester, spi, cpi, rank, updated_at')
+            .eq('student_email', email)
+            .order('semester');
+
+        if (gradesError) throw gradesError;
+
+        if (!studentData || !gradesData) {
+            return res.status(404).json({
+                success: false,
+                message: 'No academic data found for this student'
+            });
+        }
+
+        // Combine the data
+        const combinedData = gradesData.map(grade => ({
+            EnrollmentNumber: studentData.enrollment_number,
+            BatchId: studentData.batch_id,
+            semesterNumber: grade.semester,
+            SPI: grade.spi,
+            CPI: grade.cpi,
+            Rank: grade.rank,
+            updatedAt: grade.updated_at
+        }));
+
+        res.status(200).json(combinedData);
+    } catch (error) {
+        console.error('Error in getAcademicDataByEmail:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
+};
+
+// Get student's semester-wise SPI
+const getSPIByEmail = async (req, res) => {
+    try {
+        const { email } = req.params;
+        
+        const { data, error } = await supabase
+            .from('student_grades')
+            .select('semester, spi')
+            .eq('student_email', email)
+            .order('semester');
+
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No SPI data found for this student'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: data
+        });
+    } catch (error) {
+        console.error('Error in getSPIByEmail:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
+};
+
 module.exports = { 
     deleteStudent, 
     updateStudent, 
@@ -364,5 +450,7 @@ module.exports = {
     createStudents,
     updateStudentSemesters,
     getStudentsByBatch,
-    loginStudent
+    getSPIByEmail,
+    loginStudent,
+    getAcademicDataByEmail
 };
