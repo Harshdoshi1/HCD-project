@@ -7,7 +7,7 @@ import Subject from '../../HOD/managesubjects/Subject';
 import ManageBatches from '../managebatches/ManageBatches';
 import Upgradegrade from '../upgradegrade/Upgradegrade';
 import StudentAnalysisPage from '../StudentAnalysis/StudentAnalysis';
-import StudentAnalysis from './StudentAnalysis'; 
+import StudentAnalysis from './StudentAnalysis';
 import EventManagement from '../events/EventManagement';
 import FilterSection from './FilterSection';
 import PerformanceOverview from "./PerformanceOverview";
@@ -22,7 +22,42 @@ const DashboardHOD = () => {
   const [showStudentDetails, setShowStudentDetails] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState([
+    // Dummy student data for modals
+    {
+      id: 1,
+      name: 'John Doe',
+      rollNo: 'CS001',
+      batch: '2022',
+      semester: '3',
+      points: { curricular: 75, coCurricular: 60, extraCurricular: 85 },
+      history: [
+        { semester: '1', points: { curricular: 70, coCurricular: 55, extraCurricular: 80 } },
+        { semester: '2', points: { curricular: 72, coCurricular: 58, extraCurricular: 82 } }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Jane Smith',
+      rollNo: 'CS002',
+      batch: '2022',
+      semester: '3',
+      points: { curricular: 85, coCurricular: 70, extraCurricular: 65 },
+      history: [
+        { semester: '1', points: { curricular: 80, coCurricular: 65, extraCurricular: 60 } },
+        { semester: '2', points: { curricular: 82, coCurricular: 68, extraCurricular: 62 } }
+      ]
+    },
+    {
+      id: 3,
+      name: 'Alex Johnson',
+      rollNo: 'CS003',
+      batch: '2023',
+      semester: '1',
+      points: { curricular: 65, coCurricular: 80, extraCurricular: 75 },
+      history: []
+    }
+  ]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState('all');
   const [selectedSemester, setSelectedSemester] = useState('all');
@@ -32,78 +67,29 @@ const DashboardHOD = () => {
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setTimeout(() => {
-        const mockStudents = generateMockStudentData();
-        setStudents(mockStudents);
-        setFilteredStudents(mockStudents);
-        setLoading(false);
-      }, 1000);
-    };
-
-    fetchData();
+    // Set initial loading state to false since we're not pre-loading data anymore
+    setLoading(false);
   }, []);
 
-  const generateMockStudentData = () => {
-    const batches = ['2020', '2021', '2022', '2023'];
-    const semesters = ['1', '2', '3', '4', '5', '6', '7', '8'];
-
-    return Array(50).fill().map((_, index) => ({
-      id: index + 1,
-      name: `Student ${index + 1}`,
-      rollNo: `CS${2000 + index}`,
-      batch: batches[Math.floor(Math.random() * batches.length)],
-      semester: semesters[Math.floor(Math.random() * semesters.length)],
-      email: `student${index + 1}@university.edu`,
-      parentEmail: `parent${index + 1}@gmail.com`,
-      points: {
-        curricular: Math.floor(Math.random() * 100),
-        coCurricular: Math.floor(Math.random() * 100),
-        extraCurricular: Math.floor(Math.random() * 100)
-      },
-      history: Array(4).fill().map((_, i) => ({
-        semester: `${parseInt(semesters[Math.floor(Math.random() * semesters.length)]) - i}`,
-        points: {
-          curricular: Math.floor(Math.random() * 100),
-          coCurricular: Math.floor(Math.random() * 100),
-          extraCurricular: Math.floor(Math.random() * 100)
-        },
-        events: {
-          curricular: Math.random() > 0.5,
-          coCurricular: Math.random() > 0.5,
-          extraCurricular: Math.random() > 0.5
-        }
-      })).filter((item) => parseInt(item.semester) > 0)
-    }));
-  };
 
   const handleFilterChange = (batchValue, semesterValue) => {
+    console.log('Dashboard: Filter changed to:', { batchValue, semesterValue });
+
+    // Update state with the new filter values
     setSelectedBatch(batchValue);
     setSelectedSemester(semesterValue);
 
-    let filtered = [...students];
+    // Clear filtered students since we're now fetching directly in the StudentTable
+    setFilteredStudents([]);
 
-    if (batchValue !== 'all') {
-      filtered = filtered.filter(student => student.batch === batchValue);
-    }
-
-    if (semesterValue !== 'all') {
-      filtered = filtered.filter(student => student.semester === semesterValue);
-    }
-
-    setFilteredStudents(filtered);
+    // The StudentTable component will fetch filtered data directly from the API
+    // based on these values because we pass selectedBatch and selectedSemester as props
   };
 
+  // This function is now handled directly in the StudentTable component
   const handlePointsFilter = (category, order) => {
-    let sorted = [...filteredStudents];
-
-    if (order === 'high') {
-      sorted.sort((a, b) => b.points[category] - a.points[category]);
-    } else {
-      sorted.sort((a, b) => a.points[category] - b.points[category]);
-    }
-
-    setFilteredStudents(sorted);
+    console.log('Points filter:', { category, order });
+    // The sorting is now handled in the StudentTable component
   };
 
   const handleStudentSelect = (student) => {
@@ -112,10 +98,12 @@ const DashboardHOD = () => {
   };
 
   const handleEmailModalOpen = () => {
+    console.log('Opening email modal');
     setShowEmailModal(true);
   };
 
   const handleReportModalOpen = () => {
+    console.log('Opening report modal');
     setShowReportModal(true);
   };
 
@@ -162,7 +150,7 @@ const DashboardHOD = () => {
                   </header>
 
                   <div className="dashboard-content">
-                    
+
 
                     <div className="students-row">
                       <FilterSection
@@ -171,10 +159,14 @@ const DashboardHOD = () => {
                         onFilterChange={handleFilterChange}
                       />
                       <div className="charts-row">
-                      <PerformanceOverview students={filteredStudents} />
-                    </div>
+                        <PerformanceOverview
+                          selectedBatch={selectedBatch}
+                          selectedSemester={selectedSemester}
+                        />
+                      </div>
                       <StudentTable
-                        students={filteredStudents}
+                        selectedBatch={selectedBatch}
+                        selectedSemester={selectedSemester}
                         onPointsFilter={handlePointsFilter}
                         onStudentSelect={handleStudentSelect}
                       />
@@ -182,19 +174,25 @@ const DashboardHOD = () => {
                   </div>
 
                   {showEmailModal && (
-                    <EmailNotification
-                      students={filteredStudents}
-                      onClose={() => setShowEmailModal(false)}
-                    />
+                    <div className="modal-overlay">
+                      <EmailNotification
+                        students={students}
+                        selectedBatch={selectedBatch}
+                        selectedSemester={selectedSemester}
+                        onClose={() => setShowEmailModal(false)}
+                      />
+                    </div>
                   )}
 
                   {showReportModal && (
-                    <ReportGenerator
-                      students={filteredStudents}
-                      selectedBatch={selectedBatch}
-                      selectedSemester={selectedSemester}
-                      onClose={() => setShowReportModal(false)}
-                    />
+                    <div className="modal-overlay">
+                      <ReportGenerator
+                        students={students}
+                        selectedBatch={selectedBatch}
+                        selectedSemester={selectedSemester}
+                        onClose={() => setShowReportModal(false)}
+                      />
+                    </div>
                   )}
 
                   {showAnalysisModal && selectedStudent && (
@@ -228,7 +226,7 @@ const DashboardHOD = () => {
             {/* Use StudentAnalysisPage for the sidebar navigation */}
             {activeItem === 'studentAnalysis' && <StudentAnalysisPage />}
             {activeItem === 'events' && <EventManagement />}
-            {!(activeItem === 'dashboard' || activeItem === 'students' || 
+            {!(activeItem === 'dashboard' || activeItem === 'students' ||
               activeItem === 'faculty' || activeItem === 'subjects' || activeItem === 'batches' ||
               activeItem === 'studentAnalysis' || activeItem === 'events') && (
                 <div className="stats-grid">
