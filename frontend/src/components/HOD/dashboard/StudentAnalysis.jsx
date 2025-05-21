@@ -1,8 +1,96 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './StudentAnalysis.css';
 
 const StudentAnalysis = ({ student, onClose }) => {
+  // State for storing semester points data
+  const [semesterPoints, setSemesterPoints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // For debugging
+  console.log('Student data received:', student);
+  
+  // Fetch semester points data from student_points table
+  useEffect(() => {
+    const fetchSemesterPoints = async () => {
+      if (!student || !student.rollNo) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        // Get the enrollment number
+        const enrollmentNumber = student.rollNo;
+        console.log('Fetching semester points for enrollment number:', enrollmentNumber);
+        
+        // Get the current semester
+        const currentSemester = parseInt(student.semester) || 1;
+        
+        // Create an array to store all semester points
+        const allSemesterPoints = [];
+        
+        // Fetch points for each semester from 1 to current semester
+        for (let semester = 1; semester <= currentSemester; semester++) {
+          try {
+            // Use the existing fetchEventsbyEnrollandSemester endpoint
+            const response = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+              enrollmentNumber,
+              semester: semester.toString()
+            });
+            
+            console.log(`Semester ${semester} points response:`, response.data);
+            
+            // If we got data, add it to our collection
+            if (response.data && Array.isArray(response.data)) {
+              // Calculate total points for this semester
+              let semesterTotalCoCurricular = 0;
+              let semesterTotalExtraCurricular = 0;
+              
+              response.data.forEach(item => {
+                semesterTotalCoCurricular += parseInt(item.totalCocurricular || 0);
+                semesterTotalExtraCurricular += parseInt(item.totalExtracurricular || 0);
+              });
+              
+              // Add semester data to our collection
+              allSemesterPoints.push({
+                semester,
+                totalCocurricular: semesterTotalCoCurricular,
+                totalExtracurricular: semesterTotalExtraCurricular
+              });
+            } else if (response.data && !Array.isArray(response.data) && response.data.message) {
+              // If no activities found, still add the semester with zero points
+              allSemesterPoints.push({
+                semester,
+                totalCocurricular: 0,
+                totalExtracurricular: 0
+              });
+            }
+          } catch (semesterError) {
+            console.warn(`Error fetching semester ${semester} points:`, semesterError);
+            // Still add the semester with zero points on error
+            allSemesterPoints.push({
+              semester,
+              totalCocurricular: 0,
+              totalExtracurricular: 0
+            });
+          }
+        }
+        
+        console.log('All semester points collected:', allSemesterPoints);
+        setSemesterPoints(allSemesterPoints);
+      } catch (err) {
+        console.error('Error in semester points fetching process:', err);
+        setError('Failed to load semester points data');
+        setSemesterPoints([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchSemesterPoints();
+  }, [student]);
   // If no student is provided, show a default view for the StudentAnalysis page
   if (!student) {
     return (
@@ -23,35 +111,49 @@ const StudentAnalysis = ({ student, onClose }) => {
 
   // Prepare data for the line chart
   const prepareChartData = () => {
-    if (!student.history || student.history.length === 0) {
-      return [
-        {
-          semester: student.semester,
-          curricular: student.points.curricular,
-          coCurricular: student.points.coCurricular,
-          extraCurricular: student.points.extraCurricular,
-        }
-      ];
+    // If we have fetched semester points data from the API, use that
+    if (semesterPoints && semesterPoints.length > 0) {
+      console.log('Using fetched semester points data for chart:', semesterPoints);
+      
+      // Map the semester points data to the format expected by the chart
+      const chartData = semesterPoints.map(point => ({
+        semester: point.semester,
+        coCurricular: point.totalCocurricular || 0,
+        extraCurricular: point.totalExtracurricular || 0
+      }));
+      
+      // Sort by semester
+      chartData.sort((a, b) => a.semester - b.semester);
+      
+      console.log('Chart data prepared from API data:', chartData);
+      return chartData;
     }
-
-    // Sort history by semester (ascending)
-    const sortedHistory = [...student.history].sort((a, b) => parseInt(a.semester) - parseInt(b.semester));
-
-    // Add current semester data
-    return [
-      ...sortedHistory.map(item => ({
-        semester: item.semester,
-        curricular: item.points.curricular,
-        coCurricular: item.points.coCurricular,
-        extraCurricular: item.points.extraCurricular,
-      })),
-      {
-        semester: student.semester,
-        curricular: student.points.curricular,
-        coCurricular: student.points.coCurricular,
-        extraCurricular: student.points.extraCurricular,
-      }
-    ];
+    
+    // Fallback to using student data if API data is not available
+    console.log('Falling back to student object data for chart');
+    
+    // Get current semester as a number
+    const currentSemester = parseInt(student.semester) || 1;
+    
+    // Create a default data point for current semester
+    const currentSemesterData = {
+      semester: currentSemester,
+      coCurricular: student.points?.coCurricular || 0,
+      extraCurricular: student.points?.extraCurricular || 0,
+    };
+    
+    // Create data points for all semesters from 1 to current
+    const fallbackChartData = [];
+    for (let i = 1; i <= currentSemester; i++) {
+      fallbackChartData.push({
+        semester: i,
+        coCurricular: i === currentSemester ? currentSemesterData.coCurricular : 0,
+        extraCurricular: i === currentSemester ? currentSemesterData.extraCurricular : 0,
+      });
+    }
+    
+    console.log('Fallback chart data:', fallbackChartData);
+    return fallbackChartData;
   };
 
   const generateAnalysis = () => {
@@ -165,7 +267,9 @@ const StudentAnalysis = ({ student, onClose }) => {
     ];
   };
 
+  // Initialize chart data
   const chartData = prepareChartData();
+  console.log('Prepared chart data:', chartData);
   const analysis = generateAnalysis();
   const suggestions = generateSuggestions(analysis);
   const categoryData = prepareCategoryData();
@@ -219,18 +323,54 @@ const StudentAnalysis = ({ student, onClose }) => {
           <div className="analysis-section">
             <h3>Performance Trends</h3>
             <div className="chart-container">
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="semester" label={{ value: 'Semester', position: 'insideBottomRight', offset: -10 }} />
-                  <YAxis label={{ value: 'Points', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="curricular" stroke="#0088FE" name="Curricular" />
-                  <Line type="monotone" dataKey="coCurricular" stroke="#00C49F" name="Co-Curricular" />
-                  <Line type="monotone" dataKey="extraCurricular" stroke="#FFBB28" name="Extra-Curricular" />
-                </LineChart>
-              </ResponsiveContainer>
+              {loading ? (
+                <div className="loading-message">
+                  <p>Loading semester points data...</p>
+                </div>
+              ) : error ? (
+                <div className="error-message">
+                  <p>{error}</p>
+                </div>
+              ) : chartData && chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="semester" 
+                      label={{ value: 'Semester', position: 'insideBottomRight', offset: -10 }}
+                      tickCount={10}
+                      type="number"
+                      domain={[1, 'dataMax']}
+                      allowDecimals={false}
+                    />
+                    <YAxis label={{ value: 'Points', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip formatter={(value) => [`${value} points`, undefined]} />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="coCurricular" 
+                      stroke="#00C49F" 
+                      name="Co-Curricular"
+                      strokeWidth={2}
+                      dot={{ r: 6 }}
+                      activeDot={{ r: 8 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="extraCurricular" 
+                      stroke="#FFBB28" 
+                      name="Extra-Curricular"
+                      strokeWidth={2}
+                      dot={{ r: 6 }}
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="no-data-message">
+                  <p>No performance history data available</p>
+                </div>
+              )}
             </div>
           </div>
 
