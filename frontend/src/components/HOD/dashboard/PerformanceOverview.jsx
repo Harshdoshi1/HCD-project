@@ -29,9 +29,30 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         url = 'http://localhost:5001/api/students/getAllStudents';
         response = await axios.get(url);
       } else if (selectedBatch !== 'all' && selectedSemester === 'all') {
-        // Fetch students by batch only
-        url = `http://localhost:5001/api/students/getStudentsByBatch/${selectedBatch}`;
-        response = await axios.get(url);
+        // First get the batch ID from the batch name
+        try {
+          // Get all batches
+          const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+          console.log('Batches response:', batchesResponse.data);
+          
+          // Find the batch ID for the selected batch name
+          const selectedBatchObj = batchesResponse.data.find(batch => batch.batchName === selectedBatch);
+          
+          if (selectedBatchObj && selectedBatchObj.id) {
+            // Fetch students by batch ID
+            url = `http://localhost:5001/api/students/getStudentsByBatch/${selectedBatchObj.id}`;
+            console.log('Fetching from URL:', url);
+            response = await axios.get(url);
+          } else {
+            throw new Error(`Batch ID not found for batch name: ${selectedBatch}`);
+          }
+        } catch (batchError) {
+          console.error('Error fetching batch ID:', batchError);
+          setError(`Failed to get batch ID for ${selectedBatch}. Please try again.`);
+          setStudents([]);
+          setLoading(false);
+          return;
+        }
       } else if (selectedBatch !== 'all' && selectedSemester !== 'all') {
         // Fetch students by both batch and semester
         url = `http://localhost:5001/api/marks/students/${selectedBatch}/${selectedSemester}`;
