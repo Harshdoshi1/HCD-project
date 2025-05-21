@@ -98,6 +98,46 @@
   color: white;
 }
 
+/* Sidebar subitems for batches */
+.sidebar-subitems {
+  width: 100%;
+  padding-left: 15px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left: 3px solid #33C3F0;
+  margin-bottom: 10px;
+}
+
+.sidebar-subitem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 15px;
+  margin-bottom: 2px;
+  font-size: 0.9em;
+  color: #D1F8EF;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sidebar-subitem:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #33C3F0;
+}
+
+.sidebar-subicon {
+  margin-right: 8px;
+  color: #A1E3F9;
+}
+
+.sidebar-subtext {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .sidebar-footer {
   width: 100%;
   margin-top: auto;

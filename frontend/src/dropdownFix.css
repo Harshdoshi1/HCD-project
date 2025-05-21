@@ -1,0 +1,49 @@
+/* Global dropdown fix to ensure text is visible
+   This file should be imported in App.jsx or index.js */
+
+/* Standard select elements */
+select,
+select option {
+  color: black !important;
+  -webkit-text-fill-color: black !important;
+}
+
+/* React-select components */
+.react-select__control,
+.react-select__single-value,
+.react-select__option,
+.react-select__input {
+  color: black !important;
+  -webkit-text-fill-color: black !important;
+}
+
+/* Additional selectors for other UI libraries */
+.select,
+.select-input,
+.dropdown,
+.dropdown-item,
+.dropdown-toggle,
+.form-select {
+  color: black !important;
+  -webkit-text-fill-color: black !important;
+}
+
+/* Force children of select to inherit black color */
+select *,
+.select *,
+.dropdown * {
+  color: black !important;
+  -webkit-text-fill-color: black !important;
+}
+
+/* Target specific HOD and Faculty interface selectors */
+.HOD-select-wrapper select,
+.faculty-filter select,
+.filter-group select,
+.filter-item select,
+.form-group select,
+.batch-selection select,
+.semester-selection select {
+  color: black !important;
+  -webkit-text-fill-color: black !important;
+}

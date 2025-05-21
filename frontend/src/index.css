@@ -1,4 +1,49 @@
 body {
     font-family: Arial, sans-serif;
+}
 
+/* Global dropdown styling to ensure text is visible */
+select,
+select option,
+.form-select,
+.react-select__control,
+.react-select__single-value,
+.react-select__option {
+    color: black !important;
+    -webkit-text-fill-color: black !important;
+}
+
+/* Additional style to ensure dropdown text is visible in all components */
+/* HOD components */
+.HOD-select-wrapper select,
+.filter-group select,
+.filter-item select,
+.form-group select,
+.batch-selection select,
+.semester-selection select,
+/* Faculty components */
+.faculty-filter select,
+.faculty-form-group select,
+.faculty-dropdown select,
+/* Other potential dropdown containers */
+.dropdown-menu select,
+.select-container select,
+.filter-dropdown select {
+    color: black !important;
+    -webkit-text-fill-color: black !important;
+}
+
+/* Additional specificity for nested elements */
+select *,
+option,
+.dropdown-item,
+.select-option {
+    color: black !important;
+    -webkit-text-fill-color: black !important;
+}
+
+/* Ensure consistent background for better readability */
+select,
+select option {
+    background-color: white !important;
 }

@@ -3,10 +3,20 @@ const { supabase } = require('../config/db');
 // Add Subject
 const addSubject = async (req, res) => {
     try {
-        const { name, code, courseType, credits, subjectType, semester } = req.body;
+        console.log('Adding subject with payload:', req.body);
+        const { name, code, courseType, credits, subjectType, semester, batchName } = req.body;
 
-        if (courseType === 'degree') {
-            const { error } = await supabase
+        // Validate required fields
+        if (!name || !code || !courseType || !credits || !subjectType) {
+            return res.status(400).json({ 
+                error: 'Missing required fields', 
+                details: 'name, code, courseType, credits, and subjectType are required' 
+            });
+        }
+
+        // First, save to the unique subjects table based on course type
+        if (courseType.toLowerCase() === 'degree') {
+            const { data: uniqueSubject, error: uniqueError } = await supabase
                 .from('unique_sub_degrees')
                 .insert({
                     sub_code: code,
@@ -15,26 +25,85 @@ const addSubject = async (req, res) => {
                     sub_level: subjectType,
                     semester: semester,
                     program: 'Degree'
-                });
+                })
+                .select()
+                .single();
 
-            if (error) throw error;
-        } else if (courseType === 'diploma') {
-            const { error } = await supabase
+            if (uniqueError) {
+                console.error('Error inserting to unique_sub_degrees:', uniqueError);
+                throw uniqueError;
+            }
+            
+            console.log('Successfully added to unique_sub_degrees:', uniqueSubject);
+        } else if (courseType.toLowerCase() === 'diploma') {
+            const { data: uniqueSubject, error: uniqueError } = await supabase
                 .from('unique_sub_diplomas')
                 .insert({
                     sub_code: code,
                     sub_name: name,
                     sub_credit: credits,
                     sub_level: subjectType
-                });
+                })
+                .select()
+                .single();
 
-            if (error) throw error;
+            if (uniqueError) {
+                console.error('Error inserting to unique_sub_diplomas:', uniqueError);
+                throw uniqueError;
+            }
+            
+            console.log('Successfully added to unique_sub_diplomas:', uniqueSubject);
         } else {
-            return res.status(400).json({ error: 'Invalid course type' });
+            return res.status(400).json({ error: 'Invalid course type', details: "Course type must be 'degree' or 'diploma'" });
+        }
+
+        // If a batch is provided, also add to the subjects table to associate with the batch
+        if (batchName && semester) {
+            // Find the batch ID
+            const { data: batch, error: batchError } = await supabase
+                .from('batches')
+                .select('id')
+                .ilike('name', batchName)
+                .single();
+
+            if (batchError) {
+                console.warn(`Batch not found: ${batchName}`, batchError);
+            } else if (batch) {
+                // Find the semester ID
+                const { data: sem, error: semError } = await supabase
+                    .from('semesters')
+                    .select('id')
+                    .eq('batch_id', batch.id)
+                    .eq('semester_number', semester)
+                    .single();
+
+                if (semError) {
+                    console.warn(`Semester not found for batch: ${batchName}, semester: ${semester}`, semError);
+                } else if (sem) {
+                    // Now add to subjects table to link with batch and semester
+                    const { data: subjectData, error: subjectError } = await supabase
+                        .from('subjects')
+                        .insert({
+                            subject_name: name,
+                            subject_code: code,
+                            batch_id: batch.id,
+                            semester_id: sem.id,
+                            program: courseType.toLowerCase() === 'degree' ? 'Degree' : 'Diploma'
+                        })
+                        .select();
+
+                    if (subjectError) {
+                        console.error('Error adding subject to subjects table:', subjectError);
+                    } else {
+                        console.log('Successfully added subject to subjects table:', subjectData);
+                    }
+                }
+            }
         }
 
         res.status(201).json({ message: 'Subject added successfully' });
     } catch (error) {
+        console.error('Error in addSubject:', error);
         res.status(500).json({ error: 'Error adding subject', details: error.message });
     }
 };

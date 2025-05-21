@@ -19,14 +19,38 @@ const ManageBatches = () => {
     const fetchBatches = async () => {
         setIsLoading(true);
         try {
+            console.log('Fetching batches for ManageBatches component...');
             const response = await fetch('http://localhost:5001/api/batches/getAllBatches');
-            if (!response.ok) throw new Error('Failed to fetch batches');
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch batches: ${response.status} ${response.statusText}`);
+            }
+            
             const data = await response.json();
-            setBatches(data);
+            console.log('Batches data received:', data);
+            
+            if (Array.isArray(data) && data.length > 0) {
+                // Process the batches to ensure they have consistent property names
+                const processedBatches = data.map(batch => ({
+                    id: batch.id,
+                    batchName: batch.name || batch.batchName,
+                    batchStart: batch.start_date || batch.batchStart,
+                    batchEnd: batch.end_date || batch.batchEnd,
+                    courseType: batch.program || batch.courseType || 'Unknown',
+                    current_semester: batch.current_semester || 1,
+                    // Add other properties as needed
+                    semesters: batch.semesters || [] // Placeholder for semesters
+                }));
+                console.log('Processed batches:', processedBatches);
+                setBatches(processedBatches);
+            } else {
+                console.warn('No batches found or empty array returned');
+                setBatches([]);
+            }
         } catch (error) {
             setError(error.message);
+            console.error('Error fetching batches:', error);
             alert('Error fetching batches: ' + error.message);
-            console.error(error);
         } finally {
             setIsLoading(false);
         }
@@ -41,20 +65,37 @@ const ManageBatches = () => {
 
         setIsLoading(true);
         try {
+            console.log('Adding new batch:', newBatch);
+            
+            // Create payload with the expected property names
+            const batchPayload = {
+                batchName: newBatch.batchName.trim(),
+                batchStart: newBatch.batchStart,
+                batchEnd: newBatch.batchEnd,
+                courseType: newBatch.courseType
+            };
+            
             const response = await fetch('http://localhost:5001/api/batches/addBatch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newBatch)
+                body: JSON.stringify(batchPayload)
             });
-            if (!response.ok) throw new Error('Failed to add batch');
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Failed to add batch: ${errorData.message || response.statusText}`);
+            }
 
+            const responseData = await response.json();
+            console.log('Batch added successfully:', responseData);
+            
             await fetchBatches();
             setNewBatch({ batchName: '', batchStart: '', batchEnd: '', courseType: '' });
             alert('Batch added successfully!');
         } catch (error) {
             setError(error.message);
             alert('Error adding batch: ' + error.message);
-            console.error(error);
+            console.error('Error adding batch:', error);
         } finally {
             setIsLoading(false);
         }
@@ -268,11 +309,16 @@ const ManageBatches = () => {
                                         <select
                                             id="batchSelect"
                                             className="select"
-                                            onChange={(e) => setSelectedBatch(batches.find(batch => batch.batchName === e.target.value) || null)}
+                                            onChange={(e) => {
+                                                const selectedId = e.target.value;
+                                                const foundBatch = batches.find(batch => batch.id === selectedId);
+                                                console.log('Selected batch:', foundBatch);
+                                                setSelectedBatch(foundBatch);
+                                            }}
                                         >
                                             <option value="">Select a batch</option>
                                             {batches.map(batch => (
-                                                <option key={batch.batchName} value={batch.batchName}>
+                                                <option key={batch.id} value={batch.id}>
                                                     {batch.batchName} ({batch.courseType})
                                                 </option>
                                             ))}
@@ -302,21 +348,38 @@ const ManageBatches = () => {
                     <h2 className="section-title">Current Batches</h2>
                     <div className="batches-grid">
                         {batches.map((batch) => (
-                            <div key={batch.batchName} className="batch-card">
+                            <div key={batch.id} className="batch-card">
                                 <div className="batch-card-header">
                                     <h3 className="batch-title">{batch.batchName}</h3>
                                 </div>
                                 <div className="batch-card-content">
+                                    <p><strong>Type:</strong> {batch.courseType}</p>
                                     <p><strong>Duration:</strong> {formatDate(batch.batchStart)} - {formatDate(batch.batchEnd)}</p>
+                                    <p><strong>Current Semester:</strong> {batch.current_semester}</p>
+                                    
+                                    <button 
+                                        className="button secondary-button"
+                                        style={{ marginTop: '10px' }}
+                                        onClick={() => {
+                                            setSelectedBatch(batch);
+                                            setActiveTab('semester');
+                                            document.getElementById('semesterTab').scrollIntoView({ behavior: 'smooth' });
+                                        }}
+                                    >
+                                        Add Semester
+                                    </button>
 
                                     {batch.semesters && batch.semesters.length > 0 ? (
                                         <div className="semester-list">
                                             <h4>Semesters:</h4>
                                             <ul>
                                                 {batch.semesters.map((semester) => (
-                                                    <li key={semester.semesterNumber} className="semester-item">
-                                                        <span className="semester-number">Semester {semester.semesterNumber}</span>
-                                                        <span className="semester-dates">{formatDate(semester.startDate)} - {formatDate(semester.endDate)}</span>
+                                                    <li key={semester.id || semester.semesterNumber} className="semester-item">
+                                                        <span className="semester-number">Semester {semester.semester_number || semester.semesterNumber}</span>
+                                                        <span className="semester-dates">
+                                                            {formatDate(semester.start_date || semester.startDate)} - 
+                                                            {formatDate(semester.end_date || semester.endDate)}
+                                                        </span>
                                                     </li>
                                                 ))}
                                             </ul>

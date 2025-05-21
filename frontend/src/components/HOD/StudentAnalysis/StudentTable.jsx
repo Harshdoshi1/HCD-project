@@ -16,11 +16,23 @@ const StudentTable = ({
       try {
         const response = await fetch('http://localhost:5001/api/students/getAllStudents');
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
-        setStudentData(data);
+        
+        // Validate data before using it
+        if (!Array.isArray(data)) {
+          console.error('Expected array of students but received:', typeof data);
+          throw new Error('Invalid data format received from server');
+        }
+        
+        // Filter out invalid records to prevent errors
+        const validData = data.filter(student => student && typeof student === 'object');
+        console.log(`Loaded ${validData.length} valid student records out of ${data.length} total`);
+        
+        setStudentData(validData);
       } catch (err) {
+        console.error('Error fetching student data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -37,10 +49,16 @@ const StudentTable = ({
 
   // Always declare the useMemo hook, regardless of conditions
   const filteredStudents = useMemo(() => {
-    return studentData.filter(student =>
-      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.enrollmentNumber.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return studentData.filter(student => {
+      // Skip invalid student records
+      if (!student || typeof student !== 'object') return false;
+      
+      const name = student.name || '';
+      const enrollmentNumber = student.enrollmentNumber || '';
+      
+      return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             enrollmentNumber.toLowerCase().includes(searchQuery.toLowerCase());
+    });
   }, [studentData, searchQuery]);
 
   // Always declare sortedStudents with useMemo, regardless of conditions
@@ -139,16 +157,16 @@ const StudentTable = ({
             </thead>
             <tbody>
               {sortedStudents.map((student, index) => (
-                <tr key={`${student.id}-${index}`}>
-                  <td>{student.name}</td>
-                  <td>{student.enrollmentNumber}</td>
+                <tr key={`${student.id || index}-${index}`}>
+                  <td>{student.name || 'Unnamed'}</td>
+                  <td>{student.enrollmentNumber || 'N/A'}</td>
                   <td>{student.Batch?.currentSemester || 'N/A'}</td>
-                  <td>{student.id}</td>
+                  <td>{student.id || 'No ID'}</td>
                   <td>
                     <button
                       className="view-details-btn"
                       onClick={() => onViewDetails(student)}
-                      aria-label={`View details for ${student.name}`}
+                      aria-label={`View details for ${student.name || 'this student'}`}
                     >
                       View Details
                     </button>

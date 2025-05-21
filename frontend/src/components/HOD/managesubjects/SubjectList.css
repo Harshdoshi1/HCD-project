@@ -126,6 +126,14 @@
 
 .professional-filter-ds {
     width: 49%;
+    color: black !important;
+}
+
+.professional-filter-ds select,
+.professional-filter-ds option,
+.professional-filter-ds * {
+    color: black !important;
+    -webkit-text-fill-color: black !important;
 }
 
 .subject-details {

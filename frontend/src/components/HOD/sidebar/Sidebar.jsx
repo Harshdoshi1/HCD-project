@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, GraduationCap, Settings, Menu, User, LogOut, BarChart2 } from 'lucide-react';
 import ProfileModal from './ProfileModal';
 import Logout from './Logout';
@@ -36,6 +36,7 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
         }
     };
 
+    // Menu items
     const menuItems = [
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "students", label: "Students", icon: Users },

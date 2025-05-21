@@ -80,14 +80,19 @@ const AssignedSubjects = () => {
     const itemsPerPage = 6;
 
     useEffect(() => {
-        const faculty = JSON.parse(localStorage.getItem('user'));
-        const facultyId = faculty?.id;
-
-        if (!facultyId) {
-            // Redirect to login if faculty data is not found
+        // Get faculty information more reliably
+        const userItem = localStorage.getItem('user');
+        const faculty = userItem ? JSON.parse(userItem) : null;
+        
+        // Only redirect if user is completely missing, not just when id is missing
+        if (!faculty) {
+            console.warn('No user data found in localStorage');
             window.location.href = '/';
             return;
         }
+        
+        // Try to get facultyId from different possible properties
+        const facultyId = faculty.id || faculty.facultyId || faculty._id;
 
         const fetchSubjects = async () => {
             setIsLoading(true);

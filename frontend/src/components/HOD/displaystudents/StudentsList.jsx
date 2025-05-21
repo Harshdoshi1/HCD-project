@@ -24,26 +24,44 @@ const StudentsList = ({ onStudentSelect }) => {
 
     const fetchStudents = async () => {
         try {
+            setIsLoading(true);
             const response = await fetch('http://localhost:5001/api/students/getAllStudents');
             if (!response.ok) {
-                throw new Error('Failed to fetch students');
+                throw new Error(`Failed to fetch students: ${response.status} ${response.statusText}`);
             }
             const data = await response.json();
+            
+            // Validate and process student data
+            if (!Array.isArray(data)) {
+                console.warn('Expected array of students but received:', typeof data);
+                setStudents([]);
+                setIsLoading(false);
+                return;
+            }
+            
             // Add a unique ID to each student record
             const studentsWithIds = data.map((student, index) => ({
                 ...student,
-                uniqueId: `${student.enrollmentNumber}-${index}`
+                uniqueId: `${student?.enrollmentNumber || 'unknown'}-${index}`
             }));
+            
             setStudents(studentsWithIds);
 
             // Extract unique batches from students data
-            const uniqueBatches = [...new Set(studentsWithIds.filter(student => student.Batch).map(student => student.Batch.batchName))];
+            const uniqueBatches = [...new Set(
+                studentsWithIds
+                    .filter(student => student?.Batch && student.Batch?.batchName) // Ensure Batch and batchName exist
+                    .map(student => student.Batch.batchName)
+            )];
+            
             setBatches(uniqueBatches);
             setSelectedBatch(uniqueBatches.length > 0 ? uniqueBatches[0] : ''); // Set the first batch as default
             setIsLoading(false);
         } catch (error) {
             console.error('Error fetching students:', error);
             setIsLoading(false);
+            // Add user-friendly error handling
+            alert(`Failed to load student data. Please try refreshing the page. Error: ${error.message}`);
         }
     };
 
@@ -69,11 +87,21 @@ const StudentsList = ({ onStudentSelect }) => {
     });
 
     const filteredStudents = sortedStudents.filter(student => {
-        const batchMatch = selectedBatch ? student.Batch?.batchName === selectedBatch : true;
+        // Skip filtering for invalid student records
+        if (!student) return false;
+        
+        // Handle batch matching with optional chaining
+        const batchMatch = !selectedBatch || (student.Batch?.batchName === selectedBatch);
+        
+        // Handle search with default values for missing fields
+        const studentName = student.name || '';
+        const studentEnrollment = student.enrollmentNumber || '';
+        const studentEmail = student.email || '';
+        
         const searchMatch = !searchQuery ||
-            student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            student.enrollmentNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            student.email?.toLowerCase().includes(searchQuery.toLowerCase());
+            studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            studentEnrollment.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            studentEmail.toLowerCase().includes(searchQuery.toLowerCase());
 
         return batchMatch && searchMatch;
     });
@@ -223,15 +251,16 @@ const StudentsList = ({ onStudentSelect }) => {
                                 </thead>
                                 <tbody>
                                     {filteredStudents.map(student => (
-                                        <tr key={student.uniqueId}>
-                                            <td>{student.name}</td>
-                                            <td>{student.enrollmentNumber}</td>
+                                        <tr key={student.uniqueId || `student-${Math.random()}`}>
+                                            <td>{student.name || 'Unnamed'}</td>
+                                            <td>{student.enrollmentNumber || 'N/A'}</td>
                                             <td>{student.Batch?.batchName || 'N/A'}</td>
-                                            <td>{student.email}</td>
+                                            <td>{student.email || 'No email'}</td>
                                             <td>
                                                 <button
                                                     className="view-details-btn"
                                                     onClick={() => onStudentSelect && onStudentSelect(student.enrollmentNumber)}
+                                                    disabled={!student.enrollmentNumber}
                                                 >
                                                     View Details
                                                 </button>

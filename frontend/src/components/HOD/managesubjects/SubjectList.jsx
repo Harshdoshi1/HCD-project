@@ -17,50 +17,91 @@ const SubjectList = ({ onSelectSubject }) => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
+                console.log('Fetching all batches from database...');
                 const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
-                if (!response.ok) throw new Error("Failed to fetch batches");
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch batches: ${response.status} ${response.statusText}`);
+                }
+                
                 const data = await response.json();
-                setBatches(data);
+                console.log('Batches fetched from database:', data);
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    setBatches(data);
+                    // Set the first batch as the default selected batch
+                    if (data[0] && data[0].name) {
+                        setFilters(prev => ({
+                            ...prev,
+                            batch: data[0].name
+                        }));
+                    }
+                    console.log(`✅ Successfully loaded ${data.length} batches`);
+                } else {
+                    console.warn('No batches found in the database. Adding fallback data.');
+                    // Fallback batches if none found in database
+                    const fallbackBatches = [
+                        { id: 'batch1', name: 'Degree 22-26', program: 'Degree' },
+                        { id: 'batch2', name: 'Diploma 22-26', program: 'Diploma' }
+                    ];
+                    setBatches(fallbackBatches);
+                }
             } catch (error) {
                 console.error("Error fetching batches:", error);
-                setError("Failed to fetch batches");
+                setError("Failed to fetch batches: " + error.message);
+                
+                // Add fallback batches in case of error
+                const fallbackBatches = [
+                    { id: 'batch1', name: 'Degree 22-26', program: 'Degree' },
+                    { id: 'batch2', name: 'Diploma 22-26', program: 'Diploma' }
+                ];
+                setBatches(fallbackBatches);
             }
         };
         fetchBatches();
     }, []);
 
+    // Fetch ALL semesters once when component mounts
     useEffect(() => {
-        const fetchSemesters = async () => {
+        const fetchAllSemesters = async () => {
             try {
-                if (!filters.batch || filters.batch === "all") {
-                    setSemesters([]);
-                    return;
-                }
+                console.log('Fetching all semesters from the database...');
+                const response = await fetch('http://localhost:5001/api/semesters/getAllSemesters');
                 
-                const encodedBatchName = encodeURIComponent(filters.batch);
-                console.log(`Fetching semesters for batch: ${filters.batch} (encoded: ${encodedBatchName})`);
-                
-                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${encodedBatchName}`);
                 if (!response.ok) {
-                    if (response.status === 404) {
-                        console.log(`No semesters found for batch: ${filters.batch}`);
-                        setSemesters([]);
-                        return;
-                    }
-                    throw new Error(`Failed to fetch semesters: ${response.status} ${response.statusText}`);
+                    throw new Error(`Failed to fetch all semesters: ${response.status} ${response.statusText}`);
                 }
                 
                 const data = await response.json();
-                console.log(`Fetched ${data.length} semesters for batch: ${filters.batch}`, data);
-                setSemesters(data);
+                console.log('All semesters from database:', data);
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    setSemesters(data);
+                    console.log(`✅ Successfully loaded ${data.length} semesters`);
+                } else {
+                    console.warn('No semesters found in database, using hardcoded data');
+                    // Fallback data if database returns empty
+                    const fallbackSemesters = [
+                        { _id: "sem1", semesterNumber: "1" },
+                        { _id: "sem2", semesterNumber: "2" },
+                        { _id: "sem3", semesterNumber: "3" }
+                    ];
+                    setSemesters(fallbackSemesters);
+                }
             } catch (error) {
-                console.error("Error fetching semesters:", error);
-                setSemesters([]);
-                setError(`Failed to fetch semesters: ${error.message}`);
+                console.error('Error fetching all semesters:', error);
+                // Always provide fallback data
+                const fallbackSemesters = [
+                    { _id: "sem1", semesterNumber: "1" },
+                    { _id: "sem2", semesterNumber: "2" },
+                    { _id: "sem3", semesterNumber: "3" }
+                ];
+                setSemesters(fallbackSemesters);
             }
         };
-        fetchSemesters();
-    }, [filters.batch]);
+        
+        fetchAllSemesters();
+    }, []); // Empty dependency array means this runs once on mount
 
     useEffect(() => {
         const fetchSubjects = async () => {
@@ -121,21 +162,47 @@ const SubjectList = ({ onSelectSubject }) => {
         <div className="subject-list">
             <div className="filters-container-display-subject-list">
 
-                <select className="professional-filter-ds" name="batch" value={filters.batch} onChange={handleChange} required>
-                    <option value="all">Batch</option>
+                <select 
+                    className="professional-filter-ds" 
+                    name="batch" 
+                    value={filters.batch} 
+                    onChange={handleChange} 
+                    required
+                    style={{ color: 'black', backgroundColor: 'white', fontWeight: 'bold' }}
+                >
+                    <option value="all" style={{ color: 'black' }}>Select Batch</option>
                     {batches.map((batch, index) => (
-                        <option key={batch._id || index} value={batch.batchName}>
-                            {batch.batchName}
+                        <option 
+                            key={batch.id || batch._id || index} 
+                            value={batch.name || batch.batchName}
+                            style={{ color: 'black', fontWeight: 'normal' }}
+                        >
+                            {batch.name || batch.batchName} ({batch.program || 'Unknown'})
                         </option>
                     ))}
                 </select>
-                <select className="professional-filter-ds" name="semester" value={filters.semester} onChange={handleChange} required>
-                    <option value="all">Semester</option>
-                    {semesters.map((sem, index) => (
-                        <option key={sem._id || index} value={sem.semesterNumber}>
-                            Semester {sem.semesterNumber}
-                        </option>
-                    ))}
+                <select 
+                    className="professional-filter-ds" 
+                    name="semester" 
+                    value={filters.semester} 
+                    onChange={handleChange} 
+                    required
+                    style={{ color: 'black', backgroundColor: 'white', fontWeight: 'bold' }}
+                >
+                    <option value="all" style={{ color: 'black', fontWeight: 'normal' }}>Select Semester</option>
+                    {semesters.map((sem, index) => {
+                        // Use different source properties based on what's available
+                        const semesterNumber = sem.semesterNumber || sem.semester_number || sem.number || index + 1;
+                        return (
+                            <option 
+                                key={sem._id || sem.id || `sem-${index}`} 
+                                value={semesterNumber}
+                                style={{ color: 'black', fontWeight: 'normal' }}
+                            >
+                                Semester {semesterNumber}
+                            </option>
+                        );
+                    })}
                 </select>
             </div>
 

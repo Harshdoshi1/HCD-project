@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ManageComponents.css';
 
 const ManageComponents = ({ selectedSubject }) => {
@@ -6,8 +6,15 @@ const ManageComponents = ({ selectedSubject }) => {
         code: '',
         name: '',
         credits: '',
-        type: 'central'
+        type: 'central',
+        courseType: 'degree',
+        semester: '1',
+        batch: ''
     });
+    
+    const [batches, setBatches] = useState([]);
+    const [semesters, setSemesters] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const [totalWeightage, setTotalWeightage] = useState(0);
     const [weightages, setWeightages] = useState({
@@ -17,6 +24,86 @@ const ManageComponents = ({ selectedSubject }) => {
         TW: { enabled: false, weightage: 0, totalMarks: 0 },
         VIVA: { enabled: false, weightage: 0, totalMarks: 0 }
     });
+    
+    // Fetch batches when component mounts
+    useEffect(() => {
+        const fetchBatches = async () => {
+            setLoading(true);
+            try {
+                console.log('Fetching batches for subject form...');
+                const response = await fetch('http://localhost:5001/api/batches/getAllBatches');
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch batches: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Batches fetched:', data);
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    setBatches(data);
+                    // Set the first batch as default
+                    if (data[0] && data[0].name) {
+                        setNewSubject(prev => ({
+                            ...prev,
+                            batch: data[0].name
+                        }));
+                    }
+                } else {
+                    console.log('No batches found, setting fallback data');
+                    const fallbackBatches = [
+                        { id: 'batch1', name: 'Degree 22-26', program: 'Degree' },
+                        { id: 'batch2', name: 'Diploma 22-26', program: 'Diploma' }
+                    ];
+                    setBatches(fallbackBatches);
+                    setNewSubject(prev => ({
+                        ...prev,
+                        batch: fallbackBatches[0].name
+                    }));
+                }
+            } catch (error) {
+                console.error('Error fetching batches:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        // Fetch semesters
+        const fetchSemesters = async () => {
+            try {
+                const response = await fetch('http://localhost:5001/api/semesters/getAllSemesters');
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch semesters`);
+                }
+                
+                const data = await response.json();
+                console.log('Semesters fetched:', data);
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    setSemesters(data);
+                } else {
+                    const fallbackSemesters = [
+                        { id: 'sem1', semester_number: 1 },
+                        { id: 'sem2', semester_number: 2 },
+                        { id: 'sem3', semester_number: 3 }
+                    ];
+                    setSemesters(fallbackSemesters);
+                }
+            } catch (error) {
+                console.error('Error fetching semesters:', error);
+                const fallbackSemesters = [
+                    { id: 'sem1', semester_number: 1 },
+                    { id: 'sem2', semester_number: 2 },
+                    { id: 'sem3', semester_number: 3 }
+                ];
+                setSemesters(fallbackSemesters);
+            }
+        };
+        
+        fetchBatches();
+        fetchSemesters();
+    }, []);
 
     const handleSubjectChange = (field, value) => {
         setNewSubject(prev => ({
@@ -79,7 +166,30 @@ const ManageComponents = ({ selectedSubject }) => {
                 componentsMarks
             });
 
-            // Call the new API endpoint to add subject with components
+            // First add the subject to the appropriate table
+            const addSubjectResponse = await fetch('http://localhost:5001/api/subjects/addSubject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: newSubject.name,
+                    code: newSubject.code,
+                    courseType: newSubject.courseType,
+                    credits: Number(newSubject.credits),
+                    subjectType: newSubject.type,
+                    semester: newSubject.semester,
+                    batchName: newSubject.batch
+                })
+            });
+            
+            if (!addSubjectResponse.ok) {
+                const errorData = await addSubjectResponse.json();
+                console.error('Failed to add subject:', errorData);
+                throw new Error(`Failed to add subject: ${errorData.error || 'Unknown error'}`);
+            }
+            
+            console.log('Subject added successfully, now adding components...');
+            
+            // Then add the components
             const response = await fetch('http://localhost:5001/api/subjects/addSubjectWithComponents', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -104,7 +214,10 @@ const ManageComponents = ({ selectedSubject }) => {
                     code: '',
                     name: '',
                     credits: '',
-                    type: 'central'
+                    type: 'central',
+                    courseType: 'degree',
+                    semester: '1',
+                    batch: newSubject.batch // Keep the same batch for convenience
                 });
                 setWeightages({
                     CA: { enabled: false, weightage: 0, totalMarks: 0 },
@@ -127,7 +240,7 @@ const ManageComponents = ({ selectedSubject }) => {
         <div className="manage-weightage-container">
             <div className="subject-form">
                 <h3>Add New Subject</h3>
-                <div className="form-inputs">
+                <div className="subject-form-top">
                     <input
                         type="text"
                         placeholder="Subject Code"
@@ -144,6 +257,8 @@ const ManageComponents = ({ selectedSubject }) => {
                     />
                     <input
                         type="number"
+                        min="1"
+                        max="5"
                         placeholder="Credits"
                         value={newSubject.credits}
                         onChange={(e) => handleSubjectChange('credits', e.target.value)}
@@ -156,6 +271,52 @@ const ManageComponents = ({ selectedSubject }) => {
                     >
                         <option value="central">Central</option>
                         <option value="departmental">Departmental</option>
+                    </select>
+                    
+                    <select
+                        value={newSubject.courseType}
+                        onChange={(e) => handleSubjectChange('courseType', e.target.value)}
+                        className="subject-input"
+                    >
+                        <option value="degree">Degree</option>
+                        <option value="diploma">Diploma</option>
+                    </select>
+                    
+                    <select
+                        value={newSubject.batch}
+                        onChange={(e) => handleSubjectChange('batch', e.target.value)}
+                        className="subject-input"
+                        style={{ color: 'black' }}
+                    >
+                        <option value="">Select Batch</option>
+                        {batches.map((batch, index) => (
+                            <option 
+                                key={batch.id || `batch-${index}`} 
+                                value={batch.name || batch.batchName}
+                            >
+                                {batch.name || batch.batchName} ({batch.program || 'Unknown'})
+                            </option>
+                        ))}
+                    </select>
+                    
+                    <select
+                        value={newSubject.semester}
+                        onChange={(e) => handleSubjectChange('semester', e.target.value)}
+                        className="subject-input"
+                        style={{ color: 'black' }}
+                    >
+                        <option value="">Select Semester</option>
+                        {semesters.map((sem, index) => {
+                            const semNumber = sem.semester_number || sem.semesterNumber || index + 1;
+                            return (
+                                <option 
+                                    key={sem.id || `sem-${index}`} 
+                                    value={semNumber}
+                                >
+                                    Semester {semNumber}
+                                </option>
+                            );
+                        })}
                     </select>
                 </div>
             </div>

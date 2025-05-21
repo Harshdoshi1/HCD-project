@@ -1,5 +1,40 @@
-/* #root {
-  
+/* Global styles for the Higher Education Dashboard */
+
+/* Fix for dropdown text color - ensure all select elements have black text */
+select, select option {
+  color: #000000 !important; /* Force black text color */
+  background-color: #ffffff; /* White background for better readability */
+}
+
+select:focus {
+  border-color: #3674b5; /* Consistent with the app's color scheme */
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(54, 116, 181, 0.25);
+}
+
+/* Ensure dropdown text remains visible when disabled */
+select:disabled {
+  background-color: #f2f2f2;
+  color: #666666 !important;
+  cursor: not-allowed;
+}
+
+/* Ensure consistent styling for all dropdown menus */
+.react-select__control {
+  color: #000000;
+}
+
+.react-select__single-value {
+  color: #000000 !important;
+}
+
+.react-select__option {
+  color: #000000;
+}
+
+/* Legacy styles - commented out */
+/* 
+#root {
   text-align: center;
 }
 
@@ -17,27 +52,4 @@
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-} */
+*/

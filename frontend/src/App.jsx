@@ -7,7 +7,8 @@ import DashboardFaculty from './components/Faculty/dashboard/Dashboard';
 import DashboardHOD from './components/HOD/dashboard/Dashboard';
 import StudentDetail from './components/HOD/displaystudents/StudentDetails';
 import { ThemeProvider } from './context/ThemeContext';
-import './App.css'; // Keep this if you have this file
+import './App.css'; // Base styles
+import './dropdownFix.css'; // Fix for dropdown text colors
 
 function App() {
   return (

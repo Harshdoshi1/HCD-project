@@ -108,7 +108,51 @@ const getSemestersByBatch = async (req, res) => {
     }
 };
 
+const getAllSemesters = async (req, res) => {
+    try {
+        console.log("Fetching all semesters");
+        
+        // Get all semesters with batch information joined
+        const { data: semesters, error } = await supabase
+            .from('semesters')
+            .select(`
+                id,
+                semester_number,
+                start_date,
+                end_date,
+                batch_id,
+                batches:batch_id (id, name)
+            `)
+            .order('semester_number', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching all semesters:', error);
+            return res.status(500).json({ 
+                message: 'Failed to fetch semesters', 
+                error: error.message 
+            });
+        }
+
+        // Map the data to make it easier to use in frontend
+        const formattedSemesters = semesters.map(sem => ({
+            _id: sem.id,
+            semesterNumber: sem.semester_number,
+            startDate: sem.start_date,
+            endDate: sem.end_date,
+            batchId: sem.batch_id,
+            batchName: sem.batches?.name || 'Unknown Batch'
+        }));
+
+        console.log(`✅ Found ${formattedSemesters.length} total semesters`);
+        res.status(200).json(formattedSemesters);
+    } catch (error) {
+        console.error("❌ Server Error in getAllSemesters:", error.message);
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
 module.exports = {
     getSemestersByBatch,
-    addSemester
+    addSemester,
+    getAllSemesters
 };
