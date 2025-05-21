@@ -25,6 +25,16 @@ const Student = sequelize.define('Student', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    hardwarePoints:{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue:0
+    },
+    softwarePoints:{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue:0
+    },
     currnetsemester:{
         type: DataTypes.INTEGER,
         allowNull: false

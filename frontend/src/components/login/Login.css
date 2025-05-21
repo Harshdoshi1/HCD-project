@@ -6,7 +6,6 @@
     --background-light: #f5f9ff;
 }
 
-/* Container Styles */
 .login-container {
     display: flex;
     justify-content: center;
@@ -17,7 +16,6 @@
     overflow: hidden;
 }
 
-/* Background Animation */
 .background-effect {
     position: absolute;
     width: 1000px;

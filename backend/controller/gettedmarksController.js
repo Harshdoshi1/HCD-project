@@ -135,16 +135,26 @@ exports.getSubjectNamefromCode = async (req, res) => {
 exports.getBatchIdfromName = async (req, res) => {
     try {
         const { batchName } = req.params;
-        const batch = await Batch.findOne({ where: { batchName } });
-        if (!batch) {
-            return res.status(404).json({ message: "Batch not found" });
+        
+        if (!batchName) {
+            return res.status(400).json({ error: "Batch name is required" });
         }
+
+        const batch = await Batch.findOne({
+            where: { batchName }
+        });
+
+        if (!batch) {
+            return res.status(404).json({ error: `Batch with name ${batchName} not found` });
+        }
+
         res.status(200).json({ batchId: batch.id });
     } catch (error) {
         console.error("Error fetching batch ID:", error);
         res.status(500).json({ message: "Error fetching batch ID", error: error.stack });
     }
 };
+
 exports.getSubjectByBatchAndSemester = async (req, res) => {
     try {
         const { batchId, semesterId, facultyName } = req.params;
