@@ -38,7 +38,7 @@
 // export default Sidebar;
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, BookMarked, GraduationCap, Settings, User, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart2, BookOpen, Award, UserCircle, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import ProfileModal from "./ProfileModal";
 import Logout from "./Logout";
 import "./Sidebar.css";
@@ -62,9 +62,9 @@ const Sidebar = ({ activeItem, setActiveItem, isExpanded, setIsExpanded }) => {
     };
 
     const menuItems = [
-        { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { id: "subjects", label: "Subjects", icon: BookMarked },
-        { id: "grades", label: "Grades", icon: GraduationCap },
+        { id: "dashboard", label: "Dashboard", icon: BarChart2 },
+        { id: "subjects", label: "Subjects", icon: BookOpen },
+        { id: "grades", label: "Grades", icon: Award },
         // { id: "settings", label: "Settings", icon: Settings },
     ];
 
@@ -92,7 +92,7 @@ const Sidebar = ({ activeItem, setActiveItem, isExpanded, setIsExpanded }) => {
 
                 <div className="sidebar-footer">
                     <button className="sidebar-item profile" onClick={() => setIsProfileOpen(true)}>
-                        <User size={24} className="sidebar-icon" />
+                        <UserCircle size={24} className="sidebar-icon" />
                         <span className={`sidebar-label ${isExpanded ? "" : "hidden"}`}>Profile</span>
                     </button>
                     <button className="sidebar-item logout" onClick={() => setIsLogoutOpen(true)}>
