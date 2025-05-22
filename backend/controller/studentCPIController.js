@@ -264,7 +264,12 @@ exports.getStudentCPIByEmail = async (req, res) => {
                 where: {
                     EnrollmentNumber: enrollmentNumber
                 },
-
+                include: [{
+                    model: Semester,
+                    attributes: ['semesterNumber'],
+                    required: true
+                }],
+                order: [['SemesterId', 'ASC']]
             });
 
             if (studentCPIs.length === 0) {
@@ -279,8 +284,22 @@ exports.getStudentCPIByEmail = async (req, res) => {
                 });
             }
 
-            // Return all CPI records for this student
-            return res.status(200).json(studentCPIs);
+            // Transform the response to include semester number
+            const transformedCPIs = studentCPIs.map(cpi => ({
+                id: cpi.id,
+                BatchId: cpi.BatchId,
+                SemesterId: cpi.SemesterId,
+                semesterNumber: cpi.Semester.semesterNumber,
+                EnrollmentNumber: cpi.EnrollmentNumber,
+                CPI: cpi.CPI,
+                SPI: cpi.SPI,
+                Rank: cpi.Rank,
+                createdAt: cpi.createdAt,
+                updatedAt: cpi.updatedAt
+            }));
+
+            // Return all CPI records for this student with semester numbers
+            return res.status(200).json(transformedCPIs);
 
         } catch (error) {
             console.error('Error fetching student CPI data by enrollment:', error);

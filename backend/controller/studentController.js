@@ -1,7 +1,72 @@
 const express = require('express');
-const router = express.Router();
+const { Op } = require('sequelize');
 const Student = require('../models/students');
 const Batch = require('../models/batch');
+const jwt = require('jsonwebtoken');
+
+
+
+// login student
+
+const loginStudent = async (req, res) => {
+    try {
+        const { email, enrollmentNumber } = req.body;
+        console.log("Login attempt with email:", email, "and enrollment:", enrollmentNumber);
+
+        if (!email || !enrollmentNumber) {
+            return res.status(400).json({ 
+                message: 'Email and enrollment number are required',
+                error: 'Missing required fields'
+            });
+        }
+
+        // Find student by email and enrollment number
+        const student = await Student.findOne({ 
+            where: { 
+                email,
+                enrollmentNumber 
+            }
+        });
+
+        if (!student) {
+            return res.status(400).json({ 
+                message: 'Invalid email or enrollment number',
+                error: 'Student not found'
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { 
+                id: student.id, 
+                role: 'student',
+                email: student.email,
+                enrollmentNumber: student.enrollmentNumber
+            },
+            process.env.JWT_SECRET || 'your_secret_key',
+            { expiresIn: '24h' }
+        );
+
+        res.status(200).json({ 
+            message: 'Login successful', 
+            token, 
+            user: {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                enrollmentNumber: student.enrollmentNumber,
+                currnetsemester: student.currnetsemester,
+                role: 'student'
+            }
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ 
+            message: 'Server Error', 
+            error: error.message 
+        });
+    }
+};
 
 // Create a new student
 const createStudent = async (req, res) => {
@@ -220,5 +285,6 @@ module.exports = {
     createStudents, 
     createStudent,
     updateStudentSemesters,
-    getStudentsByBatch
+    getStudentsByBatch,
+    loginStudent
 };

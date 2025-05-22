@@ -5,11 +5,24 @@ import './StudentTable.css';
 
 const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStudentSelect }) => {
   const [students, setStudents] = useState([]);
+  const [batchStats, setBatchStats] = useState({
+    totalStudents: 0,
+    averageCurricular: 0,
+    averageCoCurricular: 0,
+    averageExtraCurricular: 0
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: 'ascending'
+  });
+  
+  // State for points filters
+  const [pointsFilters, setPointsFilters] = useState({
+    curricular: null,
+    coCurricular: null,
+    extraCurricular: null
   });
   
   // Fetch students based on selected batch and semester
@@ -21,6 +34,13 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
   const fetchStudents = async () => {
     setLoading(true);
     setError(null);
+    // Reset batch stats
+    setBatchStats({
+      totalStudents: 0,
+      averageCurricular: 0,
+      averageCoCurricular: 0,
+      averageExtraCurricular: 0
+    });
     
     try {
       console.log('Fetching students with filters:', { batch: selectedBatch, semester: selectedSemester });
@@ -93,9 +113,46 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
         }
         
         // Process student data to match the expected format
-        const formattedStudents = Array.isArray(dataToProcess) ? dataToProcess.map(student => {
+        const formattedStudents = Array.isArray(dataToProcess) ? await Promise.all(dataToProcess.map(async student => {
           console.log('Processing student:', student);
-          // Fetch student points data or use default values
+          
+          // Initialize points object with curricular as 0
+          let points = {
+            curricular: 0, // Keep curricular points as zero as requested
+            coCurricular: 0,
+            extraCurricular: 0
+          };
+          
+          // Fetch co-curricular and extra-curricular points from student_points table
+          try {
+            const enrollmentNumber = student.enrollmentNumber || student.rollNo;
+            const semester = student.currnetsemester || selectedSemester;
+            
+            if (enrollmentNumber && semester) {
+              const pointsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+                enrollmentNumber,
+                semester
+              });
+              
+              console.log('Student points response:', pointsResponse.data);
+              
+              if (pointsResponse.data && Array.isArray(pointsResponse.data)) {
+                // Sum up all co-curricular and extra-curricular points
+                pointsResponse.data.forEach(activity => {
+                  points.coCurricular += parseInt(activity.totalCocurricular || 0);
+                  points.extraCurricular += parseInt(activity.totalExtracurricular || 0);
+                });
+              } else if (pointsResponse.data && pointsResponse.data.totalCocurricular) {
+                // If it's a single object with the totals
+                points.coCurricular = parseInt(pointsResponse.data.totalCocurricular || 0);
+                points.extraCurricular = parseInt(pointsResponse.data.totalExtracurricular || 0);
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching student points:', error);
+            // Keep the default values if there's an error
+          }
+          
           return {
             id: student.id || Math.random().toString(36).substr(2, 9),
             name: student.name || student.studentName || 'Unknown',
@@ -104,17 +161,37 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
             semester: student.semesterNumber || student.currnetsemester || selectedSemester,
             email: student.email || 'N/A',
             parentEmail: student.parentEmail || 'N/A',
-            points: {
-              // Use actual points if available, otherwise use defaults
-              curricular: parseInt(student.curricular || student.totalCurricular || 0),
-              coCurricular: parseInt(student.coCurricular || student.totalCocurricular || 0),
-              extraCurricular: parseInt(student.extraCurricular || student.totalExtracurricular || 0)
-            }
+            points: points
           };
-        }) : [];
+        })) : [];
         
         console.log('Formatted students:', formattedStudents);
-        setStudents(formattedStudents);
+        const processedStudents = formattedStudents;
+        
+        // Process and set the students data
+        console.log('Setting students state with:', processedStudents);
+        setStudents(processedStudents);
+        
+        // Calculate batch statistics
+        if (processedStudents.length > 0) {
+          const totalCurricular = processedStudents.reduce((sum, student) => sum + (student.points?.curricular || 0), 0);
+          const totalCoCurricular = processedStudents.reduce((sum, student) => sum + (student.points?.coCurricular || 0), 0);
+          const totalExtraCurricular = processedStudents.reduce((sum, student) => sum + (student.points?.extraCurricular || 0), 0);
+          
+          setBatchStats({
+            totalStudents: processedStudents.length,
+            averageCurricular: Math.round(totalCurricular / processedStudents.length),
+            averageCoCurricular: Math.round(totalCoCurricular / processedStudents.length),
+            averageExtraCurricular: Math.round(totalExtraCurricular / processedStudents.length)
+          });
+        } else {
+          setBatchStats({
+            totalStudents: 0,
+            averageCurricular: 0,
+            averageCoCurricular: 0,
+            averageExtraCurricular: 0
+          });
+        }
       } else {
         console.log('No data in response');
         setStudents([]);
@@ -140,14 +217,33 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
 
   // Handle points filtering internally
   const handlePointsFilterInternal = (category, order) => {
-    console.log('Filtering points by:', category, order);
-    setSortConfig({
-      key: `points.${category}`,
-      direction: order === 'high' ? 'descending' : 'ascending'
-    });
+    // Check if the button is already selected (toggle functionality)
+    const isAlreadySelected = pointsFilters[category] === order;
     
-    // Still call the parent handler for any additional logic
-    onPointsFilter(category, order);
+    // Update the points filters state - if already selected, set to null (unselected)
+    setPointsFilters(prev => ({
+      ...prev,
+      [category]: isAlreadySelected ? null : order
+    }));
+    
+    // Call the parent component's filter handler if provided
+    if (onPointsFilter) {
+      // Pass null as order if toggling off, otherwise pass the order
+      onPointsFilter(category, isAlreadySelected ? null : order);
+    }
+    
+    // Update local sort config - if already selected, clear the sort
+    if (isAlreadySelected) {
+      setSortConfig({
+        key: null,
+        direction: 'ascending'
+      });
+    } else {
+      setSortConfig({
+        key: `points.${category}`,
+        direction: order === 'high' ? 'descending' : 'ascending'
+      });
+    }
   };
 
   const getSortedStudents = () => {
@@ -181,40 +277,67 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
 
   return (
     <div className="student-table-container">
+      {error && <div className="error-message">{error}</div>}
       <div className="table-header">
-        <h2>Student List {loading && <span className="loading-indicator">Loading...</span>}</h2>
+        <h3 className="table-title">Student Performance {loading && <span className="loading-indicator">Loading...</span>}</h3>
+        
+        <div className="batch-stats">
+          <span className="stat-item">Total Students: <span className="stat-value">{batchStats.totalStudents}</span></span>
+        </div>
+        
         <div className="table-filters">
+          {/* Curricular Points Filter */}
           <div className="filter-dropdown">
             <label>Curricular Points:</label>
             <div className="dropdown-buttons">
-              <button onClick={() => handlePointsFilterInternal('curricular', 'high')}>
+              <button 
+                className={pointsFilters.curricular === 'high' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('curricular', 'high')}
+              >
                 High to Low
               </button>
-              <button onClick={() => handlePointsFilterInternal('curricular', 'low')}>
+              <button 
+                className={pointsFilters.curricular === 'low' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('curricular', 'low')}
+              >
                 Low to High
               </button>
             </div>
           </div>
-
+          
+          {/* Co-curricular Points Filter */}
           <div className="filter-dropdown">
             <label>Co-curricular Points:</label>
             <div className="dropdown-buttons">
-              <button onClick={() => handlePointsFilterInternal('coCurricular', 'high')}>
+              <button 
+                className={pointsFilters.coCurricular === 'high' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('coCurricular', 'high')}
+              >
                 High to Low
               </button>
-              <button onClick={() => handlePointsFilterInternal('coCurricular', 'low')}>
+              <button 
+                className={pointsFilters.coCurricular === 'low' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('coCurricular', 'low')}
+              >
                 Low to High
               </button>
             </div>
           </div>
-
+          
+          {/* Extra-curricular Points Filter */}
           <div className="filter-dropdown">
             <label>Extra-curricular Points:</label>
             <div className="dropdown-buttons">
-              <button onClick={() => handlePointsFilterInternal('extraCurricular', 'high')}>
+              <button 
+                className={pointsFilters.extraCurricular === 'high' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('extraCurricular', 'high')}
+              >
                 High to Low
               </button>
-              <button onClick={() => handlePointsFilterInternal('extraCurricular', 'low')}>
+              <button 
+                className={pointsFilters.extraCurricular === 'low' ? 'active' : ''}
+                onClick={() => handlePointsFilterInternal('extraCurricular', 'low')}
+              >
                 Low to High
               </button>
             </div>

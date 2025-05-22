@@ -41,13 +41,13 @@ const SubjectCard = ({ subject }) => {
             </div>
 
             <div className="card-actions-asff">
-                <button className="action-btn-asff">
+                {/* <button className="action-btn-asff">
                     <Download size={16} className="action-icon-asff" />
                     Syllabus
-                </button>
-                <button className="action-btn-asff primary">
+                </button> */}
+                {/* <button className="action-btn-asff primary">
                     View Details
-                </button>
+                </button> */}
             </div>
         </div>
     );

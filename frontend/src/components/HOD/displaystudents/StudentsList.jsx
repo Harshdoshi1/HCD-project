@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { UserRoundPlus } from "lucide-react";
-import { FaPlus, FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp, FaUserGraduate } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp, FaUserGraduate, FaFileExcel } from 'react-icons/fa';
 import Select from 'react-select';
 import StudentModal from './StudentModal';
 import StudentGradesExcell from './StudentGradesExcell';
+import GradesUploadModal from './GradesUploadModal';
 import './StudentsList.css';
 
 const StudentsList = ({ onStudentSelect }) => {
@@ -11,6 +12,7 @@ const StudentsList = ({ onStudentSelect }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCPIModalOpen, setIsCPIModalOpen] = useState(false);
+    const [isGradesModalOpen, setIsGradesModalOpen] = useState(false);
     const [sortField, setSortField] = useState('name');
     const [sortDirection, setSortDirection] = useState('asc');
     const [isLoading, setIsLoading] = useState(true);
@@ -96,6 +98,15 @@ const StudentsList = ({ onStudentSelect }) => {
         fetchStudents(); // Refresh the list after potentially updating CPI/SPI data
     };
 
+    const handleOpenGradesModal = () => {
+        setIsGradesModalOpen(true);
+    };
+
+    const handleCloseGradesModal = () => {
+        setIsGradesModalOpen(false);
+        fetchStudents(); // Refresh the list after updating grades
+    };
+
     const toggleFilters = () => {
         setShowFilters(!showFilters);
     };
@@ -146,6 +157,10 @@ const StudentsList = ({ onStudentSelect }) => {
                     <button className="cpi-btn" onClick={handleOpenCPIModal}>
                         <FaUserGraduate />
                         <span>CPI</span>
+                    </button>
+                    <button className="grades-btn" onClick={handleOpenGradesModal}>
+                        <FaFileExcel />
+                        <span>Grades</span>
                     </button>
                 </div>
 
@@ -267,6 +282,13 @@ const StudentsList = ({ onStudentSelect }) => {
                 <StudentGradesExcell
                     isOpen={isCPIModalOpen}
                     onClose={handleCloseCPIModal}
+                />
+            )}
+
+            {isGradesModalOpen && (
+                <GradesUploadModal
+                    isOpen={isGradesModalOpen}
+                    onClose={handleCloseGradesModal}
                 />
             )}
         </div>

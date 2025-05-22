@@ -9,8 +9,11 @@ const {
     deleteStudent,
     createStudents,
     updateStudentSemesters,
-    getStudentsByBatch
+    getStudentsByBatch,
+    loginStudent
 } = require('../controller/studentController');
+
+router.post('/login', loginStudent);
 
 router.post('/createStudent', createStudent);
 router.get('/getStudentById', getStudentById);

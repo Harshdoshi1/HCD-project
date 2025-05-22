@@ -17,8 +17,10 @@ const semesterRoutes = require("./routes/semester_routes");
 const studentEventRoutes = require("./routes/student_event_routes");
 const facultysideRoutes = require("./routes/facultyside_router");
 const studentCPIRoutes = require('./routes/studentCPI_routes');
+const gradesRoutes = require('./routes/grades_routes');
+const academicDetailsRoutes = require('./routes/academic_details_routes');
 const app = express();
-
+const emailRoutes = require('./routes/email_routes');
 // Enable CORS
 app.use(cors({
     // origin: 'http://localhost:5173',
@@ -29,8 +31,15 @@ app.use(cors({
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Increase payload size limit for file uploads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
+app.use('/api/email', emailRoutes);
+
 app.use('/api/users', userRoutes);
 app.use('/api/batches', batchRoutes);
 app.use('/api/faculties', facultyRoutes);
@@ -44,6 +53,8 @@ app.use('/api/semesters', semesterRoutes);
 app.use('/api/events', studentEventRoutes);
 app.use('/api/facultyside', facultysideRoutes);
 app.use('/api/studentCPI', studentCPIRoutes);
+app.use('/api/grades', gradesRoutes);
+app.use('/api/academic-details', academicDetailsRoutes);
 // Marks routes
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
 app.get("/api/marks/students/:batchId/:semesterId", gettedmarksController.getStudentsByBatchAndSemester);

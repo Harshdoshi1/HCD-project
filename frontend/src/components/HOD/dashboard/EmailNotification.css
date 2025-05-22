@@ -1,4 +1,4 @@
-.modal-backdrop {
+.report-content-academic-report {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,10 +11,11 @@
   z-index: 1000;
 }
 
-.modal-container {
+.modal-container-academic-report {
   background-color: white;
   border-radius: 8px;
-
+  width: 90vw;
+  max-width: 1200px;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
@@ -22,8 +23,8 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.modal-header {
-  padding: 16px;
+.modal-header-academic-report {
+  padding: 18px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -33,14 +34,14 @@
   border-radius: 8px 8px 0 0;
 }
 
-.modal-header h2 {
+.modal-header-academic-report h2 {
   margin: 0;
   color: white;
   font-size: 18px;
   font-weight: 600;
 }
 
-.close-btn {
+.close-btn-academic-report {
   background: none;
   border: none;
   font-size: 24px;
@@ -49,17 +50,22 @@
   transition: opacity 0.3s;
 }
 
-.close-btn:hover {
+.close-btn-academic-report:hover {
   opacity: 0.8;
 }
 
-.modal-content {
-  width: 63vw;
-  padding: 30px;
+.modal-content-academic-report {
+  width: 90%;
+  max-width: 1200px;
+  padding: 20px 30px;
   overflow-y: auto;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) inset;
 }
 
-.modal-footer {
+.modal-footer-academic-report {
   padding: 15px 20px;
   display: flex;
   justify-content: space-between;
@@ -139,17 +145,21 @@
 
 .search-control {
   position: relative;
+  min-width: 200px;
+  flex: 1;
+  max-width: 300px;
 }
 
 .search-input {
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: 4px;
   border: 1px solid #ccc;
-  width: 200px;
+  width: 100%;
   transition: border-color 0.3s;
+  font-size: 14px;
 }
 
-.search-input:focus {
+.search-input-academic-report:focus {
   outline: none;
   border-color: #3674B5;
 }
@@ -198,17 +208,432 @@
   background-color: rgba(54, 116, 181, 0.05);
 }
 
-.selected-count {
+/* Academic Reports Styles */
+.header-controls-academic-report {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-right: 10px;
+}
+
+.batch-select-academic-report,
+.semester-select-academic-report {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #fff;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 14px;
+  min-width: 120px;
+  margin-right: 5px;
+}
+
+.batch-select-academic-report option,
+.semester-select-academic-report option {
+  color: #333;
+  background-color: white;
+}
+
+.top-filters-section-academic-report {
+  padding: 0 30px;
+  margin-top: 10px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #eee;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.academic-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+}
+
+.search-filters {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex: 1;
+}
+
+.top-bottom-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 2;
+  max-width: 400px;
+}
+
+.top-bottom-filter-academic-report label {
+  font-weight: 500;
+  color: #444;
+  font-size: 14px;
+}
+
+.filter-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.count-select {
+  padding: 9px 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background-color: white;
+  font-size: 14px;
+  min-width: 120px;
+}
+
+.toggle-buttons-academic-report {
+  display: flex;
+}
+
+.toggle-btn-academic-report {
+  padding: 6px 12px;
+  border: 1px solid #3674B5;
+  background-color: white;
+  color: #3674B5;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.toggle-btn-academic-report:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.toggle-btn:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.toggle-btn-academic-report.active-academic-report {
+  background-color: #3674B5;
+  color: white;
+}
+
+.report-actions-academic-report {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  min-width: 180px;
+}
+
+.btn-generate-academic-report {
+  background-color: #0A2463;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-generate-academic-report:hover {
+  background-color: #071952;
+}
+
+.btn-generate-academic-report:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.academic-content-academic-report {
+  padding: 15px 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.academic-table-container-academic-report {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.academic-table-container-academic-report h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #0A2463;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.academic-table-academic-report {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
+  table-layout: fixed;
+}
+
+.academic-table-academic-report th {
+  background-color: #f0f0f0;
+  padding: 10px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 13px;
+  color: #3674B5;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: 110px;
+}
+
+.academic-table-academic-report th.sortable-academic-report {
+  cursor: pointer;
+  padding-right: 25px;
+  position: relative;
+  text-align: center;
+}
+
+.academic-table-academic-report th.sortable-academic-report svg {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.academic-table-academic-report th.subject-header-academic-report {
+  min-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.academic-table-academic-report td {
+  padding: 10px;
+  border-top: 1px solid #eee;
+  font-size: 13px;
+  color: #555;
+  text-align: center;
+}
+
+.grade-cell-academic-report {
+  text-align: center;
+  padding: 8px 5px;
+}
+
+.grade-info-academic-report {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+}
+
+.grade {
+  font-weight: bold;
+  color: #0A2463;
+  font-size: 14px;
+}
+
+.failing-grade-academic-report .grade-academic-report {
+  color: #d32f2f;
+}
+
+.points-academic-report {
+  font-size: 11px;
+  color: #777;
+  display: block;
+  text-align: center;
+}
+
+.spi-cell-academic-report {
+  font-weight: bold;
+  color: #0A2463;
+  text-align: center;
+}
+
+.no-data-message-academic-report {
+  padding: 30px;
+  text-align: center;
+  color: #777;
+  font-style: italic;
+}
+
+.statistics-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.stat-card-academic-report {
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background-color: white;
+}
+
+.stat-card-academic-report h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 15px;
+  color: #0A2463;
+}
+
+.top-students-list-academic-report {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.top-student-item-academic-report {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  margin-bottom: 5px;
+}
+
+.rank-academic-report {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0A2463;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.student-name-academic-report {
+  flex: 1;
+  font-weight: 500;
+  color: #444;
+}
+
+.student-rollno-academic-report {
+  color: #777;
+  font-size: 12px;
+}
+
+.student-spi-academic-report {
+  font-weight: bold;
+  color: #0A2463;
+  background-color: rgba(54, 116, 181, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 50px;
+  text-align: center;
+}
+
+.subject-statistics-academic-report {
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background-color: white;
+}
+
+.subject-statistics-academic-report h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 15px;
+  color: #0A2463;
+}
+
+.subject-stats-table-academic-report-academic-report {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.subject-stats-table-academic-report-academic-report th-academic-report {
+  background-color: #f0f0f0;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  color: #3674B5;
+}
+
+.subject-stats-table-academic-report-academic-report td-academic-report {
+  padding: 10px;
+  border-top: 1px solid #eee;
+  font-size: 13px;
+  color: #555;
+}
+
+.low-pass-rate-academic-report {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+@media (max-width: 992px) {
+  .stat-cards-academic-report {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .academic-filters-academic-report {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .search-filters-academic-report {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .search-control-academic-report {
+    width: 100%;
+  }
+  
+  .search-input-academic-report {
+    width: 100%;
+  }
+  
+  .top-bottom-filter-academic-report {
+    width: 100%;
+  }
+  
+  .filter-options-academic-report {
+    flex: 1;
+  }
+  
+  .count-select-academic-report {
+    flex: 1;
+  }
+}
+
+.selected-count-academic-report {
   font-weight: 500;
   color: #3674B5;
 }
 
-.action-buttons {
+.action-buttons-academic-report {
   display: flex;
   gap: 12px;
 }
 
-.btn-cancel {
+.btn-cancel-academic-report {
   background-color: #f0f0f0;
   color: #333;
   border: none;
@@ -218,11 +643,11 @@
   transition: background-color 0.3s;
 }
 
-.btn-cancel:hover {
+.btn-cancel-academic-report:hover {
   background-color: #e0e0e0;
 }
 
-.btn-send {
+.btn-send-academic-report {
   background-color: #3674B5;
   color: white;
   border: none;
@@ -233,54 +658,54 @@
   transition: background-color 0.3s;
 }
 
-.btn-send:hover {
+.btn-send-academic-report:hover {
   background-color: #2c5d91;
 }
 
-.btn-send:disabled {
+.btn-send-academic-report:disabled {
   background-color: #a0a0a0;
   cursor: not-allowed;
 }
 
-.checkbox-cell {
+.checkbox-cell-academic-report {
   width: 40px;
   text-align: center;
 }
 
-.checkbox-header {
+.checkbox-header-academic-report {
   text-align: center;
 }
 
-.student-checkbox {
+.student-checkbox-academic-report {
   cursor: pointer;
   accent-color: #3674B5;
 }
 
-.select-all-checkbox {
+.select-all-checkbox-academic-report {
   cursor: pointer;
   accent-color: #3674B5;
 }
 
-.status-message {
+.status-message-academic-report {
   margin-top: 16px;
   padding: 12px;
   border-radius: 4px;
   font-size: 14px;
 }
 
-.status-success {
+.status-success-academic-report {
   background-color: #e6f7e6;
   color: #2e7d32;
   border: 1px solid #c8e6c9;
 }
 
-.status-error {
+.status-error-academic-report {
   background-color: #fdecea;
   color: #d32f2f;
   border: 1px solid #ffcdd2;
 }
 
-.template-dropdown {
+.template-dropdown-academic-report {
   width: 100%;
   padding: 10px;
   border-radius: 4px;
@@ -289,12 +714,12 @@
   background-color: white;
 }
 
-.template-dropdown:focus {
+.template-dropdown-academic-report:focus {
   outline: none;
   border-color: #3674B5;
 }
 
-.form-options {
+.form-options-academic-report {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
@@ -304,35 +729,35 @@
   border-radius: 6px;
 }
 
-.format-select {
+.format-select-academic-report {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.form-check {
+.form-check-academic-report {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.form-check label {
+.form-check-academic-report label-academic-report {
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
 }
 
-.icon {
+.icon-academic-report {
   color: #3E92CC;
 }
 
-.selection-table th:last-child,
-.selection-table td:last-child {
+.selection-table-academic-report th:last-child-academic-report,
+.selection-table-academic-report td:last-child-academic-report {
   width: 120px;
 }
 
-.performance-indicator {
+.performance-indicator-academic-report {
   display: inline-flex;
   align-items: center;
   gap: 4px;
