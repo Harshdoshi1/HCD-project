@@ -34,7 +34,7 @@ const sequelize = new Sequelize(
         dialectOptions: useSSL ? {
             ssl: {
                 require: true,
-                rejectUnauthorized: true,
+                rejectUnauthorized: false, // Allow self-signed certificates
                 ca: hasCACert ? fs.readFileSync(caCertPath) : undefined
             }
         } : {}
