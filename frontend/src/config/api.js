@@ -14,8 +14,8 @@ const LOCAL_URL = 'http://localhost:5001';
 
 // Select which URL to use based on environment
 // This will use the hosted backend URL when deployed to Vercel
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? BACKEND_URL 
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+    ? BACKEND_URL
     : LOCAL_URL;
 
 export default API_BASE_URL;
