@@ -1,4 +1,25 @@
-.report-modal .modal-content {
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .batch-select {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    font-size: 14px;
+    min-width: 120px;
+  }
+  
+  .report-modal .modal-content {
     display: grid;
     grid-template-columns: 300px 1fr;
     gap: 24px;
