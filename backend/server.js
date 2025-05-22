@@ -1,7 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { syncDB } = require('./models');
+const setupCors = require('./middleware/cors');
 
 const userRoutes = require('./routes/auth_routes');
 const facultyRoutes = require('./routes/faculty_routes');
@@ -21,13 +23,16 @@ const gradesRoutes = require('./routes/grades_routes');
 const academicDetailsRoutes = require('./routes/academic_details_routes');
 const app = express();
 const emailRoutes = require('./routes/email_routes');
-// Enable CORS
-app.use(cors({
-    // origin: 'http://localhost:5173',
-    origin: '*',
-    methods: 'GET,POST,PUT,DELETE',
-    credentials: true
-}));
+// Setup CORS with our custom middleware
+setupCors(app);
+
+// Log request information in development
+if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+        console.log(`${req.method} ${req.url}`);
+        next();
+    });
+}
 
 // Middleware
 app.use(express.json());
@@ -78,15 +83,77 @@ app.use((req, res) => {
     });
 });
 
-// Start Server
-const PORT = process.env.PORT || 5001;
+// Get configuration
+const config = require('./config/config');
 
-// Synchronize database before starting the server
-syncDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+// Start Server
+const PORT = config.server.port;
+
+// Prepare a message about the server environment
+const envMessage = config.server.env === 'production'
+    ? `Server running in PRODUCTION mode on port ${PORT}`
+    : `Server running in DEVELOPMENT mode on port ${PORT}`;
+
+// Add a health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        environment: config.server.env,
+        timestamp: new Date().toISOString()
     });
-}).catch(error => {
-    console.error('Failed to start server:', error);
+});
+
+// Special route to help debug database connection issues
+app.get('/api/db-status', (req, res) => {
+    res.json({
+        status: 'Server is running',
+        databaseConfig: {
+            host: config.database.host,
+            database: config.database.name,
+            user: config.database.user,
+            // Don't include password for security reasons
+        },
+        frontendUrl: config.frontend.url,
+        environment: config.server.env,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Start the server and handle database connectivity
+const startServer = async () => {
+    let dbConnected = false;
+    
+    try {
+        // Try to sync database
+        dbConnected = await syncDB();
+    } catch (error) {
+        console.error('Database synchronization error:', error);
+        console.log('\n\n==== DATABASE CONNECTION TROUBLESHOOTING ====');
+        console.log('1. Make sure your MySQL server is running');
+        console.log('   - On macOS: Open System Preferences > MySQL and start the server');
+        console.log('   - Or use: mysql.server start');
+        console.log('2. Verify your database credentials in .env file');
+        console.log('3. Make sure the database exists: CREATE DATABASE hcd;');
+        console.log('\nContinuing in API-only mode (database features will not work)\n');
+    }
+    
+    // Start server regardless of database connection status
+    app.listen(PORT, () => {
+        console.log(envMessage);
+        console.log(`Frontend URL: ${config.frontend.url}`);
+        console.log(`Backend running at: http://localhost:${PORT}`);
+        
+        if (!dbConnected) {
+            console.log('WARNING: Running in API-only mode. Database is not connected.');
+            console.log('Some API endpoints requiring database access will not function.');
+            console.log('For a local setup, ensure your MySQL server is running and database exists.');
+        } else {
+            console.log('Database is connected and synchronized.');
+        }
+    });
+};
+
+startServer().catch(error => {
+    console.error('Critical server error:', error);
     process.exit(1);
 });

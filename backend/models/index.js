@@ -23,6 +23,10 @@ const syncDB = async () => {
     try {
         console.log('Starting database synchronization...');
 
+        // First check connection
+        await sequelize.authenticate();
+        console.log('Database connection has been established successfully.');
+
         // First check if tables exist
         const tables = await sequelize.query('SHOW TABLES', { type: sequelize.QueryTypes.SELECT });
         const tableNames = tables.map(table => Object.values(table)[0]);
@@ -38,9 +42,15 @@ const syncDB = async () => {
         }
 
         console.log('Database synchronization completed successfully.');
+        return true;
     } catch (error) {
         console.error('Error during database synchronization:', error);
-        throw error;
+        if (process.env.NODE_ENV === 'production') {
+            console.log('In production mode - continuing without database sync');
+            return false;
+        } else {
+            throw error;
+        }
     }
 };
 
