@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const { syncDB } = require('./models');
 const setupCors = require('./middleware/cors');
+const initializeDatabase = require('./config/init-db');
 
 // Get configuration
 const config = require('./config/config');
@@ -139,16 +140,25 @@ const startServer = async () => {
     let dbConnected = false;
 
     try {
-        // Try to sync database
+        // First, try to initialize the database (create it if it doesn't exist)
+        console.log('Starting database initialization...');
+        const dbInitialized = await initializeDatabase();
+        
+        if (!dbInitialized) {
+            console.error('Database initialization failed');
+            throw new Error('Could not initialize database');
+        }
+        
+        // Now try to sync database schemas
+        console.log('Syncing database schemas...');
         dbConnected = await syncDB();
     } catch (error) {
-        console.error('Database synchronization error:', error);
+        console.error('Database connection error:', error);
         console.log('\n\n==== DATABASE CONNECTION TROUBLESHOOTING ====');
         console.log('1. Make sure your MySQL server is running');
-        console.log('   - On macOS: Open System Preferences > MySQL and start the server');
-        console.log('   - Or use: mysql.server start');
+        console.log('   - If using Aiven, verify service is active and credentials are correct');
         console.log('2. Verify your database credentials in .env file');
-        console.log('3. Make sure the database exists: CREATE DATABASE hcd;');
+        console.log('3. Check database logs for more information');
         console.log('\nContinuing in API-only mode (database features will not work)\n');
     }
 
