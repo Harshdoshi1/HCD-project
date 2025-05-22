@@ -12,16 +12,16 @@ const config = {
     url: process.env.FRONTEND_URL || 'https://hcd-frontend.onrender.com',
   },
   
-  // Database configuration
+  // Database configuration for Aiven MySQL
   database: {
-    host: (process.env.NODE_ENV === 'production' && process.env.PROD_DB_HOST) ? 
-      process.env.PROD_DB_HOST : process.env.DB_HOST || 'localhost',
-    user: (process.env.NODE_ENV === 'production' && process.env.PROD_DB_USER) ? 
-      process.env.PROD_DB_USER : process.env.DB_USER || 'root',
-    password: (process.env.NODE_ENV === 'production' && process.env.PROD_DB_PASSWORD) ? 
-      process.env.PROD_DB_PASSWORD : process.env.DB_PASSWORD || '',
-    name: (process.env.NODE_ENV === 'production' && process.env.PROD_DB_NAME) ? 
-      process.env.PROD_DB_NAME : process.env.DB_NAME || 'hcd',
+    // Host should include port if needed (host:port)
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    name: process.env.DB_NAME,
+    // Additional Aiven MySQL options
+    ssl: process.env.DB_SSL !== 'false', // Enable SSL by default
+    port: process.env.DB_PORT || 3306,
   },
   
   // Email configuration

@@ -5,6 +5,9 @@ const path = require('path');
 const { syncDB } = require('./models');
 const setupCors = require('./middleware/cors');
 
+// Get configuration
+const config = require('./config/config');
+
 const userRoutes = require('./routes/auth_routes');
 const facultyRoutes = require('./routes/faculty_routes');
 const componentRoutes = require('./routes/component_marks_routes');
@@ -41,6 +44,21 @@ app.use(express.urlencoded({ extended: true }));
 // Increase payload size limit for file uploads
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Root route - shows API information
+app.get('/', (req, res) => {
+    res.json({
+        name: 'HCD Project API',
+        version: '1.0.0',
+        status: 'running',
+        endpoints: '/api/*',
+        health: '/health',
+        dbStatus: '/api/db-status',
+        frontend: config.frontend.url,
+        environment: config.server.env,
+        timestamp: new Date().toISOString()
+    });
+});
 
 // Routes
 app.use('/api/email', emailRoutes);
@@ -82,9 +100,6 @@ app.use((req, res) => {
         message: 'Route not found'
     });
 });
-
-// Get configuration
-const config = require('./config/config');
 
 // Start Server
 const PORT = config.server.port;
