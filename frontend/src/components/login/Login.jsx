@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { PulseLoader } from 'react-spinners';
+import apiService, { getApiUrl } from '../../services/apiService';
 
 function Login() {
     const navigate = useNavigate();
@@ -36,20 +37,10 @@ function Login() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5001/api/users/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            });
-
-            const data = await response.json();
+            // Use apiService to make the API call - this will automatically use the correct base URL
+            console.log('Login attempt to:', getApiUrl('users/login'));
+            const data = await apiService.post('users/login', { email, password });
             console.log("data", data);
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Login failed');
-            }
 
             // Explicitly remove old local storage items before storing new ones
             localStorage.removeItem('token');

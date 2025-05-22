@@ -10,11 +10,24 @@ import API_BASE_URL from '../config/api';
 // Debug flag to show detailed errors in console
 const DEBUG = true;
 
+// Direct endpoint helper function
+// This function can be used to replace all hardcoded URL instances
+export const getApiUrl = (endpoint) => {
+  // Remove any leading slashes from endpoint
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+  
+  // Ensure path starts with /api if needed
+  const formattedEndpoint = cleanEndpoint.startsWith('api/') ? `/${cleanEndpoint}` : `/api/${cleanEndpoint}`;
+  
+  return `${API_BASE_URL}${formattedEndpoint}`;
+};
+
 // Helper function for making API requests
 const fetchApi = async (endpoint, options = {}) => {
-  // Ensure endpoint has proper format - if it already starts with /api, keep it as is
-  const formattedEndpoint = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
-  const url = `${API_BASE_URL}${formattedEndpoint}`;
+  // Get the full URL using our helper
+  const url = getApiUrl(endpoint);
+  
+  console.log(`Making API request to: ${url}`);
   
   // Set default headers if not provided
   if (!options.headers) {
@@ -56,7 +69,7 @@ const fetchApi = async (endpoint, options = {}) => {
     
     return await response.text();
   } catch (error) {
-    if (DEBUG) console.error(`API error for ${endpoint}:`, error);
+    if (DEBUG) console.error(`API error for ${url}:`, error);
     throw error;
   }
 };
