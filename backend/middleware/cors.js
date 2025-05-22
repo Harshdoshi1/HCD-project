@@ -5,6 +5,7 @@ const setupCors = (app) => {
   // Get allowed origins from environment or use defaults
   const allowedOrigins = [
     'https://hcd-project.vercel.app',
+    'https://hcd-frontend.onrender.com',
     'http://localhost:5173'
   ];
 

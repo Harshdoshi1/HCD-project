@@ -9,7 +9,7 @@ const config = {
   
   // Frontend URL
   frontend: {
-    url: process.env.FRONTEND_URL || 'http://localhost:5173',
+    url: process.env.FRONTEND_URL || 'https://hcd-frontend.onrender.com',
   },
   
   // Database configuration
