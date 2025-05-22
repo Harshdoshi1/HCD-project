@@ -1,0 +1,17 @@
+{
+  "name": "hcd-project",
+  "version": "1.0.0",
+  "description": "Human-Centered Design project with backend and frontend",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "cd backend && node server.js",
+    "install": "cd backend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "tunnel": "cd backend && npm run tunnel"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "author": "",
+  "license": "ISC"
+}

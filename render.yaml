@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: hcd-project-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        value: https://hcd-project.vercel.app
+      - key: DB_HOST
+        fromDatabase:
+          name: hcd-project-db
+          property: host
+      - key: DB_USER
+        fromDatabase:
+          name: hcd-project-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: hcd-project-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: hcd-project-db
+          property: database
+    autoDeploy: true
+
+databases:
+  - name: hcd-project-db
+    databaseName: hcd
+    user: hcd_admin
+    plan: free

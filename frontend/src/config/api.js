@@ -6,8 +6,7 @@
  */
 
 // The URL from Render where your backend is hosted
-// Replace this with your actual backend URL from Render (not the documentation link)
-const BACKEND_URL = 'https://your-backend-name.onrender.com';
+const BACKEND_URL = 'https://hcd-backend.onrender.com';
 
 // For local development
 const LOCAL_URL = 'http://localhost:5001';
