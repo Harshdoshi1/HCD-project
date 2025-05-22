@@ -87,7 +87,7 @@ const DashboardHOD = () => {
       console.log('Fetching batches...');
       const response = await axios.get('http://localhost:5001/api/batches/getAllBatches');
       console.log('Batch API response:', response.data);
-      
+
       if (response.data && Array.isArray(response.data)) {
         // The API returns an array of batch objects directly
         const batchNames = response.data.map(batch => {
@@ -95,7 +95,7 @@ const DashboardHOD = () => {
           return batch.batchName;
         });
         console.log('Extracted batch names:', batchNames);
-        
+
         // Add 'all' option to the beginning of the array
         const allBatches = ['all', ...batchNames];
         console.log('Setting batches state to:', allBatches);
@@ -218,8 +218,8 @@ const DashboardHOD = () => {
                             ) : (
                               <ul>
                                 {batches.map((batch) => (
-                                  <li 
-                                    key={batch} 
+                                  <li
+                                    key={batch}
                                     className={batch === selectedBatch ? 'active' : ''}
                                     onClick={() => handleFilterChange(batch)}
                                   >
@@ -234,10 +234,10 @@ const DashboardHOD = () => {
                       </div>
                       <div className="dashboard-actions">
                         <button className="btn-primary" onClick={handleEmailModalOpen}>
-                          Send Email Notifications
+                          Acedemic Reports
                         </button>
                         <button className="btn-secondary" onClick={handleReportModalOpen}>
-                          Generate Reports
+                          Other Reports
                         </button>
                       </div>
                     </div>

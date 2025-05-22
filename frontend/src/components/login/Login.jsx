@@ -84,7 +84,7 @@ function Login() {
             <div className="login-box fade-in">
                 <div className="logo-container">
                     <img
-                        src="https://images.unsplash.com/photo-1562774053-701939374585?w=150&h=150&fit=crop"
+                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQQeJ0BClNiKylgvlZo8TDKvc5wnoE-_rhMg&s"
                         alt="Department Logo"
                         className="department-logo"
                     />

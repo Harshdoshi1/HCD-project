@@ -1,21 +1,88 @@
-import React, { useState } from 'react';
-import { Mail, FileText } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import { FileText, ChartBar, ChartPie, BarChart as BarChartIcon, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { BarChart, Bar, PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import './EmailNotification.css';
 
-const EmailNotification = ({ students, onClose }) => {
+const AcademicReports = ({ students: initialStudents, selectedBatch: initialBatch, selectedSemester: initialSemester, onClose }) => {
+  // Basic state variables
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBatch, setSelectedBatch] = useState('all');
-  const [selectedSemester, setSelectedSemester] = useState('all');
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [emailSubject, setEmailSubject] = useState('Semester Performance Report');
-  const [emailContent, setEmailContent] = useState('');
-  const [includeParents, setIncludeParents] = useState(true);
-  const [includeDetailedReport, setIncludeDetailedReport] = useState(true);
-  const [includeCharts, setIncludeCharts] = useState(true);
-  const [reportFormat, setReportFormat] = useState('pdf');
+  const [selectedBatch, setSelectedBatch] = useState(initialBatch || 'all');
+  const [selectedSemester, setSelectedSemester] = useState(initialSemester || 'all');
+  const [students, setStudents] = useState(initialStudents || []);
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [academicData, setAcademicData] = useState([]);
+  
+  // Loading and error states
+  const [loading, setLoading] = useState(false);
+  const [fetchingStudents, setFetchingStudents] = useState(false);
+  const [error, setError] = useState(null);
+  const [studentError, setStudentError] = useState(null);
+  
+  // Filter and sorting states
+  const [batches, setBatches] = useState(['all']);
+  const [semesters, setSemesters] = useState(['all']);
+  const [subjects, setSubjects] = useState([]);
+  const [sortField, setSortField] = useState('name');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [topBottomCount, setTopBottomCount] = useState(5);
+  const [showTopStudents, setShowTopStudents] = useState(true);
+  
+  // Report generation states
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  
+  // Refs for report generation
+  const reportRef = useRef(null);
+  const gradesTableRef = useRef(null);
+  const topStudentsChartRef = useRef(null);
+  const gradeDistributionChartRef = useRef(null);
 
-  const batches = ['all', ...new Set(students.map(student => student.batch))];
-  const semesters = ['all', ...new Set(students.map(student => student.semester))];
+  // Fetch batches, subjects, and students on component mount
+  useEffect(() => {
+    fetchBatches();
+  }, []);
+  
+  useEffect(() => {
+    if (selectedBatch && selectedBatch !== 'all') {
+      fetchSemesters(selectedBatch);
+    }
+  }, [selectedBatch]);
+  
+  useEffect(() => {
+    if (selectedBatch && selectedSemester) {
+      fetchStudentsByBatchAndSemester(selectedBatch, selectedSemester);
+    }
+  }, [selectedBatch, selectedSemester]);
+  
+  useEffect(() => {
+    if (students.length > 0) {
+      applyFiltersAndSort();
+    }
+  }, [students, searchTerm, sortField, sortDirection, topBottomCount, showTopStudents]);
+  
+  // Fetch all available batches
+  const fetchBatches = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+      if (response.data && Array.isArray(response.data)) {
+        const batchNames = response.data.map(batch => batch.batchName);
+        const allBatches = ['all', ...batchNames];
+        setBatches(allBatches);
+      } else {
+        setError('Invalid batch data format');
+        setBatches(['all']);
+      }
+    } catch (err) {
+      setError('Failed to load batches');
+      setBatches(['all']);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -103,200 +170,832 @@ ${student.history ?
     onClose();
   };
 
-  const filteredStudents = students.filter((student) => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.rollNo.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBatch = selectedBatch === 'all' || student.batch === selectedBatch;
-    const matchesSemester = selectedSemester === 'all' || student.semester === selectedSemester;
+  // Fetch semesters for a selected batch
+  const fetchSemesters = async (batchName) => {
+    try {
+      // In a real app, you'd fetch this from an API
+      // For now, let's assume semesters 1-8
+      const semesterNumbers = ['all', '1', '2', '3', '4', '5', '6', '7', '8'];
+      setSemesters(semesterNumbers);
+      
+      // If you have an API endpoint for semesters:
+      // const response = await axios.get(`http://localhost:5001/api/semesters/getBatchSemesters/${batchName}`);
+      // setSemesters(['all', ...response.data]);
+    } catch (err) {
+      console.error('Error fetching semesters:', err);
+      setSemesters(['all']);
+    }
+  };
+  
+  // Fetch students by batch and semester
+  const fetchStudentsByBatchAndSemester = async (batch, semester) => {
+    setFetchingStudents(true);
+    setStudentError(null);
+    try {
+      let url = '';
+      let response;
+      
+      if (batch === 'all') {
+        // Fetch all students
+        url = 'http://localhost:5001/api/students/getAllStudents';
+        response = await axios.get(url);
+      } else {
+        // First get the batch ID from the batch name
+        const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+        const selectedBatchObj = batchesResponse.data.find(b => b.batchName === batch);
+        
+        if (selectedBatchObj && selectedBatchObj.id) {
+          if (semester === 'all') {
+            // Fetch students by batch ID
+            url = `http://localhost:5001/api/students/getStudentsByBatch/${selectedBatchObj.id}`;
+          } else {
+            // Fetch students by batch ID and semester
+            url = `http://localhost:5001/api/facultyside/marks/students/${batch}`;
+          }
+          response = await axios.get(url);
+        } else {
+          throw new Error(`Batch ID not found for batch name: ${batch}`);
+        }
+      }
+      
+      if (response && response.data) {
+        // Process student data
+        const formattedStudents = await processStudentData(response.data, batch, semester);
+        setStudents(formattedStudents);
+      } else {
+        setStudents([]);
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setStudentError('Failed to load students. ' + (err.response?.data?.message || err.message));
+      setStudents([]);
+    } finally {
+      setFetchingStudents(false);
+    }
+  };
+  
+  // Process student data and fetch academic information
+  const processStudentData = async (studentsData, batch, semester) => {
+    try {
+      // Fetch subjects for this batch and semester
+      let subjectsList = [];
+      try {
+        // Only make the API call if batch and semester are not 'all'
+        if (batch !== 'all' && semester !== 'all') {
+          const subjectsResponse = await axios.get(`http://localhost:5001/api/subjects/getSubjectsByBatchAndSemesterWithDetails/${batch}/${semester}`);
+          subjectsList = subjectsResponse.data || [];
+        } else {
+          // For 'all' cases, create some sample subjects
+          subjectsList = [
+            { sub_code: 'CSE101', sub_name: 'Introduction to CS', sub_credit: 4 },
+            { sub_code: 'CSE102', sub_name: 'Data Structures', sub_credit: 4 },
+            { sub_code: 'CSE103', sub_name: 'Algorithms', sub_credit: 4 },
+            { sub_code: 'CSE104', sub_name: 'Database Systems', sub_credit: 3 },
+            { sub_code: 'CSE105', sub_name: 'Web Development', sub_credit: 3 }
+          ];
+        }
+      } catch (error) {
+        console.warn('Error fetching subjects, using sample data instead:', error);
+        // Fallback to sample subjects
+        subjectsList = [
+          { sub_code: 'CSE101', sub_name: 'Introduction to CS', sub_credit: 4 },
+          { sub_code: 'CSE102', sub_name: 'Data Structures', sub_credit: 4 },
+          { sub_code: 'CSE103', sub_name: 'Algorithms', sub_credit: 4 },
+          { sub_code: 'CSE104', sub_name: 'Database Systems', sub_credit: 3 },
+          { sub_code: 'CSE105', sub_name: 'Web Development', sub_credit: 3 }
+        ];
+      }
+      setSubjects(subjectsList);
+      
+      // Format student data with academic details
+      return Promise.all(Array.isArray(studentsData) ? studentsData.map(async student => {
+        // Fetch academic data for this student
+        let academicMarks = {};
+        try {
+          // In a real app, you'd make an API call here to get the student's marks
+          // const marksResponse = await axios.get(`http://localhost:5001/api/marks/student/${student.id}`);
+          // academicMarks = marksResponse.data;
+          
+          // For now, let's create some sample data
+          academicMarks = createSampleAcademicData(student.id, subjectsList);
+        } catch (error) {
+          console.error('Error fetching academic marks for student:', error);
+        }
+        
+        return {
+          id: student.id || Math.random().toString(36).substr(2, 9),
+          name: student.name || student.studentName || 'Unknown',
+          rollNo: student.enrollmentNumber || student.rollNo || 'N/A',
+          batch: student.batchName || (student.Batch ? student.Batch.batchName : batch),
+          semester: student.semesterNumber || student.currnetsemester || semester || 'N/A',
+          email: student.email || 'N/A',
+          academicData: academicMarks,
+          spi: calculateSPI(academicMarks)
+        };
+      }) : []);
+    } catch (error) {
+      console.error('Error processing student data:', error);
+      return [];
+    }
+  };
+  
+  // Create sample academic data for testing
+  const createSampleAcademicData = (studentId, subjectsList) => {
+    const subjects = {};
+    
+    // For each subject, create random grades
+    subjectsList.forEach((subject, index) => {
+      const subjectCode = subject.sub_code || `SUB${index + 1}`;
+      const subjectName = subject.sub_name || `Subject ${index + 1}`;
+      const credits = subject.sub_credit || 4;
+      
+      // Generate random grades (biased by student ID to maintain consistency)
+      const studentIdSum = studentId.toString().split('').reduce((a, b) => a + parseInt(b || '0'), 0);
+      const ese = Math.min(70, 30 + (studentIdSum % 10) + Math.floor(Math.random() * 40));
+      const cse = Math.min(30, 15 + (studentIdSum % 5) + Math.floor(Math.random() * 15));
+      const ia = Math.min(20, 10 + (studentIdSum % 3) + Math.floor(Math.random() * 10));
+      const tw = Math.min(25, 15 + (studentIdSum % 5) + Math.floor(Math.random() * 10));
+      const total = ese + cse + ia + tw;
+      
+      // Assign grade based on total marks
+      let grade;
+      if (total >= 90) grade = 'AA';
+      else if (total >= 80) grade = 'AB';
+      else if (total >= 70) grade = 'BB';
+      else if (total >= 60) grade = 'BC';
+      else if (total >= 50) grade = 'CC';
+      else if (total >= 40) grade = 'CD';
+      else if (total >= 35) grade = 'DD';
+      else grade = 'FF';
+      
+      // Calculate grade points
+      let gradePoints;
+      switch(grade) {
+        case 'AA': gradePoints = 10; break;
+        case 'AB': gradePoints = 9; break;
+        case 'BB': gradePoints = 8; break;
+        case 'BC': gradePoints = 7; break;
+        case 'CC': gradePoints = 6; break;
+        case 'CD': gradePoints = 5; break;
+        case 'DD': gradePoints = 4; break;
+        default: gradePoints = 0;
+      }
+      
+      subjects[subjectCode] = {
+        name: subjectName,
+        credits,
+        ese,
+        cse,
+        ia,
+        tw,
+        total,
+        grade,
+        gradePoints
+      };
+    });
+    
+    return subjects;
+  };
+  
+  // Calculate SPI (Semester Performance Index) for a student
+  const calculateSPI = (academicData) => {
+    if (!academicData || Object.keys(academicData).length === 0) return 0;
+    
+    let totalCredits = 0;
+    let totalGradePoints = 0;
+    
+    Object.values(academicData).forEach(subject => {
+      totalCredits += subject.credits;
+      totalGradePoints += subject.credits * subject.gradePoints;
+    });
+    
+    return totalCredits > 0 ? (totalGradePoints / totalCredits).toFixed(2) : 0;
+  };
+  
+  // Safe way to get academicData values with null checks
+  const safeGetAcademicValues = (academicData) => {
+    if (!academicData || typeof academicData !== 'object') return [];
+    return Object.values(academicData);
+  };
+  
+  // Apply filters and sorting to student data
+  const applyFiltersAndSort = () => {
+    // Filter students based on search term (with null checks)
+    let filtered = students.filter((student) => {
+      if (!student || !student.name || !student.rollNo) return false;
+      
+      return student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.rollNo.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+    
+    // Sort students based on selected field and direction
+    filtered.sort((a, b) => {
+      let valueA, valueB;
+      
+      if (sortField === 'name') {
+        valueA = a.name.toLowerCase();
+        valueB = b.name.toLowerCase();
+      } else if (sortField === 'rollNo') {
+        valueA = a.rollNo.toLowerCase();
+        valueB = b.rollNo.toLowerCase();
+      } else if (sortField === 'spi') {
+        valueA = parseFloat(a.spi);
+        valueB = parseFloat(b.spi);
+      } else if (sortField.startsWith('subject_')) {
+        // Sort by specific subject grade
+        const subjectCode = sortField.replace('subject_', '');
+        valueA = a.academicData[subjectCode]?.total || 0;
+        valueB = b.academicData[subjectCode]?.total || 0;
+      } else {
+        valueA = a[sortField];
+        valueB = b[sortField];
+      }
+      
+      // Apply sort direction
+      if (sortDirection === 'asc') {
+        return valueA > valueB ? 1 : -1;
+      } else {
+        return valueA < valueB ? 1 : -1;
+      }
+    });
+    
+    // Limit to top/bottom X students if requested
+    if (topBottomCount > 0 && topBottomCount < filtered.length) {
+      if (showTopStudents) {
+        filtered = filtered.slice(-topBottomCount).reverse();
+      } else {
+        filtered = filtered.slice(0, topBottomCount);
+      }
+    }
+    
+    setFilteredStudents(filtered);
+  };
 
-    return matchesSearch && matchesBatch && matchesSemester;
-  });
+  // Generate a PDF report of academic data
+  const handleGenerateReport = async () => {
+    setGeneratingPdf(true);
+    try {
+      // Capture the report element using html2canvas
+      const reportElement = reportRef.current;
+      
+      // Create a new PDF document
+      const pdfDoc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdfDoc.internal.pageSize.getWidth();
+      const pageHeight = pdfDoc.internal.pageSize.getHeight();
+      
+      // Add title and header with styling
+      pdfDoc.setFillColor(10, 36, 99); // #0A2463 dark blue
+      pdfDoc.rect(0, 0, pageWidth, 25, 'F');
+      
+      pdfDoc.setFontSize(18);
+      pdfDoc.setTextColor(255, 255, 255); // White text
+      pdfDoc.text('Academic Performance Report', pageWidth / 2, 15, { align: 'center' });
+      
+      // Add batch and semester info
+      pdfDoc.setFontSize(12);
+      pdfDoc.setTextColor(51, 51, 51);
+      const batchText = `Batch: ${selectedBatch === 'all' ? 'All Batches' : selectedBatch}`;
+      const semesterText = `Semester: ${selectedSemester === 'all' ? 'All Semesters' : selectedSemester}`;
+      pdfDoc.text(batchText, 20, 35);
+      pdfDoc.text(semesterText, pageWidth - 20, 35, { align: 'right' });
+      
+      // Add date
+      const dateText = `Generated on: ${new Date().toLocaleDateString()}`;
+      pdfDoc.text(dateText, pageWidth / 2, 42, { align: 'center' });
+      
+      // Add a line
+      pdfDoc.setDrawColor(220, 220, 220);
+      pdfDoc.line(20, 45, pageWidth - 20, 45);
+      
+      // Executive summary section
+      pdfDoc.setFontSize(14);
+      pdfDoc.setTextColor(54, 116, 181); // #3674B5 color
+      pdfDoc.text('Executive Summary', 20, 55);
+      
+      pdfDoc.setFontSize(10);
+      pdfDoc.setTextColor(80, 80, 80);
+      const summaryText = `This report provides a comprehensive analysis of student academic performance for ${selectedBatch === 'all' ? 'all batches' : 'batch ' + selectedBatch} in ${selectedSemester === 'all' ? 'all semesters' : 'semester ' + selectedSemester}. It includes detailed grade distributions, student rankings, and subject-wise performance metrics to help identify trends and areas for improvement.`;
+      
+      // Add multiline text with word wrapping
+      const splitSummary = pdfDoc.splitTextToSize(summaryText, pageWidth - 40);
+      pdfDoc.text(splitSummary, 20, 62);
+      
+      // Calculate summary height based on number of lines
+      const summaryHeight = splitSummary.length * 5;
+      
+      // Capture and add student performance table
+      const gradesTable = gradesTableRef.current;
+      const gradeCanvas = await html2canvas(gradesTable);
+      const gradeImgData = gradeCanvas.toDataURL('image/png');
+      
+      // Section title for table
+      pdfDoc.setFontSize(14);
+      pdfDoc.setTextColor(54, 116, 181);
+      pdfDoc.text('Student Grade Performance Table', 20, 70 + summaryHeight);
+      
+      // Table description
+      pdfDoc.setFontSize(10);
+      pdfDoc.setTextColor(80, 80, 80);
+      const tableDesc = "The following table shows individual student performance across all subjects. Each cell displays the grade earned and the total marks in parentheses. Use this data to identify students who may need additional support or recognition.";
+      const splitTableDesc = pdfDoc.splitTextToSize(tableDesc, pageWidth - 40);
+      pdfDoc.text(splitTableDesc, 20, 77 + summaryHeight);
+      
+      // Calculate image dimensions to fit in PDF
+      const imgWidth = pageWidth - 40; // 20mm margin on each side
+      const imgHeight = (gradeCanvas.height * imgWidth) / gradeCanvas.width;
+      
+      // Add the image to PDF
+      pdfDoc.addImage(gradeImgData, 'PNG', 20, 90 + summaryHeight, imgWidth, imgHeight);
+      
+      // Start a new page for charts
+      pdfDoc.addPage();
+      
+      // Add title for the charts page
+      pdfDoc.setFillColor(10, 36, 99); // #0A2463 dark blue
+      pdfDoc.rect(0, 0, pageWidth, 25, 'F');
+      
+      pdfDoc.setFontSize(18);
+      pdfDoc.setTextColor(255, 255, 255);
+      pdfDoc.text('Performance Analytics', pageWidth / 2, 15, { align: 'center' });
+      
+      let yPosition = 35; // Starting y position for charts
+      
+      // Add charts if they exist
+      // Grade distribution chart
+      if (gradeDistributionChartRef.current) {
+        const gradeDistCanvas = await html2canvas(gradeDistributionChartRef.current);
+        const gradeDistImgData = gradeDistCanvas.toDataURL('image/png');
+        const chartWidth = pageWidth - 40;
+        const chartHeight = (gradeDistCanvas.height * chartWidth) / gradeDistCanvas.width;
+        
+        pdfDoc.setFontSize(14);
+        pdfDoc.setTextColor(54, 116, 181);
+        pdfDoc.text('Grade Distribution Analysis', 20, yPosition);
+        
+        // Add description for grade distribution chart
+        pdfDoc.setFontSize(10);
+        pdfDoc.setTextColor(80, 80, 80);
+        const gradeDistDesc = "This chart illustrates the distribution of grades across all subjects. The x-axis represents grade categories (AA to FF), while the y-axis shows the frequency of each grade. This visualization helps identify overall performance patterns and potential grading anomalies.";
+        const splitGradeDesc = pdfDoc.splitTextToSize(gradeDistDesc, pageWidth - 40);
+        pdfDoc.text(splitGradeDesc, 20, yPosition + 7);
+        
+        yPosition += 22; // Adjust position based on description height
+        pdfDoc.addImage(gradeDistImgData, 'PNG', 20, yPosition, chartWidth, chartHeight);
+        
+        yPosition += chartHeight + 15; // Move position for next chart
+      }
+      
+      // Top performers chart
+      if (topStudentsChartRef.current) {
+        const topStudentsCanvas = await html2canvas(topStudentsChartRef.current);
+        const topStudentsImgData = topStudentsCanvas.toDataURL('image/png');
+        const chartWidth = pageWidth - 40;
+        const chartHeight = (topStudentsCanvas.height * chartWidth) / topStudentsCanvas.width;
+        
+        // Check if we need a new page for the top performers chart
+        if (yPosition + chartHeight + 30 > pageHeight) {
+          pdfDoc.addPage();
+          yPosition = 30;
+        }
+        
+        pdfDoc.setFontSize(14);
+        pdfDoc.setTextColor(54, 116, 181);
+        pdfDoc.text('Top Performing Students', 20, yPosition);
+        
+        // Add description for top performers
+        pdfDoc.setFontSize(10);
+        pdfDoc.setTextColor(80, 80, 80);
+        const topStudentsDesc = "This section highlights the highest achieving students based on Semester Performance Index (SPI). These students demonstrate exceptional academic capability and may serve as peer mentors or be considered for academic recognition programs.";
+        const splitTopDesc = pdfDoc.splitTextToSize(topStudentsDesc, pageWidth - 40);
+        pdfDoc.text(splitTopDesc, 20, yPosition + 7);
+        
+        yPosition += 22; // Adjust position based on description height
+        pdfDoc.addImage(topStudentsImgData, 'PNG', 20, yPosition, chartWidth, chartHeight);
+        
+        yPosition += chartHeight + 15;
+      }
+      
+      // Add a conclusions page
+      pdfDoc.addPage();
+      
+      // Add title for the conclusion page
+      pdfDoc.setFillColor(10, 36, 99);
+      pdfDoc.rect(0, 0, pageWidth, 25, 'F');
+      
+      pdfDoc.setFontSize(18);
+      pdfDoc.setTextColor(255, 255, 255);
+      pdfDoc.text('Conclusions and Recommendations', pageWidth / 2, 15, { align: 'center' });
+      
+      // Add conclusions based on data
+      pdfDoc.setFontSize(14);
+      pdfDoc.setTextColor(54, 116, 181);
+      pdfDoc.text('Summary Insights', 20, 35);
+      
+      // Calculate grade distribution here to avoid reference error
+      const calculateGradeDistribution = () => {
+        const distribution = {
+          'AA': 0, 'AB': 0, 'BB': 0, 'BC': 0, 'CC': 0, 'CD': 0, 'DD': 0, 'FF': 0
+        };
+        
+        // Count grades from all students and subjects
+        filteredStudents.forEach(student => {
+          if (student && student.academicData) {
+            Object.values(student.academicData).forEach(subjectData => {
+              if (subjectData && subjectData.grade) {
+                distribution[subjectData.grade] = (distribution[subjectData.grade] || 0) + 1;
+              }
+            });
+          }
+        });
+        
+        return distribution;
+      };
+      
+      const gradeDistribution = calculateGradeDistribution();
+      
+      // Find most common grade
+      let mostCommonGrade = 'AA';
+      let maxCount = 0;
+      Object.entries(gradeDistribution).forEach(([grade, count]) => {
+        if (count > maxCount) {
+          maxCount = count;
+          mostCommonGrade = grade;
+        }
+      });
+      
+      // Calculate total grades and FF count for pass rate
+      const totalGrades = Object.values(gradeDistribution).reduce((sum, count) => sum + count, 0);
+      const failCount = gradeDistribution['FF'] || 0;
+      const passRate = totalGrades > 0 ? ((totalGrades - failCount) / totalGrades * 100).toFixed(2) : '100.00';
+      
+      // Calculate average SPI
+      const averageSPI = filteredStudents.length > 0 
+        ? (filteredStudents.reduce((sum, student) => sum + parseFloat(student.spi || 0), 0) / filteredStudents.length).toFixed(2)
+        : 0;
+      
+      pdfDoc.setFontSize(10);
+      pdfDoc.setTextColor(80, 80, 80);
+      
+      let insights = [
+        `Average SPI: ${averageSPI}`,
+        `Total Students: ${filteredStudents.length}`,
+        `Most Common Grade: ${mostCommonGrade}`,
+        `Pass Rate: ${passRate}%`
+      ];
+      
+      let yPos = 45;
+      insights.forEach(insight => {
+        pdfDoc.text(`• ${insight}`, 25, yPos);
+        yPos += 7;
+      });
+      
+      // Add recommendations
+      pdfDoc.setFontSize(14);
+      pdfDoc.setTextColor(54, 116, 181);
+      pdfDoc.text('Recommendations', 20, yPos + 10);
+      
+      pdfDoc.setFontSize(10);
+      pdfDoc.setTextColor(80, 80, 80);
+      
+      const recommendations = [
+        "Consider providing additional support resources for students scoring below the class average.",
+        "Recognize and publicly acknowledge top-performing students to motivate the entire class.",
+        "Review subjects with high failure rates to identify potential teaching methodology adjustments.",
+        "Compare results with previous semesters to track progress and identify long-term trends.",
+        "Consider conducting a student feedback survey to understand challenges faced by underperforming students."
+      ];
+      
+      yPos += 20;
+      recommendations.forEach(rec => {
+        pdfDoc.text(`• ${rec}`, 25, yPos);
+        yPos += 7;
+      });
+      
+      // Add footer with page numbers
+      const totalPages = pdfDoc.internal.getNumberOfPages();
+      
+      for (let i = 1; i <= totalPages; i++) {
+        pdfDoc.setPage(i);
+        pdfDoc.setFontSize(8);
+        pdfDoc.setTextColor(150, 150, 150);
+        pdfDoc.text(`Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        pdfDoc.text('Department of Computer Engineering - Academic Report', pageWidth / 2, pageHeight - 5, { align: 'center' });
+      }
+      
+      // Save the PDF
+      pdfDoc.save(`Academic_Report_${selectedBatch}_${selectedSemester}_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setError('Error generating PDF report. Please try again.');
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+  
+  // Handle change in sort field or direction
+  const handleSortChange = (field) => {
+    if (sortField === field) {
+      // Toggle direction if same field is clicked
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field and default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+  
+  // Render sort indicator based on current sort field and direction
+  const renderSortIndicator = (field) => {
+    if (sortField !== field) return <ArrowUpDown size={16} />;
+    return sortDirection === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />;
+  };
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-container email-modal">
-        <div className="modal-header">
-          <h2>Send Performance Reports</h2>
-          <button className="close-btn" onClick={onClose}>&times;</button>
+      {loading && batches.length <= 1 && <span className="loading-text">Loading batches...</span>}
+      {fetchingStudents && <span className="loading-text">Loading students...</span>}
+      {error && (
+        <div className="error-message">
+          {error}
         </div>
-
-        <div className="modal-content">
-          <div className="email-form">
-            <div className="form-group">
-              <label>Email Subject:</label>
-              <input
-                type="text"
-                value={emailSubject}
-                onChange={(e) => setEmailSubject(e.target.value)}
-                className="form-control"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Email Message:</label>
-              <textarea
-                value={emailContent}
-                onChange={(e) => setEmailContent(e.target.value)}
-                className="form-control"
-                rows="5"
-                placeholder="Enter additional message to include with the report..."
-              ></textarea>
-            </div>
-
-            <div className="form-options">
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  id="includeParents"
-                  checked={includeParents}
-                  onChange={(e) => setIncludeParents(e.target.checked)}
-                />
-                <label htmlFor="includeParents">
-                  <Mail className="icon" size={16} />
-                  Send copies to parents
-                </label>
-              </div>
-
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  id="includeDetailedReport"
-                  checked={includeDetailedReport}
-                  onChange={(e) => setIncludeDetailedReport(e.target.checked)}
-                />
-                <label htmlFor="includeDetailedReport">
-                  <FileText className="icon" size={16} />
-                  Include detailed performance analysis
-                </label>
-              </div>
-
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  id="includeCharts"
-                  checked={includeCharts}
-                  onChange={(e) => setIncludeCharts(e.target.checked)}
-                />
-                <label htmlFor="includeCharts">Include visual charts</label>
-              </div>
-
-              <div className="format-select">
-                <label>Report Format:</label>
-                <select
-                  value={reportFormat}
-                  onChange={(e) => setReportFormat(e.target.value)}
-                  className="form-control"
-                >
-                  <option value="pdf">PDF Document</option>
-                  <option value="excel">Excel Spreadsheet</option>
-                </select>
-              </div>
+      )}
+      {studentError && (
+        <div className="error-message">
+          {studentError}
+        </div>
+      )}
+      <div className="report-content-academic-report">
+        <div className="modal-container-academic-report report-modal-academic-report">
+          <div className="modal-header-academic-report">
+            <h2>Academic Reports</h2>
+            <div className="header-controls-academic-report">
+              <select
+                value={selectedBatch}
+                onChange={(e) => setSelectedBatch(e.target.value)}
+                disabled={loading}
+                className="batch-select-academic-report"
+              >
+                {batches.map((batch) => (
+                  <option key={batch} value={batch}>
+                    {batch === 'all' ? 'All Batches' : `Batch ${batch}`}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedSemester}
+                onChange={(e) => setSelectedSemester(e.target.value)}
+                disabled={loading || selectedBatch === 'all'}
+                className="semester-select-academic-report"
+              >
+                {semesters.map((semester) => (
+                  <option key={semester} value={semester}>
+                    {semester === 'all' ? 'All Semesters' : `Semester ${semester}`}
+                  </option>
+                ))}
+              </select>
+              <button className="close-btn-academic-report" onClick={onClose}>&times;</button>
             </div>
           </div>
-
-          <div className="student-selection">
-            <div className="selection-header">
-              <h3>Select Students</h3>
-
-              <div className="filter-controls">
-                <div className="search-control">
+          
+          <div className="top-filters-section-academic-report">
+            <div className="academic-filters-academic-report">
+              <div className="search-filters-academic-report">
+                <div className="search-control-academic-report">
                   <input
                     type="text"
                     placeholder="Search students..."
                     value={searchTerm}
-                    onChange={handleSearch}
-                    className="search-input"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input-academic-report"
                   />
                 </div>
-
-                <div className="filter-group">
-                  <select value={selectedBatch} onChange={handleBatchChange}>
-                    {batches.map(batch => (
-                      <option key={batch} value={batch}>
-                        {batch === 'all' ? 'All Batches' : `Batch ${batch}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <select value={selectedSemester} onChange={handleSemesterChange}>
-                    {semesters.map(semester => (
-                      <option key={semester} value={semester}>
-                        {semester === 'all' ? 'All Semesters' : `Semester ${semester}`}
-                      </option>
-                    ))}
-                  </select>
+                
+                <div className="top-bottom-filter-academic-report">
+                  <label>Show:</label>
+                  <div className="filter-options-academic-report">
+                    <select 
+                      value={topBottomCount} 
+                      onChange={(e) => setTopBottomCount(parseInt(e.target.value))}
+                      className="count-select-academic-report"
+                    >
+                      <option value="0">All Students</option>
+                      <option value="5">Top/Bottom 5</option>
+                      <option value="10">Top/Bottom 10</option>
+                      <option value="15">Top/Bottom 15</option>
+                      <option value="20">Top/Bottom 20</option>
+                    </select>
+                    
+                    {topBottomCount > 0 && (
+                      <div className="toggle-buttons-academic-report">
+                        <button 
+                          className={`toggle-btn-academic-report ${showTopStudents ? 'active-academic-report' : ''}`}
+                          onClick={() => setShowTopStudents(true)}
+                        >
+                          Top
+                        </button>
+                        <button 
+                          className={`toggle-btn-academic-report ${!showTopStudents ? 'active-academic-report' : ''}`}
+                          onClick={() => setShowTopStudents(false)}
+                        >
+                          Bottom
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+              
+              <div className="report-actions-academic-report">
+                <button 
+                  className="btn-generate-academic-report" 
+                  onClick={handleGenerateReport}
+                  disabled={generatingPdf || students.length === 0}
+                >
+                  {generatingPdf ? 'Generating...' : 'Generate PDF Report'}
+                </button>
+              </div>
             </div>
-
-            <div className="selection-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>
-                      <input
-                        type="checkbox"
-                        onChange={handleSelectAll}
-                        checked={selectedStudents.length === students.length && students.length > 0}
-                      />
-                    </th>
-                    <th>Name</th>
-                    <th>Roll No.</th>
-                    <th>Batch</th>
-                    <th>Semester</th>
-                    <th>Performance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredStudents.length > 0 ? (
-                    filteredStudents.map((student) => (
-                      <tr key={student.id}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={selectedStudents.includes(student.id)}
-                            onChange={(e) => handleSelectStudent(e, student.id)}
-                          />
-                        </td>
-                        <td>{student.name}</td>
-                        <td>{student.rollNo}</td>
-                        <td>{student.batch}</td>
-                        <td>{student.semester}</td>
-                        <td>
-                          <div className="performance-bar">
-                            <div className="bar" style={{ width: `${student.points.curricular / 100 * 100}%` }}></div>
-                            <div className="bar" style={{ width: `${student.points.coCurricular / 100 * 100}%` }}></div>
-                            <div className="bar" style={{ width: `${student.points.extraCurricular / 100 * 100}%` }}></div>
-                          </div>
-                        </td>
+          </div>
+          
+          <div className="modal-content-academic-report">
+            <div className="academic-content-academic-report" ref={reportRef}>
+              <div className="academic-table-container-academic-report" ref={gradesTableRef}>
+                <h3>Student Academic Performance</h3>
+                {filteredStudents.length > 0 ? (
+                  <table className="academic-table-academic-report">
+                    <thead>
+                      <tr>
+                        <th className="sortable-academic-report" onClick={() => handleSortChange('name')}>
+                          Student Name {renderSortIndicator('name')}
+                        </th>
+                        <th className="sortable-academic-report" onClick={() => handleSortChange('rollNo')}>
+                          Enrollment No. {renderSortIndicator('rollNo')}
+                        </th>
+                        {subjects.map(subject => (
+                          <th 
+                            key={subject.sub_code} 
+                            className="subject-header-academic-report sortable-academic-report" 
+                            onClick={() => handleSortChange(`subject_${subject.sub_code}`)}
+                            title={subject.sub_name}
+                          >
+                            {subject.sub_name.length > 10 ? `${subject.sub_name.substring(0, 10)}...` : subject.sub_name}
+                            {renderSortIndicator(`subject_${subject.sub_code}`)}
+                          </th>
+                        ))}
+                        <th className="sortable-academic-report" onClick={() => handleSortChange('spi')}>
+                          SPI {renderSortIndicator('spi')}
+                        </th>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="no-data">No students match the selected filters</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {filteredStudents.map(student => (
+                        <tr key={student.id || Math.random().toString(36).substr(2, 9)}>
+                          <td>{student.name || 'N/A'}</td>
+                          <td>{student.rollNo || 'N/A'}</td>
+                          {subjects.map(subject => {
+                            // Safe access to academicData
+                            if (!student || !student.academicData) {
+                              return <td key={`${student?.id || 'unknown'}_${subject.sub_code}`} className="grade-cell-academic-report">-</td>;
+                            }
+                            
+                            const subjectData = student.academicData[subject.sub_code];
+                            return (
+                              <td 
+                                key={`${student.id}_${subject.sub_code}`}
+                                className={`grade-cell-academic-report ${subjectData?.grade === 'FF' ? 'failing-grade-academic-report' : ''}`}
+                                title={`ESE: ${subjectData?.ese || 0}, CSE: ${subjectData?.cse || 0}, IA: ${subjectData?.ia || 0}, TW: ${subjectData?.tw || 0}, Total: ${subjectData?.total || 0}`}
+                              >
+                                {subjectData ? (
+                                  <div className="grade-info-academic-report">
+                                    <span className="grade-academic-report">{subjectData.grade}</span>
+                                    <span className="points-academic-report">{subjectData.total}</span>
+                                  </div>
+                                ) : '-'}
+                              </td>
+                            );
+                          })}
+                          <td className="spi-cell-academic-report">{student.spi || '0.00'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="no-data-message-academic-report">
+                    {fetchingStudents ? 'Loading student data...' : 'No students found matching the selected criteria'}
+                  </div>
+                )}
+              </div>
+              
+              {filteredStudents.length > 0 && (
+                <div className="statistics-section-academic-report">
+                  <div className="stat-cards-academic-report">
+                    <div className="stat-card-academic-report" ref={topStudentsChartRef}>
+                      <h4>Top Performers (by SPI)</h4>
+                      <div className="top-students-list-academic-report">
+                        {[...filteredStudents]
+                          .sort((a, b) => parseFloat(b.spi) - parseFloat(a.spi))
+                          .slice(0, 5)
+                          .map((student, index) => (
+                            <div key={student.id} className="top-student-item-academic-report">
+                              <span className="rank-academic-report">{index + 1}</span>
+                              <span className="student-name-academic-report">{student.name}</span>
+                              <span className="student-rollno-academic-report">{student.rollNo}</span>
+                              <span className="student-spi-academic-report">{student.spi}</span>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    </div>
+                    
+                    <div className="stat-card-academic-report" ref={gradeDistributionChartRef}>
+                      <h4>Grade Distribution</h4>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={[
+                          { grade: 'AA', count: filteredStudents.reduce((count, student) => 
+                            count + safeGetAcademicValues(student.academicData).filter(s => s && s.grade === 'AA').length, 0) },
+                          { grade: 'AB', count: filteredStudents.reduce((count, student) => 
+                            count + safeGetAcademicValues(student.academicData).filter(s => s && s.grade === 'AB').length, 0) },
+                          { grade: 'BB', count: filteredStudents.reduce((count, student) => 
+                            count + safeGetAcademicValues(student.academicData).filter(s => s && s.grade === 'BB').length, 0) },
+                          { grade: 'BC', count: filteredStudents.reduce((count, student) => 
+                            count + safeGetAcademicValues(student.academicData).filter(s => s && s.grade === 'BC').length, 0) },
+                          { grade: 'CC', count: filteredStudents.reduce((count, student) => 
+                            count + safeGetAcademicValues(student.academicData).filter(s => s && s.grade === 'CC').length, 0) },
+                          { grade: 'CD', count: filteredStudents.reduce((count, student) => 
+                            count + safeGetAcademicValues(student.academicData).filter(s => s && s.grade === 'CD').length, 0) },
+                          { grade: 'DD', count: filteredStudents.reduce((count, student) => 
+                            count + safeGetAcademicValues(student.academicData).filter(s => s && s.grade === 'DD').length, 0) },
+                          { grade: 'FF', count: filteredStudents.reduce((count, student) => 
+                            count + safeGetAcademicValues(student.academicData).filter(s => s && s.grade === 'FF').length, 0) },
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="grade" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="count" fill="#0A2463" name="Number of Grades" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  
+                  <div className="subject-statistics-academic-report">
+                    <h4>Subject-wise Performance</h4>
+                    <table className="subject-stats-table-academic-report">
+                      <thead>
+                        <tr>
+                          <th>Subject</th>
+                          <th>Average</th>
+                          <th>Highest</th>
+                          <th>Lowest</th>
+                          <th>Pass %</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {subjects.map(subject => {
+                          // Calculate statistics for this subject with safe access
+                          const subjectMarks = filteredStudents
+                            .map(student => {
+                              if (!student || !student.academicData) return 0;
+                              const subjectData = student.academicData[subject.sub_code];
+                              return subjectData?.total || 0;
+                            })
+                            .filter(mark => mark > 0);
+                            
+                          const average = subjectMarks.length > 0 ? 
+                            (subjectMarks.reduce((a, b) => a + b, 0) / subjectMarks.length).toFixed(2) : 0;
+                            
+                          const highest = subjectMarks.length > 0 ? Math.max(...subjectMarks) : 0;
+                          const lowest = subjectMarks.length > 0 ? Math.min(...subjectMarks) : 0;
+                          
+                          const passCount = filteredStudents.filter(student => {
+                            if (!student || !student.academicData) return false;
+                            const subjectData = student.academicData[subject.sub_code];
+                            return subjectData && subjectData.grade !== 'FF';
+                          }).length;
+                          
+                          const passPercentage = filteredStudents.length > 0 ? 
+                            ((passCount / filteredStudents.length) * 100).toFixed(2) : 0;
+                            
+                          return (
+                            <tr key={subject.sub_code}>
+                              <td title={subject.sub_name}>
+                                {subject.sub_name.length > 25 ? `${subject.sub_name.substring(0, 25)}...` : subject.sub_name}
+                              </td>
+                              <td>{average}</td>
+                              <td>{highest}</td>
+                              <td>{lowest}</td>
+                              <td className={passPercentage < 70 ? 'low-pass-rate' : ''}>
+                                {passPercentage}%
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-
-        <div className="modal-footer">
-          <div className="selected-count">
-            {selectedStudents.length} students selected
-          </div>
-          <div className="action-buttons">
-            <button className="btn-cancel" onClick={onClose}>Cancel</button>
-            <button
-              className="btn-send"
-              onClick={handleSendEmails}
-              disabled={selectedStudents.length === 0 || !emailSubject || !emailContent}
-            >
-              Send Reports
-            </button>
           </div>
         </div>
       </div>
@@ -304,4 +1003,4 @@ ${student.history ?
   );
 };
 
-export default EmailNotification;
+export default AcademicReports;
