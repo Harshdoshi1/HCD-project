@@ -62,7 +62,6 @@ const Sidebar = ({ activeItem, setActiveItem, isExpanded, setIsExpanded }) => {
     };
 
     const menuItems = [
-        { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "subjects", label: "Subjects", icon: BookMarked },
         { id: "grades", label: "Grades", icon: GraduationCap },
         // { id: "settings", label: "Settings", icon: Settings },
@@ -82,7 +81,10 @@ const Sidebar = ({ activeItem, setActiveItem, isExpanded, setIsExpanded }) => {
                         <button
                             key={item.id}
                             className={`sidebar-item ${activeItem === item.id ? "active" : ""}`}
-                            onClick={() => setActiveItem(item.id)}
+                            onClick={() => {
+                                setActiveItem(item.id);
+                                navigate(`/faculty/${item.id}`);
+                            }}
                         >
                             <item.icon size={20} className="sidebar-icon" />
                             {isExpanded && <span>{item.label}</span>}

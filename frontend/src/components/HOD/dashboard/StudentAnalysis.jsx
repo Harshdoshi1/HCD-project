@@ -1002,9 +1002,9 @@ const StudentAnalysis = ({ student, onClose }) => {
           <button className="btn-generate-report" onClick={toggleReportGenerator}>
             Generate Report
           </button>
-          <button className="btn-share" onClick={handleSendAnalysis}>
+          {/* <button className="btn-share" onClick={handleSendAnalysis}>
             Share Analysis with Student & Parents
-          </button>
+          </button> */}
 
           {showReportGenerator && (
             <ReportGeneratorModal
