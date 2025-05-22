@@ -71,16 +71,71 @@
 
 .upload-instructions h3 {
     margin-top: 0;
+    margin-bottom: 10px;
     color: #333;
 }
 
+.upload-instructions h4 {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    color: #444;
+}
+
 .upload-instructions ul {
-    margin-bottom: 0;
+    margin-left: 20px;
+    margin-bottom: 15px;
     padding-left: 20px;
 }
 
-.upload-instructions li {
-    margin-bottom: 8px;
+.excel-header-example {
+    background-color: #f0f8ff;
+    padding: 12px;
+    border-radius: 4px;
+    border-left: 4px solid #0078d4;
+    margin: 15px 0;
+    font-family: monospace;
+    font-size: 14px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.excel-example {
+    margin: 15px 0;
+    overflow-x: auto;
+}
+
+.excel-example table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+.excel-example th {
+    background-color: #f0f8ff;
+    color: #333;
+    font-weight: bold;
+    text-align: left;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.excel-example td {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    font-family: monospace;
+}
+
+.excel-example tr:hover {
+    background-color: #f9f9f9;
+}
+
+.note {
+    background-color: #fffde7;
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 4px solid #ffc107;
+    margin-top: 15px;
 }
 
 .file-upload-container {
@@ -222,6 +277,34 @@
 .error-details ul {
     margin: 0;
     padding-left: 20px;
+}
+
+.debug-info {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f0f8ff;
+    border-radius: 4px;
+    border-left: 4px solid #0078d4;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.debug-info h4 {
+    margin-top: 0;
+    color: #0078d4;
+    margin-bottom: 10px;
+}
+
+.debug-content {
+    background-color: #f5f5f5;
+    padding: 8px;
+    border-radius: 3px;
+    overflow-x: auto;
+}
+
+.debug-content p {
+    margin: 5px 0;
+    line-height: 1.5;
 }
 
 .student-grades-modal-footer {

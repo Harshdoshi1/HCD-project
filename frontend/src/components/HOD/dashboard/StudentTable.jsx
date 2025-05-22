@@ -125,10 +125,12 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
           
           // Fetch co-curricular and extra-curricular points from student_points table
           try {
-            const enrollmentNumber = student.enrollmentNumber || student.rollNo;
-            const semester = student.currnetsemester || selectedSemester;
+            let enrollmentNumber = student.enrollmentNumber || student.rollNo;
+            let semester = student.semesterNumber || student.currnetsemester || selectedSemester;
             
             if (enrollmentNumber && semester) {
+              console.log('Fetching points for student:', enrollmentNumber, 'semester:', semester);
+              
               const pointsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
                 enrollmentNumber,
                 semester
@@ -136,16 +138,40 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
               
               console.log('Student points response:', pointsResponse.data);
               
-              if (pointsResponse.data && Array.isArray(pointsResponse.data)) {
+              if (pointsResponse.data && Array.isArray(pointsResponse.data) && pointsResponse.data.length > 0) {
+                // Reset points before summing (in case of multiple entries)
+                points.coCurricular = 0;
+                points.extraCurricular = 0;
+                
                 // Sum up all co-curricular and extra-curricular points
                 pointsResponse.data.forEach(activity => {
-                  points.coCurricular += parseInt(activity.totalCocurricular || 0);
-                  points.extraCurricular += parseInt(activity.totalExtracurricular || 0);
+                  // Make sure we're working with numbers by using parseInt with base 10
+                  const coPoints = parseInt(activity.totalCocurricular || 0, 10);
+                  const extraPoints = parseInt(activity.totalExtracurricular || 0, 10);
+                  
+                  console.log(`Adding points for ${enrollmentNumber}: Co-curricular: ${coPoints}, Extra-curricular: ${extraPoints}`);
+                  
+                  points.coCurricular += coPoints;
+                  points.extraCurricular += extraPoints;
                 });
-              } else if (pointsResponse.data && pointsResponse.data.totalCocurricular) {
-                // If it's a single object with the totals
-                points.coCurricular = parseInt(pointsResponse.data.totalCocurricular || 0);
-                points.extraCurricular = parseInt(pointsResponse.data.totalExtracurricular || 0);
+                
+                console.log(`Total points for ${enrollmentNumber}: Co-curricular: ${points.coCurricular}, Extra-curricular: ${points.extraCurricular}`);
+              } else if (pointsResponse.data && typeof pointsResponse.data === 'object') {
+                // If it's a single object (either in array[0] or direct object)
+                let pointsData = pointsResponse.data;
+                
+                // Handle both array with one object and direct object
+                if (Array.isArray(pointsResponse.data) && pointsResponse.data.length === 1) {
+                  pointsData = pointsResponse.data[0];
+                }
+                
+                // Now safely extract the points
+                if (pointsData.totalCocurricular !== undefined || pointsData.totalExtracurricular !== undefined) {
+                  points.coCurricular = parseInt(pointsData.totalCocurricular || 0, 10);
+                  points.extraCurricular = parseInt(pointsData.totalExtracurricular || 0, 10);
+                  
+                  console.log(`Direct points for ${enrollmentNumber}: Co-curricular: ${points.coCurricular}, Extra-curricular: ${points.extraCurricular}`);
+                }
               }
             }
           } catch (error) {
