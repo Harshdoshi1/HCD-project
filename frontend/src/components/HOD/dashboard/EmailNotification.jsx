@@ -173,14 +173,32 @@ ${student.history ?
   // Fetch semesters for a selected batch
   const fetchSemesters = async (batchName) => {
     try {
-      // In a real app, you'd fetch this from an API
-      // For now, let's assume semesters 1-8
-      const semesterNumbers = ['all', '1', '2', '3', '4', '5', '6', '7', '8'];
-      setSemesters(semesterNumbers);
+      console.log(`Fetching semesters for batch: ${batchName}`);
       
-      // If you have an API endpoint for semesters:
-      // const response = await axios.get(`http://localhost:5001/api/semesters/getBatchSemesters/${batchName}`);
-      // setSemesters(['all', ...response.data]);
+      // First get the batch ID from the batch name
+      const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+      const selectedBatchObj = batchesResponse.data.find(b => b.batchName === batchName);
+      
+      if (selectedBatchObj && selectedBatchObj.id) {
+        // Fetch semesters for this batch ID
+        const response = await axios.get(`http://localhost:5001/api/semesters/batch/${selectedBatchObj.id}`);
+        
+        if (response.data && Array.isArray(response.data)) {
+          // Extract semester numbers and sort them
+          const fetchedSemesters = response.data
+            .map(sem => sem.semesterNumber.toString())
+            .sort((a, b) => parseInt(a) - parseInt(b));
+          
+          setSemesters(['all', ...fetchedSemesters]);
+          console.log('Fetched semesters:', fetchedSemesters);
+        } else {
+          console.warn('Unexpected response format for semesters:', response.data);
+          setSemesters(['all']);
+        }
+      } else {
+        console.warn(`Batch ID not found for batch name: ${batchName}`);
+        setSemesters(['all']);
+      }
     } catch (err) {
       console.error('Error fetching semesters:', err);
       setSemesters(['all']);
@@ -242,28 +260,50 @@ ${student.history ?
       try {
         // Only make the API call if batch and semester are not 'all'
         if (batch !== 'all' && semester !== 'all') {
-          const subjectsResponse = await axios.get(`http://localhost:5001/api/subjects/getSubjectsByBatchAndSemesterWithDetails/${batch}/${semester}`);
-          subjectsList = subjectsResponse.data || [];
+          // First get the batch ID from the batch name
+          const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+          const selectedBatchObj = batchesResponse.data.find(b => b.batchName === batch);
+          
+          if (selectedBatchObj && selectedBatchObj.id) {
+            // Get semester ID for this semester number
+            const semesterResponse = await axios.get(`http://localhost:5001/api/semesters/batch/${selectedBatchObj.id}`);
+            const selectedSemObj = semesterResponse.data.find(s => s.semesterNumber.toString() === semester.toString());
+            
+            if (selectedSemObj && selectedSemObj.id) {
+              // Now we have both batch ID and semester ID, we can fetch subjects
+              const subjectsResponse = await axios.get(`http://localhost:5001/api/subjects/batch/${selectedBatchObj.id}/semester/${selectedSemObj.id}`);
+              subjectsList = subjectsResponse.data || [];
+              console.log(`Fetched ${subjectsList.length} subjects for batch ${batch}, semester ${semester}:`, subjectsList);
+            } else {
+              throw new Error(`Semester ID not found for semester number: ${semester}`);
+            }
+          } else {
+            throw new Error(`Batch ID not found for batch name: ${batch}`);
+          }
         } else {
-          // For 'all' cases, create some sample subjects
-          subjectsList = [
-            { sub_code: 'CSE101', sub_name: 'Introduction to CS', sub_credit: 4 },
-            { sub_code: 'CSE102', sub_name: 'Data Structures', sub_credit: 4 },
-            { sub_code: 'CSE103', sub_name: 'Algorithms', sub_credit: 4 },
-            { sub_code: 'CSE104', sub_name: 'Database Systems', sub_credit: 3 },
-            { sub_code: 'CSE105', sub_name: 'Web Development', sub_credit: 3 }
-          ];
+          // For 'all' cases, we need to fetch all subjects across semesters
+          // This could be expensive, so we'll limit to a specific batch if possible
+          if (batch !== 'all') {
+            const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+            const selectedBatchObj = batchesResponse.data.find(b => b.batchName === batch);
+            
+            if (selectedBatchObj && selectedBatchObj.id) {
+              // Fetch all subjects for this batch
+              const subjectsResponse = await axios.get(`http://localhost:5001/api/subjects/getAllByBatchId/${selectedBatchObj.id}`);
+              subjectsList = subjectsResponse.data || [];
+              console.log(`Fetched ${subjectsList.length} subjects for batch ${batch}:`, subjectsList);
+            }
+          } else {
+            // This is a fallback - fetching all subjects would be inefficient, so we'll limit
+            console.warn('Fetching all subjects across all batches is not supported. Using a limited set.');
+            subjectsList = [];
+          }
         }
       } catch (error) {
         console.warn('Error fetching subjects, using sample data instead:', error);
-        // Fallback to sample subjects
-        subjectsList = [
-          { sub_code: 'CSE101', sub_name: 'Introduction to CS', sub_credit: 4 },
-          { sub_code: 'CSE102', sub_name: 'Data Structures', sub_credit: 4 },
-          { sub_code: 'CSE103', sub_name: 'Algorithms', sub_credit: 4 },
-          { sub_code: 'CSE104', sub_name: 'Database Systems', sub_credit: 3 },
-          { sub_code: 'CSE105', sub_name: 'Web Development', sub_credit: 3 }
-        ];
+        // If we couldn't fetch subjects, use an empty array
+        console.error('Error fetching subjects:', error);
+        subjectsList = [];
       }
       setSubjects(subjectsList);
       
@@ -272,12 +312,73 @@ ${student.history ?
         // Fetch academic data for this student
         let academicMarks = {};
         try {
-          // In a real app, you'd make an API call here to get the student's marks
-          // const marksResponse = await axios.get(`http://localhost:5001/api/marks/student/${student.id}`);
-          // academicMarks = marksResponse.data;
-          
-          // For now, let's create some sample data
-          academicMarks = createSampleAcademicData(student.id, subjectsList);
+          if (student.id && subjectsList.length > 0) {
+            // We'll fetch marks for each subject for this student
+            for (const subject of subjectsList) {
+              const subjectCode = subject.sub_code || (subject.UniqueSubDegree && subject.UniqueSubDegree.sub_code);
+              if (!subjectCode) continue;
+              
+              try {
+                const marksResponse = await axios.get(`http://localhost:5001/api/marks/student/${student.id}/subject/${subjectCode}`);
+                
+                if (marksResponse.data && marksResponse.data.id) {
+                  const marks = marksResponse.data;
+                  const subjectName = subject.sub_name || (subject.UniqueSubDegree && subject.UniqueSubDegree.sub_name) || 'Unknown';
+                  const credits = subject.sub_credit || 4;
+                  
+                  // Calculate total marks
+                  const ese = marks.ese || 0;
+                  const cse = marks.cse || 0;
+                  const ia = marks.ia || 0;
+                  const tw = marks.tw || 0;
+                  const total = ese + cse + ia + tw;
+                  
+                  // Determine grade based on total marks
+                  let grade;
+                  if (total >= 90) grade = 'AA';
+                  else if (total >= 80) grade = 'AB';
+                  else if (total >= 70) grade = 'BB';
+                  else if (total >= 60) grade = 'BC';
+                  else if (total >= 50) grade = 'CC';
+                  else if (total >= 40) grade = 'CD';
+                  else if (total >= 35) grade = 'DD';
+                  else grade = 'FF';
+                  
+                  // Calculate grade points
+                  let gradePoints;
+                  switch(grade) {
+                    case 'AA': gradePoints = 10; break;
+                    case 'AB': gradePoints = 9; break;
+                    case 'BB': gradePoints = 8; break;
+                    case 'BC': gradePoints = 7; break;
+                    case 'CC': gradePoints = 6; break;
+                    case 'CD': gradePoints = 5; break;
+                    case 'DD': gradePoints = 4; break;
+                    default: gradePoints = 0;
+                  }
+                  
+                  // Add to academic marks
+                  academicMarks[subjectCode] = {
+                    name: subjectName,
+                    credits,
+                    ese,
+                    cse,
+                    ia,
+                    tw,
+                    total,
+                    grade,
+                    gradePoints
+                  };
+                }
+              } catch (subjectError) {
+                console.warn(`No marks found for student ${student.id}, subject ${subjectCode}`);
+              }
+            }
+            
+            console.log(`Fetched marks for student ${student.id} for ${Object.keys(academicMarks).length} subjects`);
+          } else {
+            console.warn(`Cannot fetch marks: student.id=${student.id}, subjectsList.length=${subjectsList.length}`);
+          }
         } catch (error) {
           console.error('Error fetching academic marks for student:', error);
         }
@@ -299,62 +400,30 @@ ${student.history ?
     }
   };
   
-  // Create sample academic data for testing
-  const createSampleAcademicData = (studentId, subjectsList) => {
-    const subjects = {};
-    
-    // For each subject, create random grades
-    subjectsList.forEach((subject, index) => {
-      const subjectCode = subject.sub_code || `SUB${index + 1}`;
-      const subjectName = subject.sub_name || `Subject ${index + 1}`;
-      const credits = subject.sub_credit || 4;
-      
-      // Generate random grades (biased by student ID to maintain consistency)
-      const studentIdSum = studentId.toString().split('').reduce((a, b) => a + parseInt(b || '0'), 0);
-      const ese = Math.min(70, 30 + (studentIdSum % 10) + Math.floor(Math.random() * 40));
-      const cse = Math.min(30, 15 + (studentIdSum % 5) + Math.floor(Math.random() * 15));
-      const ia = Math.min(20, 10 + (studentIdSum % 3) + Math.floor(Math.random() * 10));
-      const tw = Math.min(25, 15 + (studentIdSum % 5) + Math.floor(Math.random() * 10));
-      const total = ese + cse + ia + tw;
-      
-      // Assign grade based on total marks
-      let grade;
-      if (total >= 90) grade = 'AA';
-      else if (total >= 80) grade = 'AB';
-      else if (total >= 70) grade = 'BB';
-      else if (total >= 60) grade = 'BC';
-      else if (total >= 50) grade = 'CC';
-      else if (total >= 40) grade = 'CD';
-      else if (total >= 35) grade = 'DD';
-      else grade = 'FF';
-      
-      // Calculate grade points
-      let gradePoints;
-      switch(grade) {
-        case 'AA': gradePoints = 10; break;
-        case 'AB': gradePoints = 9; break;
-        case 'BB': gradePoints = 8; break;
-        case 'BC': gradePoints = 7; break;
-        case 'CC': gradePoints = 6; break;
-        case 'CD': gradePoints = 5; break;
-        case 'DD': gradePoints = 4; break;
-        default: gradePoints = 0;
-      }
-      
-      subjects[subjectCode] = {
-        name: subjectName,
-        credits,
-        ese,
-        cse,
-        ia,
-        tw,
-        total,
-        grade,
-        gradePoints
-      };
-    });
-    
-    return subjects;
+  // Function to get grade from total marks
+  const getGradeFromTotal = (total) => {
+    if (total >= 90) return 'AA';
+    else if (total >= 80) return 'AB';
+    else if (total >= 70) return 'BB';
+    else if (total >= 60) return 'BC';
+    else if (total >= 50) return 'CC';
+    else if (total >= 40) return 'CD';
+    else if (total >= 35) return 'DD';
+    else return 'FF';
+  };
+  
+  // Function to get grade points from grade
+  const getGradePoints = (grade) => {
+    switch(grade) {
+      case 'AA': return 10;
+      case 'AB': return 9;
+      case 'BB': return 8;
+      case 'BC': return 7;
+      case 'CC': return 6;
+      case 'CD': return 5;
+      case 'DD': return 4;
+      default: return 0;
+    }
   };
   
   // Calculate SPI (Semester Performance Index) for a student

@@ -101,6 +101,36 @@
     justify-content: center;
 }
 
+.loading-indicator {
+    background: #f8f9fa;
+    color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.email-info {
+    font-size: 14px;
+    color: #6c757d;
+    font-style: italic;
+    margin-bottom: 15px;
+}
+
+.save-button-pm:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
 .forgot-password:hover {
     text-decoration: underline;
 }

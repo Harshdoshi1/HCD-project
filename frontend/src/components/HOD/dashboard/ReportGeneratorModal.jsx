@@ -1127,6 +1127,201 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
     determineBatchName();
   }, [student]);
 
+  // State for semesters, subjects, and marks
+  const [availableSemesters, setAvailableSemesters] = useState([]);
+  const [subjectsBySemester, setSubjectsBySemester] = useState({});
+  const [studentMarks, setStudentMarks] = useState({});
+  const [studentCPIs, setStudentCPIs] = useState([]);
+
+  // Fetch available semesters for the student's batch
+  useEffect(() => {
+    const fetchSemestersForBatch = async () => {
+      if (!student || !student.batchId) {
+        console.log('Missing student batch information');
+        return;
+      }
+
+      try {
+        console.log(`Fetching semesters for batch: ${student.batchId}`);
+        const response = await axios.get(`http://localhost:5001/api/semesters/batch/${student.batchId}`);
+
+        if (response.data && Array.isArray(response.data)) {
+          // Sort semesters by semester number
+          const sortedSemesters = response.data.sort((a, b) => a.semesterNumber - b.semesterNumber);
+          console.log('Available semesters:', sortedSemesters);
+          setAvailableSemesters(sortedSemesters);
+        } else {
+          console.warn('Unexpected response format for semesters:', response.data);
+          setAvailableSemesters([]);
+        }
+      } catch (err) {
+        console.error('Error fetching semesters for batch:', err);
+        setAvailableSemesters([]);
+      }
+    };
+
+    fetchSemestersForBatch();
+  }, [student]);
+
+  // Fetch student CPI/SPI data
+  useEffect(() => {
+    const fetchStudentCPI = async () => {
+      if (!student || !student.rollNo) {
+        console.log('Missing student enrollment information');
+        return;
+      }
+
+      try {
+        console.log(`Fetching CPI/SPI data for student: ${student.rollNo}`);
+        // Use the controller endpoint we examined in studentCPIController.js
+        const response = await axios.get(`http://localhost:5001/api/student-cpi/enrollment/${student.rollNo}`);
+
+        if (response.data && Array.isArray(response.data)) {
+          console.log('Student CPI/SPI data:', response.data);
+          setStudentCPIs(response.data);
+        } else {
+          console.warn('Unexpected response format for student CPI/SPI:', response.data);
+          setStudentCPIs([]);
+        }
+      } catch (err) {
+        console.error('Error fetching student CPI/SPI data:', err);
+        setStudentCPIs([]);
+      }
+    };
+
+    fetchStudentCPI();
+  }, [student]);
+
+  // Function to fetch subjects for a semester
+  const fetchSubjectsForSemester = async (batchId, semesterId) => {
+    if (!batchId || !semesterId) return [];
+
+    try {
+      console.log(`Fetching subjects for batch ${batchId}, semester ${semesterId}`);
+      const response = await axios.get(`http://localhost:5001/api/subjects/batch/${batchId}/semester/${semesterId}`);
+
+      if (response.data && Array.isArray(response.data)) {
+        console.log(`Subjects for semester ${semesterId}:`, response.data);
+        return response.data;
+      } else {
+        console.warn(`No subjects found for semester ${semesterId}`);
+        return [];
+      }
+    } catch (err) {
+      console.error(`Error fetching subjects for semester ${semesterId}:`, err);
+      return [];
+    }
+  };
+
+  // Function to fetch marks for a student and subject
+  const fetchMarksForSubject = async (studentId, subjectCode) => {
+    if (!studentId || !subjectCode) return null;
+
+    try {
+      console.log(`Fetching marks for student ${studentId}, subject ${subjectCode}`);
+      const response = await axios.get(`http://localhost:5001/api/marks/student/${studentId}/subject/${subjectCode}`);
+
+      if (response.data) {
+        console.log(`Marks for student ${studentId}, subject ${subjectCode}:`, response.data);
+        return response.data;
+      } else {
+        console.warn(`No marks found for student ${studentId}, subject ${subjectCode}`);
+        return null;
+      }
+    } catch (err) {
+      console.error(`Error fetching marks for student ${studentId}, subject ${subjectCode}:`, err);
+      return null;
+    }
+  };
+
+  // Prepare academic data for a semester
+  const prepareAcademicData = async (semester) => {
+    console.log(`Preparing academic data for semester ${semester}`);
+
+    try {
+      // Find the semester object from available semesters
+      const semesterObj = availableSemesters.find(sem => sem.semesterNumber === parseInt(semester));
+
+      if (!semesterObj) {
+        console.warn(`Semester ${semester} not found in available semesters`);
+        return null;
+      }
+
+      // Get CPI/SPI data for this semester
+      const semesterCPI = studentCPIs.find(cpi => {
+        if (cpi.SemesterId === semesterObj.id) return true;
+        if (cpi.Semester && cpi.Semester.semesterNumber === parseInt(semester)) return true;
+        return false;
+      });
+
+      // Get subjects for this semester
+      let subjects = [];
+      if (subjectsBySemester[semesterObj.id]) {
+        subjects = subjectsBySemester[semesterObj.id];
+      } else {
+        subjects = await fetchSubjectsForSemester(student.batchId, semesterObj.id);
+        setSubjectsBySemester(prev => ({
+          ...prev,
+          [semesterObj.id]: subjects
+        }));
+      }
+
+      // Prepare subject data with marks
+      const subjectsWithMarks = [];
+
+      for (const subject of subjects) {
+        const subjectCode = subject.sub_code || (subject.UniqueSubDegree && subject.UniqueSubDegree.sub_code);
+        if (!subjectCode) continue;
+
+        // Check if marks are already cached
+        const cacheKey = `${student.id}_${subjectCode}`;
+        let marks;
+
+        if (studentMarks[cacheKey]) {
+          marks = studentMarks[cacheKey];
+        } else {
+          marks = await fetchMarksForSubject(student.id, subjectCode);
+          if (marks) {
+            setStudentMarks(prev => ({
+              ...prev,
+              [cacheKey]: marks
+            }));
+          }
+        }
+
+        // Get subject name
+        const subjectName = subject.sub_name ||
+          (subject.UniqueSubDegree && subject.UniqueSubDegree.sub_name) ||
+          'N/A';
+
+        // Format the marks data
+        subjectsWithMarks.push({
+          subjectCode: subjectCode,
+          subjectName: subjectName,
+          ese: marks ? `${marks.ese || 0}/${subject.ese_max || '-'}` : '-',
+          cse: marks ? `${marks.cse || 0}/${subject.cse_max || '-'}` : '-',
+          ia: marks ? `${marks.ia || 0}/${subject.ia_max || '-'}` : '-',
+          tw: marks ? `${marks.tw || 0}/${subject.tw_max || '-'}` : '-',
+          viva: marks ? `${marks.viva || 0}/${subject.viva_max || '-'}` : '-',
+          grade: marks && marks.grade ? marks.grade : '-'
+        });
+      }
+
+      // Construct the complete academic data
+      return {
+        semesterInfo: {
+          semester,
+          spi: semesterCPI ? semesterCPI.SPI : 'N/A',
+          cpi: semesterCPI ? semesterCPI.CPI : 'N/A'
+        },
+        subjects: subjectsWithMarks
+      };
+    } catch (error) {
+      console.error(`Error preparing academic data for semester ${semester}:`, error);
+      return null;
+    }
+  };
+
   // Create the performance trends chart
   useEffect(() => {
     if (performanceTrendsChartRef.current && chartData && chartData.length > 0) {
@@ -1289,6 +1484,16 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
     doc.setTextColor(80, 80, 80);
     doc.text('ESE: End Semester Exam | CSE: Continuous Semester Evaluation | IA: Internal Assessment | TW: Term Work | Viva: Viva Voce', pageWidth / 2, yPos, { align: 'center' });
     return yPos + 10;
+  };
+
+  // Helper function to fetch academic data for a semester
+  const fetchSemesterAcademicData = async (semester) => {
+    try {
+      return await prepareAcademicData(semester);
+    } catch (error) {
+      console.error(`Error fetching academic data for semester ${semester}:`, error);
+      return null;
+    }
   };
 
   const generatePDFForEmail = async () => {
@@ -1634,14 +1839,15 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
       }
 
       // 4. Performance Insights (if selected)
-      if (selectedOptions.performanceInsights && performanceInsights && performanceInsights.length > 0) {
+      // Only include insights if this semester is specifically selected in the checkbox list
+      if (selectedOptions.performanceInsights && performanceInsights && performanceInsights.length > 0 && selectedSemesters.includes(semester)) {
         const semInsights = performanceInsights.filter(insight => insight.semester === semester);
 
         if (semInsights.length > 0) {
-          // Add performance insights section header
+          // Add performance insights section header with semester number to clarify
           doc.setFontSize(14);
           doc.setTextColor(54, 116, 181);
-          doc.text("Performance Insights", 20, yPos);
+          doc.text(`Performance Insights - Semester ${semester}`, 20, yPos);
           yPos += 10;
 
           // Group insights by type
@@ -1654,8 +1860,8 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           doc.setFontSize(12);
           doc.setTextColor(0, 0, 0);
 
-          // Strengths section
-          if (strengthInsights.length > 0) {
+          // Strengths section - only include for selected semesters
+          if (strengthInsights.length > 0 && selectedSemesters.includes(semester)) {
             if (yPos > 250) {
               doc.addPage();
               yPos = 20;
@@ -1663,7 +1869,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
 
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
-            doc.text("Strengths:", 30, yPos);
+            doc.text(`Strengths - Semester ${semester}:`, 30, yPos);
             doc.setFont(undefined, 'normal');
             yPos += 7;
 
@@ -1680,8 +1886,8 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             yPos += 5;
           }
 
-          // Areas for Improvement section
-          if (improvementInsights.length > 0) {
+          // Areas for Improvement section - only include for selected semesters
+          if (improvementInsights.length > 0 && selectedSemesters.includes(semester)) {
             if (yPos > 250) {
               doc.addPage();
               yPos = 20;
@@ -1689,7 +1895,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
 
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
-            doc.text("Areas for Improvement:", 30, yPos);
+            doc.text(`Areas for Improvement - Semester ${semester}:`, 30, yPos);
             doc.setFont(undefined, 'normal');
             yPos += 7;
 
@@ -1707,7 +1913,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           }
 
           // Participation Pattern section
-          if (patternInsights.length > 0) {
+          if (patternInsights.length > 0 && selectedSemesters.includes(semester)) {
             if (yPos > 250) {
               doc.addPage();
               yPos = 20;
@@ -1715,7 +1921,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
 
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
-            doc.text("Participation Pattern:", 30, yPos);
+            doc.text(`Participation Pattern - Semester ${semester}:`, 30, yPos);
             doc.setFont(undefined, 'normal');
             yPos += 7;
 
@@ -1725,7 +1931,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 yPos = 20;
               }
 
-              doc.text(insight.text, 30, yPos);
+              doc.text(`• ${insight.text}`, 30, yPos);
               yPos += 7;
             });
 
@@ -1733,7 +1939,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           }
 
           // Trend Analysis section
-          if (trendInsights.length > 0) {
+          if (trendInsights.length > 0 && selectedSemesters.includes(semester)) {
             if (yPos > 250) {
               doc.addPage();
               yPos = 20;
@@ -1741,7 +1947,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
 
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
-            doc.text("Trend Analysis:", 30, yPos);
+            doc.text(`Trend Analysis - Semester ${semester}:`, 30, yPos);
             doc.setFont(undefined, 'normal');
             yPos += 7;
 
@@ -1751,9 +1957,11 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 yPos = 20;
               }
 
-              doc.text(insight.text, 30, yPos);
+              doc.text(`• ${insight.text}`, 30, yPos);
               yPos += 7;
             });
+
+            yPos += 10;
           }
 
           yPos += 5;
@@ -1767,19 +1975,20 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
       }
 
       // 5. Academic Details (if selected)
-      if (selectedOptions.academicDetails && academicDetails && academicDetails.length > 0) {
-        const semAcademics = academicDetails.filter(detail => detail.semester === semester);
+      if (selectedOptions.academicDetails) {
+        // Fetch the academic details for this semester
+        const academicData = await fetchSemesterAcademicData(semester);
 
-        if (semAcademics.length > 0) {
+        if (academicData && academicData.subjects && academicData.subjects.length > 0) {
           // Add academic details section header
           doc.setFontSize(14);
           doc.setTextColor(54, 116, 181);
           doc.text("Academic Details", 20, yPos);
           yPos += 10;
 
-          // Get SPI and CPI data if available
-          const spi = semAcademics[0]?.spi || 'N/A';
-          const cpi = semAcademics[0]?.cpi || 'N/A';
+          // Get SPI and CPI data from the academicData
+          const spi = academicData.semesterInfo?.spi || 'N/A';
+          const cpi = academicData.semesterInfo?.cpi || 'N/A';
 
           // Add SPI and CPI information
           doc.setFontSize(11);
@@ -1788,17 +1997,18 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           yPos += 10;
 
           // Create comprehensive table header with detailed evaluation components
-          const headers = [['Subject Code', 'ESE', 'CSE', 'IA', 'TW', 'Viva', 'Grade']];
+          const headers = [['Subject Code', 'Subject Name', 'ESE', 'CSE', 'IA', 'TW', 'Viva', 'Grade']];
 
-          // Create table data with all evaluation components
-          const data = semAcademics.map(subject => [
+          // Create table data with all evaluation components from the fetched academicData
+          const data = academicData.subjects.map(subject => [
             subject.subjectCode || 'N/A',
-            subject.ese || '0/0',
-            subject.cse || '0/0',
-            subject.ia || '0/0',
-            subject.tw || '0/0',
-            subject.viva || '0/0',
-            subject.grade || 'N/A'
+            subject.subjectName || 'N/A',
+            subject.ese || '-',
+            subject.cse || '-',
+            subject.ia || '-',
+            subject.tw || '-',
+            subject.viva || '-',
+            subject.grade || '-'
           ]);
 
           // Add table
@@ -1814,18 +2024,8 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             },
             alternateRowStyles: {
               fillColor: [240, 240, 240]
-            },
-            didDrawPage: (data) => {
-              // Add subject name above the grade if available
-              if (data.row.index !== undefined && data.row.index >= 0 && semAcademics[data.row.index]) {
-                const subject = semAcademics[data.row.index];
-                if (subject.subjectName) {
-                  doc.setFontSize(8);
-                  doc.setTextColor(80, 80, 80);
-                  doc.text(subject.subjectName, data.settings.margin.left, data.row.y - 2);
-                }
-              }
             }
+            // No need for didDrawPage anymore since we're including subject name directly in the table
           });
 
           // Update yPos after table
@@ -2607,13 +2807,13 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             >
               Send Report
             </button>
-            <button
+            {/* <button
               className="generate-btn"
               onClick={generatePDF}
               disabled={isGenerating || selectedSemesters.length === 0}
             >
               {isGenerating ? 'Generating...' : 'Generate Report'}
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
