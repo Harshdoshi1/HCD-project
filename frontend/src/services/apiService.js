@@ -12,7 +12,9 @@ const DEBUG = true;
 
 // Helper function for making API requests
 const fetchApi = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`;
+  // Ensure endpoint has proper format - if it already starts with /api, keep it as is
+  const formattedEndpoint = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+  const url = `${API_BASE_URL}${formattedEndpoint}`;
   
   // Set default headers if not provided
   if (!options.headers) {
