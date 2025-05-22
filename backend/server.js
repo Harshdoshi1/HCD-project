@@ -13,7 +13,7 @@ const subRoutes = require('./routes/sub_routes');
 // const studentCoCurricularRoutes = require('./routes/student_cocurricular_routes');
 // const studentExtracurricularRoutes = require('./routes/student_extracurricular_routes');
 const batchRoutes = require("./routes/batch_routes");
-const gettedmarksController = require("./controller/gettedMarksController");
+const gettedmarksController = require("./controller/gettedmarksController");
 const students_points_routes = require("./routes/students_points_routes");
 const semesterRoutes = require("./routes/semester_routes");
 const studentEventRoutes = require("./routes/student_event_routes");
@@ -122,7 +122,7 @@ app.get('/api/db-status', (req, res) => {
 // Start the server and handle database connectivity
 const startServer = async () => {
     let dbConnected = false;
-    
+
     try {
         // Try to sync database
         dbConnected = await syncDB();
@@ -136,13 +136,13 @@ const startServer = async () => {
         console.log('3. Make sure the database exists: CREATE DATABASE hcd;');
         console.log('\nContinuing in API-only mode (database features will not work)\n');
     }
-    
+
     // Start server regardless of database connection status
     app.listen(PORT, () => {
         console.log(envMessage);
         console.log(`Frontend URL: ${config.frontend.url}`);
         console.log(`Backend running at: http://localhost:${PORT}`);
-        
+
         if (!dbConnected) {
             console.log('WARNING: Running in API-only mode. Database is not connected.');
             console.log('Some API endpoints requiring database access will not function.');

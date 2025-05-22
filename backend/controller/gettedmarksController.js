@@ -135,7 +135,7 @@ exports.getSubjectNamefromCode = async (req, res) => {
 exports.getBatchIdfromName = async (req, res) => {
     try {
         const { batchName } = req.params;
-        
+
         if (!batchName) {
             return res.status(400).json({ error: "Batch name is required" });
         }
