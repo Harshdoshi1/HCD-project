@@ -155,7 +155,7 @@ const ManageComponents = ({ selectedSubject }) => {
                         className="subject-input"
                     >
                         <option value="central">Central</option>
-                        <option value="departmental">Departmental</option>
+                        <option value="department">Departmental</option>
                     </select>
                 </div>
             </div>
