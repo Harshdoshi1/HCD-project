@@ -15,33 +15,33 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
     fetchStudents();
     fetchPerformanceTrends();
   }, [selectedBatch, selectedSemester]);
-  
+
   // Direct API test function to verify endpoints are working
   const testAPIEndpoints = async () => {
     console.log('Testing API endpoints for Performance Trends chart...');
-    
+
     try {
       // Test batches API
       console.log('1. Testing batches API...');
       const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
       console.log('Batches API response:', batchesResponse.data);
-      
+
       if (!batchesResponse.data || !Array.isArray(batchesResponse.data) || batchesResponse.data.length === 0) {
         console.error('Batches API returned no data or invalid format');
       } else {
         // Test semesters API with the first batch
         const firstBatch = batchesResponse.data[0];
         console.log(`2. Testing semesters API with batch ID ${firstBatch.id}...`);
-        
+
         try {
           const semestersResponse = await axios.get(`http://localhost:5001/api/semesters/batch/${firstBatch.id}`);
           console.log('Semesters API response:', semestersResponse.data);
-          
+
           if (semestersResponse.data && Array.isArray(semestersResponse.data) && semestersResponse.data.length > 0) {
             // Test student marks API
             const firstSemester = semestersResponse.data[0];
             console.log(`3. Testing marks API with batch ${firstBatch.batchName} and semester ${firstSemester.semesterNumber}...`);
-            
+
             try {
               const marksResponse = await axios.get(
                 `http://localhost:5001/api/marks/students/${firstBatch.batchName}/${firstSemester.semesterNumber}`
@@ -58,24 +58,24 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
     } catch (err) {
       console.error('Batches API test failed:', err.message);
     }
-    
+
     console.log('API endpoint testing complete');
   };
-  
+
   // Run API test once on component mount
   useEffect(() => {
     testAPIEndpoints();
   }, []);
-  
+
   // Fetch performance trends data
   const fetchPerformanceTrends = async () => {
     console.log('Starting fetchPerformanceTrends with batch:', selectedBatch, 'semester:', selectedSemester);
     try {
       setLoading(true);
-      
+
       // If a batch is selected, try to get batch-specific data
       let batchId = null;
-      
+
       if (selectedBatch !== 'all') {
         try {
           const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
@@ -87,10 +87,10 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
           console.error('Error fetching batch id:', err);
         }
       }
-      
+
       // Fetch all semester data for the given batch
       let semestersData = [];
-      
+
       if (batchId) {
         try {
           const semestersResponse = await axios.get(`http://localhost:5001/api/semesters/batch/${batchId}`);
@@ -101,10 +101,10 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
           console.error('Error fetching semesters:', err);
         }
       }
-      
+
       // Format the trend data
       const formattedTrendData = [];
-      
+
       // If we have semester data, fetch student performance for each semester
       if (semestersData.length > 0) {
         for (const semester of semestersData) {
@@ -117,16 +117,16 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
               console.error(`Error fetching students data: ${err.message}`);
               return { data: null };
             });
-            
+
             if (studentsResponse.data && studentsResponse.data.students) {
               const students = studentsResponse.data.students;
-              
+
               // Calculate average points for each category
               let curricular = 0;
               let coCurricular = 0;
               let extraCurricular = 0;
               let count = 0;
-              
+
               for (const student of students) {
                 try {
                   const pointsResponse = await axios.post(
@@ -136,17 +136,17 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                       semester: semester.semesterNumber
                     }
                   );
-                  
+
                   if (pointsResponse.data && Array.isArray(pointsResponse.data)) {
                     // Sum points for this student
                     let studentCoCurr = 0;
                     let studentExtraCurr = 0;
-                    
+
                     pointsResponse.data.forEach(activity => {
                       studentCoCurr += parseInt(activity.totalCocurricular || 0);
                       studentExtraCurr += parseInt(activity.totalExtracurricular || 0);
                     });
-                    
+
                     // Accumulate for average calculation
                     coCurricular += studentCoCurr;
                     extraCurricular += studentExtraCurr;
@@ -156,15 +156,15 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                   console.error('Error fetching student points:', err);
                 }
               }
-              
+
               // Calculate academic performance (example data if real data not available)
               // This would ideally come from a real API endpoint
               const academicResponse = await axios.get(
                 `http://localhost:5001/api/academic-performance/batch/${batchId}/semester/${semester.semesterNumber}`
               ).catch(() => ({ data: { averageScore: Math.floor(Math.random() * 40) + 60 } }));
-              
+
               const academicScore = academicResponse.data?.averageScore || Math.floor(Math.random() * 40) + 60;
-              
+
               // Add semester data to trend data
               formattedTrendData.push({
                 semester: `Sem ${semester.semesterNumber}`,
@@ -188,10 +188,10 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
             console.error(`Error fetching batch students: ${err.message}`);
             return { data: null };
           });
-          
+
           if (batchStudentsResponse.data && Array.isArray(batchStudentsResponse.data)) {
             const students = batchStudentsResponse.data;
-            
+
             // For each student, get their semester-wise performance
             for (const student of students) {
               if (student.enrollmentNumber) {
@@ -204,15 +204,15 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                     console.error(`Error fetching CPI data: ${err.message}`);
                     return { data: null };
                   });
-                  
+
                   if (cpiResponse.data && Array.isArray(cpiResponse.data)) {
                     // Process semester-wise data
                     cpiResponse.data.forEach(semData => {
                       const semesterKey = `Sem ${semData.semesterNumber}`;
-                      
+
                       // Find or create entry for this semester
                       let semEntry = formattedTrendData.find(entry => entry.semester === semesterKey);
-                      
+
                       if (!semEntry) {
                         semEntry = {
                           semester: semesterKey,
@@ -223,14 +223,14 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                         };
                         formattedTrendData.push(semEntry);
                       }
-                      
+
                       // Add academic performance (SPI)
                       if (semData.spi) {
                         // Convert SPI (0-10 scale) to percentage (0-100 scale)
                         const spiAsPercentage = (parseFloat(semData.spi) * 10);
                         semEntry.curricular += spiAsPercentage;
                       }
-                      
+
                       // Increment student count for this semester
                       semEntry.studentCount = (semEntry.studentCount || 0) + 1;
                     });
@@ -238,12 +238,12 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                 } catch (err) {
                   console.error(`Error fetching CPI data for student ${student.enrollmentNumber}:`, err);
                 }
-                
+
                 // Get co-curricular and extra-curricular activities for each semester
                 try {
                   // Get all semesters the student has data for
                   const semestersWithData = formattedTrendData.map(entry => entry.semester.replace('Sem ', ''));
-                  
+
                   for (const semNumber of semestersWithData) {
                     const pointsResponse = await axios.post(
                       'http://localhost:5001/api/events/fetchEventsbyEnrollandSemester',
@@ -252,21 +252,21 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                         semester: semNumber
                       }
                     );
-                    
+
                     if (pointsResponse.data && Array.isArray(pointsResponse.data)) {
                       const semesterKey = `Sem ${semNumber}`;
                       const semEntry = formattedTrendData.find(entry => entry.semester === semesterKey);
-                      
+
                       if (semEntry) {
                         // Sum points for this student
                         let studentCoCurr = 0;
                         let studentExtraCurr = 0;
-                        
+
                         pointsResponse.data.forEach(activity => {
                           studentCoCurr += parseInt(activity.totalCocurricular || 0);
                           studentExtraCurr += parseInt(activity.totalExtracurricular || 0);
                         });
-                        
+
                         // Add to semester totals
                         semEntry.coCurricular += studentCoCurr;
                         semEntry.extraCurricular += studentExtraCurr;
@@ -278,7 +278,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                 }
               }
             }
-            
+
             // Calculate averages for each semester
             formattedTrendData.forEach(semEntry => {
               if (semEntry.studentCount > 0) {
@@ -288,7 +288,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                 delete semEntry.studentCount; // Remove the helper property
               }
             });
-            
+
             // Sort by semester number
             formattedTrendData.sort((a, b) => {
               const semA = parseInt(a.semester.replace('Sem ', ''));
@@ -304,12 +304,12 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         try {
           // Get all batches to generate representative data
           const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
-          
+
           if (batchesResponse.data && Array.isArray(batchesResponse.data)) {
             // Get data for each batch and aggregate
             const allSemesters = new Set();
             const semesterData = {};
-            
+
             // First, determine all semesters across all batches
             for (const batch of batchesResponse.data) {
               try {
@@ -317,7 +317,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                 if (semestersResponse.data && Array.isArray(semestersResponse.data)) {
                   semestersResponse.data.forEach(sem => {
                     allSemesters.add(sem.semesterNumber);
-                    
+
                     // Initialize semester data if not exists
                     const semKey = `Sem ${sem.semesterNumber}`;
                     if (!semesterData[semKey]) {
@@ -334,34 +334,34 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                 console.error(`Error fetching semesters for batch ${batch.batchName}:`, err);
               }
             }
-            
+
             // Convert to array of semester data objects
             const sortedSemesters = Array.from(allSemesters).sort((a, b) => a - b);
-            
+
             // If we found any semesters, fetch overall averages
             if (sortedSemesters.length > 0) {
               // For each semester, get overall performance metrics across all batches
               for (const semNumber of sortedSemesters) {
                 const semKey = `Sem ${semNumber}`;
-                
+
                 try {
                   // Get overall academic performance
                   const academicResponse = await axios.get(
                     `http://localhost:5001/api/academic-performance/overall/semester/${semNumber}`
                   ).catch(() => null);
-                  
+
                   if (academicResponse && academicResponse.data) {
                     semesterData[semKey].curricular = academicResponse.data.averageScore || 75;
                   } else {
                     // Generate a realistic average if no data
                     semesterData[semKey].curricular = 70 + Math.floor(Math.random() * 15);
                   }
-                  
+
                   // Get co-curricular and extra-curricular averages
                   const activitiesResponse = await axios.get(
                     `http://localhost:5001/api/events/averages/semester/${semNumber}`
                   ).catch(() => null);
-                  
+
                   if (activitiesResponse && activitiesResponse.data) {
                     semesterData[semKey].coCurricular = activitiesResponse.data.coCurricular || 40 + semNumber * 5;
                     semesterData[semKey].extraCurricular = activitiesResponse.data.extraCurricular || 30 + semNumber * 4;
@@ -370,13 +370,13 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                     semesterData[semKey].coCurricular = 40 + semNumber * 5;
                     semesterData[semKey].extraCurricular = 30 + semNumber * 4;
                   }
-                  
+
                   semesterData[semKey].count = 1; // Just to ensure it's counted
                 } catch (err) {
                   console.error(`Error processing overall data for semester ${semNumber}:`, err);
                 }
               }
-              
+
               // Convert to array format for the chart
               for (const [semester, data] of Object.entries(semesterData)) {
                 if (data.count > 0) {
@@ -388,7 +388,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                   });
                 }
               }
-              
+
               // Sort by semester number
               formattedTrendData.sort((a, b) => {
                 const semA = parseInt(a.semester.replace('Sem ', ''));
@@ -401,17 +401,17 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
           console.error('Error generating overall batch data:', err);
         }
       }
-      
+
       // Log results
       console.log('Trend data collection complete. Items found:', formattedTrendData.length);
       console.log('Trend data details:', formattedTrendData);
-      
+
       // Generate sample data if no real data was found
       if (formattedTrendData.length === 0) {
         // Generate batch-specific sample data
         const batchNumber = selectedBatch !== 'all' ? selectedBatch.replace(/\D/g, '') : '20';
         const startYear = parseInt(batchNumber) || 19;
-        
+
         // Create sample data with batch-specific variations
         let sampleData = [
           { semester: 'Sem 1', curricular: 70 + (startYear % 10), coCurricular: 40 + (startYear % 15), extraCurricular: 30 + (startYear % 10) },
@@ -423,7 +423,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         formattedTrendData = sampleData;
         console.log('Using sample data for batch:', selectedBatch);
       }
-      
+
       // Set the trend data
       setTrendData(formattedTrendData);
     } catch (err) {
@@ -631,7 +631,6 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
   const distribution = getPerformanceDistribution();
 
   const overallData = [
-    { name: 'Curricular', value: averages.curricular },
     { name: 'Co-Curricular', value: averages.coCurricular },
     { name: 'Extra-Curricular', value: averages.extraCurricular }
   ];
@@ -679,7 +678,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
               label={({ name, value }) => `${name}: ${value}`}
             >
               {overallData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={['#9b87f5', '#1EAEDB', '#33C3F0'][index % 3]} />
+                <Cell key={`cell-${index}`} fill={['#1EAEDB', '#33C3F0'][index]} />
               ))}
             </Pie>
             <Tooltip />
@@ -688,7 +687,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         </div>
 
         <div className="chart-box">
-          <h3>Performance Trends</h3>
+          {/* <h3>Performance Trends</h3> */}
           <LineChart
             width={260}
             height={240}
@@ -708,7 +707,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                 return [value, labels[name] || name];
               }}
             />
-            <Legend 
+            <Legend
               formatter={(value) => {
                 const labels = {
                   curricular: 'Academic',
