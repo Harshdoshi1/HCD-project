@@ -594,14 +594,14 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                   />
                   <label>Include Recommendations</label>
                 </div>
-                <div className="form-check">
+                {/* <div className="form-check">
                   <input
                     type="checkbox"
                     checked={includeTrends}
                     onChange={(e) => setIncludeTrends(e.target.checked)}
                   />
                   <label>Include Historical Trends</label>
-                </div>
+                </div> */}
               </div>
             </div>
             <div className="report-preview" ref={reportRef}>
