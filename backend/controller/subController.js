@@ -339,7 +339,7 @@ const addSubjectWithComponents = async (req, res) => {
         console.log('Received data:', req.body);
 
         // Validate input
-        if (!subject || !name || !credits) {
+        if (!subject || !name || credits === undefined || credits === null) {
             return res.status(400).json({
                 error: 'Missing required fields',
                 received: { subject, name, credits }
