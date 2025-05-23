@@ -198,7 +198,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content">
+            <div className="modal-content-add-student-model">
                 <h2>Add Student</h2>
                 <div className="toggle-buttons">
                     <button style={{ marginRight: '5px' }} onClick={() => setIsManualEntry(true)}>Manual Entry</button>

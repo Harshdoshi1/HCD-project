@@ -63,33 +63,33 @@
   box-sizing: border-box;
 }
 
-.upload-instructions {
+.upload-instructions-grade-upload {
   margin-bottom: 20px;
   background-color: #f0f7fb;
   padding: 15px;
   border-radius: 8px;
   border-left: 4px solid #3674B5;
   width: auto;
-  max-width: 100%;
+  max-width: 57%;
 }
 
-.upload-instructions p {
+.upload-instructions-grade-upload p {
   margin-top: 0;
   margin-bottom: 10px;
   color: #333;
 }
 
-.upload-instructions ul {
+.upload-instructions-grade-upload ul {
   margin: 0;
   padding-left: 20px;
 }
 
-.upload-instructions li {
+.upload-instructions-grade-upload li {
   margin-bottom: 5px;
   color: #555;
 }
 
-.file-drop-area {
+.file-drop-area-grade-upload {
   border: 2px dashed #3674B5;
   border-radius: 8px;
   padding: 30px;
@@ -97,9 +97,11 @@
   background-color: #f8f9fa;
   margin-bottom: 20px;
   transition: all 0.3s;
+  max-width: 54%;
+
 }
 
-.file-drop-area:hover {
+.file-drop-area-grade-upload:hover {
   background-color: #f0f7fb;
   border-color: #2c5d91;
 }
@@ -176,7 +178,7 @@
   overflow-x: auto;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  width: 57%;
 }
 
 .preview-table {
@@ -303,17 +305,18 @@
     width: 95%;
     max-height: 95vh;
   }
-  
+
   .or-text::before,
   .or-text::after {
     width: 40px;
   }
-  
+
   .modal-footer {
     flex-direction: column;
   }
-  
-  .cancel-btn, .upload-btn {
+
+  .cancel-btn,
+  .upload-btn {
     width: 100%;
   }
 }

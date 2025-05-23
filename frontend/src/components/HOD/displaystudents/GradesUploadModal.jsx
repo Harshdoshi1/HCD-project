@@ -178,7 +178,7 @@ const GradesUploadModal = ({ isOpen, onClose }) => {
                 </div>
                 
                 <div className="modal-content">
-                    <div className="upload-instructions">
+                    <div className="upload-instructions-grade-upload">
                         <p>Upload an Excel file with the following columns:</p>
                         <ul>
                             <li><strong>EnrollmentNumber</strong> - Student enrollment number</li>
@@ -188,7 +188,7 @@ const GradesUploadModal = ({ isOpen, onClose }) => {
                     </div>
                     
                     <div 
-                        className="file-drop-area"
+                        className="file-drop-area-grade-upload"
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
                     >
