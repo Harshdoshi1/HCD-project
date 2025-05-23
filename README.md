@@ -1,16 +1,15 @@
-# Student Performance Analyzer – Web Portal (HOD, Faculty, CC)
+# Student Performance Analyzer – Web Portal (HOD, Faculty)
 
-A role-based web application for academic and extracurricular evaluation used by Heads of Departments (HODs), Faculty members, and Class Coordinators. This system enables efficient grade entry, activity tracking, subject allocation, and ranking computation.
+A role-based web application for academic and extracurricular evaluation used by Heads of Departments (HODs) and Faculty members. This system enables efficient grade entry, activity tracking, subject allocation, and ranking computation.
 
 ---
 
 ## 🔍 Overview
 
 This web portal enables:
-- **HODs** to assign subjects and define evaluation weightages.
+- **HODs** to assign subjects and define evaluation weightages , to manage student data and view reports.
 - **Faculty** to enter academic scores and track student activities.
-- **Class Coordinators** to manage student data and view reports.
-
+  
 ---
 
 ## 🧰 Tech Stack
@@ -37,9 +36,8 @@ This web portal enables:
 - Combined scoring for academic + non-academic contributions
 
 ### 🔐 Role-Based Access
-- **HOD**: Assign faculty, define subject weightages, manage access
+- **HOD**: Assign faculty, define subject weightages, manage access , View consolidated reports
 - **Faculty**: Enter and manage grades and activities for assigned subjects only
-- **CC**: View consolidated reports, assist in data management
 
 ### 🔧 System Functionality
 - Secure JWT login for authenticated access
