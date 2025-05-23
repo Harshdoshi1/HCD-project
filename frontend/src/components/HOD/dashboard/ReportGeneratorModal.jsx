@@ -1078,54 +1078,14 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
   const [selectedSemesters, setSelectedSemesters] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
-  const [batchName, setBatchName] = useState(student.batchName || 'N/A');
+  // Simply use student.batch directly as it's displayed in StudentAnalysis.jsx
+  const [batchName, setBatchName] = useState(student.batch || 'N/A');
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailData, setEmailData] = useState({
     email: student.email || '',
     subject: 'Student Performance Report',
     description: ''
   });
-
-  // Handle batch name display without relying on a specific API endpoint
-  useEffect(() => {
-    // Extract batch information from student data if available
-    const determineBatchName = () => {
-      // If student already has a batchName property that's not N/A, use it
-      if (student && student.batchName && student.batchName !== 'N/A') {
-        console.log('Using existing batch name:', student.batchName);
-        setBatchName(student.batchName);
-        return;
-      }
-
-      // If student has a batchId property, use that to create a batch name
-      if (student && student.batchId) {
-        const formattedBatchName = `Batch ${student.batchId}`;
-        console.log('Using batch ID to create batch name:', formattedBatchName);
-        setBatchName(formattedBatchName);
-        return;
-      }
-
-      // If we have enrollment number, extract batch year from it
-      if (student && student.rollNo) {
-        // Most enrollment numbers start with year code (e.g., 92200133022 - where 92 is the year)
-        const enrollmentStr = student.rollNo.toString();
-        if (enrollmentStr.length >= 2) {
-          const yearCode = enrollmentStr.substring(0, 2);
-          const fullYear = yearCode >= '90' ? `19${yearCode}` : `20${yearCode}`;
-          const batchName = `Batch of ${fullYear}`;
-          console.log('Derived batch name from enrollment number:', batchName);
-          setBatchName(batchName);
-          return;
-        }
-      }
-
-      // Default fallback
-      console.log('Using default batch name');
-      setBatchName('ICT Undergraduate');
-    };
-
-    determineBatchName();
-  }, [student]);
 
   // State for semesters, subjects, and marks
   const [availableSemesters, setAvailableSemesters] = useState([]);
@@ -1234,90 +1194,23 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
     }
   };
 
-  // Prepare academic data for a semester
+  // Prepare academic data for a semester - This function will always fetch fresh data for each semester
   const prepareAcademicData = async (semester) => {
     console.log(`Preparing academic data for semester ${semester}`);
 
     try {
-      // Find the semester object from available semesters
-      const semesterObj = availableSemesters.find(sem => sem.semesterNumber === parseInt(semester));
-
-      if (!semesterObj) {
-        console.warn(`Semester ${semester} not found in available semesters`);
+      // Directly fetch academic details from the API for this specific semester
+      const response = await axios.get(`http://localhost:5001/api/academic-details/student/${student.rollNo}/semester/${semester}`);
+      
+      if (!response.data || !response.data.success) {
+        console.warn(`No academic data found for semester ${semester}`);
         return null;
       }
-
-      // Get CPI/SPI data for this semester
-      const semesterCPI = studentCPIs.find(cpi => {
-        if (cpi.SemesterId === semesterObj.id) return true;
-        if (cpi.Semester && cpi.Semester.semesterNumber === parseInt(semester)) return true;
-        return false;
-      });
-
-      // Get subjects for this semester
-      let subjects = [];
-      if (subjectsBySemester[semesterObj.id]) {
-        subjects = subjectsBySemester[semesterObj.id];
-      } else {
-        subjects = await fetchSubjectsForSemester(student.batchId, semesterObj.id);
-        setSubjectsBySemester(prev => ({
-          ...prev,
-          [semesterObj.id]: subjects
-        }));
-      }
-
-      // Prepare subject data with marks
-      const subjectsWithMarks = [];
-
-      for (const subject of subjects) {
-        const subjectCode = subject.sub_code || (subject.UniqueSubDegree && subject.UniqueSubDegree.sub_code);
-        if (!subjectCode) continue;
-
-        // Check if marks are already cached
-        const cacheKey = `${student.id}_${subjectCode}`;
-        let marks;
-
-        if (studentMarks[cacheKey]) {
-          marks = studentMarks[cacheKey];
-        } else {
-          marks = await fetchMarksForSubject(student.id, subjectCode);
-          if (marks) {
-            setStudentMarks(prev => ({
-              ...prev,
-              [cacheKey]: marks
-            }));
-          }
-        }
-
-        // Get subject name
-        const subjectName = subject.sub_name ||
-          (subject.UniqueSubDegree && subject.UniqueSubDegree.sub_name) ||
-          'N/A';
-
-        // Format the marks data
-        subjectsWithMarks.push({
-          subjectCode: subjectCode,
-          subjectName: subjectName,
-          ese: marks ? `${marks.ese || 0}/${subject.ese_max || '-'}` : '-',
-          cse: marks ? `${marks.cse || 0}/${subject.cse_max || '-'}` : '-',
-          ia: marks ? `${marks.ia || 0}/${subject.ia_max || '-'}` : '-',
-          tw: marks ? `${marks.tw || 0}/${subject.tw_max || '-'}` : '-',
-          viva: marks ? `${marks.viva || 0}/${subject.viva_max || '-'}` : '-',
-          grade: marks && marks.grade ? marks.grade : '-'
-        });
-      }
-
-      // Construct the complete academic data
-      return {
-        semesterInfo: {
-          semester,
-          spi: semesterCPI ? semesterCPI.SPI : 'N/A',
-          cpi: semesterCPI ? semesterCPI.CPI : 'N/A'
-        },
-        subjects: subjectsWithMarks
-      };
+      
+      console.log(`Successfully fetched academic details for semester ${semester}:`, response.data);
+      return response.data.data;
     } catch (error) {
-      console.error(`Error preparing academic data for semester ${semester}:`, error);
+      console.error(`Error fetching academic data for semester ${semester}:`, error);
       return null;
     }
   };
@@ -2501,28 +2394,25 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           doc.addPage();
           yPos = 20;
         }
-
+        
         // 5. Academic Details (if selected)
         if (selectedOptions.academicDetails) {
-          // We need to fetch academic details for this specific semester
           try {
-            // Use the existing data if it's for the current semester
+            // Fetch academic details for this specific semester
+            console.log(`Fetching academic details for semester ${semester}`);
+            const response = await axios.get(`http://localhost:5001/api/academic-details/student/${student.rollNo}/semester/${semester}`);
+            
             let semesterAcademics = null;
-            if (academicDetails && selectedSemesters.includes(semester)) {
-              semesterAcademics = academicDetails;
-            } else {
-              // Otherwise fetch it
-              const response = await axios.get(`http://localhost:5001/api/academic-details/student/${student.rollNo}/semester/${semester}`);
-
-              if (response.data && response.data.success) {
-                semesterAcademics = response.data.data;
-              }
+            if (response.data && response.data.success) {
+              semesterAcademics = response.data.data;
+              console.log(`Successfully fetched academic details for semester ${semester}`, semesterAcademics);
             }
-
+            
             if (semesterAcademics && semesterAcademics.subjects && semesterAcademics.subjects.length > 0) {
+              // Display academic details for this semester
               doc.setFontSize(12);
               doc.setTextColor(0, 0, 0);
-              doc.text("Academic Details", 20, yPos);
+              doc.text(`Academic Performance - Semester ${semester}`, 20, yPos);
               yPos += 7;
 
               // Add SPI/CPI if available
@@ -2544,6 +2434,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 subject.studentMarks.grades || 'N/A'
               ]);
 
+              // Add the table to the PDF
               autoTable(doc, {
                 startY: yPos,
                 head: academicHeaders,
@@ -2562,7 +2453,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
             } else {
               doc.setFontSize(12);
               doc.setTextColor(0, 0, 0);
-              doc.text("Academic Details: No academic data available for this semester", 20, yPos);
+              doc.text(`Academic Details: No academic data available for semester ${semester}`, 20, yPos);
               yPos += 10;
             }
           } catch (err) {
