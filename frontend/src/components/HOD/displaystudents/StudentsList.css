@@ -116,7 +116,8 @@
 
 .filter-toggle-btn,
 .add-student-btn,
-.cpi-btn {
+.cpi-btn,
+.grades-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -149,7 +150,8 @@
 }
 
 .add-student-btn,
-.cpi-btn {
+.cpi-btn,
+.grades-btn {
     background-color: white;
     color: #3674B5;
 }
@@ -161,7 +163,8 @@
 
 .filter-toggle-btn svg,
 .add-student-btn svg,
-.cpi-btn svg {
+.cpi-btn svg,
+.grades-btn svg {
     margin-right: 8px;
     font-size: 0.9rem;
 }
@@ -393,6 +396,25 @@
     text-align: right;
 }
 
+.filter-toggle-btn,
+.add-student-btn,
+.cpi-btn,
+.grades-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.2rem;
+    border: 0px;
+    border-radius: 8px;
+    background: white;
+    color: #3674B5;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+
 @media (max-width: 992px) {
     .students-list-container {
         padding: 1.5rem;
@@ -429,7 +451,8 @@
 
     .filter-toggle-btn,
     .add-student-btn,
-    .cpi-btn {
+    .cpi-btn,
+    .grades-btn {
         width: 100%;
         justify-content: center;
     }
