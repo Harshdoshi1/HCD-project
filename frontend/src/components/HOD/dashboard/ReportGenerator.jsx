@@ -438,7 +438,6 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
     if (students.length === 0) return [];
 
     return [
-      { name: 'Curricular', value: stats.averages.curricular },
       { name: 'Co-Curricular', value: stats.averages.coCurricular },
       { name: 'Extra-Curricular', value: stats.averages.extraCurricular }
     ];
@@ -600,7 +599,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                     checked={includeTrends}
                     onChange={(e) => setIncludeTrends(e.target.checked)}
                   />
-                  <label>Include Historical Trends</label>
+                  <label>Include   Historical Trends</label>
                 </div> */}
               </div>
             </div>
@@ -655,7 +654,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                         label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       >
                         {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          <Cell key={`cell-${index}`} fill={['#1EAEDB', '#33C3F0'][index]} />
                         ))}
                       </Pie>
                       <Tooltip />
