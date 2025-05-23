@@ -1,4 +1,4 @@
-# Student Evaluation System – Web Portal (HOD, Faculty, CC)
+# Student Performance Analyzer – Web Portal (HOD, Faculty, CC)
 
 A role-based web application for academic and extracurricular evaluation used by Heads of Departments (HODs), Faculty members, and Class Coordinators. This system enables efficient grade entry, activity tracking, subject allocation, and ranking computation.
 
@@ -53,7 +53,7 @@ Clone Repository
 
 git clone https://github.com/Harshdoshi1/HCD-project.git
 
-📁 Project Structure
+## 📁 Project Structure
 
 student-analysis/
 ├── backend/       # Node.js + Express API
