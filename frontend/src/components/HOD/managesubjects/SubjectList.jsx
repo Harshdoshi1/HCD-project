@@ -119,24 +119,26 @@ const SubjectList = ({ onSelectSubject }) => {
 
     return (
         <div className="subject-list">
-            <div className="filters-container-display-subject-list">
-
-                <select className="professional-filter-ds" name="batch" value={filters.batch} onChange={handleChange} required>
-                    <option value="all">Batch</option>
-                    {batches.map((batch, index) => (
-                        <option key={batch._id || index} value={batch.batchName}>
-                            {batch.batchName}
-                        </option>
-                    ))}
-                </select>
-                <select className="professional-filter-ds" name="semester" value={filters.semester} onChange={handleChange} required>
-                    <option value="all">Semester</option>
-                    {semesters.map((sem, index) => (
-                        <option key={sem._id || index} value={sem.semesterNumber}>
-                            Semester {sem.semesterNumber}
-                        </option>
-                    ))}
-                </select>
+            <div className="subject-header">
+                <h2 className="subject-title">Subjects</h2>
+                <div className="filters-container-display-subject-list">
+                    <select className="professional-filter-ds" name="batch" value={filters.batch} onChange={handleChange} required>
+                        <option value="all">Batch</option>
+                        {batches.map((batch, index) => (
+                            <option key={batch._id || index} value={batch.batchName}>
+                                {batch.batchName}
+                            </option>
+                        ))}
+                    </select>
+                    <select className="professional-filter-ds" name="semester" value={filters.semester} onChange={handleChange} required>
+                        <option value="all">Semester</option>
+                        {semesters.map((sem, index) => (
+                            <option key={sem._id || index} value={sem.semesterNumber}>
+                                Semester {sem.semesterNumber}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             <div className="subjects-grid">
@@ -146,9 +148,11 @@ const SubjectList = ({ onSelectSubject }) => {
                         const name = subject.sub_name || subject.subjectName || subject.name;
                         return (
                             <div key={subject._id || code || index} className="subject-card" onClick={() => onSelectSubject(subject)}>
-                                {code && (
-                                    <div className="subject-code">{code}</div>
-                                )}
+                                <div className="card-header">
+                                    {code && (
+                                        <div className="subject-code">{code}</div>
+                                    )}
+                                </div>
                                 <div className="subject-name">
                                     {name}
                                 </div>
@@ -159,7 +163,17 @@ const SubjectList = ({ onSelectSubject }) => {
                                     {(subject.sub_type || subject.type) &&
                                         <div><strong>Category:</strong> {subject.sub_type || subject.type}</div>}
                                     <div><strong>Semester:</strong> {filters.semester}</div>
-                                    <div><strong>Batch:</strong> {filters.batch}</div>
+                                </div>
+                                <div className="card-actions">
+                                    <button className="card-action-button" onClick={(e) => { e.stopPropagation(); }}>
+                                        <i className="fas fa-edit"></i>
+                                    </button>
+                                    <button className="card-action-button" onClick={(e) => { e.stopPropagation(); }}>
+                                        <i className="fas fa-file-alt"></i>
+                                    </button>
+                                    <button className="card-action-button" onClick={(e) => { e.stopPropagation(); }}>
+                                        <i className="fas fa-folder"></i>
+                                    </button>
                                 </div>
                             </div>
                         );
