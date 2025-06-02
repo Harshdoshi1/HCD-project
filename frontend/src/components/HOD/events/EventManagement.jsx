@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Upload } from 'lucide-react';
+import { Plus, Upload, Filter } from 'lucide-react';
 import AddEventForm from './AddEventForm';
 import ExcelUpload from './ExcelUpload';
 import './EventManagement.css';
@@ -10,6 +10,7 @@ const EventManagement = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('all');
 
   useEffect(() => {
     fetchEvents();
@@ -32,10 +33,39 @@ const EventManagement = () => {
     }
   };
 
+  // Filter events based on the active filter
+  const filteredEvents = activeFilter === 'all' 
+    ? events 
+    : events.filter(event => event.eventType === activeFilter);
+
   return (
     <div className="event-management-container">
       <div className="event-header">
         <h2>Events</h2>
+        
+        <div className="event-filters">
+          <div className="filter-buttons">
+            <button 
+              className={`filter-button ${activeFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('all')}
+            >
+              All
+            </button>
+            <button 
+              className={`filter-button ${activeFilter === 'co-curricular' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('co-curricular')}
+            >
+              Co-Curricular
+            </button>
+            <button 
+              className={`filter-button ${activeFilter === 'extra-curricular' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('extra-curricular')}
+            >
+              Extra-Curricular
+            </button>
+          </div>
+        </div>
+        
         <div className="action-buttons">
           <button
             className="add-event-button"
@@ -47,7 +77,7 @@ const EventManagement = () => {
             className="upload-excel-button"
             onClick={() => setShowExcelForm(true)}
           >
-            Upload Participants
+            <Upload size={16} /> Upload Participants
           </button>
         </div>
       </div>
@@ -71,17 +101,28 @@ const EventManagement = () => {
           <p>Loading events...</p>
         ) : error ? (
           <p className="error-message">{error}</p>
-        ) : events.length === 0 ? (
-          <p>No events found</p>
+        ) : filteredEvents.length === 0 ? (
+          <p className="no-events-message">No events found for the selected filter</p>
         ) : (
           <div className="events-grid">
-            {events.map((event, index) => (
-              <div key={index} className="event-card">
-                <h3>{event.eventName}</h3>
+            {filteredEvents.map((event, index) => (
+              <div 
+                key={index} 
+                className="event-card"
+              >
+                <div className="event-name-container">
+                  <h3>{event.eventName}</h3>
+                </div>
+                {event.points && (
+                  <div className="event-points">
+                    <span className="points-value">{event.points}</span>
+                    <span className="points-label">points</span>
+                  </div>
+                )}
                 <div className="event-details">
                   <p><strong>Category:</strong> {event.eventCategory}</p>
                   <p><strong>Date:</strong> {event.date}</p>
-                  <p><strong>Duration:</strong> {event.duration}</p>
+                  <p><strong>Duration:</strong> {event.duration} {event.duration === 1 ? 'hour' : 'hours'}</p>
                 </div>
               </div>
             ))}
