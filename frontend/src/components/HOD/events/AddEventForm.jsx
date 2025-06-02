@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { X } from 'lucide-react';
 import './AddEventForm.css';
 
 const AddEventForm = ({ onClose, onSuccess }) => {
@@ -44,75 +44,82 @@ const AddEventForm = ({ onClose, onSuccess }) => {
         <div className="modal-header">
           <h3>Add New Event</h3>
           <button className="close-button" onClick={onClose}>
-            <Plus size={16} />
+            <X size={18} />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="event-form">
-          <div className="form-group">
-            <label htmlFor="eventId">Event ID</label>
-            <input
-              type="text"
-              id="eventId"
-              value={formData.eventId}
-              onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="eventId">Event ID</label>
+              <input
+                type="text"
+                id="eventId"
+                value={formData.eventId}
+                onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="eventName">Event Name</label>
+              <input
+                type="text"
+                id="eventName"
+                value={formData.eventName}
+                onChange={(e) => setFormData({ ...formData, eventName: e.target.value })}
+                required
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="eventName">Event Name</label>
-            <input
-              type="text"
-              id="eventName"
-              value={formData.eventName}
-              onChange={(e) => setFormData({ ...formData, eventName: e.target.value })}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="eventType">Event Type</label>
+              <select
+                id="eventType"
+                value={formData.eventType}
+                onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                required
+              >
+                <option value="co-curricular">Co-Curricular</option>
+                <option value="extra-curricular">Extra-Curricular</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="eventCategory">Event Category</label>
+              <input
+                type="text"
+                id="eventCategory"
+                value={formData.eventCategory}
+                onChange={(e) => setFormData({ ...formData, eventCategory: e.target.value })}
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="eventType">Event Type</label>
-            <select
-              id="eventType"
-              value={formData.eventType}
-              onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-              required
-            >
-              <option value="co-curricular">Co-Curricular</option>
-              <option value="extra-curricular">Extra-Curricular</option>
-            </select>
-          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="points">Points</label>
+              <input
+                type="number"
+                id="points"
+                value={formData.points}
+                onChange={(e) => setFormData({ ...formData, points: e.target.value })}
+                required
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="eventCategory">Event Category</label>
-            <input
-              type="text"
-              id="eventCategory"
-              value={formData.eventCategory}
-              onChange={(e) => setFormData({ ...formData, eventCategory: e.target.value })}
-            />
+            <div className="form-group">
+              <label htmlFor="duration">Duration (hours)</label>
+              <input
+                type="number"
+                id="duration"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+              />
+            </div>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="points">Points</label>
-            <input
-              type="number"
-              id="points"
-              value={formData.points}
-              onChange={(e) => setFormData({ ...formData, points: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="duration">Duration (hours)</label>
-            <input
-              type="number"
-              id="duration"
-              value={formData.duration}
-              onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-            />
-          </div>
+          
           <div className="form-group">
             <label htmlFor="eventDate">Event Date</label>
             <input

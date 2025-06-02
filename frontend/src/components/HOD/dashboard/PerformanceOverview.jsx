@@ -413,15 +413,15 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         const startYear = parseInt(batchNumber) || 19;
 
         // Create sample data with batch-specific variations
-        let sampleData = [
-          { semester: 'Sem 1', curricular: 70 + (startYear % 10), coCurricular: 40 + (startYear % 15), extraCurricular: 30 + (startYear % 10) },
-          { semester: 'Sem 2', curricular: 75 + (startYear % 10), coCurricular: 45 + (startYear % 15), extraCurricular: 35 + (startYear % 10) },
-          { semester: 'Sem 3', curricular: 72 + (startYear % 10), coCurricular: 50 + (startYear % 15), extraCurricular: 40 + (startYear % 10) },
-          { semester: 'Sem 4', curricular: 78 + (startYear % 10), coCurricular: 55 + (startYear % 15), extraCurricular: 45 + (startYear % 10) },
-          { semester: 'Sem 5', curricular: 80 + (startYear % 10), coCurricular: 60 + (startYear % 15), extraCurricular: 50 + (startYear % 10) }
-        ];
-        formattedTrendData = sampleData;
-        console.log('Using sample data for batch:', selectedBatch);
+        // let sampleData = [
+        //   { semester: 'Sem 1', curricular: 70 + (startYear % 10), coCurricular: 40 + (startYear % 15), extraCurricular: 30 + (startYear % 10) },
+        //   { semester: 'Sem 2', curricular: 75 + (startYear % 10), coCurricular: 45 + (startYear % 15), extraCurricular: 35 + (startYear % 10) },
+        //   { semester: 'Sem 3', curricular: 72 + (startYear % 10), coCurricular: 50 + (startYear % 15), extraCurricular: 40 + (startYear % 10) },
+        //   { semester: 'Sem 4', curricular: 78 + (startYear % 10), coCurricular: 55 + (startYear % 15), extraCurricular: 45 + (startYear % 10) },
+        //   { semester: 'Sem 5', curricular: 80 + (startYear % 10), coCurricular: 60 + (startYear % 15), extraCurricular: 50 + (startYear % 10) }
+        // ];
+        // formattedTrendData = sampleData;
+        // console.log('Using sample data for batch:', selectedBatch);
       }
 
       // Set the trend data
