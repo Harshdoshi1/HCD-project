@@ -1,0 +1,310 @@
+/* Modal Overlay */
+.modal-overlay-upload-grade-model {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Modal Container */
+.grades-upload-modal-upload-grade-model {
+    background-color: #fff;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1001;
+}
+
+/* Modal Header */
+.modal-header-upload-grade-model {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header-upload-grade-model h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.close-btn-upload-grade-model {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.close-btn-upload-grade-model:hover {
+    background-color: #f1f1f1;
+    color: #dc3545;
+}
+
+/* Modal Content */
+.modal-content-upload-grade-model {
+    padding: 20px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+/* Upload Instructions */
+.upload-instructions-upload-grade-model {
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    border-left: 4px solid #007bff;
+}
+
+.upload-instructions-upload-grade-model p {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.upload-instructions-upload-grade-model ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.upload-instructions-upload-grade-model li {
+    margin-bottom: 5px;
+}
+
+/* File Drop Area */
+.file-drop-area-upload-grade-model {
+    border: 2px dashed #ced4da;
+    border-radius: 8px;
+    padding: 30px 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: border-color 0.3s, background-color 0.3s;
+    cursor: pointer;
+}
+
+.file-drop-area-upload-grade-model:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.file-icon-upload-grade-model {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.or-text-upload-grade-model {
+    margin: 15px 0;
+    color: #6c757d;
+    position: relative;
+}
+
+.or-text-upload-grade-model::before,
+.or-text-upload-grade-model::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 80px;
+    height: 1px;
+    background-color: #dee2e6;
+}
+
+.or-text-upload-grade-model::before {
+    right: calc(50% + 20px);
+}
+
+.or-text-upload-grade-model::after {
+    left: calc(50% + 20px);
+}
+
+.file-select-btn-upload-grade-model {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.file-select-btn-upload-grade-model:hover {
+    background-color: #0069d9;
+}
+
+.selected-file-upload-grade-model {
+    margin-top: 15px;
+    color: #495057;
+    font-weight: 500;
+}
+
+/* Preview Section */
+.preview-section-upload-grade-model {
+    margin-top: 20px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.preview-section-upload-grade-model h3 {
+    margin: 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 1.1rem;
+}
+
+.preview-table-container-upload-grade-model {
+    overflow-x: auto;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.preview-table-upload-grade-model {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.preview-table-upload-grade-model th,
+.preview-table-upload-grade-model td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.preview-table-upload-grade-model th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.preview-table-upload-grade-model tr:last-child td {
+    border-bottom: none;
+}
+
+.preview-table-upload-grade-model tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Upload Status */
+.upload-status-upload-grade-model {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.success-upload-grade-model {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.error-upload-grade-model {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Modal Footer */
+.modal-footer-upload-grade-model {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    border-radius: 0 0 8px 8px;
+}
+
+.cancel-btn-upload-grade-model {
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    color: #6c757d;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.cancel-btn-upload-grade-model:hover {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.upload-btn-upload-grade-model {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background-color: #28a745;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.upload-btn-upload-grade-model:hover {
+    background-color: #218838;
+}
+
+.upload-btn-upload-grade-model:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .grades-upload-modal-upload-grade-model {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .file-drop-area-upload-grade-model {
+        padding: 20px 15px;
+    }
+    
+    .or-text-upload-grade-model::before,
+    .or-text-upload-grade-model::after {
+        width: 40px;
+    }
+    
+    .modal-footer-upload-grade-model {
+        flex-direction: column;
+    }
+    
+    .cancel-btn-upload-grade-model,
+    .upload-btn-upload-grade-model {
+        width: 100%;
+    }
+}
