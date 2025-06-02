@@ -8,20 +8,13 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-<<<<<<< HEAD
-  
-=======
   const [trendData, setTrendData] = useState([]);
 
->>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
   // Fetch students based on selected batch and semester
   useEffect(() => {
     fetchStudents();
     fetchPerformanceTrends();
   }, [selectedBatch, selectedSemester]);
-<<<<<<< HEAD
-  
-=======
 
   // Direct API test function to verify endpoints are working
   const testAPIEndpoints = async () => {
@@ -440,7 +433,6 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
     }
   };
 
->>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
   const fetchStudents = async () => {
     setLoading(true);
     setError(null);
@@ -615,30 +607,8 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
 
   // Get trend data with simplified fallback
   const getCategoryTrends = () => {
-<<<<<<< HEAD
-    if (!students || students.length === 0) return [];
-    
-    const semesters = [...new Set(students.flatMap(s => s.history?.map(h => h.semester) || []))].sort();
-    if (semesters.length === 0) return [];
-    return semesters.map(sem => ({
-      semester: sem,
-      curricular: students.reduce((acc, s) => {
-        const hist = s.history?.find(h => h.semester === sem);
-        return hist ? acc + hist.points.curricular : acc;
-      }, 0) / students.length,
-      coCurricular: students.reduce((acc, s) => {
-        const hist = s.history?.find(h => h.semester === sem);
-        return hist ? acc + hist.points.coCurricular : acc;
-      }, 0) / students.length,
-      extraCurricular: students.reduce((acc, s) => {
-        const hist = s.history?.find(h => h.semester === sem);
-        return hist ? acc + hist.points.extraCurricular : acc;
-      }, 0) / students.length,
-    }));
-=======
     // Always provide data for visualization purposes
     return trendData.length > 0 ? trendData : [];
->>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
   };
 
   const getParticipationRate = () => {

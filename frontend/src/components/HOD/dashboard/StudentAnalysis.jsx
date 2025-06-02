@@ -809,11 +809,6 @@ const StudentAnalysis = ({ student, onClose }) => {
 
         <div className="modal-footer">
           <button className="btn-cancel" onClick={onClose}>Close</button>
-<<<<<<< HEAD
-          <button className="btn-share" onClick={handleSendAnalysis}>
-            Share Analysis with Student & Parents
-          </button>
-=======
           <button className="btn-generate-report" onClick={toggleReportGenerator}>
             Generate Report
           </button>
@@ -833,7 +828,6 @@ const StudentAnalysis = ({ student, onClose }) => {
               chartData={chartData}
             />
           )}
->>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
         </div>
       </div>
     </div>

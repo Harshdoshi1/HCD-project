@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import Sidebar from '../sidebar/Sidebar';
 import Faculty from "../managefaculty/Faculty";
 import StudentsList from '../../HOD/displaystudents/StudentsList';
@@ -9,7 +10,6 @@ import Upgradegrade from '../upgradegrade/Upgradegrade';
 import StudentAnalysisPage from '../StudentAnalysis/StudentAnalysis';
 import StudentAnalysis from './StudentAnalysis';
 import EventManagement from '../events/EventManagement';
-import FilterSection from './FilterSection';
 import PerformanceOverview from "./PerformanceOverview";
 import StudentTable from './StudentTable';
 import EmailNotification from './EmailNotification';
@@ -62,6 +62,10 @@ const DashboardHOD = () => {
   ]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState('all');
+  const [batches, setBatches] = useState(['all']);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchError, setBatchError] = useState(null);
+  const [showBatchDropdown, setShowBatchDropdown] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -71,10 +75,10 @@ const DashboardHOD = () => {
   useEffect(() => {
     // Set initial loading state to false since we're not pre-loading data anymore
     setLoading(false);
+    // Fetch batches when component mounts
+    fetchBatches();
   }, []);
 
-<<<<<<< HEAD
-=======
   // Fetch all batches
   const fetchBatches = async () => {
     setBatchLoading(true);
@@ -109,15 +113,37 @@ const DashboardHOD = () => {
       setBatchLoading(false);
     }
   };
->>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
 
-  const handleFilterChange = (batchValue, semesterValue) => {
-    console.log('Dashboard: Filter changed to:', { batchValue, semesterValue });
+  // Toggle batch dropdown visibility
+  const toggleBatchDropdown = () => {
+    setShowBatchDropdown(!showBatchDropdown);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showBatchDropdown && !event.target.closest('.batch-filter-container')) {
+        setShowBatchDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showBatchDropdown]);
+
+
+  const handleFilterChange = (batchValue) => {
+    console.log('Dashboard: Filter changed to batch:', batchValue);
 
     // Update state with the new filter values
     setSelectedBatch(batchValue);
     // Always use 'all' for semester since we removed the semester filter
     setSelectedSemester('all');
+
+    // Close the dropdown after selection
+    setShowBatchDropdown(false);
 
     // Clear filtered students since we're now fetching directly in the StudentTable
     setFilteredStudents([]);
@@ -179,15 +205,6 @@ const DashboardHOD = () => {
                 <div className="dashboard-container">
                   <header className="dashboard-header">
                     <h1>HOD Dashboard</h1>
-<<<<<<< HEAD
-                    <div className="dashboard-actions">
-                      <button className="btn-primary" onClick={handleEmailModalOpen}>
-                        Send Email Notifications
-                      </button>
-                      <button className="btn-secondary" onClick={handleReportModalOpen}>
-                        Generate Reports
-                      </button>
-=======
                     <div className="dashboard-controls">
                       <div className="batch-filter-container">
                         <div className="batch-filter-selected" onClick={toggleBatchDropdown}>
@@ -223,18 +240,11 @@ const DashboardHOD = () => {
                           Generate Reports
                         </button>
                       </div>
->>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
                     </div>
                   </header>
 
                   <div className="dashboard-content">
-
-
                     <div className="students-row">
-                      <FilterSection
-                        selectedBatch={selectedBatch}
-                        onFilterChange={handleFilterChange}
-                      />
                       <div className="charts-row">
                         <PerformanceOverview
                           selectedBatch={selectedBatch}

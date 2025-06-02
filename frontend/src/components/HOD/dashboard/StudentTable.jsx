@@ -5,6 +5,12 @@ import './StudentTable.css';
 
 const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStudentSelect }) => {
   const [students, setStudents] = useState([]);
+  const [batchStats, setBatchStats] = useState({
+    totalStudents: 0,
+    averageCurricular: 0,
+    averageCoCurricular: 0,
+    averageExtraCurricular: 0
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({
@@ -33,6 +39,13 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
   const fetchStudents = async () => {
     setLoading(true);
     setError(null);
+    // Reset batch stats
+    setBatchStats({
+      totalStudents: 0,
+      averageCurricular: 0,
+      averageCoCurricular: 0,
+      averageExtraCurricular: 0
+    });
     
     try {
       console.log('Fetching students with filters:', { batch: selectedBatch, semester: selectedSemester });
@@ -184,7 +197,32 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
         })) : [];
         
         console.log('Formatted students:', formattedStudents);
-        setStudents(formattedStudents);
+        const processedStudents = formattedStudents;
+        
+        // Process and set the students data
+        console.log('Setting students state with:', processedStudents);
+        setStudents(processedStudents);
+        
+        // Calculate batch statistics
+        if (processedStudents.length > 0) {
+          const totalCurricular = processedStudents.reduce((sum, student) => sum + (student.points?.curricular || 0), 0);
+          const totalCoCurricular = processedStudents.reduce((sum, student) => sum + (student.points?.coCurricular || 0), 0);
+          const totalExtraCurricular = processedStudents.reduce((sum, student) => sum + (student.points?.extraCurricular || 0), 0);
+          
+          setBatchStats({
+            totalStudents: processedStudents.length,
+            averageCurricular: Math.round(totalCurricular / processedStudents.length),
+            averageCoCurricular: Math.round(totalCoCurricular / processedStudents.length),
+            averageExtraCurricular: Math.round(totalExtraCurricular / processedStudents.length)
+          });
+        } else {
+          setBatchStats({
+            totalStudents: 0,
+            averageCurricular: 0,
+            averageCoCurricular: 0,
+            averageExtraCurricular: 0
+          });
+        }
       } else {
         console.log('No data in response');
         setStudents([]);
@@ -268,32 +306,6 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
 
   const sortedStudents = getSortedStudents();
 
-<<<<<<< HEAD
-  return (
-    <div className="student-table-container">
-      {error && <div className="error-message">{error}</div>}
-      <div className="table-header">
-        <h3>Student Performance {loading && <span className="loading-indicator">Loading...</span>}</h3>
-        
-        <div className="table-filters">
-          {/* Curricular Points Filter */}
-          <div className="filter-dropdown">
-            <label>Curricular Points:</label>
-            <div className="dropdown-buttons">
-              <button 
-                className={pointsFilters.curricular === 'high' ? 'active' : ''}
-                onClick={() => handlePointsFilterInternal('curricular', 'high')}
-              >
-                High to Low
-              </button>
-              <button 
-                className={pointsFilters.curricular === 'low' ? 'active' : ''}
-                onClick={() => handlePointsFilterInternal('curricular', 'low')}
-              >
-                Low to High
-              </button>
-            </div>
-=======
   // Function to open student detail modal
   const openStudentDetailModal = async (student) => {
     setSelectedStudentDetail(student);
@@ -343,7 +355,6 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
           <div className="student-detail-header">
             <h3>Student Details</h3>
             <button onClick={closeStudentDetailModal} className="modal-close-btn">&times;</button>
->>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
           </div>
           <div className="student-detail-body">
             <div className="student-info-section">
