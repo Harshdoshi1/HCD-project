@@ -154,7 +154,7 @@ const StudentGradesExcell = ({ isOpen, onClose }) => {
                         <ul>
                             <li><strong>BatchId</strong> - The numeric batch ID (must match existing batch ID in database)</li>
                             <li><strong>SemesterId</strong> - The numeric semester ID (must match existing semester ID)</li>
-                            <li><strong>EnrollmentNumber</strong> - Student's enrollment number (e.g., "21BCP001")</li>
+                            <li><strong>EnrollmentNumber</strong> - Student's enrollment number (e.g., "92200133001")</li>
                             <li><strong>CPI</strong> - Cumulative Performance Index (0-10)</li>
                             <li><strong>SPI</strong> - Semester Performance Index (0-10)</li>
                             <li><strong>Rank</strong> - Student's rank in the semester (numeric)</li>
@@ -177,7 +177,7 @@ const StudentGradesExcell = ({ isOpen, onClose }) => {
                                     <tr>
                                         <td>1</td>
                                         <td>3</td>
-                                        <td>21BCP001</td>
+                                        <td>92200133001</td>
                                         <td>8.5</td>
                                         <td>9.1</td>
                                         <td>5</td>
