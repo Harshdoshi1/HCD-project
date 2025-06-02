@@ -355,13 +355,18 @@ const addSubjectWithComponents = async (req, res) => {
 
         // Create subject with required fields
         // Default semester to 1 and program to 'Degree' if not provided
+        // Make sure type is one of the valid enum values: 'central' or 'department'
+        // If it's not provided or invalid, default to 'central'
+        const validType = type && ['central', 'department'].includes(type) ? type : 'central';
+        
+        console.log('Creating subject with type:', validType);
+
         const subjectRecord = await UniqueSubDegree.create({
             sub_code: subject,
             sub_name: name,
             sub_credit: credits,
-            sub_level: type || 'central', // Use type from request or default to 'central'
-            semester: 1,                  // Default semester
-            program: 'Degree'             // Default program
+            sub_level: validType,
+            program: 'Degree'      // Default program
         });
 
         // Map component names from frontend to database
@@ -464,23 +469,23 @@ const getSubjectsByBatch = async (req, res) => {
     try {
         const { batchName } = req.params;
         console.log(`Fetching subjects for batch: ${batchName}`);
-        
+
         // First get the batch ID
         const batch = await Batch.findOne({ where: { batchName } });
         if (!batch) {
             return res.status(404).json({ message: "Batch not found" });
         }
-        
+
         // Get all subjects assigned to this batch
         const subjects = await Subject.findAll({
             where: { batchId: batch.id },
             attributes: ['id', 'subjectName', 'batchId', 'semesterId']
         });
-        
+
         // Get the unique subject codes from UniqueSubDegree that match these subjects
         const uniqueSubjects = await UniqueSubDegree.findAll();
-        
-        return res.status(200).json({ 
+
+        return res.status(200).json({
             subjects,
             uniqueSubjects
         });
@@ -547,13 +552,13 @@ const getAllSubjectsWithDetails = async (req, res) => {
 const getSubjectsByBatchWithDetails = async (req, res) => {
     try {
         const { batchName } = req.params;
-        
+
         // Find batch ID from batchName
         const batch = await Batch.findOne({ where: { batchName } });
         if (!batch) {
             return res.status(404).json({ message: "Batch not found" });
         }
-        
+
         // Find all subjects for this batch with their related semester information
         const subjects = await Subject.findAll({
             where: { batchId: batch.id },
@@ -564,18 +569,18 @@ const getSubjectsByBatchWithDetails = async (req, res) => {
                 }
             ]
         });
-        
+
         if (!subjects || subjects.length === 0) {
             return res.status(404).json({ message: "No subjects found for this batch" });
         }
-        
+
         // Get the unique subject codes and names from UniqueSubDegree
         const subjectNames = subjects.map(s => s.subjectName);
         const uniqueSubjectsInfo = await UniqueSubDegree.findAll({
             where: { sub_name: { [Op.in]: subjectNames } },
             attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level', 'program']
         });
-        
+
         // Map the unique subject info to each subject
         const subjectsWithDetails = subjects.map(subject => {
             const uniqueInfo = uniqueSubjectsInfo.find(u => u.sub_name === subject.subjectName);
@@ -591,7 +596,7 @@ const getSubjectsByBatchWithDetails = async (req, res) => {
                 program: uniqueInfo ? uniqueInfo.program : null
             };
         });
-        
+
         return res.status(200).json({ subjects: subjectsWithDetails });
     } catch (error) {
         console.error("Error fetching subjects by batch:", error);
@@ -603,43 +608,43 @@ const getSubjectsByBatchWithDetails = async (req, res) => {
 const getSubjectsByBatchAndSemesterWithDetails = async (req, res) => {
     try {
         const { batchName, semesterNumber } = req.params;
-        
+
         // Find batch ID from batchName
         const batch = await Batch.findOne({ where: { batchName } });
         if (!batch) {
             return res.status(404).json({ message: "Batch not found" });
         }
-        
+
         // Find semester ID from semesterNumber and batchId
-        const semester = await Semester.findOne({ 
-            where: { 
-                semesterNumber: parseInt(semesterNumber), 
-                batchId: batch.id 
-            } 
+        const semester = await Semester.findOne({
+            where: {
+                semesterNumber: parseInt(semesterNumber),
+                batchId: batch.id
+            }
         });
         if (!semester) {
             return res.status(404).json({ message: "Semester not found for this batch" });
         }
-        
+
         // Find all subjects for this batch and semester
         const subjects = await Subject.findAll({
-            where: { 
+            where: {
                 batchId: batch.id,
                 semesterId: semester.id
             }
         });
-        
+
         if (!subjects || subjects.length === 0) {
             return res.status(404).json({ message: "No subjects found for this batch and semester" });
         }
-        
+
         // Get the unique subject codes and names from UniqueSubDegree
         const subjectNames = subjects.map(s => s.subjectName);
         const uniqueSubjectsInfo = await UniqueSubDegree.findAll({
             where: { sub_name: { [Op.in]: subjectNames } },
             attributes: ['sub_code', 'sub_name', 'sub_credit', 'sub_level', 'program']
         });
-        
+
         // Map the unique subject info to each subject
         const subjectsWithDetails = subjects.map(subject => {
             const uniqueInfo = uniqueSubjectsInfo.find(u => u.sub_name === subject.subjectName);
@@ -655,7 +660,7 @@ const getSubjectsByBatchAndSemesterWithDetails = async (req, res) => {
                 program: uniqueInfo ? uniqueInfo.program : null
             };
         });
-        
+
         return res.status(200).json({ subjects: subjectsWithDetails });
     } catch (error) {
         console.error("Error fetching subjects by batch and semester:", error);
@@ -663,23 +668,23 @@ const getSubjectsByBatchAndSemesterWithDetails = async (req, res) => {
     }
 };
 
-module.exports = { 
-    getSubjectsByBatchAndSemester, 
-    addSubject, 
-    getSubjectWithComponents, 
-    addSubjectWithComponents, 
-    getDropdownData, 
-    getSubjectsByBatchSemesterandFaculty, 
-    assignSubject, 
-    getSubjectByCode, 
-    deleteSubject, 
-    getSubjects, 
-    addUniqueSubDegree, 
-    addUniqueSubDiploma, 
-    getSubjectComponentsWithSubjectCode, 
-    getAllUniqueSubjects, 
+module.exports = {
+    getSubjectsByBatchAndSemester,
+    addSubject,
+    getSubjectWithComponents,
+    addSubjectWithComponents,
+    getDropdownData,
+    getSubjectsByBatchSemesterandFaculty,
+    assignSubject,
+    getSubjectByCode,
+    deleteSubject,
+    getSubjects,
+    addUniqueSubDegree,
+    addUniqueSubDiploma,
+    getSubjectComponentsWithSubjectCode,
+    getAllUniqueSubjects,
     getSubjectsByBatch,
     getAllSubjectsWithDetails,
     getSubjectsByBatchWithDetails,
-    getSubjectsByBatchAndSemesterWithDetails 
+    getSubjectsByBatchAndSemesterWithDetails
 };

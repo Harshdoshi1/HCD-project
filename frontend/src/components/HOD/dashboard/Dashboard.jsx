@@ -73,6 +73,43 @@ const DashboardHOD = () => {
     setLoading(false);
   }, []);
 
+<<<<<<< HEAD
+=======
+  // Fetch all batches
+  const fetchBatches = async () => {
+    setBatchLoading(true);
+    setBatchError(null);
+    try {
+      console.log('Fetching batches...');
+      const response = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+      console.log('Batch API response:', response.data);
+
+      if (response.data && Array.isArray(response.data)) {
+        // The API returns an array of batch objects directly
+        const batchNames = response.data.map(batch => {
+          console.log('Batch object:', batch);
+          return batch.batchName;
+        });
+        console.log('Extracted batch names:', batchNames);
+
+        // Add 'all' option to the beginning of the array
+        const allBatches = ['all', ...batchNames];
+        console.log('Setting batches state to:', allBatches);
+        setBatches(allBatches);
+      } else {
+        console.error('Invalid batch data format:', response.data);
+        setBatchError('Invalid batch data format');
+        setBatches(['all']);
+      }
+    } catch (err) {
+      console.error('Error fetching batches:', err);
+      setBatchError('Failed to load batches');
+      setBatches(['all']);
+    } finally {
+      setBatchLoading(false);
+    }
+  };
+>>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
 
   const handleFilterChange = (batchValue, semesterValue) => {
     console.log('Dashboard: Filter changed to:', { batchValue, semesterValue });
@@ -142,6 +179,7 @@ const DashboardHOD = () => {
                 <div className="dashboard-container">
                   <header className="dashboard-header">
                     <h1>HOD Dashboard</h1>
+<<<<<<< HEAD
                     <div className="dashboard-actions">
                       <button className="btn-primary" onClick={handleEmailModalOpen}>
                         Send Email Notifications
@@ -149,6 +187,43 @@ const DashboardHOD = () => {
                       <button className="btn-secondary" onClick={handleReportModalOpen}>
                         Generate Reports
                       </button>
+=======
+                    <div className="dashboard-controls">
+                      <div className="batch-filter-container">
+                        <div className="batch-filter-selected" onClick={toggleBatchDropdown}>
+                          <span>{selectedBatch === 'all' ? 'All Batches' : `Batch ${selectedBatch}`}</span>
+                          <i className={`batch-dropdown-icon ${showBatchDropdown ? 'open' : ''}`}>▼</i>
+                        </div>
+                        {showBatchDropdown && (
+                          <div className="batch-filter-dropdown">
+                            {batchLoading ? (
+                              <div className="batch-loading">Loading batches...</div>
+                            ) : (
+                              <ul>
+                                {batches.map((batch) => (
+                                  <li
+                                    key={batch}
+                                    className={batch === selectedBatch ? 'active' : ''}
+                                    onClick={() => handleFilterChange(batch)}
+                                  >
+                                    {batch === 'all' ? 'All Batches' : `Batch ${batch}`}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                            {batchError && <div className="batch-error">{batchError}</div>}
+                          </div>
+                        )}
+                      </div>
+                      <div className="dashboard-actions">
+                        {/* <button className="btn-primary" onClick={handleEmailModalOpen}>
+                          Acedemic Reports
+                        </button> */}
+                        <button className="btn-secondary" onClick={handleReportModalOpen}>
+                          Generate Reports
+                        </button>
+                      </div>
+>>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
                     </div>
                   </header>
 

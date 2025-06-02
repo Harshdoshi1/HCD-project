@@ -13,28 +13,102 @@ const { Op } = require('sequelize');
 // Upload student CPI/SPI data from Excel file
 exports.uploadStudentCPI = async (req, res) => {
     try {
+        // Set up global error handler for all async operations
+        process.on('unhandledRejection', (error) => {
+            console.error('Unhandled Promise Rejection:', error);
+        });
         if (!req.file) {
             return res.status(400).json({ message: 'Please upload an Excel file' });
         }
 
-        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+        console.log('Received file:', req.file.originalname, 'Size:', req.file.size, 'bytes');
+
+        console.log('Processing file:', req.file.originalname);
+
+        // Simple XLSX parsing - more reliable for basic Excel files
+        const workbook = xlsx.read(req.file.buffer, {
+            type: 'buffer',
+            raw: true
+        });
+
+        console.log('Worksheet names:', workbook.SheetNames);
+
+        if (workbook.SheetNames.length === 0) {
+            return res.status(400).json({ message: 'Excel file contains no worksheets' });
+        }
+
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const data = xlsx.utils.sheet_to_json(sheet);
 
-        if (data.length === 0) {
-            return res.status(400).json({ message: 'Excel file is empty' });
+        // Try simplified approach - direct to JSON with header:1 option
+        const simpleData = xlsx.utils.sheet_to_json(sheet, {
+            header: 1,  // Use first row as headers
+            raw: true,   // Keep raw values
+            defval: null // Default to null for empty cells
+        });
+
+        console.log('Raw data from Excel:', simpleData);
+
+        if (!simpleData || simpleData.length < 2) {
+            return res.status(400).json({ message: 'Excel file must have a header row and at least one data row' });
         }
 
-        // Validate required columns
-        const requiredColumns = ['Batch', 'Semester', 'EnrollmentNumber', 'CPI', 'SPI', 'Rank'];
-        const missingColumns = requiredColumns.filter(col => !data[0].hasOwnProperty(col));
+        // Extract header row and convert to proper case for expected columns
+        const headerRow = simpleData[0];
+        console.log('Header row:', headerRow);
 
-        if (missingColumns.length > 0) {
+        // Map data using simple array approach
+        const expectedHeaders = ['BatchId', 'SemesterId', 'EnrollmentNumber', 'CPI', 'SPI', 'Rank'];
+
+        // Find header indexes
+        const headerIndexes = {};
+        expectedHeaders.forEach(expectedHeader => {
+            const index = headerRow.findIndex(h =>
+                h && typeof h === 'string' &&
+                h.trim().toLowerCase() === expectedHeader.toLowerCase());
+
+            if (index !== -1) {
+                headerIndexes[expectedHeader] = index;
+            }
+        });
+
+        console.log('Found header indexes:', headerIndexes);
+
+        // Check if all required headers were found
+        const missingHeaders = expectedHeaders.filter(header => headerIndexes[header] === undefined);
+
+        if (missingHeaders.length > 0) {
             return res.status(400).json({
-                message: `Missing required columns: ${missingColumns.join(', ')}`
+                message: `Missing required columns: ${missingHeaders.join(', ')}`,
+                foundHeaders: headerRow,
+                expected: expectedHeaders
             });
         }
+
+        // Process data rows into objects with the expected property names
+        const processedData = [];
+        for (let i = 1; i < simpleData.length; i++) {
+            const row = simpleData[i];
+            if (!row || row.length === 0) continue;
+
+            const dataObj = {};
+            expectedHeaders.forEach(header => {
+                dataObj[header] = row[headerIndexes[header]];
+            });
+
+            // Skip rows with all empty values
+            if (Object.values(dataObj).some(v => v !== null && v !== undefined)) {
+                processedData.push(dataObj);
+            }
+        }
+
+        console.log('Processed data:', processedData);
+
+        if (processedData.length === 0) {
+            return res.status(400).json({ message: 'No valid data rows found in Excel file' });
+        }
+
+        // Skip the detailed old parsing methods since we're using the simpler approach now
 
         // Process and save data
         const results = {
@@ -43,59 +117,133 @@ exports.uploadStudentCPI = async (req, res) => {
             errors: []
         };
 
-        for (const row of data) {
+        for (const row of processedData) {
             try {
-                // Find batch by name
-                const batch = await Batch.findOne({
-                    where: { batchName: row.Batch }
-                });
+                // Get values from the row with exact column names
+                const batchId = row.BatchId;
+                const semesterId = row.SemesterId;
+                const enrollmentNumber = row.EnrollmentNumber;
+                const cpi = row.CPI;
+                const spi = row.SPI;
+                const rank = row.Rank;
+
+                // Log the row data for debugging
+                console.log('Processing row:', { batchId, semesterId, enrollmentNumber, cpi, spi, rank });
+
+                // Validate all required fields are present and not undefined
+                if (batchId === undefined || semesterId === undefined ||
+                    enrollmentNumber === undefined || cpi === undefined ||
+                    spi === undefined || rank === undefined) {
+                    results.failed++;
+                    results.errors.push(`Row has undefined values: ${JSON.stringify(row)}`);
+                    continue;
+                }
+
+                // First, try to find if the batchId is actually a batch name
+                let batch;
+                let actualBatchId = batchId;
+
+                // Check if batchId is a number or string
+                if (isNaN(Number(batchId))) {
+                    // If it's a string, try to find batch by name
+                    console.log(`Trying to find batch by name: ${batchId}`);
+                    batch = await Batch.findOne({
+                        where: { batchName: batchId }
+                    });
+
+                    if (batch) {
+                        console.log(`Found batch with name ${batchId}, ID: ${batch.id}`);
+                        actualBatchId = batch.id;
+                    }
+                } else {
+                    // If it's a number, try to find by ID
+                    batch = await Batch.findByPk(batchId);
+                }
 
                 if (!batch) {
                     results.failed++;
-                    results.errors.push(`Batch not found: ${row.Batch} for enrollment ${row.EnrollmentNumber}`);
+                    results.errors.push(`Batch with ID/name ${batchId} not found for enrollment ${enrollmentNumber}`);
                     continue;
                 }
 
-                // Find semester by number and batch
-                const semester = await Semester.findOne({
-                    where: {
-                        batchId: batch.id,
-                        semesterNumber: row.Semester
+                // Similar approach for semester - check if it's a number or name
+                let semester;
+                let actualSemesterId = semesterId;
+
+                // Check if semesterId is a number or string
+                if (isNaN(Number(semesterId))) {
+                    // If it's a string, try to find semester by number and batch
+                    console.log(`Trying to find semester by name/number: ${semesterId} for batch ${actualBatchId}`);
+                    // Try to extract semester number if it's in format like "Semester 1"
+                    const semNumberMatch = semesterId.match(/\d+/);
+                    if (semNumberMatch) {
+                        const semNumber = parseInt(semNumberMatch[0], 10);
+                        semester = await Semester.findOne({
+                            where: {
+                                batchId: actualBatchId,
+                                semesterNumber: semNumber
+                            }
+                        });
+
+                        if (semester) {
+                            console.log(`Found semester ${semNumber} for batch ${actualBatchId}, ID: ${semester.id}`);
+                            actualSemesterId = semester.id;
+                        }
                     }
-                });
+                } else {
+                    // If it's a number, first try direct lookup
+                    semester = await Semester.findByPk(semesterId);
+
+                    // If not found, try looking up by semester number for this batch
+                    if (!semester) {
+                        semester = await Semester.findOne({
+                            where: {
+                                batchId: actualBatchId,
+                                semesterNumber: semesterId
+                            }
+                        });
+
+                        if (semester) {
+                            console.log(`Found semester by number ${semesterId} for batch ${actualBatchId}, ID: ${semester.id}`);
+                            actualSemesterId = semester.id;
+                        }
+                    }
+                }
 
                 if (!semester) {
                     results.failed++;
-                    results.errors.push(`Semester ${row.Semester} not found for batch ${row.Batch}`);
+                    results.errors.push(`Semester with ID/number ${semesterId} not found for batch ${batchId} and enrollment ${enrollmentNumber}`);
                     continue;
                 }
 
-                // Check if record already exists
+                // Check if record already exists - use actual IDs found from lookups
                 const existingRecord = await StudentCPI.findOne({
                     where: {
-                        BatchId: batch.id,
-                        SemesterId: semester.id,
-                        EnrollmentNumber: row.EnrollmentNumber
+                        BatchId: actualBatchId,
+                        SemesterId: actualSemesterId,
+                        EnrollmentNumber: enrollmentNumber
                     }
                 });
 
                 if (existingRecord) {
                     // Update existing record
                     await existingRecord.update({
-                        CPI: row.CPI,
-                        SPI: row.SPI,
-                        Rank: row.Rank
+                        CPI: cpi,
+                        SPI: spi,
+                        Rank: rank
                     });
+                    console.log(`Updated record for ${enrollmentNumber}`);
                 } else {
-                    // Create new record
+                    // Create new record with correct IDs
                     await StudentCPI.create({
-                        BatchId: batch.id,
-                        SemesterId: semester.id,
-                        EnrollmentNumber: row.EnrollmentNumber,
-                        CPI: row.CPI,
-                        SPI: row.SPI,
-                        Rank: row.Rank
+                        BatchId: actualBatchId, // Use the actual batch ID from lookup
+                        SemesterId: actualSemesterId, // Use the actual semester ID from lookup
+                        EnrollmentNumber: enrollmentNumber,
+                        CPI: cpi,
+                        SPI: spi,
+                        Rank: rank
                     });
+                    console.log(`Created new record for ${enrollmentNumber} with BatchId=${actualBatchId}, SemesterId=${actualSemesterId}`);
                 }
 
                 results.success++;
@@ -111,7 +259,18 @@ exports.uploadStudentCPI = async (req, res) => {
         });
     } catch (error) {
         console.error('Error uploading student CPI data:', error);
-        return res.status(500).json({ message: 'Server error', error: error.message });
+        // Send detailed error for debugging
+        return res.status(500).json({
+            message: 'Server error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+            name: error.name
+        });
+    } finally {
+        // Clean up error handler
+        process.removeListener('unhandledRejection', (error) => {
+            console.error('Unhandled Promise Rejection:', error);
+        });
     }
 };
 

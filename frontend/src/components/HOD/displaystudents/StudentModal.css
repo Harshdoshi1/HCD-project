@@ -10,7 +10,7 @@
     align-items: center;
 }
 
-.modal-content {
+.modal-content-add-student-model {
     background: white;
     padding: 20px;
     border-radius: 8px;
@@ -18,11 +18,11 @@
     width: 500px;
 }
 
-.modal-content h2 {
+.modal-content-add-student-model h2 {
     margin-bottom: 15px;
 }
 
-.modal-content input {
+.modal-content-add-student-model input {
     margin-bottom: 10px;
     width: 100%;
     padding: 10px;
@@ -67,7 +67,7 @@
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-.modal-content button {
+.modal-content-add-student-model button {
     margin-top: 10px;
     padding: 10px;
     border: none;
@@ -77,7 +77,7 @@
     cursor: pointer;
 }
 
-.modal-content button[type="button"] {
+.modal-content-add-student-model button[type="button"] {
     background-color: #dc3545;
 }
 
@@ -95,6 +95,6 @@
     filter: blur(4px);
 }
 
-.modal-content input {
+.modal-content-add-student-model input {
     width: 96%;
 }

@@ -12,6 +12,11 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
     direction: 'ascending'
   });
   
+  // State for student details modal
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedStudentDetail, setSelectedStudentDetail] = useState(null);
+  const [studentAcademicData, setStudentAcademicData] = useState(null);
+  
   // State for points filters
   const [pointsFilters, setPointsFilters] = useState({
     curricular: null,
@@ -112,10 +117,12 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
           
           // Fetch co-curricular and extra-curricular points from student_points table
           try {
-            const enrollmentNumber = student.enrollmentNumber || student.rollNo;
-            const semester = student.currnetsemester || selectedSemester;
+            let enrollmentNumber = student.enrollmentNumber || student.rollNo;
+            let semester = student.semesterNumber || student.currnetsemester || selectedSemester;
             
             if (enrollmentNumber && semester) {
+              console.log('Fetching points for student:', enrollmentNumber, 'semester:', semester);
+              
               const pointsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
                 enrollmentNumber,
                 semester
@@ -123,16 +130,40 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
               
               console.log('Student points response:', pointsResponse.data);
               
-              if (pointsResponse.data && Array.isArray(pointsResponse.data)) {
+              if (pointsResponse.data && Array.isArray(pointsResponse.data) && pointsResponse.data.length > 0) {
+                // Reset points before summing (in case of multiple entries)
+                points.coCurricular = 0;
+                points.extraCurricular = 0;
+                
                 // Sum up all co-curricular and extra-curricular points
                 pointsResponse.data.forEach(activity => {
-                  points.coCurricular += parseInt(activity.totalCocurricular || 0);
-                  points.extraCurricular += parseInt(activity.totalExtracurricular || 0);
+                  // Make sure we're working with numbers by using parseInt with base 10
+                  const coPoints = parseInt(activity.totalCocurricular || 0, 10);
+                  const extraPoints = parseInt(activity.totalExtracurricular || 0, 10);
+                  
+                  console.log(`Adding points for ${enrollmentNumber}: Co-curricular: ${coPoints}, Extra-curricular: ${extraPoints}`);
+                  
+                  points.coCurricular += coPoints;
+                  points.extraCurricular += extraPoints;
                 });
-              } else if (pointsResponse.data && pointsResponse.data.totalCocurricular) {
-                // If it's a single object with the totals
-                points.coCurricular = parseInt(pointsResponse.data.totalCocurricular || 0);
-                points.extraCurricular = parseInt(pointsResponse.data.totalExtracurricular || 0);
+                
+                console.log(`Total points for ${enrollmentNumber}: Co-curricular: ${points.coCurricular}, Extra-curricular: ${points.extraCurricular}`);
+              } else if (pointsResponse.data && typeof pointsResponse.data === 'object') {
+                // If it's a single object (either in array[0] or direct object)
+                let pointsData = pointsResponse.data;
+                
+                // Handle both array with one object and direct object
+                if (Array.isArray(pointsResponse.data) && pointsResponse.data.length === 1) {
+                  pointsData = pointsResponse.data[0];
+                }
+                
+                // Now safely extract the points
+                if (pointsData.totalCocurricular !== undefined || pointsData.totalExtracurricular !== undefined) {
+                  points.coCurricular = parseInt(pointsData.totalCocurricular || 0, 10);
+                  points.extraCurricular = parseInt(pointsData.totalExtracurricular || 0, 10);
+                  
+                  console.log(`Direct points for ${enrollmentNumber}: Co-curricular: ${points.coCurricular}, Extra-curricular: ${points.extraCurricular}`);
+                }
               }
             }
           } catch (error) {
@@ -237,6 +268,7 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
 
   const sortedStudents = getSortedStudents();
 
+<<<<<<< HEAD
   return (
     <div className="student-table-container">
       {error && <div className="error-message">{error}</div>}
@@ -261,142 +293,359 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
                 Low to High
               </button>
             </div>
+=======
+  // Function to open student detail modal
+  const openStudentDetailModal = async (student) => {
+    setSelectedStudentDetail(student);
+    setShowDetailModal(true);
+    
+    // Fetch detailed academic data for the student if we have enrollment number
+    if (student && student.rollNo) {
+      try {
+        const response = await axios.get(`http://localhost:5001/api/studentCPI/enrollment/${student.rollNo}`);
+        if (response.data) {
+          setStudentAcademicData(response.data);
+          console.log('Fetched academic data:', response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching student academic data:', error);
+        setStudentAcademicData(null);
+      }
+    }
+  };
+  
+  // Function to close student detail modal
+  const closeStudentDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedStudentDetail(null);
+    setStudentAcademicData(null);
+  };
+  
+  // Function to handle select all students checkbox
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      // If checked, select all filtered students
+      if (onStudentSelect && typeof onStudentSelect === 'function') {
+        sortedStudents.forEach(student => onStudentSelect(student));
+      }
+    }
+  };
+  
+  // Render the component with a separate modal outside the main return
+  const renderStudentDetailModal = () => {
+    if (!showDetailModal || !selectedStudentDetail) {
+      return null;
+    }
+    
+    return (
+      <div className="student-detail-modal">
+        <div className="student-detail-content">
+          <div className="student-detail-header">
+            <h3>Student Details</h3>
+            <button onClick={closeStudentDetailModal} className="modal-close-btn">&times;</button>
+>>>>>>> bf49fa3e2a258150785fde85c45f9a997acaecc4
           </div>
-          
-          {/* Co-curricular Points Filter */}
-          <div className="filter-dropdown">
-            <label>Co-curricular Points:</label>
-            <div className="dropdown-buttons">
-              <button 
-                className={pointsFilters.coCurricular === 'high' ? 'active' : ''}
-                onClick={() => handlePointsFilterInternal('coCurricular', 'high')}
-              >
-                High to Low
-              </button>
-              <button 
-                className={pointsFilters.coCurricular === 'low' ? 'active' : ''}
-                onClick={() => handlePointsFilterInternal('coCurricular', 'low')}
-              >
-                Low to High
-              </button>
+          <div className="student-detail-body">
+            <div className="student-info-section">
+              <h4>Personal Information</h4>
+              <div className="info-grid">
+                <div className="info-item">
+                  <div className="info-label">Name</div>
+                  <div className="info-value">{selectedStudentDetail.name}</div>
+                </div>
+                <div className="info-item">
+                  <div className="info-label">Enrollment Number</div>
+                  <div className="info-value">{selectedStudentDetail.rollNo}</div>
+                </div>
+                <div className="info-item">
+                  <div className="info-label">Batch</div>
+                  <div className="info-value">{selectedStudentDetail.batch}</div>
+                </div>
+                <div className="info-item">
+                  <div className="info-label">Semester</div>
+                  <div className="info-value">{selectedStudentDetail.semester}</div>
+                </div>
+                <div className="info-item">
+                  <div className="info-label">Email</div>
+                  <div className="info-value">{selectedStudentDetail.email}</div>
+                </div>
+                {selectedStudentDetail.parentEmail && (
+                  <div className="info-item">
+                    <div className="info-label">Parent Email</div>
+                    <div className="info-value">{selectedStudentDetail.parentEmail}</div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-          
-          {/* Extra-curricular Points Filter */}
-          <div className="filter-dropdown">
-            <label>Extra-curricular Points:</label>
-            <div className="dropdown-buttons">
-              <button 
-                className={pointsFilters.extraCurricular === 'high' ? 'active' : ''}
-                onClick={() => handlePointsFilterInternal('extraCurricular', 'high')}
-              >
-                High to Low
-              </button>
-              <button 
-                className={pointsFilters.extraCurricular === 'low' ? 'active' : ''}
-                onClick={() => handlePointsFilterInternal('extraCurricular', 'low')}
-              >
-                Low to High
-              </button>
+            
+            <div className="student-info-section">
+              <h4>Performance Summary</h4>
+              <div className="performance-grid">
+                <div className="performance-item">
+                  <div className="performance-label">Curricular Points</div>
+                  <div className="performance-value">{selectedStudentDetail.points.curricular}</div>
+                  <div className="performance-bar-container">
+                    <div 
+                      className="performance-bar curricular" 
+                      style={{ width: `${Math.min(selectedStudentDetail.points.curricular, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="performance-item">
+                  <div className="performance-label">Co-Curricular Points</div>
+                  <div className="performance-value">{selectedStudentDetail.points.coCurricular}</div>
+                  <div className="performance-bar-container">
+                    <div 
+                      className="performance-bar co-curricular" 
+                      style={{ width: `${Math.min(selectedStudentDetail.points.coCurricular, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="performance-item">
+                  <div className="performance-label">Extra-Curricular Points</div>
+                  <div className="performance-value">{selectedStudentDetail.points.extraCurricular}</div>
+                  <div className="performance-bar-container">
+                    <div 
+                      className="performance-bar extra-curricular" 
+                      style={{ width: `${Math.min(selectedStudentDetail.points.extraCurricular, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Academic Performance Section */}
+            <div className="student-info-section">
+              <h4>Academic Performance</h4>
+              {studentAcademicData ? (
+                <div className="academic-data-container">
+                  <div className="academic-summary">
+                    <div className="academic-item">
+                      <div className="academic-label">Current CPI</div>
+                      <div className="academic-value highlight">
+                        {studentAcademicData.CPI || 'N/A'}
+                      </div>
+                    </div>
+                    <div className="academic-item">
+                      <div className="academic-label">Current SPI</div>
+                      <div className="academic-value highlight">
+                        {studentAcademicData.currentSPI || 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {studentAcademicData.semesterData && studentAcademicData.semesterData.length > 0 ? (
+                    <table className="academic-table">
+                      <thead>
+                        <tr>
+                          <th>Semester</th>
+                          <th>SPI</th>
+                          <th>CPI</th>
+                          <th>Credits Earned</th>
+                          <th>Credits Taken</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {studentAcademicData.semesterData.map((sem, index) => (
+                          <tr key={index}>
+                            <td>{sem.semesterName || sem.semester || index + 1}</td>
+                            <td>{sem.SPI || 'N/A'}</td>
+                            <td>{sem.CPI || 'N/A'}</td>
+                            <td>{sem.creditsEarned || 'N/A'}</td>
+                            <td>{sem.creditsTaken || 'N/A'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <p>No semester data available.</p>
+                  )}
+                </div>
+              ) : (
+                <p>No academic data available for this student.</p>
+              )}
             </div>
           </div>
         </div>
       </div>
+    );
+  };
 
-      {error && <div className="error-message">{error}</div>}
-      
-      <div className="table-responsive">
-        <table className="student-table">
-          <thead>
-            <tr>
-              <th onClick={() => handleSort('name')}>
-                Name {sortConfig.key === 'name' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('rollNo')}>
-                Enrollment {sortConfig.key === 'rollNo' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('batch')}>
-                Batch {sortConfig.key === 'batch' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('semester')}>
-                Semester {sortConfig.key === 'semester' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('points.curricular')}>
-                Curricular {sortConfig.key === 'points.curricular' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('points.coCurricular')}>
-                Co-Curricular {sortConfig.key === 'points.coCurricular' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('points.extraCurricular')}>
-                Extra-Curricular {sortConfig.key === 'points.extraCurricular' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+  return (
+    <>
+      <div className="student-table-container">
+        {error && <div className="error-message">{error}</div>}
+        <div className="table-header">
+          <h3 className="table-title">Student Performance {loading && <span className="loading-indicator">Loading...</span>}</h3>
+          
+          <div className="batch-stats">
+            <span className="stat-item">Total Students: <span className="stat-value">{batchStats.totalStudents}</span></span>
+          </div>
+          
+          <div className="table-filters">
+            {/* Curricular Points Filter */}
+            <div className="filter-dropdown">
+              <label>Curricular Points:</label>
+              <div className="dropdown-buttons">
+                <button 
+                  className={pointsFilters.curricular === 'high' ? 'active' : ''}
+                  onClick={() => handlePointsFilterInternal('curricular', 'high')}
+                >
+                  High to Low
+                </button>
+                <button 
+                  className={pointsFilters.curricular === 'low' ? 'active' : ''}
+                  onClick={() => handlePointsFilterInternal('curricular', 'low')}
+                >
+                  Low to High
+                </button>
+              </div>
+            </div>
+            
+            {/* Co-curricular Points Filter */}
+            <div className="filter-dropdown">
+              <label>Co-curricular Points:</label>
+              <div className="dropdown-buttons">
+                <button 
+                  className={pointsFilters.coCurricular === 'high' ? 'active' : ''}
+                  onClick={() => handlePointsFilterInternal('coCurricular', 'high')}
+                >
+                  High to Low
+                </button>
+                <button 
+                  className={pointsFilters.coCurricular === 'low' ? 'active' : ''}
+                  onClick={() => handlePointsFilterInternal('coCurricular', 'low')}
+                >
+                  Low to High
+                </button>
+              </div>
+            </div>
+            
+            {/* Extra-curricular Points Filter */}
+            <div className="filter-dropdown">
+              <label>Extra-curricular Points:</label>
+              <div className="dropdown-buttons">
+                <button 
+                  className={pointsFilters.extraCurricular === 'high' ? 'active' : ''}
+                  onClick={() => handlePointsFilterInternal('extraCurricular', 'high')}
+                >
+                  High to Low
+                </button>
+                <button 
+                  className={pointsFilters.extraCurricular === 'low' ? 'active' : ''}
+                  onClick={() => handlePointsFilterInternal('extraCurricular', 'low')}
+                >
+                  Low to High
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+        
+        <div className="table-responsive">
+          <table className="student-table">
+            <thead>
               <tr>
-                <td colSpan="8" className="loading-data">Loading students...</td>
+                <th onClick={() => handleSort('name')}>
+                  Name {sortConfig.key === 'name' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('rollNo')}>
+                  Enrollment {sortConfig.key === 'rollNo' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('batch')}>
+                  Batch {sortConfig.key === 'batch' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('semester')}>
+                  Semester {sortConfig.key === 'semester' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('points.curricular')}>
+                  Curricular {sortConfig.key === 'points.curricular' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('points.coCurricular')}>
+                  Co-Curricular {sortConfig.key === 'points.coCurricular' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('points.extraCurricular')}>
+                  Extra-Curricular {sortConfig.key === 'points.extraCurricular' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
+                <th>Actions</th>
               </tr>
-            ) : sortedStudents.length > 0 ? (
-              sortedStudents.map((student) => (
-                <tr key={student.id || student.rollNo}>
-                  <td>{student.name}</td>
-                  <td>{student.rollNo}</td>
-                  <td>{student.batch}</td>
-                  <td>{student.semester}</td>
-                  <td>
-                    <div className="points-container">
-                      <div className="points-value">{student.points.curricular}</div>
-                      <div className="points-bar-container">
-                        <div 
-                          className="points-bar curricular"
-                          style={{ width: `${Math.min(student.points.curricular, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="points-container">
-                      <div className="points-value">{student.points.coCurricular}</div>
-                      <div className="points-bar-container">
-                        <div 
-                          className="points-bar co-curricular"
-                          style={{ width: `${Math.min(student.points.coCurricular, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="points-container">
-                      <div className="points-value">{student.points.extraCurricular}</div>
-                      <div className="points-bar-container">
-                        <div 
-                          className="points-bar extra-curricular"
-                          style={{ width: `${Math.min(student.points.extraCurricular, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <button
-                      className="dashboard-HOD-btn-view"
-                      onClick={() => onStudentSelect(student)}
-                    >
-                      View Analysis
-                    </button>
-                  </td>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="loading-data">Loading students...</td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="no-data">No students match the selected filters</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              ) : sortedStudents.length > 0 ? (
+                sortedStudents.map((student) => (
+                  <tr key={student.id || student.rollNo}>
+                    <td>{student.name}</td>
+                    <td>{student.rollNo}</td>
+                    <td>{student.batch}</td>
+                    <td>{student.semester}</td>
+                    <td>
+                      <div className="points-container">
+                        <div className="points-value">{student.points.curricular}</div>
+                        <div className="points-bar-container">
+                          <div 
+                            className="points-bar curricular"
+                            style={{ width: `${Math.min(student.points.curricular, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="points-container">
+                        <div className="points-value">{student.points.coCurricular}</div>
+                        <div className="points-bar-container">
+                          <div 
+                            className="points-bar co-curricular"
+                            style={{ width: `${Math.min(student.points.coCurricular, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="points-container">
+                        <div className="points-value">{student.points.extraCurricular}</div>
+                        <div className="points-bar-container">
+                          <div 
+                            className="points-bar extra-curricular"
+                            style={{ width: `${Math.min(student.points.extraCurricular, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="dashboard-HOD-btn-view"
+                          onClick={() => onStudentSelect(student)}
+                        >
+                          Analysis
+                        </button>
+                        <button
+                          className="dashboard-HOD-btn-details"
+                          onClick={() => openStudentDetailModal(student)}
+                        >
+                          Details
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="no-data">No students match the selected filters</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+      {renderStudentDetailModal()}
+    </>
   );
 };
 

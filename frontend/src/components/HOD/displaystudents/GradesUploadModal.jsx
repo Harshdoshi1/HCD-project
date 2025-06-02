@@ -168,17 +168,17 @@ const GradesUploadModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className="grades-upload-modal">
-                <div className="modal-header">
+        <div className="modal-overlay-upload-grade-model">
+            <div className="grades-upload-modal-upload-grade-model">
+                <div className="modal-header-upload-grade-model">
                     <h2><FaFileExcel /> Upload Grades</h2>
-                    <button className="close-btn" onClick={onClose}>
+                    <button className="close-btn-upload-grade-model" onClick={onClose}>
                         <FaTimes />
                     </button>
                 </div>
                 
-                <div className="modal-content">
-                    <div className="upload-instructions">
+                <div className="modal-content-upload-grade-model">
+                    <div className="upload-instructions-upload-grade-model">
                         <p>Upload an Excel file with the following columns:</p>
                         <ul>
                             <li><strong>EnrollmentNumber</strong> - Student enrollment number</li>
@@ -188,16 +188,16 @@ const GradesUploadModal = ({ isOpen, onClose }) => {
                     </div>
                     
                     <div 
-                        className="file-drop-area"
+                        className="file-drop-area-upload-grade-model"
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
                     >
-                        <div className="file-icon">
+                        <div className="file-icon-upload-grade-model">
                             <FaFileExcel />
                         </div>
                         <p>Drag & Drop your Excel file here</p>
-                        <p className="or-text">OR</p>
-                        <label className="file-select-btn">
+                        <p className="or-text-upload-grade-model">OR</p>
+                        <label className="file-select-btn-upload-grade-model">
                             Browse Files
                             <input 
                                 type="file" 
@@ -206,14 +206,14 @@ const GradesUploadModal = ({ isOpen, onClose }) => {
                                 style={{ display: 'none' }}
                             />
                         </label>
-                        {fileName && <p className="selected-file">Selected: {fileName}</p>}
+                        {fileName && <p className="selected-file-upload-grade-model">Selected: {fileName}</p>}
                     </div>
                     
                     {showPreview && previewData.length > 0 && (
-                        <div className="preview-section">
+                        <div className="preview-section-upload-grade-model">
                             <h3>Preview (First 5 rows)</h3>
-                            <div className="preview-table-container">
-                                <table className="preview-table">
+                            <div className="preview-table-container-upload-grade-model">
+                                <table className="preview-table-upload-grade-model">
                                     <thead>
                                         <tr>
                                             <th>Enrollment Number</th>
@@ -236,16 +236,16 @@ const GradesUploadModal = ({ isOpen, onClose }) => {
                     )}
                     
                     {uploadStatus.message && (
-                        <div className={`upload-status ${uploadStatus.success ? 'success' : 'error'}`}>
+                        <div className={`upload-status-upload-grade-model ${uploadStatus.success ? 'success-upload-grade-model' : 'error-upload-grade-model'}`}>
                             {uploadStatus.message}
                         </div>
                     )}
                 </div>
                 
-                <div className="modal-footer">
-                    <button className="cancel-btn" onClick={onClose}>Cancel</button>
+                <div className="modal-footer-upload-grade-model">
+                    <button className="cancel-btn-upload-grade-model" onClick={onClose}>Cancel</button>
                     <button 
-                        className="upload-btn" 
+                        className="upload-btn-upload-grade-model" 
                         onClick={handleUpload}
                         disabled={!file || uploading}
                     >

@@ -335,12 +335,12 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
                     >
                         Overview
                     </button>
-                    <button
+                    {/* <button
                         className={`tab-sdp ${activeTab === 'curricular' ? 'active' : ''}`}
                         onClick={() => setActiveTab('curricular')}
                     >
                         Academic Details
-                    </button>
+                    </button> */}
                     <button
                         className={`tab-sdp ${activeTab === 'co-curricular' ? 'active' : ''}`}
                         onClick={() => setActiveTab('co-curricular')}

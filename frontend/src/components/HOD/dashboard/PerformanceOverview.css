@@ -102,6 +102,25 @@
   border-left: 3px solid #d32f2f;
 }
 
+.no-data-message {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80%;
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  padding: 15px;
+  color: #666;
+  border-left: 3px solid #3674B5;
+}
+
+.no-data-message p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
 @media (max-width: 768px) {
   .overview-stats {
     flex-direction: column;
