@@ -119,11 +119,37 @@ const deleteComponentWeightage = async (req, res) => {
 };
 
 
+// Get Component Weightages by Subject Code
+const getComponentWeightagesBySubjectCode = async (req, res) => {
+  try {
+    const { subjectCode } = req.params;
+    
+    const weightages = await ComponentWeightage.findAll({
+      where: { subjectId: subjectCode }, // Query by subjectId which stores the subject code
+      include: [
+        { model: Batch, attributes: ["batchName"] },
+        { model: Semester, attributes: ["semesterNumber"] },
+        { model: UniqueSubDegree, attributes: ["sub_name"] }, // subject_name is included
+      ],
+    });
+
+    if (!weightages || weightages.length === 0) {
+      return res.status(404).json({ error: "Component Weightages not found for this subject code" });
+    }
+
+    res.status(200).json(weightages);
+  } catch (error) {
+    console.error("Error in getComponentWeightagesBySubjectCode:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   updateComponentWeightage,
   deleteComponentWeightage,
   getComponentWeightageById,
   getAllComponentWeightages,
-  createComponentWeightage
+  createComponentWeightage,
+  getComponentWeightagesBySubjectCode // Export the new function
 };
 

@@ -1,0 +1,117 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 30px; /* Increased padding */
+    border-radius: 10px; /* Slightly more rounded corners */
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15); /* Softer shadow */
+    width: 90%;
+    max-width: 550px; /* Slightly wider max-width */
+    position: relative;
+    animation: fadeInScale 0.3s ease-out;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* Modern font stack */
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 15px; /* Adjusted position */
+    right: 20px; /* Adjusted position */
+    background: #f0f0f0;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1.2rem; /* Adjusted for new button size */
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    background-color: #e0e0e0;
+    color: #000;
+}
+
+/* Hover style combined above */
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 25px; /* Increased margin */
+    color: #2c3e50; /* Darker, more neutral color */
+    font-size: 1.6rem; /* Slightly larger */
+    font-weight: 600;
+    border-bottom: 2px solid #5c95c9; /* Theme color border */
+    padding-bottom: 15px; /* Increased padding */
+}
+
+.details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.details-table th,
+.details-table td {
+    border: 1px solid #e0e0e0; /* Softer border */
+    padding: 12px 15px; /* Increased padding */
+    text-align: left;
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.details-table th {
+    background-color: #eaf2f8; /* Light theme blue */
+    color: #334e68; /* Darker text for contrast */
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.details-table td {
+    color: #555;
+}
+
+.details-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Slightly more subtle striping */
+}
+
+.details-table tbody tr:hover {
+    background-color: #f0f4f8; /* Hover effect for rows */
+}
+
+.error-message {
+    color: #c0392b; /* Adjusted error color */
+    background-color: #fdecea;
+    border: 1px solid #f5c6cb;
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
