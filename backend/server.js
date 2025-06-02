@@ -19,6 +19,7 @@ const facultysideRoutes = require("./routes/facultyside_router");
 const studentCPIRoutes = require('./routes/studentCPI_routes');
 const gradesRoutes = require('./routes/grades_routes');
 const academicDetailsRoutes = require('./routes/academic_details_routes');
+const componentWeightageRoutes = require('./routes/component_weightage_router'); // Import component weightage routes
 const app = express();
 const emailRoutes = require('./routes/email_routes');
 // Enable CORS
@@ -55,6 +56,7 @@ app.use('/api/facultyside', facultysideRoutes);
 app.use('/api/studentCPI', studentCPIRoutes);
 app.use('/api/grades', gradesRoutes);
 app.use('/api/academic-details', academicDetailsRoutes);
+app.use('/api/weightages', componentWeightageRoutes); // Use component weightage routes
 // Marks routes
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
 app.get("/api/marks/students/:batchId/:semesterId", gettedmarksController.getStudentsByBatchAndSemester);
