@@ -182,7 +182,7 @@ const ManageComponents = ({ selectedSubject }) => {
                                         onChange={(e) => handleWeightageChange(component, 'enabled', e.target.checked)}
                                     />
                                 </td>
-                                <td>{component === 'CA' ? 'Continuous Assessment (CA)' :
+                                <td>{component === 'CA' ? 'Continuous Semester Evolution (CSE)' :
                                     component === 'ESE' ? 'End Semester Exam (ESE)' :
                                         component === 'IA' ? 'Internal Assessment (IA)' :
                                             component === 'TW' ? 'Term Work (TW)' :

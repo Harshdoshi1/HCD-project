@@ -233,9 +233,9 @@ const DashboardHOD = () => {
                         )}
                       </div>
                       <div className="dashboard-actions">
-                        <button className="btn-primary" onClick={handleEmailModalOpen}>
+                        {/* <button className="btn-primary" onClick={handleEmailModalOpen}>
                           Acedemic Reports
-                        </button>
+                        </button> */}
                         <button className="btn-secondary" onClick={handleReportModalOpen}>
                           Generate Reports
                         </button>
