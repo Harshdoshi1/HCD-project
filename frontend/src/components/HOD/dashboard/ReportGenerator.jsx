@@ -518,7 +518,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
         </div>
       )}
       <div className="report-content">
-        <div className="modal-container report-modal">
+        <div className="modal-container" style={{ width: "55vw" }}>
           <div className="modal-header">
             <h2>Generate Reports</h2>
             <div className="header-controls">
@@ -537,7 +537,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
               <button className="close-btn" onClick={onClose}>&times;</button>
             </div>
           </div>
-          <div className="modal-content">
+          <div className="modal-content"  >
             <div className="report-config">
               <div className="form-group">
                 <label>Report Type:</label>

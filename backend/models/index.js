@@ -12,8 +12,9 @@ const ComponentMarks = require('./componentMarks');
 const Student = require('./students');
 const Gettedmarks = require('./gettedmarks');
 const SubjectWiseGrades = require('./SubjectWiseGrades');
-
 const ParticipationType = require('./participationTypes');
+const CourseOutcome = require('./courseOutcome');
+const SubjectComponentCo = require('./subjectComponentCo');
 
 // const CoCurricularActivity = require('./cocurricularActivity');
 // const ExtraCurricularActivity = require('./extraCurricularActivity');
@@ -44,4 +45,23 @@ const syncDB = async () => {
     }
 };
 
-module.exports = { User, Batch, Semester, Faculty, Subject, UniqueSubDegree, UniqueSubDiploma, AssignSubject, ComponentWeightage, ComponentMarks, Student, Gettedmarks, ParticipationType,SubjectWiseGrades, syncDB };
+module.exports = {
+    sequelize,
+    User,
+    Batch,
+    Semester,
+    Faculty,
+    Subject,
+    UniqueSubDegree,
+    UniqueSubDiploma,
+    AssignSubject,
+    ComponentWeightage,
+    ComponentMarks,
+    Student,
+    Gettedmarks,
+    SubjectWiseGrades,
+    ParticipationType,
+    CourseOutcome,
+    SubjectComponentCo,
+    syncDB
+};

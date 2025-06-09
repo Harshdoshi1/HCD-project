@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import "./SubjectList.css";
+import SubjectDetailsModal from './SubjectDetailsModal'; // Import the modal component
 
 const SubjectList = ({ onSelectSubject }) => {
     const [filters, setFilters] = useState({
@@ -13,6 +14,10 @@ const SubjectList = ({ onSelectSubject }) => {
     const [subjects, setSubjects] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // State for the modal
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedSubjectForModal, setSelectedSubjectForModal] = useState(null);
 
     useEffect(() => {
         const fetchBatches = async () => {
@@ -36,10 +41,10 @@ const SubjectList = ({ onSelectSubject }) => {
                     setSemesters([]);
                     return;
                 }
-                
+
                 const encodedBatchName = encodeURIComponent(filters.batch);
                 console.log(`Fetching semesters for batch: ${filters.batch} (encoded: ${encodedBatchName})`);
-                
+
                 const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${encodedBatchName}`);
                 if (!response.ok) {
                     if (response.status === 404) {
@@ -49,7 +54,7 @@ const SubjectList = ({ onSelectSubject }) => {
                     }
                     throw new Error(`Failed to fetch semesters: ${response.status} ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
                 console.log(`Fetched ${data.length} semesters for batch: ${filters.batch}`, data);
                 setSemesters(data);
@@ -66,20 +71,20 @@ const SubjectList = ({ onSelectSubject }) => {
         const fetchSubjects = async () => {
             setLoading(true);
             setError(null);
-            
+
             try {
                 if (filters.batch === "all" || filters.semester === "all") {
                     setSubjects([]);
                     return;
                 }
-                
+
                 const encodedBatchName = encodeURIComponent(filters.batch);
                 console.log(`Fetching subjects for batch: ${filters.batch} and semester: ${filters.semester}`);
-                
+
                 const response = await fetch(
                     `http://localhost:5001/api/subjects/getSubjects/${encodedBatchName}/${filters.semester}`
                 );
-                
+
                 if (!response.ok) {
                     if (response.status === 404) {
                         console.log(`No subjects found for batch: ${filters.batch} and semester: ${filters.semester}`);
@@ -90,7 +95,7 @@ const SubjectList = ({ onSelectSubject }) => {
                     console.error('API Error:', errorData);
                     throw new Error(errorData.message || "Failed to fetch subjects");
                 }
-                
+
                 const data = await response.json();
                 console.log('Subjects API Response:', data);
                 setSubjects(data.uniqueSubjects || data.subjects || []);
@@ -102,7 +107,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 setLoading(false);
             }
         };
-        
+
         fetchSubjects();
     }, [filters.batch, filters.semester]);
 
@@ -115,6 +120,17 @@ const SubjectList = ({ onSelectSubject }) => {
         }));
         // Clear subjects immediately on filter change
         setSubjects([]);
+    };
+
+    // Modal handlers
+    const handleOpenModal = (subject) => {
+        setSelectedSubjectForModal(subject);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedSubjectForModal(null);
     };
 
     return (
@@ -147,14 +163,12 @@ const SubjectList = ({ onSelectSubject }) => {
                         const code = subject.sub_code || subject.subjectCode || subject.code;
                         const name = subject.sub_name || subject.subjectName || subject.name;
                         return (
-                            <div key={subject._id || code || index} className="subject-card" onClick={() => onSelectSubject(subject)}>
+                            <div key={subject._id || code || index} className="subject-card" onClick={() => handleOpenModal(subject)}>
                                 <div className="card-header">
+                                    <h3 className="subject-card-title">{name}</h3>
                                     {code && (
-                                        <div className="subject-code">{code}</div>
+                                        <span className="subject-card-code">{code}</span>
                                     )}
-                                </div>
-                                <div className="subject-name">
-                                    {name}
                                 </div>
                                 <div className="subject-details">
                                     <div><strong>Type:</strong> {filters.program.charAt(0).toUpperCase() + filters.program.slice(1)}</div>
@@ -183,6 +197,14 @@ const SubjectList = ({ onSelectSubject }) => {
                     <p className="no-subjects">No subjects found for the selected filters.</p>
                 )}
             </div>
+
+            {isModalOpen && selectedSubjectForModal && (
+                <SubjectDetailsModal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    subject={selectedSubjectForModal}
+                />
+            )}
         </div>
     );
 };

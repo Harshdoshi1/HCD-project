@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
-const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma, ComponentWeightage, ComponentMarks, AssignSubjects } = require('../models'); // Import models
+const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma, ComponentWeightage, ComponentMarks, AssignSubjects, CourseOutcome, SubjectComponentCo } = require('../models'); // Import models
 
 // Add Subject
 const addSubject = async (req, res) => {
@@ -327,36 +327,31 @@ const getSubjectsByBatchSemesterandFaculty = async (req, res) => {
 
 const addSubjectWithComponents = async (req, res) => {
     try {
-        const {
-            subject, // subject code (from frontend)
-            name,    // subject name
-            credits, // subject credits
-            type,    // subject type (central or departmental)
-            componentsWeightage, // array of component weightages
-            componentsMarks      // array of component marks
-        } = req.body;
+        console.log('Received request body:', req.body);
+        const { subject, name, credits, type, components, courseOutcomes } = req.body;
 
-        console.log('Received data:', req.body);
-
-        // Validate input
-        if (!subject || !name || credits === undefined || credits === null) {
-            return res.status(400).json({
-                error: 'Missing required fields',
-                received: { subject, name, credits }
-            });
+        // Validate required fields
+        if (!subject || !name || !credits) {
+            return res.status(400).json({ error: 'Subject code, name, and credits are required' });
         }
 
-        if (!componentsWeightage || !componentsMarks || !Array.isArray(componentsWeightage) || !Array.isArray(componentsMarks)) {
-            return res.status(400).json({
-                error: 'Invalid component data',
-                received: { componentsWeightage, componentsMarks }
-            });
+        // Validate components
+        if (!Array.isArray(components)) {
+            return res.status(400).json({ error: 'Components must be an array' });
+        }
+
+        // Validate course outcomes
+        if (!Array.isArray(courseOutcomes)) {
+            return res.status(400).json({ error: 'Course outcomes must be an array' });
+        }
+
+        // Check if subject already exists
+        const existingSubject = await UniqueSubDegree.findOne({ where: { sub_code: subject } });
+        if (existingSubject) {
+            return res.status(400).json({ error: 'Subject already exists', subject: existingSubject });
         }
 
         // Create subject with required fields
-        // Default semester to 1 and program to 'Degree' if not provided
-        // Make sure type is one of the valid enum values: 'central' or 'department'
-        // If it's not provided or invalid, default to 'central'
         const validType = type && ['central', 'department'].includes(type) ? type : 'central';
         
         console.log('Creating subject with type:', validType);
@@ -369,49 +364,108 @@ const addSubjectWithComponents = async (req, res) => {
             program: 'Degree'      // Default program
         });
 
+        console.log('Created subject record:', subjectRecord);
+
+        // Create course outcomes
+        const createdCOs = await Promise.all(
+            courseOutcomes.map(async (co) => {
+                if (!co.text || co.text.trim() === '') {
+                    throw new Error(`Course outcome ${co.id} description is required`);
+                }
+                console.log('Creating CO with data:', {
+                    subject_id: subjectRecord.sub_code,
+                    co_code: co.id,
+                    description: co.text
+                });
+                const createdCO = await CourseOutcome.create({
+                    subject_id: subjectRecord.sub_code,
+                    co_code: co.id,
+                    description: co.text
+                });
+                console.log('Created CO:', createdCO);
+                return createdCO;
+            })
+        );
+
+        console.log('Created all COs:', createdCOs);
+
         // Map component names from frontend to database
         const componentMap = {
-            'CA': 'cse',   // Continuous Assessment maps to CSE in DB
-            'ESE': 'ese',  // End Semester Exam
-            'IA': 'ia',    // Internal Assessment
-            'TW': 'tw',    // Term Work
-            'VIVA': 'viva' // Viva
+            'CA': 'CA',   // Keep as CA instead of cse
+            'ESE': 'ESE',  // Keep as ESE
+            'IA': 'IA',    // Keep as IA
+            'TW': 'TW',    // Keep as TW
+            'VIVA': 'VIVA' // Keep as VIVA
         };
 
         // Prepare weightage and marks data
         const weightageData = { subjectId: subject };
         const marksData = { subjectId: subject };
 
-        // Process weightage components
-        componentsWeightage.forEach(component => {
+        // Process components
+        for (const component of components) {
             const dbField = componentMap[component.name];
             if (dbField) {
-                weightageData[dbField] = component.weightage;
+                weightageData[dbField.toLowerCase()] = component.weightage; // Convert to lowercase for DB fields
+                marksData[dbField.toLowerCase()] = component.totalMarks; // Convert to lowercase for DB fields
             }
-        });
+        }
 
-        // Process marks components
-        componentsMarks.forEach(component => {
-            const dbField = componentMap[component.name];
-            if (dbField) {
-                marksData[dbField] = component.value;
-            }
-        });
-
+        console.log('Creating weightage with data:', weightageData);
         // Create weightage and marks records
         const weightage = await ComponentWeightage.create(weightageData);
+        console.log('Created weightage:', weightage);
+
+        console.log('Creating marks with data:', marksData);
         const marks = await ComponentMarks.create(marksData);
+        console.log('Created marks:', marks);
+
+        // Collect all created associations
+        let allAssociations = [];
+
+        // Create component-CO associations
+        for (const component of components) {
+            const dbField = componentMap[component.name];
+            if (dbField && component.selectedCOs && Array.isArray(component.selectedCOs)) {
+                // Find the corresponding CO records
+                const selectedCOs = createdCOs.filter(co => 
+                    component.selectedCOs.includes(co.co_code)
+                );
+
+                for (const co of selectedCOs) {
+                    try {
+                        const association = await SubjectComponentCo.create({
+                            subject_component_id: weightage.id, // If you later fix per-component logic, use the correct id here
+                            course_outcome_id: co.id,
+                            component: component.name
+                        });
+                        allAssociations.push(association); // Collect the association
+                    } catch (error) {
+                        console.error('Error creating association:', error);
+                        continue;
+                    }
+                }
+            }
+        }
 
         res.status(201).json({
             subject: subjectRecord,
             weightage,
             marks,
-            message: 'Subject and components added successfully'
+            courseOutcomes: createdCOs,
+            subjectComponentCos: allAssociations,
+            message: 'Subject, components, and course outcomes added successfully'
         });
 
     } catch (error) {
-        console.error('Error adding subject with components:', error);
-        res.status(500).json({
+        console.error('Error in addSubjectWithComponents:', error);
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            errors: error.errors
+        });
+        res.status(500).json({ 
             error: error.message,
             type: error.name,
             details: error.errors?.map(e => e.message) || []

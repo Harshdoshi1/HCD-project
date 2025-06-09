@@ -2504,8 +2504,8 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
   };
 
   return (
-    <div className="report-generator-modal">
-      <div className="modal-overlay">
+    <div className="report-generator-modal" style={{width:"100%"}}>
+      <div className="modal-overlay" style={{width:"100%"}}> 
         <div className="modal-container">
           <div className="modal-header">
             <h2>Generate Student Report</h2>
@@ -2594,7 +2594,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
               </div>
             </div>
 
-            <div className="semester-selection-section">
+            <div className="semester-selection-section" >
               <h3>Semester Selection</h3>
               <p className="section-description">Select the semesters to include in the report:</p>
 

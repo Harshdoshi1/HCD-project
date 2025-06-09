@@ -3,7 +3,7 @@
     display: flex;
     justify-content: end;
     align-items: center;
-    margin-bottom: 2rem;
+    /* margin-bottom: 0.5rem; */
     gap: 1.5rem;
     transition: max-height 0.3s ease;
     overflow: hidden;
@@ -38,9 +38,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 0.5rem;
     flex-wrap: wrap;
     gap: 1rem;
+    margin-top: -1rem;
 }
 
 .subject-title {
@@ -108,23 +109,37 @@
 }
 
 .subject-card .card-header {
-    height: 100px;
-    background-color: #3a6ea5;
-    position: relative;
+    /* background-color: #5c95c9; */
+    /* Base color removed, will be set by nth-child */
+    color: #ffffff;
+    padding: 15px;
     display: flex;
-    align-items: flex-end;
+    flex-direction: column;
+    /* Stack title and code vertically */
+    justify-content: center;
+    /* Center content vertically */
+    align-items: flex-start;
+    /* Align text to the start */
+    height: auto;
+    /* Adjust height based on content */
+    min-height: 80px;
+    /* Ensure a minimum height */
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .subject-card:nth-child(3n+1) .card-header {
-    background-color: #2c5282;
+    background-color: #6c95c2;
+    /* Darker Blue */
 }
 
 .subject-card:nth-child(3n+2) .card-header {
-    background-color: #4c51bf;
+    background-color: #87bfa1;
+    /* Green */
 }
 
 .subject-card:nth-child(3n+3) .card-header {
-    background-color: #805ad5;
+    background-color: #3badb8;
+    /* Teal */
 }
 
 .subject-card:hover {
@@ -154,25 +169,27 @@
     color: #4a90e2;
 }
 
-.subject-code {
-    font-weight: bold;
+.subject-card-title {
     font-size: 1.1em;
-    color: #fff;
-    padding: 5px 15px;
-    display: inline-block;
-    margin-bottom: 8px;
-    position: absolute;
-    bottom: 10px;
-    left: 15px;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+    /* Space below title */
+    color: #ffffff;
 }
 
+.subject-card-code {
+    font-size: 0.85em;
+    font-weight: normal;
+    color: #e0e0e0;
+    /* Lighter color for the code */
+    display: block;
+    /* Ensure it takes its own line if needed */
+}
+
+/* .subject-name class is no longer used as its content moved to .card-header */
 .subject-name {
-    font-size: 1.1em;
-    color: #333;
-    margin: 0;
-    font-weight: 600;
-    padding: 15px 15px 10px;
-    border-bottom: 1px solid #eee;
+    display: none;
+    /* Hide the old subject-name element if it's still somehow rendered */
 }
 
 .professional-filter-ds {
@@ -200,7 +217,7 @@
 }
 
 .subject-details {
-    font-size: 0.85em;
+    font-size: 1em;
     color: #666;
     padding: 10px 15px;
     line-height: 1.5;
@@ -209,9 +226,21 @@
     overflow-y: auto;
 }
 
-.subject-details div {
-    margin-bottom: 5px;
+.subject-details div:not(.subject-detail-row) {
+    margin-bottom: 8px;
+    /* Adjusted margin for single items */
 }
+
+.subject-detail-row {
+    display: flex;
+    justify-content: space-between;
+    /* Puts Type on left, Semester on right */
+    align-items: center;
+    margin-bottom: 8px;
+    /* Consistent margin for rows */
+}
+
+/* .subject-detail-row span ruleset removed as it was empty */
 
 .subject-details strong {
     color: #555;

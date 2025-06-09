@@ -532,14 +532,14 @@ const StudentAnalysis = ({ student, onClose }) => {
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-container analysis-modal">
-        <div className="modal-header">
+      <div className="modal-container batch-analysis-modal" >
+        <div className="modal-header" style={{flexDirection:"row"}}>
           <h2>Student Analysis: {student.name}</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
 
-        <div className="modal-content">
-          <div className="student-details">
+        <div className="modal-content-batch-analysis-modal" style={{padding:"20px"}}>
+          <div className="student-details-batch-analysis-modal">
             <div className="detail-item">
               <span className="detail-label">Roll Number:</span>
               <span className="detail-value">{student.rollNo}</span>
@@ -554,7 +554,7 @@ const StudentAnalysis = ({ student, onClose }) => {
             </div>
           </div>
 
-          <div className="analysis-section">
+          <div className="analysis-section-batch-analysis-modal">
             <h3>Performance Trends</h3>
 
             <div className="chart-container">

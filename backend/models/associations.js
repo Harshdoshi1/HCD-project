@@ -1,6 +1,10 @@
 const StudentPoints = require('./StudentPoints');
 const EventMaster = require('./EventMaster');
 const ParticipationType = require('./participationTypes');
+const UniqueSubDegree = require('./uniqueSubDegree'); 
+const CourseOutcome = require('./courseOutcome');
+const ComponentWeightage = require('./componentWeightage'); 
+const SubjectComponentCo = require('./subjectComponentCo');
 
 // Set up associations between StudentPoints and EventMaster without enforcing foreign key constraints
 StudentPoints.belongsTo(EventMaster, {
@@ -18,8 +22,56 @@ StudentPoints.belongsTo(ParticipationType, {
   constraints: false // Don't enforce foreign key constraints
 });
 
+// --- CourseOutcome Associations ---
+
+// UniqueSubDegree (Subject) has many CourseOutcomes
+UniqueSubDegree.hasMany(CourseOutcome, {
+  foreignKey: 'subject_id',
+  as: 'courseOutcomes' // Alias for fetching COs from a Subject
+});
+// CourseOutcome belongs to one UniqueSubDegree (Subject)
+CourseOutcome.belongsTo(UniqueSubDegree, {
+  foreignKey: 'subject_id',
+  as: 'subject' // Alias for fetching Subject from a CO
+});
+
+// --- SubjectComponentCo Associations (Many-to-Many between ComponentWeightage and CourseOutcome) ---
+
+// ComponentWeightage (Subject Component) can have many CourseOutcomes through SubjectComponentCo
+ComponentWeightage.belongsToMany(CourseOutcome, {
+  through: SubjectComponentCo,
+  foreignKey: 'subject_component_id', // Foreign key in SubjectComponentCo linking to ComponentWeightage
+  otherKey: 'course_outcome_id',    // Foreign key in SubjectComponentCo linking to CourseOutcome
+  as: 'associatedCourseOutcomes'    // Alias for fetching COs from a ComponentWeightage
+});
+
+// CourseOutcome can be associated with many ComponentWeightages (Subject Components) through SubjectComponentCo
+CourseOutcome.belongsToMany(ComponentWeightage, {
+  through: SubjectComponentCo,
+  foreignKey: 'course_outcome_id',       // Foreign key in SubjectComponentCo linking to CourseOutcome
+  otherKey: 'subject_component_id', // Foreign key in SubjectComponentCo linking to ComponentWeightage
+  as: 'associatedComponents'       // Alias for fetching ComponentWeightages from a CO
+});
+
+// Explicitly define relationships for the join table SubjectComponentCo
+// SubjectComponentCo belongs to one ComponentWeightage
+SubjectComponentCo.belongsTo(ComponentWeightage, {
+  foreignKey: 'subject_component_id',
+  as: 'componentWeightage' // Alias for fetching ComponentWeightage from SubjectComponentCo
+});
+
+// SubjectComponentCo belongs to one CourseOutcome
+SubjectComponentCo.belongsTo(CourseOutcome, {
+  foreignKey: 'course_outcome_id',
+  as: 'courseOutcome' // Alias for fetching CourseOutcome from SubjectComponentCo
+});
+
 module.exports = {
   StudentPoints,
   EventMaster,
-  ParticipationType
+  ParticipationType,
+  UniqueSubDegree,
+  CourseOutcome,
+  ComponentWeightage,
+  SubjectComponentCo
 };
