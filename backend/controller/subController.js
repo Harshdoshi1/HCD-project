@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
 const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma, ComponentWeightage, ComponentMarks, AssignSubjects, CourseOutcome, SubjectComponentCo } = require('../models'); // Import models
+const BloomsTaxonomy = require('../models/bloomsTaxonomy');
+const CoBloomsTaxonomy = require('../models/coBloomsTaxonomy');
 
 // Add Subject
 const addSubject = async (req, res) => {
@@ -328,7 +330,7 @@ const getSubjectsByBatchSemesterandFaculty = async (req, res) => {
 const addSubjectWithComponents = async (req, res) => {
     try {
         console.log('Received request body:', req.body);
-        const { subject, name, credits, type, components, courseOutcomes } = req.body;
+        const { subject, name, credits, type, components, courseOutcomes, bloomsTaxonomy } = req.body;
 
         // Validate required fields
         if (!subject || !name || !credits) {
@@ -389,6 +391,42 @@ const addSubjectWithComponents = async (req, res) => {
 
         console.log('Created all COs:', createdCOs);
 
+        // Create Blooms Taxonomy associations
+        if (bloomsTaxonomy) {
+            console.log('Processing Blooms Taxonomy associations:', bloomsTaxonomy);
+            for (const [coId, bloomsIds] of Object.entries(bloomsTaxonomy)) {
+                const co = createdCOs.find(co => co.co_code === coId);
+                if (co && Array.isArray(bloomsIds)) {
+                    console.log(`Creating associations for CO ${coId} with Blooms IDs:`, bloomsIds);
+                    try {
+                        // First, delete any existing associations for this CO
+                        await CoBloomsTaxonomy.destroy({
+                            where: { course_outcome_id: co.id }
+                        });
+
+                        // Create new associations one by one
+                        for (const bloomsId of bloomsIds) {
+                            try {
+                                await CoBloomsTaxonomy.create({
+                                    course_outcome_id: co.id,
+                                    blooms_taxonomy_id: bloomsId
+                                });
+                                console.log(`Successfully created association: CO ${co.id} - Blooms ${bloomsId}`);
+                            } catch (assocError) {
+                                console.error(`Error creating individual association for CO ${co.id} and Blooms ${bloomsId}:`, assocError);
+                                // Continue with other associations even if one fails
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error processing Blooms associations for CO ${coId}:`, error);
+                        // Continue with other COs even if one fails
+                    }
+                } else {
+                    console.log(`Skipping invalid Blooms association for CO ${coId}:`, { co, bloomsIds });
+                }
+            }
+        }
+
         // Map component names from frontend to database
         const componentMap = {
             'CA': 'CA',   // Keep as CA instead of cse
@@ -424,26 +462,31 @@ const addSubjectWithComponents = async (req, res) => {
         let allAssociations = [];
 
         // Create component-CO associations
-        for (const component of components) {
-            const dbField = componentMap[component.name];
-            if (dbField && component.selectedCOs && Array.isArray(component.selectedCOs)) {
-                // Find the corresponding CO records
-                const selectedCOs = createdCOs.filter(co => 
-                    component.selectedCOs.includes(co.co_code)
-                );
-
-                for (const co of selectedCOs) {
-                    try {
-                        const association = await SubjectComponentCo.create({
-                            subject_component_id: weightage.id, // If you later fix per-component logic, use the correct id here
-                            course_outcome_id: co.id,
-                            component: component.name
-                        });
-                        allAssociations.push(association); // Collect the association
-                    } catch (error) {
-                        console.error('Error creating association:', error);
-                        continue;
+        for (const coRecord of createdCOs) { // Iterate through each created Course Outcome
+            const associatedComponentNames = [];
+            // Find all components from the input `components` array that are associated with this coRecord
+            for (const inputComponent of components) { 
+                // Ensure componentMap has the component and selectedCOs is valid
+                if (componentMap[inputComponent.name] && inputComponent.selectedCOs && Array.isArray(inputComponent.selectedCOs)) {
+                    if (inputComponent.selectedCOs.includes(coRecord.co_code)) {
+                        associatedComponentNames.push(inputComponent.name);
                     }
+                }
+            }
+
+            if (associatedComponentNames.length > 0) {
+                try {
+                    const componentsString = associatedComponentNames.join(',');
+                    const association = await SubjectComponentCo.create({
+                        subject_component_id: weightage.id, // ID of the row in ComponentWeightage for this subject
+                        course_outcome_id: coRecord.id,    // ID of the CourseOutcome
+                        component: componentsString        // Comma-separated string of component names
+                    });
+                    allAssociations.push(association);
+                } catch (error) {
+                    console.error(`Error creating SubjectComponentCo association for CO ID ${coRecord.id}:`, error);
+                    // If this is part of a transaction, ensure rollback on error.
+                    // For now, logging and continuing. Consider implications for data consistency.
                 }
             }
         }
@@ -454,7 +497,7 @@ const addSubjectWithComponents = async (req, res) => {
             marks,
             courseOutcomes: createdCOs,
             subjectComponentCos: allAssociations,
-            message: 'Subject, components, and course outcomes added successfully'
+            message: 'Subject, components, course outcomes, and Blooms Taxonomy levels added successfully'
         });
 
     } catch (error) {

@@ -19,6 +19,8 @@ const facultysideRoutes = require("./routes/facultyside_router");
 const studentCPIRoutes = require('./routes/studentCPI_routes');
 const gradesRoutes = require('./routes/grades_routes');
 const academicDetailsRoutes = require('./routes/academic_details_routes');
+const bloomsTaxonomyRoutes = require('./routes/bloomsTaxonomyRoutes');
+const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
 const app = express();
 const emailRoutes = require('./routes/email_routes');
 // Enable CORS
@@ -55,6 +57,8 @@ app.use('/api/facultyside', facultysideRoutes);
 app.use('/api/studentCPI', studentCPIRoutes);
 app.use('/api/grades', gradesRoutes);
 app.use('/api/academic-details', academicDetailsRoutes);
+app.use('/api/blooms-taxonomy', bloomsTaxonomyRoutes);
+app.use('/api/course-outcomes', courseOutcomeRoutes);
 // Marks routes
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
 app.get("/api/marks/students/:batchId/:semesterId", gettedmarksController.getStudentsByBatchAndSemester);

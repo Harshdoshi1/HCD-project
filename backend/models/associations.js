@@ -5,6 +5,8 @@ const UniqueSubDegree = require('./uniqueSubDegree');
 const CourseOutcome = require('./courseOutcome');
 const ComponentWeightage = require('./componentWeightage'); 
 const SubjectComponentCo = require('./subjectComponentCo');
+const BloomsTaxonomy = require('./bloomsTaxonomy');
+const CoBloomsTaxonomy = require('./coBloomsTaxonomy');
 
 // Set up associations between StudentPoints and EventMaster without enforcing foreign key constraints
 StudentPoints.belongsTo(EventMaster, {
@@ -66,6 +68,36 @@ SubjectComponentCo.belongsTo(CourseOutcome, {
   as: 'courseOutcome' // Alias for fetching CourseOutcome from SubjectComponentCo
 });
 
+// --- Blooms Taxonomy Associations ---
+
+// CourseOutcome can have many Blooms Taxonomy levels through CoBloomsTaxonomy
+CourseOutcome.belongsToMany(BloomsTaxonomy, {
+    through: CoBloomsTaxonomy,
+    foreignKey: 'course_outcome_id',
+    otherKey: 'blooms_taxonomy_id',
+    as: 'bloomsLevels'
+});
+
+// Blooms Taxonomy can be associated with many Course Outcomes through CoBloomsTaxonomy
+BloomsTaxonomy.belongsToMany(CourseOutcome, {
+    through: CoBloomsTaxonomy,
+    foreignKey: 'blooms_taxonomy_id',
+    otherKey: 'course_outcome_id',
+    as: 'courseOutcomes'
+});
+
+// CoBloomsTaxonomy belongs to CourseOutcome
+CoBloomsTaxonomy.belongsTo(CourseOutcome, {
+    foreignKey: 'course_outcome_id',
+    as: 'courseOutcome'
+});
+
+// CoBloomsTaxonomy belongs to BloomsTaxonomy
+CoBloomsTaxonomy.belongsTo(BloomsTaxonomy, {
+    foreignKey: 'blooms_taxonomy_id',
+    as: 'bloomsTaxonomy'
+});
+
 module.exports = {
   StudentPoints,
   EventMaster,
@@ -73,5 +105,7 @@ module.exports = {
   UniqueSubDegree,
   CourseOutcome,
   ComponentWeightage,
-  SubjectComponentCo
+  SubjectComponentCo,
+  BloomsTaxonomy,
+  CoBloomsTaxonomy
 };

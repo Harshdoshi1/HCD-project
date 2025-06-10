@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ManageComponents.css';
 
 const ManageComponents = ({ selectedSubject }) => {
@@ -20,6 +20,24 @@ const ManageComponents = ({ selectedSubject }) => {
 
     const [numCOs, setNumCOs] = useState(0);
     const [courseOutcomes, setCourseOutcomes] = useState([]);
+    const [bloomsLevels, setBloomsLevels] = useState([]);
+    const [selectedBlooms, setSelectedBlooms] = useState({});
+
+    useEffect(() => {
+        // Fetch Blooms Taxonomy levels when component mounts
+        const fetchBloomsLevels = async () => {
+            try {
+                const response = await fetch('http://localhost:5001/api/blooms-taxonomy');
+                if (response.ok) {
+                    const data = await response.json();
+                    setBloomsLevels(data);
+                }
+            } catch (error) {
+                console.error('Error fetching Blooms Taxonomy levels:', error);
+            }
+        };
+        fetchBloomsLevels();
+    }, []);
 
     const handleSubjectChange = (field, value) => {
         setNewSubject(prev => ({
@@ -55,8 +73,16 @@ const ManageComponents = ({ selectedSubject }) => {
         if (isNaN(countVal) || countVal < 0) {
             setNumCOs(0); 
             setCourseOutcomes([]);
+            setSelectedBlooms({});
             return;
         }
+
+        // Enforce maximum limit of 10 COs
+        if (countVal > 10) {
+            alert('Maximum number of COs allowed is 10');
+            return;
+        }
+
         setNumCOs(countVal);
 
         setCourseOutcomes(prevCOs => {
@@ -68,6 +94,15 @@ const ManageComponents = ({ selectedSubject }) => {
                 });
             }
             return newCOs;
+        });
+
+        // Reset Blooms selections for new COs
+        setSelectedBlooms(prev => {
+            const newSelected = {};
+            for (let i = 1; i <= countVal; i++) {
+                newSelected[`CO${i}`] = prev[`CO${i}`] || [];
+            }
+            return newSelected;
         });
     };
 
@@ -98,6 +133,22 @@ const ManageComponents = ({ selectedSubject }) => {
         });
     };
 
+    const handleBloomsChange = (coId, bloomsId, isChecked) => {
+        setSelectedBlooms(prev => {
+            const currentSelected = prev[coId] || [];
+            let newSelected;
+            if (isChecked) {
+                newSelected = [...currentSelected, bloomsId];
+            } else {
+                newSelected = currentSelected.filter(id => id !== bloomsId);
+            }
+            return {
+                ...prev,
+                [coId]: newSelected
+            };
+        });
+    };
+
     const handleSave = async () => {
         if (!newSubject.code || !newSubject.name || !newSubject.credits) {
             alert('Please fill in all subject details');
@@ -124,7 +175,8 @@ const ManageComponents = ({ selectedSubject }) => {
             credits: Number(newSubject.credits),
             type: newSubject.type,
             components: components,
-            courseOutcomes: courseOutcomes.filter(co => co.text && co.text.trim() !== '')
+            courseOutcomes: courseOutcomes.filter(co => co.text && co.text.trim() !== ''),
+            bloomsTaxonomy: selectedBlooms
         };
 
         try {
@@ -144,7 +196,7 @@ const ManageComponents = ({ selectedSubject }) => {
             console.log('API Response:', data);
 
             if (response.ok) {
-                alert('Subject, components, and course outcomes added successfully!');
+                alert('Subject, components, course outcomes, and Blooms Taxonomy levels added successfully!');
 
                 // Reset form
                 setNewSubject({
@@ -163,6 +215,7 @@ const ManageComponents = ({ selectedSubject }) => {
                 setTotalWeightage(0);
                 setNumCOs(0);
                 setCourseOutcomes([]);
+                setSelectedBlooms({});
             } else {
                 console.error('API Error:', {
                     status: response.status,
@@ -222,6 +275,7 @@ const ManageComponents = ({ selectedSubject }) => {
                             type="number"
                             id="numCOs"
                             min="0"
+                            max="10"
                             value={numCOs}
                             onChange={handleNumCOsChange}
                             className="subject-input"
@@ -238,6 +292,25 @@ const ManageComponents = ({ selectedSubject }) => {
                                 onChange={(e) => handleCOTextChange(index, e.target.value)}
                                 className="subject-input"
                             />
+                            <div className="blooms-taxonomy-section">
+                                <h4>Blooms Taxonomy Levels</h4>
+                                <div className="blooms-checkboxes">
+                                    {bloomsLevels.map(level => (
+                                        <div key={level.id} className="blooms-checkbox-item">
+                                            <input
+                                                type="checkbox"
+                                                id={`${co.id}-blooms-${level.id}`}
+                                                checked={selectedBlooms[co.id]?.includes(level.id) || false}
+                                                onChange={(e) => handleBloomsChange(co.id, level.id, e.target.checked)}
+                                                disabled={!co.text || co.text.trim() === ''}
+                                            />
+                                            <label htmlFor={`${co.id}-blooms-${level.id}`}>
+                                                {level.name}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
