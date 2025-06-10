@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { syncDB } = require('./models');
+const app = require('./app');
+const initializeDatabase = require('./config/initDb');
 
 const userRoutes = require('./routes/auth_routes');
 const facultyRoutes = require('./routes/faculty_routes');
@@ -21,7 +23,6 @@ const gradesRoutes = require('./routes/grades_routes');
 const academicDetailsRoutes = require('./routes/academic_details_routes');
 const bloomsTaxonomyRoutes = require('./routes/bloomsTaxonomyRoutes');
 const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
-const app = express();
 const emailRoutes = require('./routes/email_routes');
 // Enable CORS
 app.use(cors({
@@ -82,15 +83,34 @@ app.use((req, res) => {
     });
 });
 
-// Start Server
 const PORT = process.env.PORT || 5001;
 
-// Synchronize database before starting the server
-syncDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
-}).catch(error => {
-    console.error('Failed to start server:', error);
+const startServer = async () => {
+    try {
+        // Initialize database
+        await initializeDatabase();
+        console.log('Database initialized successfully');
+
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
     process.exit(1);
 });
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (error) => {
+    console.error('Unhandled Rejection:', error);
+    process.exit(1);
+});
+
+startServer();

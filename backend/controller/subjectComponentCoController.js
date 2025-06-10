@@ -1,12 +1,12 @@
 const SubjectComponentCo = require('../models/subjectComponentCo');
-const SubjectComponent = require('../models/subjectComponent'); // Assuming model path
+// const SubjectComponent = require('../models/subjectComponent'); // Assuming model path
 const CourseOutcome = require('../models/courseOutcome'); // Assuming model path
 
 // Get all COs for a specific subject component
 exports.getCOsBySubjectComponent = async (req, res) => {
     try {
         const { subjectComponentId } = req.params;
-        
+
         const componentExists = await SubjectComponent.findByPk(subjectComponentId);
         if (!componentExists) {
             return res.status(404).json({ message: 'Subject Component not found' });

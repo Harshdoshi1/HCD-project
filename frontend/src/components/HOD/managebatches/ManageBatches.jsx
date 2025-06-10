@@ -6,7 +6,13 @@ const ManageBatches = () => {
     const [batches, setBatches] = useState([]);
     const [newBatch, setNewBatch] = useState({ batchName: '', batchStart: '', batchEnd: '', courseType: '' });
     const [selectedBatch, setSelectedBatch] = useState(null);
-    const [semesterToAdd, setSemesterToAdd] = useState({ semesterNumber: '', startDate: '', endDate: '' });
+    const [semesterToAdd, setSemesterToAdd] = useState({
+        semesterNumber: '',
+        startDate: '',
+        endDate: '',
+        numberOfClasses: ''
+    });
+    const [classDetails, setClassDetails] = useState([]);
     const [activeTab, setActiveTab] = useState('batch');
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -71,30 +77,73 @@ const ManageBatches = () => {
             return;
         }
 
+        // Validate class names if classes are being added
+        if (semesterToAdd.numberOfClasses > 0) {
+            const classNames = classDetails.map(detail => detail.className);
+            const uniqueClassNames = new Set(classNames);
+            if (classNames.length !== uniqueClassNames.size) {
+                setError('Duplicate class names are not allowed');
+                return;
+            }
+            if (classNames.some(name => !name.trim())) {
+                setError('All classes must have a name');
+                return;
+            }
+        }
+
         const semesterData = {
             batchName: selectedBatch.batchName,
             semesterNumber: semesterToAdd.semesterNumber,
             startDate: semesterToAdd.startDate,
             endDate: semesterToAdd.endDate,
-
         };
 
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/semesters/addSemester', {
+            // First create the semester
+            const semesterResponse = await fetch('http://localhost:5001/api/semesters/addSemester', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(semesterData)
             });
-            if (!response.ok) throw new Error('Failed to add semester');
+
+            if (!semesterResponse.ok) {
+                const errorData = await semesterResponse.json();
+                throw new Error(errorData.message || 'Failed to add semester');
+            }
+
+            const semesterResult = await semesterResponse.json();
+
+            // If classes are specified, create them
+            if (semesterToAdd.numberOfClasses > 0 && classDetails.length > 0) {
+                const classesData = {
+                    semesterId: semesterResult.id,
+                    classes: classDetails.map(classDetail => ({
+                        className: classDetail.className,
+                        numberOfStudents: 0 // Default value, can be updated later
+                    }))
+                };
+
+                const classesResponse = await fetch('http://localhost:5001/api/classes/createMultipleClasses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(classesData)
+                });
+
+                if (!classesResponse.ok) {
+                    const errorData = await classesResponse.json();
+                    throw new Error(errorData.message || 'Failed to add classes');
+                }
+            }
 
             await fetchBatches();
             setSelectedBatch(null);
-            setSemesterToAdd({ semesterNumber: '', startDate: '', endDate: '' });
-            alert('Semester added successfully!');
+            setSemesterToAdd({ semesterNumber: '', startDate: '', endDate: '', numberOfClasses: '' });
+            setClassDetails([]);
+            alert('Semester and classes added successfully!');
         } catch (error) {
             setError(error.message);
-            alert('Error adding semester: ' + error.message);
+            alert('Error: ' + error.message);
             console.error(error);
         } finally {
             setIsLoading(false);
@@ -117,6 +166,31 @@ const ManageBatches = () => {
 
     const handleClosePassStudentsModal = () => {
         setIsPassStudentsModalOpen(false);
+    };
+
+    const handleNumberOfClassesChange = (e) => {
+        const numClasses = parseInt(e.target.value) || 0;
+        setSemesterToAdd({ ...semesterToAdd, numberOfClasses: numClasses });
+
+        // Initialize class details array with empty objects
+        const newClassDetails = Array(numClasses).fill().map((_, index) => ({
+            className: '',
+            file: null
+        }));
+        setClassDetails(newClassDetails);
+    };
+
+    const handleClassDetailChange = (index, field, value) => {
+        const newClassDetails = [...classDetails];
+        newClassDetails[index] = {
+            ...newClassDetails[index],
+            [field]: value
+        };
+        setClassDetails(newClassDetails);
+    };
+
+    const handleFileUpload = (index, file) => {
+        handleClassDetailChange(index, 'file', file);
     };
 
     return (
@@ -278,16 +352,67 @@ const ManageBatches = () => {
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="card-footer">
-                                        <button
-                                            onClick={handleAddSemester}
-                                            disabled={isLoading}
-                                            style={{ flex: '0 0 auto' }}
-                                            className="button primary-button"
-                                        >
-                                            Add Semester
-                                        </button>
+
+                                    <div className="form-group" style={{ flex: '1' }}>
+                                        <label htmlFor="numberOfClasses">Number of Classes</label>
+                                        <input
+                                            id="numberOfClasses"
+                                            className="input"
+                                            type="number"
+                                            min="1"
+                                            placeholder="Enter number of classes"
+                                            value={semesterToAdd.numberOfClasses}
+                                            onChange={handleNumberOfClassesChange}
+                                        />
                                     </div>
+                                </div>
+
+                                {semesterToAdd.numberOfClasses > 0 && (
+                                    <div className="class-details-container">
+                                        <h3 className="class-details-title">Class Details</h3>
+                                        <div className="class-details-grid">
+                                            {classDetails.map((classDetail, index) => (
+                                                <div key={index} className="class-detail-card">
+                                                    <div className="form-group">
+                                                        <label htmlFor={`className-${index}`}>Class Name</label>
+                                                        <input
+                                                            id={`className-${index}`}
+                                                            className="input"
+                                                            placeholder={`e.g., Class ${String.fromCharCode(65 + index)}`}
+                                                            value={classDetail.className}
+                                                            onChange={(e) => handleClassDetailChange(index, 'className', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label htmlFor={`file-${index}`}>Student List (Excel)</label>
+                                                        <div className="file-upload-container">
+                                                            <input
+                                                                id={`file-${index}`}
+                                                                type="file"
+                                                                accept=".xlsx,.xls"
+                                                                onChange={(e) => handleFileUpload(index, e.target.files[0])}
+                                                                className="file-input"
+                                                            />
+                                                            <button className="upload-button">
+                                                                {classDetail.file ? classDetail.file.name : 'Upload Excel'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="card-footer">
+                                    <button
+                                        onClick={handleAddSemester}
+                                        disabled={isLoading}
+                                        style={{ flex: '0 0 auto' }}
+                                        className="button primary-button"
+                                    >
+                                        Add Semester
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -331,9 +456,9 @@ const ManageBatches = () => {
                 </div>
             )}
             {/* PassStudents Modal */}
-            <PassStudents 
-                isOpen={isPassStudentsModalOpen} 
-                onClose={handleClosePassStudentsModal} 
+            <PassStudents
+                isOpen={isPassStudentsModalOpen}
+                onClose={handleClosePassStudentsModal}
             />
         </div>
     );

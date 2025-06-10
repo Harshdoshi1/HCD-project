@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify transporter configuration
-transporter.verify(function(error, success) {
+transporter.verify(function (error, success) {
     if (error) {
         console.error('SMTP connection error:', error);
     } else {
@@ -81,12 +81,12 @@ exports.sendEmailWithAttachment = async (req, res) => {
         //         contentType: 'application/pdf'
         //     });
         // }
-const mailOptions = {
-    from: from || process.env.EMAIL_USER || 'krishmamtora26@gmail.com',
-    to,
-    subject: subject || 'Student Performance Report',
-    text: text || 'Please find attached the student performance report.',
-    html: `
+        const mailOptions = {
+            from: from || process.env.EMAIL_USER || 'krishmamtora26@gmail.com',
+            to,
+            subject: subject || 'Student Performance Report',
+            text: text || 'Please find attached the student performance report.',
+            html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
             <h2 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 10px;">Student Performance Report</h2>
             <p style="color: #555; line-height: 1.6;">
@@ -102,21 +102,21 @@ const mailOptions = {
             </div>
         </div>
     `,
-    attachments: []
-};
+            attachments: []
+        };
 
-// Logging email details
-console.log('Sending email to:', to);
-console.log('Email subject:', subject);
+        // Logging email details
+        console.log('Sending email to:', to);
+        console.log('Email subject:', subject);
 
-// Add PDF attachment if provided
-if (req.file) {
-    mailOptions.attachments.push({
-        filename: 'student-report.pdf',
-        content: req.file.buffer,
-        contentType: 'application/pdf'
-    });
-}
+        // Add PDF attachment if provided
+        if (req.file) {
+            mailOptions.attachments.push({
+                filename: 'student-report.pdf',
+                content: req.file.buffer,
+                contentType: 'application/pdf'
+            });
+        }
 
         // Send the email
         const info = await transporter.sendMail(mailOptions);

@@ -31,10 +31,17 @@ const SubjectComponentCo = sequelize.define('SubjectComponentCo', {
         comment: 'Component name (e.g., CA, ESE, IA, TW, VIVA)'
     }
 }, {
-    tableName: 'subject_component_cos',
+    tableName: 'subj_comp_cos',
     timestamps: true,
     updatedAt: 'updated_at',
-    createdAt: 'created_at'
+    createdAt: 'created_at',
+    indexes: [
+        {
+            name: 'idx_comp_co',
+            unique: true,
+            fields: ['subject_component_id', 'course_outcome_id']
+        }
+    ]
 });
 
 module.exports = SubjectComponentCo;
