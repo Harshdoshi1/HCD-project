@@ -3,6 +3,8 @@ const router = express.Router();
 const Semester = require("../models/semester.js");
 const Batch = require('../models/batch.js');
 const ClassSection = require('../models/classSection.js');
+// Import associations to ensure they are loaded
+require("../models/associations");
 
 const addSemester = async (req, res) => {
     try {
@@ -25,6 +27,9 @@ const addSemester = async (req, res) => {
             startDate,
             endDate
         });
+
+        // Update currentSemester in batch table
+        await batch.update({ currentSemester: semesterNumber });
 
         let classSections = [];
 

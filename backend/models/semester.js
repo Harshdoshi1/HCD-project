@@ -10,6 +10,4 @@ const Semester = sequelize.define('Semester', {
     endDate: { type: DataTypes.DATEONLY, allowNull: false }
 }, { timestamps: false });
 
-Semester.belongsTo(Batch, { foreignKey: 'batchId' });
-
 module.exports = Semester;

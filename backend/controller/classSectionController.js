@@ -1,6 +1,8 @@
 const ClassSection = require("../models/classSection");
 const Semester = require("../models/semester");
 const Batch = require("../models/batch");
+// Import associations to ensure they are loaded
+require("../models/associations");
 
 const addClassSections = async (req, res) => {
     try {
@@ -134,14 +136,19 @@ const getSemesterWiseBatchInfo = async (req, res) => {
             order: [['semesterNumber', 'ASC']]
         });
 
-        // Generate dummy data for demonstration
+        // Process real data from ClassSections table
         const semesterInfo = semesters.map(semester => {
             const classSections = semester.classSections || [];
             const totalClasses = classSections.length;
 
-            // Generate dummy student counts
-            const studentsPerClass = Math.floor(Math.random() * 20) + 30; // 30-50 students per class
-            const totalStudents = totalClasses * studentsPerClass;
+            // Calculate real totals from ClassSections data
+            let totalStudents = 0;
+            let studentsPerClass = 0;
+
+            if (totalClasses > 0) {
+                totalStudents = classSections.reduce((sum, cls) => sum + (cls.studentCount || 0), 0);
+                studentsPerClass = Math.round(totalStudents / totalClasses);
+            }
 
             return {
                 semesterNumber: semester.semesterNumber,
@@ -154,7 +161,7 @@ const getSemesterWiseBatchInfo = async (req, res) => {
                     id: cls.id,
                     name: cls.className,
                     letter: cls.classLetter,
-                    students: studentsPerClass
+                    students: cls.studentCount || 0
                 }))
             };
         });

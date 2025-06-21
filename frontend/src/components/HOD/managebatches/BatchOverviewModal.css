@@ -184,6 +184,12 @@
     font-size: 0.75rem;
 }
 
+.no-classes {
+    color: #9ca3af;
+    font-style: italic;
+    font-size: 0.8rem;
+}
+
 .no-data-message {
     text-align: center;
     padding: 2rem;

@@ -46,8 +46,4 @@ const ClassSection = sequelize.define('ClassSection', {
     tableName: 'ClassSections'
 });
 
-// Define associations
-ClassSection.belongsTo(Semester, { foreignKey: 'semesterId' });
-ClassSection.belongsTo(Batch, { foreignKey: 'batchId' });
-
 module.exports = ClassSection; 

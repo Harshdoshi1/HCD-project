@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './BatchOverviewModal.css';
 
 const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
+    const [batchInfo, setBatchInfo] = useState(null);
     const [semesterData, setSemesterData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -25,6 +26,7 @@ const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
             }
 
             const data = await response.json();
+            setBatchInfo(data);
             setSemesterData(data.semesters || []);
         } catch (error) {
             console.error('Error fetching semester-wise batch info:', error);
@@ -69,6 +71,19 @@ const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
         });
     };
 
+    // Calculate total batch statistics
+    const calculateBatchStats = () => {
+        if (!semesterData.length) return { totalStudents: 0, totalClasses: 0, averageStudentsPerClass: 0 };
+
+        const totalStudents = semesterData.reduce((sum, semester) => sum + semester.totalStudents, 0);
+        const totalClasses = semesterData.reduce((sum, semester) => sum + semester.totalClasses, 0);
+        const averageStudentsPerClass = totalClasses > 0 ? Math.round(totalStudents / totalClasses) : 0;
+
+        return { totalStudents, totalClasses, averageStudentsPerClass };
+    };
+
+    const batchStats = calculateBatchStats();
+
     if (!isOpen || !batch) return null;
 
     return (
@@ -96,6 +111,18 @@ const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
                         <div className="summary-item">
                             <span className="summary-label">Total Semesters:</span>
                             <span className="summary-value">{semesterData.length}</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="summary-label">Total Classes:</span>
+                            <span className="summary-value">{batchStats.totalClasses}</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="summary-label">Total Students:</span>
+                            <span className="summary-value">{batchStats.totalStudents}</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="summary-label">Avg Students/Class:</span>
+                            <span className="summary-value">{batchStats.averageStudentsPerClass}</span>
                         </div>
                     </div>
 
@@ -145,12 +172,16 @@ const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
                                                 </td>
                                                 <td className="details-cell">
                                                     <div className="class-details">
-                                                        {semester.classes.map((cls, clsIndex) => (
-                                                            <div key={clsIndex} className="class-detail-item">
-                                                                <span className="class-name">{cls.name}</span>
-                                                                <span className="class-students">({cls.students} students)</span>
-                                                            </div>
-                                                        ))}
+                                                        {semester.classes.length > 0 ? (
+                                                            semester.classes.map((cls, clsIndex) => (
+                                                                <div key={clsIndex} className="class-detail-item">
+                                                                    <span className="class-name">{cls.name}</span>
+                                                                    <span className="class-students">({cls.students} students)</span>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <span className="no-classes">No classes configured</span>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
