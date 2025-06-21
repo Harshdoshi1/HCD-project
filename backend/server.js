@@ -21,6 +21,7 @@ const gradesRoutes = require('./routes/grades_routes');
 const academicDetailsRoutes = require('./routes/academic_details_routes');
 const bloomsTaxonomyRoutes = require('./routes/bloomsTaxonomyRoutes');
 const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
+const classSectionRoutes = require('./routes/classSection_routes');
 const app = express();
 const emailRoutes = require('./routes/email_routes');
 // Enable CORS
@@ -52,6 +53,7 @@ app.use('/api/Events', students_points_routes);
 // app.use('/api/students/cocurricular', studentCoCurricularRoutes);
 app.use('/api/subjects', subRoutes);
 app.use('/api/semesters', semesterRoutes);
+app.use('/api/class-sections', classSectionRoutes);
 app.use('/api/events', studentEventRoutes);
 app.use('/api/facultyside', facultysideRoutes);
 app.use('/api/studentCPI', studentCPIRoutes);

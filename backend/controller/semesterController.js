@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Semester = require("../models/semester.js");
 const Batch = require('../models/batch.js');
+const ClassSection = require('../models/classSection.js');
 
 const addSemester = async (req, res) => {
     try {
-        const { batchName, semesterNumber, startDate, endDate } = req.body;
+        const { batchName, semesterNumber, startDate, endDate, numberOfClasses, classes } = req.body;
 
         if (!batchName || !semesterNumber || !startDate || !endDate) {
             return res.status(400).json({ message: "All fields are required." });
@@ -25,7 +26,43 @@ const addSemester = async (req, res) => {
             endDate
         });
 
-        res.status(201).json({ message: "Semester added successfully", semester: newSemester });
+        let classSections = [];
+
+        // Handle class sections if provided
+        if (numberOfClasses && numberOfClasses > 0 && classes && Array.isArray(classes)) {
+            // Validate classes array
+            if (classes.length !== parseInt(numberOfClasses)) {
+                return res.status(400).json({ message: "Number of classes doesn't match the classes array." });
+            }
+
+            // Create class sections
+            for (let i = 0; i < classes.length; i++) {
+                const classData = classes[i];
+                const classLetter = String.fromCharCode(65 + i); // A, B, C, etc.
+
+                if (!classData.name || !classData.name.trim()) {
+                    return res.status(400).json({ message: `Class name is required for class ${classLetter}.` });
+                }
+
+                const classSection = await ClassSection.create({
+                    semesterId: newSemester.id,
+                    batchId: batch.id,
+                    className: classData.name.trim(),
+                    classLetter: classLetter,
+                    studentCount: 0, // Will be updated when students are added
+                    excelFileName: classData.excelFile ? classData.excelFile.name : null,
+                    isActive: true
+                });
+
+                classSections.push(classSection);
+            }
+        }
+
+        res.status(201).json({
+            message: "Semester added successfully",
+            semester: newSemester,
+            classSections: classSections
+        });
 
     } catch (error) {
         res.status(500).json({ message: "Server Error", error: error.message });
@@ -52,7 +89,16 @@ const getSemestersByBatch = async (req, res) => {
         }
 
         console.log(`✅ Found batch with ID: ${batch.id}, fetching semesters...`);
-        const semesters = await Semester.findAll({ where: { batchId: batch.id } });
+        const semesters = await Semester.findAll({
+            where: { batchId: batch.id },
+            include: [{
+                model: ClassSection,
+                as: 'classSections',
+                where: { isActive: true },
+                required: false
+            }],
+            order: [['semesterNumber', 'ASC']]
+        });
 
         if (!semesters.length) {
             console.log(`⚠️ No semesters found for batch ID: ${batch.id}`);

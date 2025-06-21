@@ -1,12 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './BatchOverviewModal.css';
 
 const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
-    if (!isOpen || !batch) return null;
+    const [semesterData, setSemesterData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    // Generate dummy data for demonstration
+    useEffect(() => {
+        if (isOpen && batch) {
+            fetchSemesterWiseBatchInfo();
+        }
+    }, [isOpen, batch]);
+
+    const fetchSemesterWiseBatchInfo = async () => {
+        if (!batch) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`http://localhost:5001/api/class-sections/getSemesterWiseBatchInfo/${encodeURIComponent(batch.batchName)}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch batch information');
+            }
+
+            const data = await response.json();
+            setSemesterData(data.semesters || []);
+        } catch (error) {
+            console.error('Error fetching semester-wise batch info:', error);
+            setError(error.message);
+            // Fallback to dummy data if API fails
+            setSemesterData(generateDummyData());
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Generate dummy data for demonstration (fallback)
     const generateDummyData = () => {
-        const semesters = batch.semesters || [];
+        const semesters = batch?.semesters || [];
         return semesters.map((semester, index) => {
             const numClasses = Math.floor(Math.random() * 4) + 1; // 1-4 classes
             const studentsPerClass = Math.floor(Math.random() * 20) + 30; // 30-50 students per class
@@ -27,8 +59,6 @@ const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
         });
     };
 
-    const semesterData = generateDummyData();
-
     const formatDate = (dateString) => {
         if (!dateString) return "";
         const date = new Date(dateString);
@@ -38,6 +68,8 @@ const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
             day: 'numeric'
         });
     };
+
+    if (!isOpen || !batch) return null;
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -66,6 +98,17 @@ const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
                             <span className="summary-value">{semesterData.length}</span>
                         </div>
                     </div>
+
+                    {isLoading ? (
+                        <div className="loading-message">
+                            <p>Loading batch information...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="error-message">
+                            <p>Error loading data: {error}</p>
+                            <p>Showing dummy data for demonstration.</p>
+                        </div>
+                    ) : null}
 
                     {semesterData.length > 0 ? (
                         <div className="semester-overview">

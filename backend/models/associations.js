@@ -1,12 +1,15 @@
 const StudentPoints = require('./StudentPoints');
 const EventMaster = require('./EventMaster');
 const ParticipationType = require('./participationTypes');
-const UniqueSubDegree = require('./uniqueSubDegree'); 
+const UniqueSubDegree = require('./uniqueSubDegree');
 const CourseOutcome = require('./courseOutcome');
-const ComponentWeightage = require('./componentWeightage'); 
+const ComponentWeightage = require('./componentWeightage');
 const SubjectComponentCo = require('./subjectComponentCo');
 const BloomsTaxonomy = require('./bloomsTaxonomy');
 const CoBloomsTaxonomy = require('./coBloomsTaxonomy');
+const ClassSection = require('./classSection');
+const Semester = require('./semester');
+const Batch = require('./batch');
 
 // Set up associations between StudentPoints and EventMaster without enforcing foreign key constraints
 StudentPoints.belongsTo(EventMaster, {
@@ -22,6 +25,32 @@ StudentPoints.belongsTo(ParticipationType, {
   targetKey: 'id',
   as: 'participationType',
   constraints: false // Don't enforce foreign key constraints
+});
+
+// --- ClassSection Associations ---
+
+// Semester has many ClassSections
+Semester.hasMany(ClassSection, {
+  foreignKey: 'semesterId',
+  as: 'classSections'
+});
+
+// Batch has many ClassSections
+Batch.hasMany(ClassSection, {
+  foreignKey: 'batchId',
+  as: 'classSections'
+});
+
+// ClassSection belongs to Semester
+ClassSection.belongsTo(Semester, {
+  foreignKey: 'semesterId',
+  as: 'semester'
+});
+
+// ClassSection belongs to Batch
+ClassSection.belongsTo(Batch, {
+  foreignKey: 'batchId',
+  as: 'batch'
 });
 
 // --- CourseOutcome Associations ---
@@ -72,30 +101,30 @@ SubjectComponentCo.belongsTo(CourseOutcome, {
 
 // CourseOutcome can have many Blooms Taxonomy levels through CoBloomsTaxonomy
 CourseOutcome.belongsToMany(BloomsTaxonomy, {
-    through: CoBloomsTaxonomy,
-    foreignKey: 'course_outcome_id',
-    otherKey: 'blooms_taxonomy_id',
-    as: 'bloomsLevels'
+  through: CoBloomsTaxonomy,
+  foreignKey: 'course_outcome_id',
+  otherKey: 'blooms_taxonomy_id',
+  as: 'bloomsLevels'
 });
 
 // Blooms Taxonomy can be associated with many Course Outcomes through CoBloomsTaxonomy
 BloomsTaxonomy.belongsToMany(CourseOutcome, {
-    through: CoBloomsTaxonomy,
-    foreignKey: 'blooms_taxonomy_id',
-    otherKey: 'course_outcome_id',
-    as: 'courseOutcomes'
+  through: CoBloomsTaxonomy,
+  foreignKey: 'blooms_taxonomy_id',
+  otherKey: 'course_outcome_id',
+  as: 'courseOutcomes'
 });
 
 // CoBloomsTaxonomy belongs to CourseOutcome
 CoBloomsTaxonomy.belongsTo(CourseOutcome, {
-    foreignKey: 'course_outcome_id',
-    as: 'courseOutcome'
+  foreignKey: 'course_outcome_id',
+  as: 'courseOutcome'
 });
 
 // CoBloomsTaxonomy belongs to BloomsTaxonomy
 CoBloomsTaxonomy.belongsTo(BloomsTaxonomy, {
-    foreignKey: 'blooms_taxonomy_id',
-    as: 'bloomsTaxonomy'
+  foreignKey: 'blooms_taxonomy_id',
+  as: 'bloomsTaxonomy'
 });
 
 module.exports = {
@@ -107,6 +136,8 @@ module.exports = {
   ComponentWeightage,
   SubjectComponentCo,
   BloomsTaxonomy,
-  CoBloomsTaxonomy
+  CoBloomsTaxonomy,
+  ClassSection,
+  Semester,
+  Batch
 };
-        

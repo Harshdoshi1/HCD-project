@@ -191,6 +191,32 @@
     font-style: italic;
 }
 
+.loading-message {
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280;
+}
+
+.loading-message p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.error-message {
+    text-align: center;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border-radius: 6px;
+    border: 1px solid #fecaca;
+}
+
+.error-message p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
 .modal-footer {
     padding: 1rem 1.5rem;
     border-top: 1px solid #e5e7eb;
