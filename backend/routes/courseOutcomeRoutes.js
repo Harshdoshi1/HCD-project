@@ -19,3 +19,4 @@ router.delete('/:id', courseOutcomeController.deleteCourseOutcome);
 
 module.exports = router;
 
+
