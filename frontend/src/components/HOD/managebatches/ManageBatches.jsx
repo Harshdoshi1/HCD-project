@@ -1,20 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import './ManageBatches.css';
 import PassStudents from './PassStudents';
+import BatchOverviewModal from './BatchOverviewModal';
 
 const ManageBatches = () => {
     const [batches, setBatches] = useState([]);
     const [newBatch, setNewBatch] = useState({ batchName: '', batchStart: '', batchEnd: '', courseType: '' });
     const [selectedBatch, setSelectedBatch] = useState(null);
-    const [semesterToAdd, setSemesterToAdd] = useState({ semesterNumber: '', startDate: '', endDate: '' });
+    const [semesterToAdd, setSemesterToAdd] = useState({
+        semesterNumber: '',
+        startDate: '',
+        endDate: '',
+        numberOfClasses: '',
+        classes: []
+    });
     const [activeTab, setActiveTab] = useState('batch');
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isPassStudentsModalOpen, setIsPassStudentsModalOpen] = useState(false);
+    const [isBatchOverviewModalOpen, setIsBatchOverviewModalOpen] = useState(false);
+    const [selectedBatchForOverview, setSelectedBatchForOverview] = useState(null);
 
     useEffect(() => {
         fetchBatches();
     }, []);
+
+    // Generate class sections when numberOfClasses changes
+    useEffect(() => {
+        const numClasses = parseInt(semesterToAdd.numberOfClasses) || 0;
+        if (numClasses > 0) {
+            const classSections = [];
+            for (let i = 0; i < numClasses; i++) {
+                const sectionLetter = String.fromCharCode(65 + i); // A, B, C, etc.
+                classSections.push({
+                    id: i,
+                    name: `Class ${sectionLetter}`,
+                    excelFile: null
+                });
+            }
+            setSemesterToAdd(prev => ({
+                ...prev,
+                classes: classSections
+            }));
+        } else {
+            setSemesterToAdd(prev => ({
+                ...prev,
+                classes: []
+            }));
+        }
+    }, [semesterToAdd.numberOfClasses]);
 
     const fetchBatches = async () => {
         setIsLoading(true);
@@ -71,12 +105,22 @@ const ManageBatches = () => {
             return;
         }
 
+        // Validate class names
+        if (semesterToAdd.numberOfClasses > 0) {
+            const emptyClassNames = semesterToAdd.classes.some(cls => !cls.name.trim());
+            if (emptyClassNames) {
+                setError('Please provide names for all classes');
+                return;
+            }
+        }
+
         const semesterData = {
             batchName: selectedBatch.batchName,
             semesterNumber: semesterToAdd.semesterNumber,
             startDate: semesterToAdd.startDate,
             endDate: semesterToAdd.endDate,
-
+            numberOfClasses: semesterToAdd.numberOfClasses,
+            classes: semesterToAdd.classes
         };
 
         setIsLoading(true);
@@ -90,7 +134,13 @@ const ManageBatches = () => {
 
             await fetchBatches();
             setSelectedBatch(null);
-            setSemesterToAdd({ semesterNumber: '', startDate: '', endDate: '' });
+            setSemesterToAdd({
+                semesterNumber: '',
+                startDate: '',
+                endDate: '',
+                numberOfClasses: '',
+                classes: []
+            });
             alert('Semester added successfully!');
         } catch (error) {
             setError(error.message);
@@ -99,6 +149,24 @@ const ManageBatches = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleClassNameChange = (classId, newName) => {
+        setSemesterToAdd(prev => ({
+            ...prev,
+            classes: prev.classes.map(cls =>
+                cls.id === classId ? { ...cls, name: newName } : cls
+            )
+        }));
+    };
+
+    const handleExcelFileChange = (classId, file) => {
+        setSemesterToAdd(prev => ({
+            ...prev,
+            classes: prev.classes.map(cls =>
+                cls.id === classId ? { ...cls, excelFile: file } : cls
+            )
+        }));
     };
 
     const formatDate = (dateString) => {
@@ -117,6 +185,16 @@ const ManageBatches = () => {
 
     const handleClosePassStudentsModal = () => {
         setIsPassStudentsModalOpen(false);
+    };
+
+    const handleBatchCardClick = (batch) => {
+        setSelectedBatchForOverview(batch);
+        setIsBatchOverviewModalOpen(true);
+    };
+
+    const handleCloseBatchOverviewModal = () => {
+        setIsBatchOverviewModalOpen(false);
+        setSelectedBatchForOverview(null);
     };
 
     return (
@@ -221,7 +299,7 @@ const ManageBatches = () => {
                         <div className="card">
                             <div className="card-header">
                                 <h2 className="card-title">Add Semester to Batch</h2>
-                                <p className="card-description">Create a new semester for an existing batch</p>
+                                <p className="card-description">Create a new semester for an existing batch with optional class divisions</p>
                             </div>
                             <div className="card-content form-container">
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
@@ -278,16 +356,81 @@ const ManageBatches = () => {
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="card-footer">
-                                        <button
-                                            onClick={handleAddSemester}
-                                            disabled={isLoading}
-                                            style={{ flex: '0 0 auto' }}
-                                            className="button primary-button"
-                                        >
-                                            Add Semester
-                                        </button>
+
+                                    <div className="form-group" style={{ flex: '1' }}>
+                                        <label htmlFor="numberOfClasses">Number of Classes</label>
+                                        <input
+                                            id="numberOfClasses"
+                                            className="input"
+                                            type="number"
+                                            min="0"
+                                            max="10"
+                                            placeholder="e.g., 3 (creates A, B, C)"
+                                            value={semesterToAdd.numberOfClasses}
+                                            onChange={(e) => setSemesterToAdd({ ...semesterToAdd, numberOfClasses: e.target.value })}
+                                        />
                                     </div>
+                                </div>
+
+                                {/* Dynamic Class Fields */}
+                                {semesterToAdd.classes.length > 0 && (
+                                    <div className="classes-section">
+                                        <h3 className="classes-section-title">Class Configuration</h3>
+                                        <div className="classes-grid">
+                                            {semesterToAdd.classes.map((cls) => (
+                                                <div key={cls.id} className="class-config-card">
+                                                    <div className="class-config-header">
+                                                        <h4 className="class-config-title">Class {String.fromCharCode(65 + cls.id)}</h4>
+                                                    </div>
+                                                    <div className="class-config-content">
+                                                        <div className="form-group">
+                                                            <label htmlFor={`className-${cls.id}`}>Class Name</label>
+                                                            <input
+                                                                id={`className-${cls.id}`}
+                                                                className="input"
+                                                                placeholder="e.g., Computer Science A"
+                                                                value={cls.name}
+                                                                onChange={(e) => handleClassNameChange(cls.id, e.target.value)}
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label htmlFor={`excelFile-${cls.id}`}>Upload Student List (Excel)</label>
+                                                            <div className="file-upload-wrapper">
+                                                                <input
+                                                                    id={`excelFile-${cls.id}`}
+                                                                    className="file-input"
+                                                                    type="file"
+                                                                    accept=".xlsx,.xls"
+                                                                    onChange={(e) => handleExcelFileChange(cls.id, e.target.files[0])}
+                                                                />
+                                                                <div
+                                                                    className={`file-upload-placeholder ${cls.excelFile ? 'has-file' : ''}`}
+                                                                    onClick={() => document.getElementById(`excelFile-${cls.id}`).click()}
+                                                                >
+                                                                    <span className="file-upload-icon">📄</span>
+                                                                    <span className="file-upload-text">
+                                                                        {cls.excelFile ? cls.excelFile.name : 'Choose Excel file'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="card-footer">
+                                    <button
+                                        onClick={handleAddSemester}
+                                        disabled={isLoading}
+                                        style={{ flex: '0 0 auto' }}
+                                        className="button primary-button"
+                                    >
+                                        Add Semester
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -302,7 +445,12 @@ const ManageBatches = () => {
                     <h2 className="section-title">Current Batches</h2>
                     <div className="batches-grid">
                         {batches.map((batch) => (
-                            <div key={batch.batchName} className="batch-card">
+                            <div
+                                key={batch.batchName}
+                                className="batch-card"
+                                onClick={() => handleBatchCardClick(batch)}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 <div className="batch-card-header">
                                     <h3 className="batch-title">{batch.batchName}</h3>
                                 </div>
@@ -330,10 +478,18 @@ const ManageBatches = () => {
                     </div>
                 </div>
             )}
+
             {/* PassStudents Modal */}
-            <PassStudents 
-                isOpen={isPassStudentsModalOpen} 
-                onClose={handleClosePassStudentsModal} 
+            <PassStudents
+                isOpen={isPassStudentsModalOpen}
+                onClose={handleClosePassStudentsModal}
+            />
+
+            {/* Batch Overview Modal */}
+            <BatchOverviewModal
+                isOpen={isBatchOverviewModalOpen}
+                onClose={handleCloseBatchOverviewModal}
+                batch={selectedBatchForOverview}
             />
         </div>
     );
