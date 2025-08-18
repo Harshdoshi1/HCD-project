@@ -14,8 +14,19 @@ const EventManagement = () => {
 
   useEffect(() => {
     fetchEvents();
+    fetchOutcomes();
   }, []);
 
+  const fetchOutcomes = async () => {
+    try {
+      const response = await fetch('')
+    } catch {
+
+    }
+    finally {
+
+    }
+  }
   const fetchEvents = async () => {
     try {
       const response = await fetch('http://localhost:5001/api/events/all');
@@ -34,30 +45,30 @@ const EventManagement = () => {
   };
 
   // Filter events based on the active filter
-  const filteredEvents = activeFilter === 'all' 
-    ? events 
+  const filteredEvents = activeFilter === 'all'
+    ? events
     : events.filter(event => event.eventType === activeFilter);
 
   return (
     <div className="event-management-container">
       <div className="event-header">
         <h2>Events</h2>
-        
+
         <div className="event-filters">
           <div className="filter-buttons">
-            <button 
+            <button
               className={`filter-button ${activeFilter === 'all' ? 'active' : ''}`}
               onClick={() => setActiveFilter('all')}
             >
               All
             </button>
-            <button 
+            <button
               className={`filter-button ${activeFilter === 'co-curricular' ? 'active' : ''}`}
               onClick={() => setActiveFilter('co-curricular')}
             >
               Co-Curricular
             </button>
-            <button 
+            <button
               className={`filter-button ${activeFilter === 'extra-curricular' ? 'active' : ''}`}
               onClick={() => setActiveFilter('extra-curricular')}
             >
@@ -65,7 +76,7 @@ const EventManagement = () => {
             </button>
           </div>
         </div>
-        
+
         <div className="action-buttons">
           <button
             className="add-event-button"
@@ -85,7 +96,10 @@ const EventManagement = () => {
       {showAddForm && (
         <AddEventForm
           onClose={() => setShowAddForm(false)}
-          onSuccess={() => setShowAddForm(false)}
+          onSuccess={() => {
+            setShowAddForm(false);
+            fetchEvents(); // Refresh the events list
+          }}
         />
       )}
 
@@ -106,8 +120,8 @@ const EventManagement = () => {
         ) : (
           <div className="events-grid">
             {filteredEvents.map((event, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="event-card"
               >
                 <div className="event-name-container">
@@ -121,9 +135,25 @@ const EventManagement = () => {
                 )}
                 <div className="event-details">
                   <p><strong>Category:</strong> {event.eventCategory}</p>
-                  <p><strong>Date:</strong> {event.date}</p>
+                  <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
                   <p><strong>Duration:</strong> {event.duration} {event.duration === 1 ? 'hour' : 'hours'}</p>
                 </div>
+
+                {event.outcomes && event.outcomes.length > 0 && (
+                  <div className="event-outcomes">
+                    <h4>Associated Outcomes</h4>
+                    <div className="outcomes-tags">
+                      {event.outcomes.map((outcome, idx) => (
+                        <span
+                          key={idx}
+                          className={`outcome-tag ${outcome.outcome_type === 'Technical' ? 'technical' : 'non-technical'}`}
+                        >
+                          {outcome.outcome}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

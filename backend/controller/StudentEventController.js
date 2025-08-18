@@ -8,13 +8,14 @@ const sequelize = require('../config/db');
 // Create new event
 const createEvent = async (req, res) => {
   try {
-    const { eventId, eventName, eventType, eventCategory, points, duration, eventDate } = req.body;
-    console.log("Testing ", eventId, eventName, eventType, eventCategory, points, duration, eventDate);
+    const { eventId, eventName, eventType, eventCategory, points, duration, eventDate, eventOutcomes } = req.body;
+    console.log("Testing ", eventId, eventName, eventType, eventCategory, points, duration, eventDate, eventOutcomes);
     const event = await EventMaster.create({
       eventId,
       eventName,
       eventType,
       eventCategory,
+      eventOutcomes,
       points: parseInt(points),
       duration: duration ? parseInt(duration) : null,
       date: eventDate // Changed from eventDate to date to match the model

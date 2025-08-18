@@ -25,19 +25,24 @@ const Student = sequelize.define('Student', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    hardwarePoints:{
+    hardwarePoints: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue:0
+        defaultValue: 0
     },
-    softwarePoints:{
+    softwarePoints: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue:0
+        defaultValue: 0
     },
-    currnetsemester:{
+    currnetsemester: {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+    currentClassName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'Current class name (e.g., Computer Science A, Computer Science B)'
     }
 }, {
     tableName: 'Students',

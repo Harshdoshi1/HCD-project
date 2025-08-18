@@ -24,6 +24,8 @@ const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
 const classSectionRoutes = require('./routes/classSection_routes');
 const app = express();
 const emailRoutes = require('./routes/email_routes');
+const mainRouter = require('./routes/index');
+
 // Enable CORS
 app.use(cors({
     // origin: 'http://localhost:5173',
@@ -41,8 +43,8 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
+app.use('/api', mainRouter);
 app.use('/api/email', emailRoutes);
-
 app.use('/api/users', userRoutes);
 app.use('/api/batches', batchRoutes);
 app.use('/api/faculties', facultyRoutes);
@@ -54,13 +56,33 @@ app.use('/api/Events', students_points_routes);
 app.use('/api/subjects', subRoutes);
 app.use('/api/semesters', semesterRoutes);
 app.use('/api/class-sections', classSectionRoutes);
-app.use('/api/events', studentEventRoutes);
+// app.use('/api/events', studentEventRoutes); // Commented out to avoid conflict with main events router
 app.use('/api/facultyside', facultysideRoutes);
 app.use('/api/studentCPI', studentCPIRoutes);
 app.use('/api/grades', gradesRoutes);
 app.use('/api/academic-details', academicDetailsRoutes);
 app.use('/api/blooms-taxonomy', bloomsTaxonomyRoutes);
 app.use('/api/course-outcomes', courseOutcomeRoutes);
+
+// Add logging to see what routes are registered
+console.log('Registered routes:');
+console.log('- /api (mainRouter)');
+console.log('- /api/email');
+console.log('- /api/users');
+console.log('- /api/batches');
+console.log('- /api/faculties');
+console.log('- /api/components');
+console.log('- /api/students');
+console.log('- /api/Events');
+console.log('- /api/subjects');
+console.log('- /api/semesters');
+console.log('- /api/class-sections');
+console.log('- /api/facultyside');
+console.log('- /api/studentCPI');
+console.log('- /api/grades');
+console.log('- /api/academic-details');
+console.log('- /api/blooms-taxonomy');
+console.log('- /api/course-outcomes');
 // Marks routes
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
 app.get("/api/marks/students/:batchId/:semesterId", gettedmarksController.getStudentsByBatchAndSemester);
@@ -96,3 +118,5 @@ syncDB().then(() => {
     console.error('Failed to start server:', error);
     process.exit(1);
 });
+
+

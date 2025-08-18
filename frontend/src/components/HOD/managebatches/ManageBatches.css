@@ -98,6 +98,131 @@
     font-size: 0.875rem;
 }
 
+/* Excel Actions Styles */
+.excel-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.excel-actions .button {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.excel-actions .secondary-button {
+    background-color: #6b7280;
+    color: white;
+}
+
+.excel-actions .secondary-button:hover {
+    background-color: #4b5563;
+}
+
+.excel-actions .primary-button {
+    background-color: #3674B5;
+    color: white;
+}
+
+.excel-actions .primary-button:hover {
+    background-color: #2d5a8f;
+}
+
+.excel-actions .button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Template Actions Styles */
+.classes-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.template-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.template-actions .button {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.template-actions .secondary-button {
+    background-color: #6b7280;
+    color: white;
+}
+
+.template-actions .secondary-button:hover {
+    background-color: #4b5563;
+}
+
+.template-actions .info-button {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.template-actions .info-button:hover {
+    background-color: #2563eb;
+}
+
+/* Excel Upload Section Styles */
+.excel-upload-section {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.excel-upload-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.excel-upload-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.excel-upload-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.upload-info {
+    background-color: #e6f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 10px;
+}
+
+.upload-info p {
+    margin: 0;
+    color: #2c5aa0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
 .form-container {
     display: flex;
     flex-direction: column;

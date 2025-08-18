@@ -12,7 +12,8 @@ const ManageBatches = () => {
         startDate: '',
         endDate: '',
         numberOfClasses: '',
-        classes: []
+        classes: [],
+        excelFile: null
     });
     const [activeTab, setActiveTab] = useState('batch');
     const [error, setError] = useState(null);
@@ -160,13 +161,108 @@ const ManageBatches = () => {
         }));
     };
 
-    const handleExcelFileChange = (classId, file) => {
+    const handleExcelFileChange = (file) => {
         setSemesterToAdd(prev => ({
             ...prev,
-            classes: prev.classes.map(cls =>
-                cls.id === classId ? { ...cls, excelFile: file } : cls
-            )
+            excelFile: file
         }));
+    };
+
+    const handleExcelUpload = async () => {
+        if (!semesterToAdd.excelFile) {
+            setError('Please select an Excel file first');
+            return;
+        }
+
+        if (!selectedBatch) {
+            setError('Please select a batch first');
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('excelFile', semesterToAdd.excelFile);
+            formData.append('semesterId', semesterToAdd.semesterNumber);
+            formData.append('batchId', selectedBatch.id);
+            formData.append('numberOfClasses', semesterToAdd.numberOfClasses);
+
+            const response = await fetch('http://localhost:5001/api/excel-upload/upload-all-classes', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to upload Excel file');
+            }
+
+            const result = await response.json();
+            alert(`Excel uploaded successfully! ${result.data.totalUpdated} students updated across all classes.`);
+
+            // Clear the file input
+            setSemesterToAdd(prev => ({
+                ...prev,
+                excelFile: null
+            }));
+
+        } catch (error) {
+            setError(error.message);
+            console.error('Error uploading Excel:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const previewExcelData = async () => {
+        if (!semesterToAdd.excelFile) {
+            setError('Please select an Excel file first');
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('excelFile', semesterToAdd.excelFile);
+
+            const response = await fetch('http://localhost:5001/api/excel-upload/preview-all-classes', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to preview Excel file');
+            }
+
+            const result = await response.json();
+
+            // Show preview in a more user-friendly way
+            let previewMessage = `Excel preview: ${result.data.totalStudents} students found.\n\n`;
+            previewMessage += `Class distribution:\n`;
+            Object.entries(result.data.classDistribution).forEach(([className, count]) => {
+                previewMessage += `${className}: ${count} students\n`;
+            });
+
+            if (result.data.preview.length > 0) {
+                previewMessage += `\nSample students:\n`;
+                result.data.preview.slice(0, 5).forEach(student => {
+                    previewMessage += `• ${student.name} (${student.enrollmentNumber}) → ${student.className}\n`;
+                });
+            }
+
+            alert(previewMessage);
+
+        } catch (error) {
+            setError(error.message);
+            console.error('Error previewing Excel:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const formatDate = (dateString) => {
@@ -372,7 +468,85 @@ const ManageBatches = () => {
                                     </div>
                                 </div>
 
-                                {/* Dynamic Class Fields */}
+                                {/* Excel Upload Section */}
+                                {semesterToAdd.classes.length > 0 && (
+                                    <div className="excel-upload-section">
+                                        <div className="excel-upload-header">
+                                            <h3 className="excel-upload-title">Student Data Upload</h3>
+                                            <div className="template-actions">
+                                                <button
+                                                    type="button"
+                                                    className="button secondary-button"
+                                                    onClick={() => window.open('http://localhost:5001/api/excel-upload/template', '_blank')}
+                                                    style={{ fontSize: '12px', padding: '6px 12px' }}
+                                                >
+                                                    📥 Download Template
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="button info-button"
+                                                    onClick={() => window.open('http://localhost:5001/api/excel-upload/instructions', '_blank')}
+                                                    style={{ fontSize: '12px', padding: '6px 12px' }}
+                                                >
+                                                    ℹ️ Format Guide
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="excel-upload-content">
+                                            <div className="form-group">
+                                                <label htmlFor="excelFile">Upload Student List (Excel)</label>
+                                                <div className="file-upload-wrapper">
+                                                    <input
+                                                        id="excelFile"
+                                                        className="file-input"
+                                                        type="file"
+                                                        accept=".xlsx,.xls"
+                                                        onChange={(e) => handleExcelFileChange(e.target.files[0])}
+                                                    />
+                                                    <div
+                                                        className={`file-upload-placeholder ${semesterToAdd.excelFile ? 'has-file' : ''}`}
+                                                        onClick={() => document.getElementById('excelFile').click()}
+                                                    >
+                                                        <span className="file-upload-icon">📄</span>
+                                                        <span className="file-upload-text">
+                                                            {semesterToAdd.excelFile ? semesterToAdd.excelFile.name : 'Choose Excel file for all classes'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {semesterToAdd.excelFile && (
+                                                    <div className="excel-actions" style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+                                                        <button
+                                                            type="button"
+                                                            className="button secondary-button"
+                                                            onClick={previewExcelData}
+                                                            disabled={isLoading}
+                                                            style={{ fontSize: '12px', padding: '6px 12px' }}
+                                                        >
+                                                            {isLoading ? 'Loading...' : 'Preview Data'}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="button primary-button"
+                                                            onClick={handleExcelUpload}
+                                                            disabled={isLoading}
+                                                            style={{ fontSize: '12px', padding: '6px 12px' }}
+                                                        >
+                                                            {isLoading ? 'Uploading...' : 'Upload All Classes'}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="upload-info">
+                                                <p><strong>Note:</strong> Upload one Excel file containing all students. The system will automatically distribute students to their respective classes based on the "Class" column in your Excel file.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Class Configuration Section */}
                                 {semesterToAdd.classes.length > 0 && (
                                     <div className="classes-section">
                                         <h3 className="classes-section-title">Class Configuration</h3>
@@ -393,27 +567,6 @@ const ManageBatches = () => {
                                                                 onChange={(e) => handleClassNameChange(cls.id, e.target.value)}
                                                                 required
                                                             />
-                                                        </div>
-                                                        <div className="form-group">
-                                                            <label htmlFor={`excelFile-${cls.id}`}>Upload Student List (Excel)</label>
-                                                            <div className="file-upload-wrapper">
-                                                                <input
-                                                                    id={`excelFile-${cls.id}`}
-                                                                    className="file-input"
-                                                                    type="file"
-                                                                    accept=".xlsx,.xls"
-                                                                    onChange={(e) => handleExcelFileChange(cls.id, e.target.files[0])}
-                                                                />
-                                                                <div
-                                                                    className={`file-upload-placeholder ${cls.excelFile ? 'has-file' : ''}`}
-                                                                    onClick={() => document.getElementById(`excelFile-${cls.id}`).click()}
-                                                                >
-                                                                    <span className="file-upload-icon">📄</span>
-                                                                    <span className="file-upload-text">
-                                                                        {cls.excelFile ? cls.excelFile.name : 'Choose Excel file'}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

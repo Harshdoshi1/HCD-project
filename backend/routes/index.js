@@ -1,12 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const eventsRouter = require('./events');
-const dashboardRouter = require('./dashboard_routes');
+const eventOutcomeRouter = require('./eventOutcomeRoutes');
+const excelUploadRouter = require('./excelUploadRoutes');
 
 // Event routes
-router.use('/api', eventsRouter);
+router.use('/events', eventsRouter);
 
-// Dashboard routes
-router.use('/api/dashboard', dashboardRouter);
+// Event Outcomes routes
+router.use('/event-outcomes', eventOutcomeRouter);
+
+// Excel Upload routes
+router.use('/excel-upload', excelUploadRouter);
 
 module.exports = router;

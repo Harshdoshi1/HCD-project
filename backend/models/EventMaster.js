@@ -18,12 +18,14 @@ const EventMaster = sequelize.define('EventMaster', {
     },
     eventCategory: {
         type: DataTypes.STRING,
-        allowNull: true, // Optional field
+        allowNull: true,
     },
+
     points: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
+
     duration: {
         type: DataTypes.INTEGER, // Optional field
         allowNull: true,

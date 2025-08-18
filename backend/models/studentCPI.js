@@ -4,41 +4,41 @@ const Batch = require('./batch');
 const Semester = require('./semester');
 
 const StudentCPI = sequelize.define('StudentCPI', {
-    id: { 
-        type: DataTypes.INTEGER, 
-        autoIncrement: true, 
-        primaryKey: true 
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
     },
-    BatchId: { 
-        type: DataTypes.INTEGER, 
+    BatchId: {
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: Batch,
             key: 'id'
         }
     },
-    SemesterId: { 
-        type: DataTypes.INTEGER, 
+    SemesterId: {
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: Semester,
             key: 'id'
         }
     },
-    EnrollmentNumber: { 
-        type: DataTypes.STRING, 
-        allowNull: false 
+    EnrollmentNumber: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    CPI: { 
-        type: DataTypes.FLOAT, 
+    CPI: {
+        type: DataTypes.FLOAT,
         allowNull: false,
         validate: {
             min: 0,
             max: 10
         }
     },
-    SPI: { 
-        type: DataTypes.FLOAT, 
+    SPI: {
+        type: DataTypes.FLOAT,
         allowNull: false,
         validate: {
             min: 0,
@@ -51,6 +51,11 @@ const StudentCPI = sequelize.define('StudentCPI', {
         validate: {
             min: 1
         }
+    },
+    className: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'Class name when the CPI was recorded'
     }
 }, {
     tableName: 'StudentCPIs',

@@ -5,6 +5,8 @@ const bloomsTaxonomyRoutes = require('./routes/bloomsTaxonomyRoutes');
 const subRoutes = require('./routes/subRoutes');
 const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
 const subjectComponentCoRoutes = require('./routes/subjectComponentCoRoutes');
+const eventsRoutes = require('./routes/events');
+const eventOutcomesRoutes = require('./routes/eventOutcomeRoutes');
 
 const app = express();
 
@@ -18,6 +20,8 @@ app.use('/api/blooms-taxonomy', bloomsTaxonomyRoutes);
 app.use('/api/subjects', subRoutes);
 app.use('/api/course-outcomes', courseOutcomeRoutes);
 app.use('/api/subject-component-cos', subjectComponentCoRoutes);
+app.use('/api', eventsRoutes);
+app.use('/api', eventOutcomesRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

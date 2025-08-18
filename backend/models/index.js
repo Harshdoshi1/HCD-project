@@ -16,6 +16,8 @@ const ParticipationType = require('./participationTypes');
 const CourseOutcome = require('./courseOutcome');
 const SubjectComponentCo = require('./subjectComponentCo');
 const ClassSection = require('./classSection');
+const EventOutcomes = require('./EventOutcomes');
+const EventOutcomeMapping = require('./EventOutcomeMapping');
 
 // const CoCurricularActivity = require('./cocurricularActivity');
 // const ExtraCurricularActivity = require('./extraCurricularActivity');
@@ -65,5 +67,7 @@ module.exports = {
     CourseOutcome,
     SubjectComponentCo,
     ClassSection,
+    EventOutcomes,
+    EventOutcomeMapping,
     syncDB
 };

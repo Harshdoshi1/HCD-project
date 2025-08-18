@@ -1,6 +1,8 @@
 const StudentPoints = require('./StudentPoints');
 const EventMaster = require('./EventMaster');
 const ParticipationType = require('./participationTypes');
+const EventOutcomes = require('./EventOutcomes');
+const EventOutcomeMapping = require('./EventOutcomeMapping');
 const UniqueSubDegree = require('./uniqueSubDegree');
 const CourseOutcome = require('./courseOutcome');
 const ComponentWeightage = require('./componentWeightage');
@@ -25,6 +27,36 @@ StudentPoints.belongsTo(ParticipationType, {
   targetKey: 'id',
   as: 'participationType',
   constraints: false // Don't enforce foreign key constraints
+});
+
+// --- Event-Outcome Associations ---
+
+// EventMaster can have many EventOutcomes through EventOutcomeMapping
+EventMaster.belongsToMany(EventOutcomes, {
+  through: EventOutcomeMapping,
+  foreignKey: 'eventId',
+  otherKey: 'outcomeId',
+  as: 'outcomes'
+});
+
+// EventOutcomes can be associated with many EventMaster through EventOutcomeMapping
+EventOutcomes.belongsToMany(EventMaster, {
+  through: EventOutcomeMapping,
+  foreignKey: 'outcomeId',
+  otherKey: 'eventId',
+  as: 'events'
+});
+
+// EventOutcomeMapping belongs to EventMaster
+EventOutcomeMapping.belongsTo(EventMaster, {
+  foreignKey: 'eventId',
+  as: 'event'
+});
+
+// EventOutcomeMapping belongs to EventOutcomes
+EventOutcomeMapping.belongsTo(EventOutcomes, {
+  foreignKey: 'outcomeId',
+  as: 'outcome'
 });
 
 // --- ClassSection Associations ---
@@ -131,6 +163,8 @@ module.exports = {
   StudentPoints,
   EventMaster,
   ParticipationType,
+  EventOutcomes,
+  EventOutcomeMapping,
   UniqueSubDegree,
   CourseOutcome,
   ComponentWeightage,
