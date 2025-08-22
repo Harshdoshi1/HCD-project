@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './StudentAnalysis.css';
+import ReportGeneratorModal from './ReportGeneratorModal.jsx';
 
 const StudentAnalysis = ({ student, onClose }) => {
   // State for storing semester points data
@@ -11,6 +12,8 @@ const StudentAnalysis = ({ student, onClose }) => {
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [activityList, setActivityList] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
+  const [academicDetails, setAcademicDetails] = useState(null);
+  const [showReportGenerator, setShowReportGenerator] = useState(false);
   const [performanceInsights, setPerformanceInsights] = useState({
     strengths: [],
     areasForImprovement: [],
@@ -530,15 +533,19 @@ const StudentAnalysis = ({ student, onClose }) => {
     onClose();
   };
 
+  const toggleReportGenerator = () => {
+    setShowReportGenerator(prev => !prev);
+  };
+
   return (
     <div className="modal-backdrop">
       <div className="modal-container batch-analysis-modal" >
-        <div className="modal-header" style={{flexDirection:"row"}}>
+        <div className="modal-header" style={{ flexDirection: "row" }}>
           <h2>Student Analysis: {student.name}</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
 
-        <div className="modal-content-batch-analysis-modal" style={{padding:"20px"}}>
+        <div className="modal-content-batch-analysis-modal" style={{ padding: "20px" }}>
           <div className="student-details-batch-analysis-modal">
             <div className="detail-item">
               <span className="detail-label">Roll Number:</span>

@@ -21,10 +21,11 @@ const gradesRoutes = require('./routes/grades_routes');
 const academicDetailsRoutes = require('./routes/academic_details_routes');
 const bloomsTaxonomyRoutes = require('./routes/bloomsTaxonomyRoutes');
 const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
-const classSectionRoutes = require('./routes/classSection_routes');
-const app = express();
 const emailRoutes = require('./routes/email_routes');
 const mainRouter = require('./routes/index');
+const student_event_routes = require('./routes/student_event_routes');
+const classSectionRoutes = require('./routes/classSection_routes');
+const app = express();
 
 // Enable CORS
 app.use(cors({
@@ -51,6 +52,8 @@ app.use('/api/faculties', facultyRoutes);
 app.use('/api/components', componentRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/Events', students_points_routes);
+app.use('/api/events', student_event_routes);
+
 // app.use('/api/students/extracurricular', studentExtracurricularRoutes);
 // app.use('/api/students/cocurricular', studentCoCurricularRoutes);
 app.use('/api/subjects', subRoutes);
@@ -64,26 +67,7 @@ app.use('/api/academic-details', academicDetailsRoutes);
 app.use('/api/blooms-taxonomy', bloomsTaxonomyRoutes);
 app.use('/api/course-outcomes', courseOutcomeRoutes);
 
-// Add logging to see what routes are registered
-console.log('Registered routes:');
-console.log('- /api (mainRouter)');
-console.log('- /api/email');
-console.log('- /api/users');
-console.log('- /api/batches');
-console.log('- /api/faculties');
-console.log('- /api/components');
-console.log('- /api/students');
-console.log('- /api/Events');
-console.log('- /api/subjects');
-console.log('- /api/semesters');
-console.log('- /api/class-sections');
-console.log('- /api/facultyside');
-console.log('- /api/studentCPI');
-console.log('- /api/grades');
-console.log('- /api/academic-details');
-console.log('- /api/blooms-taxonomy');
-console.log('- /api/course-outcomes');
-// Marks routes
+
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
 app.get("/api/marks/students/:batchId/:semesterId", gettedmarksController.getStudentsByBatchAndSemester);
 

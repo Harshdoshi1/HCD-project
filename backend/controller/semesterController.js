@@ -6,6 +6,23 @@ const ClassSection = require('../models/classSection.js');
 // Import associations to ensure they are loaded
 require("../models/associations");
 
+// const { Semester } = require('../models');
+const getSemesterIdByNumber = async (req, res) => {
+    try {
+        const semesterNumber = parseInt(req.params.semesterNumber);
+        if (isNaN(semesterNumber)) {
+            return res.status(400).json({ message: "Invalid semester number" });
+        }
+        const semester = await Semester.findOne({ where: { semesterNumber } });
+        if (!semester) {
+            return res.status(404).json({ message: "Semester not found" });
+        }
+        res.json({ semesterId: semester.id });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 const addSemester = async (req, res) => {
     try {
         const { batchName, semesterNumber, startDate, endDate, numberOfClasses, classes } = req.body;
@@ -118,10 +135,49 @@ const getSemestersByBatch = async (req, res) => {
     }
 };
 
+// New: Get semesters by batch ID (numeric ID)
+const getSemestersByBatchId = async (req, res) => {
+    try {
+        const { batchId } = req.params;
+
+        if (!batchId) {
+            return res.status(400).json({ message: "Batch ID is required." });
+        }
+
+        // Optional: verify batch exists
+        const batch = await Batch.findByPk(batchId);
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found." });
+        }
+
+        const semesters = await Semester.findAll({
+            where: { batchId: batch.id },
+            include: [{
+                model: ClassSection,
+                as: 'classSections',
+                where: { isActive: true },
+                required: false
+            }],
+            order: [['semesterNumber', 'ASC']]
+        });
+
+        if (!semesters || semesters.length === 0) {
+            return res.status(404).json({ message: "No semesters found for this batch." });
+        }
+
+        return res.status(200).json(semesters);
+    } catch (error) {
+        console.error("❌ Server Error:", error.message);
+        return res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
 
 
 module.exports = {
     getSemestersByBatch,
-    addSemester
+    getSemestersByBatchId,
+    addSemester,
+    getSemesterIdByNumber
 };
 

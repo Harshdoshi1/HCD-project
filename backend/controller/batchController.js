@@ -1,5 +1,19 @@
 const Batch = require("../models/batch");
 
+
+const getBatchIdByName = async (req, res) => {
+    try {
+        const batchName = req.params.batchName;
+        const batch = await Batch.findOne({ where: { batchName } });
+        if (!batch) {
+            return res.status(404).json({ message: "Batch not found" });
+        }
+        res.json({ batchId: batch.id });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 const addBatch = async (req, res) => {
     try {
         const { batchName, batchStart, batchEnd, courseType } = req.body;
@@ -47,5 +61,5 @@ const getAllBatches = async (req, res) => {
 
 
 module.exports = {
-    getAllBatches, addBatch
+    getAllBatches, addBatch,getBatchIdByName
 }
