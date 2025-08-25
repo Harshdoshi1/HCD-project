@@ -463,82 +463,9 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
               }
             }
 
-            // Convert to array of semester data objects
             const sortedSemesters = Array.from(allSemesters).sort(
               (a, b) => a - b
             );
-
-            // If we found any semesters, fetch overall averages
-            // if (sortedSemesters.length > 0) {
-            //   // For each semester, get overall performance metrics across all batches
-            //   for (const semNumber of sortedSemesters) {
-            //     const semKey = `Sem ${semNumber}`;
-
-            //     try {
-            //       // Get overall academic performance
-            //       const academicResponse = await axios
-            //         .get(
-            //           `http://localhost:5001/api/academic-performance/overall/semester/${semNumber}`
-            //         )
-            //         .catch(() => null);
-
-            //       if (academicResponse && academicResponse.data) {
-            //         semesterData[semKey].curricular =
-            //           academicResponse.data.averageScore || 75;
-            //       } else {
-            //         // Generate a realistic average if no data
-            //         semesterData[semKey].curricular =
-            //           70 + Math.floor(Math.random() * 15);
-            //       }
-
-            //       // Get co-curricular and extra-curricular averages
-            //       const activitiesResponse = await axios
-            //         .get(
-            //           `http://localhost:5001/api/events/averages/semester/${semNumber}`
-            //         )
-            //         .catch(() => null);
-
-            //       if (activitiesResponse && activitiesResponse.data) {
-            //         semesterData[semKey].coCurricular =
-            //           activitiesResponse.data.coCurricular ||
-            //           40 + semNumber * 5;
-            //         semesterData[semKey].extraCurricular =
-            //           activitiesResponse.data.extraCurricular ||
-            //           30 + semNumber * 4;
-            //       } else {
-            //         // Generate realistic progression of activities
-            //         semesterData[semKey].coCurricular = 40 + semNumber * 5;
-            //         semesterData[semKey].extraCurricular = 30 + semNumber * 4;
-            //       }
-
-            //       semesterData[semKey].count = 1; // Just to ensure it's counted
-            //     } catch (err) {
-            //       console.error(
-            //         `Error processing overall data for semester ${semNumber}:`,
-            //         err
-            //       );
-            //     }
-            //   }
-
-            //   // Convert to array format for the chart
-            //   for (const [semester, data] of Object.entries(semesterData)) {
-            //     if (data.count > 0) {
-            //       formattedTrendData.push({
-            //         semester: semester,
-            //         curricular: Math.round(data.curricular),
-            //         coCurricular: Math.round(data.coCurricular),
-            //         extraCurricular: Math.round(data.extraCurricular),
-            //       });
-            //     }
-            //   }
-
-            //   // Sort by semester number
-            //   formattedTrendData.sort((a, b) => {
-            //     const semA = parseInt(a.semester.replace("Sem ", ""));
-            //     const semB = parseInt(b.semester.replace("Sem ", ""));
-            //     return semA - semB;
-            //   });
-            // }
           }
         } catch (err) {
           console.error("Error generating overall batch data:", err);
@@ -558,17 +485,6 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         const batchNumber =
           selectedBatch !== "all" ? selectedBatch.replace(/\D/g, "") : "20";
         const startYear = parseInt(batchNumber) || 19;
-
-        // Create sample data with batch-specific variations
-        // let sampleData = [
-        //   { semester: 'Sem 1', curricular: 70 + (startYear % 10), coCurricular: 40 + (startYear % 15), extraCurricular: 30 + (startYear % 10) },
-        //   { semester: 'Sem 2', curricular: 75 + (startYear % 10), coCurricular: 45 + (startYear % 15), extraCurricular: 35 + (startYear % 10) },
-        //   { semester: 'Sem 3', curricular: 72 + (startYear % 10), coCurricular: 50 + (startYear % 15), extraCurricular: 40 + (startYear % 10) },
-        //   { semester: 'Sem 4', curricular: 78 + (startYear % 10), coCurricular: 55 + (startYear % 15), extraCurricular: 45 + (startYear % 10) },
-        //   { semester: 'Sem 5', curricular: 80 + (startYear % 10), coCurricular: 60 + (startYear % 15), extraCurricular: 50 + (startYear % 10) }
-        // ];
-        // formattedTrendData = sampleData;
-        // console.log('Using sample data for batch:', selectedBatch);
       }
 
       // Set the trend data
