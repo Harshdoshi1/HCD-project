@@ -5,7 +5,8 @@ const {
     addSemester,
     getSemestersByBatch,
     getSemestersByBatchId,
-    getSemesterIdByNumber
+    getSemesterIdByNumber,
+    getSemesterNumberById
 } = require('../controller/semesterController.js');
 
 // Semester Routes
@@ -17,6 +18,7 @@ router.get('/semesters/batch/:batchId', getSemestersByBatchId);
 
 // router.get('/getSemestersByBatch', getSemestersByBatch);
 router.get('/id/:semesterNumber', getSemesterIdByNumber);
+router.get("/getSemesterNumberById/:semesterId", getSemesterNumberById);
 
 
 module.exports = router;

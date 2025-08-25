@@ -74,7 +74,9 @@ const StudentGrades = () => {
 
     try {
       console.log("Fetching components for subject:", subjectCode);
-      // Use the getSubjectComponentsWithSubjectCode endpoint
+
+      //fetch semester number from id using
+
       const response = await fetch(
         `http://localhost:5001/api/subjects/getSubjectComponentsWithSubjectCode/${subjectCode}`
       );
@@ -207,7 +209,7 @@ const StudentGrades = () => {
       //fetch semesterID from semesterNumber
       const semesterID = selectedSemester.id;
       const response = await fetch(
-        `http://localhost:5001/api/marks/students/${batchId}/${semesterID}`
+        `http://localhost:5001/api/marks/students/${batchId}/${selectedSemester.semesterNumber}`
       );
 
       if (!response.ok) {
@@ -510,11 +512,16 @@ const StudentGrades = () => {
           "and semester:",
           selectedSemester.semesterNumber
         );
-        const semesterID = selectedSemester.id;
-
+        // const semesterID = selectedSemester.id;
+        // console.log(
+        //   "Fetching students for batch ID:",
+        //   batchId,
+        //   "and semester:",
+        //   semesterID
+        // );
         // Use the new API endpoint that filters by both batch and semester
         const response = await fetch(
-          `http://localhost:5001/api/marks/students/${batchId}/${semesterID}`
+          `http://localhost:5001/api/marks/students/${batchId}/${selectedSemester.semesterNumber}`
         );
         if (!response.ok) throw new Error("Failed to fetch students");
         const data = await response.json();
@@ -657,8 +664,34 @@ const StudentGrades = () => {
           const batchIdData = await batchIdResponse.json();
           const batchId = batchIdData.batchId;
 
-          // Fetch student data with batch ID
-          fetchStudentData(batchId, subject.subCode);
+          console.log("fetcifngjsfuar : batch id", batchId);
+
+          const getCurrentSemester = async (batchId) => {
+            try {
+              const response = await fetch(
+                `http://localhost:5001/api/semesters/getSemesterNumberById/${batchId}`
+              );
+
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const data = await response.json();
+              const currentSemester = data.currentSemester;
+              console.log("Current Semester:", currentSemester);
+              return currentSemester;
+            } catch (error) {
+              console.error("Error fetching current semester:", error);
+            }
+          };
+
+          const currentSemester = await getCurrentSemester(batchId);
+
+          fetchStudentData(
+            batchIdData.batchId,
+            subject.subCode,
+            currentSemester
+          );
         } catch (error) {
           console.error("Error getting batch ID:", error);
           setError("Failed to get batch ID: " + error.message);

@@ -14,6 +14,27 @@ const getBatchIdByName = async (req, res) => {
     }
 };
 
+const getCurrentSemester = async (req, res) => {
+  try {
+    const batchId = parseInt(req.params.batchId);
+    if (isNaN(batchId)) {
+      return res.status(400).json({ message: "Invalid batch id" });
+    }
+
+    // Fetch the row from Semester table where batchId matches
+    const semester = await Semester.findOne({ where: { batchId } });
+
+    if (!semester) {
+      return res.status(404).json({ message: "Semester not found" });
+    }
+
+    // Return the current semester number
+    res.json({ currentSemester: semester.semesterNumber }); // or semester.currentSemester
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 const addBatch = async (req, res) => {
     try {
         const { batchName, batchStart, batchEnd, courseType } = req.body;
@@ -61,5 +82,5 @@ const getAllBatches = async (req, res) => {
 
 
 module.exports = {
-    getAllBatches, addBatch,getBatchIdByName
+    getAllBatches, addBatch,getBatchIdByName,getCurrentSemester
 }

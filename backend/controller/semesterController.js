@@ -23,6 +23,30 @@ const getSemesterIdByNumber = async (req, res) => {
     }
 };
 
+
+const getSemesterNumberById = async (req, res) => {
+  try {
+    const semesterId = parseInt(req.params.semesterId);
+    if (isNaN(semesterId)) {
+      return res.status(400).json({ message: "Invalid semester id" });
+    }
+
+    // Fetch the row from Semester table where id matches
+    const semester = await Semester.findOne({ where: { id: semesterId } });
+
+    if (!semester) {
+      return res.status(404).json({ message: "Semester not found" });
+    }
+
+    // Return the semesterNumber field
+    res.json({ semesterNumber: semester.semesterNumber });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
 const addSemester = async (req, res) => {
     try {
         const { batchName, semesterNumber, startDate, endDate, numberOfClasses, classes } = req.body;
@@ -178,6 +202,7 @@ module.exports = {
     getSemestersByBatch,
     getSemestersByBatchId,
     addSemester,
-    getSemesterIdByNumber
+    getSemesterIdByNumber,
+    getSemesterNumberById
 };
 
