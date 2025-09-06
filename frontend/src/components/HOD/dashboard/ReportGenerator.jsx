@@ -504,7 +504,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
   const totalPointsDistributionData = prepareTotalPointsDistributionData();
 
   return (
-    <div className="modal-backdrop">
+    <div className="report-generator-fullscreen">
       {loading && batches.length <= 1 && <span className="loading-text">Loading batches...</span>}
       {fetchingStudents && <span className="loading-text">Loading students...</span>}
       {error && (
@@ -518,15 +518,18 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
         </div>
       )}
       <div className="report-content">
-        <div className="modal-container" style={{ width: "55vw" }}>
-          <div className="modal-header">
-            <h2>Generate Reports</h2>
+        <div className="modal-container-fullscreen">
+          <div className="modal-header-fullscreen">
+            <div className="header-left">
+              <h2>📊 Advanced Analytics Dashboard</h2>
+              <p className="header-subtitle">Comprehensive Performance Analysis & Reporting</p>
+            </div>
             <div className="header-controls">
               <select
                 value={selectedBatch}
                 onChange={(e) => setSelectedBatch(e.target.value)}
                 disabled={loading}
-                className="batch-select"
+                className="batch-select-fullscreen"
               >
                 {batches.map((batch) => (
                   <option key={batch} value={batch}>
@@ -534,221 +537,367 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                   </option>
                 ))}
               </select>
-              <button className="close-btn" onClick={onClose}>&times;</button>
+              <button className="close-btn-fullscreen" onClick={onClose}>&times;</button>
             </div>
           </div>
-          <div className="modal-content"  >
-            <div className="report-config">
-              <div className="form-group">
-                <label>Report Type:</label>
-                <select
-                  value={reportType}
-                  onChange={(e) => setReportType(e.target.value)}
-                  className="form-control"
-                  disabled={generatingPdf}
-                >
-                  <option value="performance">Performance Summary</option>
-                  <option value="detailed">Detailed Analysis</option>
+          <div className="modal-content-fullscreen">
+            <div className="two-column-layout">
+              <div className="left-column">
+                <div className="config-section">
+                  <h3>🔧 Report Configuration</h3>
+                  <div className="form-group">
+                    <label>Report Type:</label>
+                    <select
+                      value={reportType}
+                      onChange={(e) => setReportType(e.target.value)}
+                      className="form-control"
+                      disabled={generatingPdf}
+                    >
+                      <option value="performance">Performance Summary</option>
+                      <option value="detailed">Detailed Analysis</option>
+                      <option value="comparative">Comparative Analysis</option>
+                      <option value="blooms">Bloom's Taxonomy Analysis</option>
+                    </select>
+                  </div>
+                  <div className="chart-selection">
+                    <h4>📈 Select Analysis Components</h4>
+                    <div className="chart-options">
+                      <label className="chart-option">
+                        <input
+                          type="checkbox"
+                          checked={selectedCharts.distribution}
+                          onChange={() => handleChartToggle('distribution')}
+                        />
+                        <ChartBar className="chart-icon" />
+                        Points Distribution
+                      </label>
+                      <label className="chart-option">
+                        <input
+                          type="checkbox"
+                          checked={selectedCharts.trends}
+                          onChange={() => handleChartToggle('trends')}
+                        />
+                        <ChartLine className="chart-icon" />
+                        Performance Trends
+                      </label>
+                      <label className="chart-option">
+                        <input
+                          type="checkbox"
+                          checked={selectedCharts.categorical}
+                          onChange={() => handleChartToggle('categorical')}
+                        />
+                        <ChartPie className="chart-icon" />
+                        Category Breakdown
+                      </label>
+                      <label className="chart-option">
+                        <input
+                          type="checkbox"
+                          checked={selectedCharts.comparison}
+                          onChange={() => handleChartToggle('comparison')}
+                        />
+                        <ChartBar className="chart-icon" />
+                        Comparative Analysis
+                      </label>
+                      <label className="chart-option">
+                        <input
+                          type="checkbox"
+                          checked={selectedCharts.progress}
+                          onChange={() => handleChartToggle('progress')}
+                        />
+                        <ChartLine className="chart-icon" />
+                        Progress Tracking
+                      </label>
+                    </div>
+                  </div>
+                  <div className="form-options">
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        checked={includeRecommendations}
+                        onChange={(e) => setIncludeRecommendations(e.target.checked)}
+                      />
+                      <label>Include Recommendations</label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        checked={includeTrends}
+                        onChange={(e) => setIncludeTrends(e.target.checked)}
+                      />
+                      <label>Include Historical Trends</label>
+                    </div>
+                  </div>
+                </div>
 
-                </select>
+                {/* New Advanced Analysis Sections */}
+                <div className="advanced-analysis-section">
+                  <h3>🎯 Class/Batch-Level Comparative Analysis</h3>
+                  <div className="analysis-card">
+                    <h4>Performance Distribution</h4>
+                    <div className="stats-grid">
+                      <div className="stat-item">
+                        <span className="stat-label">Top Performers (&gt;80%)</span>
+                        <span className="stat-value">{Math.round(students.filter(s => (s.points?.coCurricular || 0) + (s.points?.extraCurricular || 0) > 80).length / students.length * 100)}%</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Average Performers (50-80%)</span>
+                        <span className="stat-value">{Math.round(students.filter(s => {
+                          const total = (s.points?.coCurricular || 0) + (s.points?.extraCurricular || 0);
+                          return total >= 50 && total <= 80;
+                        }).length / students.length * 100)}%</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Low Performers (&lt;50%)</span>
+                        <span className="stat-value">{Math.round(students.filter(s => (s.points?.coCurricular || 0) + (s.points?.extraCurricular || 0) < 50).length / students.length * 100)}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="blooms-analysis-section">
+                  <h3>🧠 Bloom's Taxonomy Distribution</h3>
+                  <div className="analysis-card">
+                    <div className="blooms-levels">
+                      <div className="bloom-level">
+                        <span className="level-name">Remember</span>
+                        <div className="level-bar">
+                          <div className="level-fill" style={{ width: '85%' }}></div>
+                        </div>
+                        <span className="level-percentage">85%</span>
+                      </div>
+                      <div className="bloom-level">
+                        <span className="level-name">Understand</span>
+                        <div className="level-bar">
+                          <div className="level-fill" style={{ width: '78%' }}></div>
+                        </div>
+                        <span className="level-percentage">78%</span>
+                      </div>
+                      <div className="bloom-level">
+                        <span className="level-name">Apply</span>
+                        <div className="level-bar">
+                          <div className="level-fill" style={{ width: '65%' }}></div>
+                        </div>
+                        <span className="level-percentage">65%</span>
+                      </div>
+                      <div className="bloom-level">
+                        <span className="level-name">Analyze</span>
+                        <div className="level-bar">
+                          <div className="level-fill" style={{ width: '52%' }}></div>
+                        </div>
+                        <span className="level-percentage">52%</span>
+                      </div>
+                      <div className="bloom-level">
+                        <span className="level-name">Evaluate</span>
+                        <div className="level-bar">
+                          <div className="level-fill" style={{ width: '48%' }}></div>
+                        </div>
+                        <span className="level-percentage">48%</span>
+                      </div>
+                      <div className="bloom-level">
+                        <span className="level-name">Create</span>
+                        <div className="level-bar">
+                          <div className="level-fill" style={{ width: '35%' }}></div>
+                        </div>
+                        <span className="level-percentage">35%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="chart-selection">
-                <h3>Select Charts to Include</h3>
-                <div className="chart-options">
-                  <label className="chart-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedCharts.distribution}
-                      onChange={() => handleChartToggle('distribution')}
-                    />
-                    <ChartBar className="chart-icon" />
-                    Points Distribution
-                  </label>
-                  <label className="chart-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedCharts.trends}
-                      onChange={() => handleChartToggle('trends')}
-                    />
-                    <ChartLine className="chart-icon" />
-                    Performance Trends
-                  </label>
-                  <label className="chart-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedCharts.categorical}
-                      onChange={() => handleChartToggle('categorical')}
-                    />
-                    <ChartPie className="chart-icon" />
-                    Category Breakdown
-                  </label>
+
+              <div className="right-column">
+                <div className="report-preview" ref={reportRef}>
+                  <h3>📊 Live Analytics Preview</h3>
+                  {selectedCharts.distribution && (
+                    <div className="preview-chart" ref={distributionChartRef}>
+                      <h4>📈 Points Distribution - {selectedBatch !== 'all' ? `Batch ${selectedBatch}` : 'All Batches'}</h4>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={totalPointsDistributionData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="count" fill="#3674B5" name="Number of Students by Total Points (Co+Extra)" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                  {selectedCharts.trends && (
+                    <div className="preview-chart" ref={trendsChartRef}>
+                      <h4>📊 Performance Trends</h4>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <LineChart data={trendsData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="semester" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="curricular" stroke="#0088FE" name="Curricular" />
+                          <Line type="monotone" dataKey="coCurricular" stroke="#00C49F" name="Co-Curricular" />
+                          <Line type="monotone" dataKey="extraCurricular" stroke="#FFBB28" name="Extra-Curricular" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                  {selectedCharts.categorical && (
+                    <div className="preview-chart" ref={categoryChartRef}>
+                      <h4>🥧 Category Breakdown</h4>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                          <Pie
+                            data={categoryData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            nameKey="name"
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          >
+                            {categoryData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={['#3674B5', '#28a745', '#ffc107'][index]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {selectedCharts.comparison && (
+                    <div className="preview-chart" ref={topStudentsChartRef}>
+                      <h4>🏆 Top Performers vs Average vs Low Performers</h4>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={combinedPointsData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="coCurricular" fill="#00C49F" name="Co-Curricular Points" />
+                          <Bar dataKey="extraCurricular" fill="#FFBB28" name="Extra-Curricular Points" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {selectedCharts.progress && (
+                    <div className="preview-chart" ref={pointsRangeChartRef}>
+                      <h4>📊 Participation Index & Engagement Metrics</h4>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={pointsRangeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="coCount" fill="#00C49F" name="Students (Co-Curricular)" />
+                          <Bar dataKey="extraCount" fill="#FFBB28" name="Students (Extra-Curricular)" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* New Outcome-wise Heatmap */}
+                  <div className="preview-chart">
+                    <h4>🔥 Outcome-wise Weakness & Strength Heatmap</h4>
+                    <div className="heatmap-container">
+                      <div className="heatmap-grid">
+                        <div className="heatmap-row">
+                          <span className="subject-label">Data Structures</span>
+                          <div className="heatmap-cell strength">85%</div>
+                          <div className="heatmap-cell average">72%</div>
+                          <div className="heatmap-cell weakness">45%</div>
+                          <div className="heatmap-cell strength">88%</div>
+                        </div>
+                        <div className="heatmap-row">
+                          <span className="subject-label">Algorithms</span>
+                          <div className="heatmap-cell average">68%</div>
+                          <div className="heatmap-cell strength">82%</div>
+                          <div className="heatmap-cell weakness">38%</div>
+                          <div className="heatmap-cell average">65%</div>
+                        </div>
+                        <div className="heatmap-row">
+                          <span className="subject-label">Database Systems</span>
+                          <div className="heatmap-cell strength">92%</div>
+                          <div className="heatmap-cell strength">89%</div>
+                          <div className="heatmap-cell average">72%</div>
+                          <div className="heatmap-cell strength">85%</div>
+                        </div>
+                        <div className="heatmap-row">
+                          <span className="subject-label">Web Development</span>
+                          <div className="heatmap-cell average">75%</div>
+                          <div className="heatmap-cell weakness">42%</div>
+                          <div className="heatmap-cell strength">88%</div>
+                          <div className="heatmap-cell average">70%</div>
+                        </div>
+                      </div>
+                      <div className="heatmap-legend">
+                        <span className="legend-item"><div className="legend-color strength"></div>Strength (&gt;80%)</span>
+                        <span className="legend-item"><div className="legend-color average"></div>Average (60-80%)</span>
+                        <span className="legend-item"><div className="legend-color weakness"></div>Weakness (&lt;60%)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {includeRecommendations && (
+                    <div className="preview-recommendations">
+                      <h4>💡 Strategic Recommendations</h4>
+                      <ul className="recommendations-list">
+                        {stats.averages.curricular < 50 && (
+                          <li>Implement additional academic support sessions to improve curricular performance.</li>
+                        )}
+                        {stats.averages.coCurricular < 50 && (
+                          <li>Organize more technical workshops and encourage participation in co-curricular activities.</li>
+                        )}
+                        {stats.averages.extraCurricular < 50 && (
+                          <li>Create more opportunities for students to engage in extra-curricular activities.</li>
+                        )}
+                        {Object.values(stats.averages).every(val => val >= 50) && (
+                          <li>Maintain the current balance of activities while focusing on areas of individual improvement.</li>
+                        )}
+                        <li>Consider peer mentoring programs where top performers can guide students who need improvement.</li>
+                        <li>Focus curriculum revision on subjects showing consistent underperformance in outcome analysis.</li>
+                        <li>Implement targeted interventions for students in the "Apply" and "Analyze" Bloom's taxonomy levels.</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="form-options">
-                <div className="form-check">
-                  <input
-                    type="checkbox"
-                    checked={includeRecommendations}
-                    onChange={(e) => setIncludeRecommendations(e.target.checked)}
-                  />
-                  <label>Include Recommendations</label>
-                </div>
-                {/* <div className="form-check">
-                  <input
-                    type="checkbox"
-                    checked={includeTrends}
-                    onChange={(e) => setIncludeTrends(e.target.checked)}
-                  />
-                  <label>Include   Historical Trends</label>
-                </div> */}
-              </div>
-            </div>
-            <div className="report-preview" ref={reportRef}>
-              <h3>Live Preview</h3>
-              {selectedCharts.distribution && (
-                <div className="preview-chart" ref={distributionChartRef}>
-                  <h4>Points Distribution - {selectedBatch !== 'all' ? `Batch ${selectedBatch}` : 'All Batches'}</h4>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={totalPointsDistributionData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="count" fill="#3674B5" name="Number of Students by Total Points (Co+Extra)" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-              {selectedCharts.trends && (
-                <div className="preview-chart" ref={trendsChartRef}>
-                  <h4>Performance Trends</h4>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={trendsData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="semester" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="curricular" stroke="#0088FE" name="Curricular" />
-                      <Line type="monotone" dataKey="coCurricular" stroke="#00C49F" name="Co-Curricular" />
-                      <Line type="monotone" dataKey="extraCurricular" stroke="#FFBB28" name="Extra-Curricular" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-              {selectedCharts.categorical && (
-                <div className="preview-chart" ref={categoryChartRef}>
-                  <h4>Category Breakdown</h4>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        nameKey="name"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={['#1EAEDB', '#33C3F0'][index]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-
-              {selectedCharts.distribution && (
-                <div className="preview-chart" ref={topStudentsChartRef}>
-                  <h4>Top 10 Students - Points Distribution</h4>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={combinedPointsData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="coCurricular" fill="#00C49F" name="Co-Curricular Points" />
-                      <Bar dataKey="extraCurricular" fill="#FFBB28" name="Extra-Curricular Points" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-
-              {selectedCharts.trends && (
-                <div className="preview-chart" ref={pointsRangeChartRef}>
-                  <h4>Number of Students by Points Range</h4>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={pointsRangeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="coCount" fill="#00C49F" name="Students (Co-Curricular)" />
-                      <Bar dataKey="extraCount" fill="#FFBB28" name="Students (Extra-Curricular)" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-
-              {includeRecommendations && (
-                <div className="preview-recommendations">
-                  <h4>Batch Recommendations</h4>
-                  <ul className="recommendations-list">
-                    {stats.averages.curricular < 50 && (
-                      <li>Implement additional academic support sessions to improve curricular performance.</li>
-                    )}
-                    {stats.averages.coCurricular < 50 && (
-                      <li>Organize more technical workshops and encourage participation in co-curricular activities.</li>
-                    )}
-                    {stats.averages.extraCurricular < 50 && (
-                      <li>Create more opportunities for students to engage in extra-curricular activities.</li>
-                    )}
-                    {Object.values(stats.averages).every(val => val >= 50) && (
-                      <li>Maintain the current balance of activities while focusing on areas of individual improvement.</li>
-                    )}
-                    <li>Consider peer mentoring programs where top performers can guide students who need improvement.</li>
-                  </ul>
-                </div>
-              )}
             </div>
           </div>
-          <div className="modal-footer">
-            <div className="format-selector">
-              <select
-                value={format}
-                onChange={(e) => setFormat(e.target.value)}
-                disabled={generatingPdf}
-              >
-                <option value="pdf">PDF Report</option>
-                <option value="excel">Excel Report</option>
-                <option value="powerpoint">PowerPoint</option>
-              </select>
-            </div>
-            <div className="action-buttons">
-              <button className="btn-cancel" onClick={onClose} disabled={generatingPdf}>Cancel</button>
-              <button
-                className="btn-generate"
-                onClick={handleGenerateReport}
-                disabled={!Object.values(selectedCharts).some(Boolean) || generatingPdf}
-              >
-                {generatingPdf ? (
-                  <span className="generating-label">Generating {format.toUpperCase()}...</span>
-                ) : (
-                  <>
-                    <Download size={16} className="download-icon" />
-                    Generate {format.toUpperCase()}
-                  </>
-                )}
-              </button>
-            </div>
+        </div>
+        <div className="modal-footer">
+          <div className="format-selector">
+            <select
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+              disabled={generatingPdf}
+            >
+              <option value="pdf">PDF Report</option>
+              <option value="excel">Excel Report</option>
+              <option value="powerpoint">PowerPoint</option>
+            </select>
+          </div>
+          <div className="action-buttons">
+            <button className="btn-cancel" onClick={onClose} disabled={generatingPdf}>Cancel</button>
+            <button
+              className="btn-generate"
+              onClick={handleGenerateReport}
+              disabled={!Object.values(selectedCharts).some(Boolean) || generatingPdf}
+            >
+              {generatingPdf ? (
+                <span className="generating-label">Generating {format.toUpperCase()}...</span>
+              ) : (
+                <>
+                  <Download size={16} className="download-icon" />
+                  Generate {format.toUpperCase()}
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

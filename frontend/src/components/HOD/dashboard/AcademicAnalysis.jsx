@@ -65,15 +65,15 @@ const AcademicAnalysis = ({ student, academicData }) => {
         allSemesterPoints.push({
           semester,
           totalCocurricular: 0,
-          totalExtracurricular: 0
+          totalExtracurricular: 0,
         });
       }
 
       setSemesterPoints(allSemesterPoints);
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching semester data:', err);
-      setError('Failed to load semester data');
+      console.error("Error fetching semester data:", err);
+      setError("Failed to load semester data");
       setSemesterPoints([]);
       setLoading(false);
     }
@@ -418,10 +418,12 @@ const AcademicAnalysis = ({ student, academicData }) => {
       <div className="semester-filter-nonacademic">
         <label className="semester-label-nonacademic">Select Semester: </label>
         <div className="semester-buttons-nonacademic">
-          {semesterPoints.map(point => (
+          {semesterPoints.map((point) => (
             <button
               key={point.semester}
-              className={`semester-btn-nonacademic ${selectedSemester === point.semester ? 'active-nonacademic' : ''}`}
+              className={`semester-btn-nonacademic ${
+                selectedSemester === point.semester ? "active-nonacademic" : ""
+              }`}
               onClick={() => handleSemesterChange(point.semester)}
             >
               Semester {point.semester}
@@ -734,8 +736,8 @@ const AcademicAnalysis = ({ student, academicData }) => {
 
                 <div className="bloom-legend">
                   <span className="legend-item">
-                    <span className="legend-dot excellent-bloom"></span>Excellent
-                    (85+)
+                    <span className="legend-dot excellent-bloom"></span>
+                    Excellent (85+)
                   </span>
                   <span className="legend-item">
                     <span className="legend-dot good-bloom"></span>Good (70-84)
@@ -926,7 +928,9 @@ const AcademicAnalysis = ({ student, academicData }) => {
               <ul>
                 <li>Build a strong portfolio with diverse projects</li>
                 <li>Seek internship opportunities in software development</li>
-                <li>Develop soft skills through team projects and presentations</li>
+                <li>
+                  Develop soft skills through team projects and presentations
+                </li>
               </ul>
             </div>
           </div>
