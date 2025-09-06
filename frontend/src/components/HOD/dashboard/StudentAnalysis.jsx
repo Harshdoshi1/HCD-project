@@ -651,70 +651,70 @@ const StudentAnalysis = ({ student, onClose }) => {
                   </div>
                 </div>
 
-                {/* Activity List Section */}
-                <div className="analysis-section-nonacademic">
-                  <h3>Activity List</h3>
+                {/* Activity List and Pie Chart Section */}
+                <div className="activity-pie-container">
+                  <div className="activity-section">
+                    <h3>📋 Activity List</h3>
 
-                  {/* Semester Filter */}
-                  <div className="semester-filter-nonacademic">
-                    <label className="semester-label-nonacademic">Select Semester: </label>
-                    <div className="semester-buttons-nonacademic">
-                      {semesterPoints.map(point => (
-                        <button
-                          key={point.semester}
-                          className={`semester-btn-nonacademic ${selectedSemester === point.semester ? 'active-nonacademic' : ''}`}
-                          onClick={() => handleSemesterChange(point.semester)}
-                        >
-                          Semester {point.semester}
-                        </button>
-                      ))}
+                    {/* Semester Filter */}
+                    <div className="semester-filter-nonacademic">
+                      <label className="semester-label-nonacademic">Select Semester: </label>
+                      <div className="semester-buttons-nonacademic">
+                        {semesterPoints.map(point => (
+                          <button
+                            key={point.semester}
+                            className={`semester-btn-nonacademic ${selectedSemester === point.semester ? 'active-nonacademic' : ''}`}
+                            onClick={() => handleSemesterChange(point.semester)}
+                          >
+                            Semester {point.semester}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="activity-list-container-nonacademic">
+                      {loadingActivities ? (
+                        <div className="loading-message">
+                          <p>Loading activities...</p>
+                        </div>
+                      ) : activityList && activityList.length > 0 ? (
+                        <table className="activity-table-nonacademic">
+                          <thead>
+                            <tr>
+                              <th>Activity Name</th>
+                              <th>Type</th>
+                              <th>Position</th>
+                              <th>Points</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activityList.map(activity => (
+                              <tr key={activity.id}>
+                                <td>{activity.name}</td>
+                                <td>{activity.type}</td>
+                                <td>{activity.position}</td>
+                                <td>{activity.points}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <div className="no-data-message">
+                          <p>No activities found for semester {selectedSemester}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="activity-list-container-nonacademic">
-                    {loadingActivities ? (
-                      <div className="loading-message">
-                        <p>Loading activities...</p>
-                      </div>
-                    ) : activityList && activityList.length > 0 ? (
-                      <table className="activity-table-nonacademic">
-                        <thead>
-                          <tr>
-                            <th>Activity Name</th>
-                            <th>Type</th>
-                            <th>Position</th>
-                            <th>Points</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {activityList.map(activity => (
-                            <tr key={activity.id}>
-                              <td>{activity.name}</td>
-                              <td>{activity.type}</td>
-                              <td>{activity.position}</td>
-                              <td>{activity.points}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <div className="no-data-message">
-                        <p>No activities found for semester {selectedSemester}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                <div className="analysis-section-nonacademic">
-                  <h3>Current Performance Breakdown</h3>
-                  <div className="chart-container-nonacademic">
-                    <ResponsiveContainer width="100%" height={250}>
+                  <div className="pie-chart-section">
+                    <h4>📊 Performance Breakdown</h4>
+                    <ResponsiveContainer width="100%" height={220}>
                       <PieChart>
                         <Pie
                           data={categoryData}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          outerRadius={80}
+                          outerRadius={70}
                           fill="#8884d8"
                           dataKey="value"
                           nameKey="name"
@@ -731,114 +731,155 @@ const StudentAnalysis = ({ student, onClose }) => {
                   </div>
                 </div>
 
-                <div className="analysis-section">
-                  <h3>Performance Insights</h3>
-                  {loadingActivities ? (
-                    <div className="loading-message">
-                      <p>Analyzing performance data...</p>
-                    </div>
-                  ) : (
-                    <div className="insights-grid">
-                      {/* Strengths Card */}
-                      <div className="insight-card">
-                        <h4>Strengths</h4>
-                        {performanceInsights.strengths.length > 0 ? (
-                          <div className="insight-list">
-                            <p className="insight-header">Strong performance in:</p>
-                            <ul>
-                              {performanceInsights.strengths.map((strength, index) => (
-                                <li key={index} className="insight-item">
-                                  <span className="category-name">{strength.category}</span>
-                                  <span className="points-badge strength">{strength.points} pts</span>
-                                </li>
-                              ))}
-                            </ul>
+                {/* Performance Insights and Suggestions Container */}
+                <div className="insights-suggestions-container">
+                  <div className="insights-section">
+                    <h3>🎯 Performance Insights</h3>
+                    {loadingActivities ? (
+                      <div className="loading-message">
+                        <p>Analyzing performance data...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="insights-grid">
+                          {/* Strengths Card */}
+                          <div className="insight-card">
+                            <h4>Strengths</h4>
+                            {performanceInsights.strengths.length > 0 ? (
+                              <div className="insight-list">
+                                <p className="insight-header">Strong performance in:</p>
+                                <ul>
+                                  {performanceInsights.strengths.map((strength, index) => (
+                                    <li key={index} className="insight-item">
+                                      <span className="category-name">{strength.category}</span>
+                                      <span className="points-badge strength">{strength.points} pts</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : (
+                              <p>No specific strengths identified in this semester.</p>
+                            )}
                           </div>
-                        ) : (
-                          <p>No specific strengths identified in this semester.</p>
-                        )}
-                      </div>
 
-                      {/* Areas for Improvement Card */}
-                      <div className="insight-card">
-                        <h4>Areas for Improvement</h4>
-                        {performanceInsights.areasForImprovement.length > 0 ? (
-                          <div className="insight-list">
-                            <p className="insight-header">Suggested areas to explore:</p>
-                            <ul>
-                              {performanceInsights.areasForImprovement.slice(0, 4).map((area, index) => (
-                                <li key={index} className="insight-item">
-                                  <span className="category-name">{area.category}</span>
-                                  {area.count === 0 ? (
-                                    <span className="participation-status no-participation">Not participated</span>
-                                  ) : (
-                                    <span className="points-badge weakness">{area.points} pts</span>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
+                          {/* Areas for Improvement Card */}
+                          <div className="insight-card">
+                            <h4>Areas for Improvement</h4>
+                            {performanceInsights.areasForImprovement.length > 0 ? (
+                              <div className="insight-list">
+                                <p className="insight-header">Suggested areas to explore:</p>
+                                <ul>
+                                  {performanceInsights.areasForImprovement.slice(0, 4).map((area, index) => (
+                                    <li key={index} className="insight-item">
+                                      <span className="category-name">{area.category}</span>
+                                      {area.count === 0 ? (
+                                        <span className="participation-status no-participation">Not participated</span>
+                                      ) : (
+                                        <span className="points-badge weakness">{area.points} pts</span>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : (
+                              <p>No specific areas for improvement identified.</p>
+                            )}
                           </div>
-                        ) : (
-                          <p>No specific areas for improvement identified.</p>
-                        )}
-                      </div>
 
-                      {/* Participation Pattern Card */}
-                      <div className="insight-card">
-                        <h4>Participation Pattern</h4>
-                        <p>{performanceInsights.participationPattern}</p>
-                      </div>
+                          {/* Participation Pattern Card */}
+                          <div className="insight-card">
+                            <h4>Participation Pattern</h4>
+                            <p>{performanceInsights.participationPattern}</p>
+                          </div>
 
-                      {/* Trend Analysis Card */}
-                      <div className="insight-card">
-                        <h4>Trend Analysis</h4>
-                        <p>{performanceInsights.trendAnalysis}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="analysis-section">
-                  <h3>Improvement Suggestions</h3>
-                  <div className="suggestions-container">
-                    <ul className="suggestions-list">
-                      {suggestions.map((suggestion, index) => (
-                        <li key={index} className="suggestion-item">{suggestion}</li>
-                      ))}
-                    </ul>
-
-                    <div className="action-plan">
-                      <h4>Recommended Action Plan</h4>
-                      <div className="action-steps">
-                        <div className="action-step">
-                          <div className="step-number">1</div>
-                          <div className="step-content">
-                            <h5>Short-term (Next 1-2 months)</h5>
-                            <p>{analysis.weakness === 'curricular'
-                              ? 'Schedule weekly study sessions focusing on weaker subjects'
-                              : analysis.weakness === 'coCurricular'
-                                ? 'Join at least one technical club or workshop this month'
-                                : 'Participate in at least one extracurricular event this month'}</p>
+                          {/* Trend Analysis Card */}
+                          <div className="insight-card">
+                            <h4>Trend Analysis</h4>
+                            <p>{performanceInsights.trendAnalysis}</p>
                           </div>
                         </div>
 
-                        <div className="action-step">
-                          <div className="step-number">2</div>
-                          <div className="step-content">
-                            <h5>Mid-term (Next 3-4 months)</h5>
-                            <p>{analysis.weakness === 'curricular'
-                              ? 'Aim for 10% improvement in academic scores by next assessment'
-                              : analysis.weakness === 'coCurricular'
-                                ? 'Contribute to a technical project or competition'
-                                : 'Take on a specific role in an extracurricular activity'}</p>
+                        {/* Additional Analysis Feature */}
+                        <div className="additional-analysis">
+                          <h4>📈 Activity Engagement Metrics</h4>
+                          <div className="analysis-metrics">
+                            <div className="metric-item">
+                              <span className="metric-label">Total Activities</span>
+                              <span className="metric-value">{activityList.length}</span>
+                            </div>
+                            <div className="metric-item">
+                              <span className="metric-label">Avg Points/Activity</span>
+                              <span className="metric-value">
+                                {activityList.length > 0 
+                                  ? Math.round(activityList.reduce((sum, act) => sum + (act.points || 0), 0) / activityList.length)
+                                  : 0}
+                              </span>
+                            </div>
+                            <div className="metric-item">
+                              <span className="metric-label">Categories Explored</span>
+                              <span className="metric-value">
+                                {new Set(activityList.map(act => act.category)).size}
+                              </span>
+                            </div>
+                            <div className="metric-item">
+                              <span className="metric-label">Leadership Roles</span>
+                              <span className="metric-value">
+                                {activityList.filter(act => 
+                                  act.position && 
+                                  (act.position.toLowerCase().includes('leader') || 
+                                   act.position.toLowerCase().includes('head') ||
+                                   act.position.toLowerCase().includes('captain'))
+                                ).length}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                      </>
+                    )}
+                  </div>
 
-                        <div className="action-step">
-                          <div className="step-number">3</div>
-                          <div className="step-content">
-                            <h5>Long-term (This semester)</h5>
-                            <p>Achieve balanced growth across all three areas with at least 15% improvement in {formatCategoryName(analysis.weakness)} points</p>
+                  <div className="suggestions-section">
+                    <h3>💡 Improvement Suggestions</h3>
+                    <div className="suggestions-container">
+                      <ul className="suggestions-list">
+                        {suggestions.map((suggestion, index) => (
+                          <li key={index} className="suggestion-item">{suggestion}</li>
+                        ))}
+                      </ul>
+
+                      <div className="action-plan">
+                        <h4>Recommended Action Plan</h4>
+                        <div className="action-steps">
+                          <div className="action-step">
+                            <div className="step-number">1</div>
+                            <div className="step-content">
+                              <h5>Short-term (Next 1-2 months)</h5>
+                              <p>{analysis.weakness === 'curricular'
+                                ? 'Schedule weekly study sessions focusing on weaker subjects'
+                                : analysis.weakness === 'coCurricular'
+                                  ? 'Join at least one technical club or workshop this month'
+                                  : 'Participate in at least one extracurricular event this month'}</p>
+                            </div>
+                          </div>
+
+                          <div className="action-step">
+                            <div className="step-number">2</div>
+                            <div className="step-content">
+                              <h5>Mid-term (Next 3-4 months)</h5>
+                              <p>{analysis.weakness === 'curricular'
+                                ? 'Aim for 10% improvement in academic scores by next assessment'
+                                : analysis.weakness === 'coCurricular'
+                                  ? 'Contribute to a technical project or competition'
+                                  : 'Take on a specific role in an extracurricular activity'}</p>
+                            </div>
+                          </div>
+
+                          <div className="action-step">
+                            <div className="step-number">3</div>
+                            <div className="step-content">
+                              <h5>Long-term (This semester)</h5>
+                              <p>Achieve balanced growth across all three areas with at least 15% improvement in {formatCategoryName(analysis.weakness)} points</p>
+                            </div>
                           </div>
                         </div>
                       </div>
