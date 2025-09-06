@@ -10,12 +10,53 @@ const ManageComponents = ({ selectedSubject }) => {
   });
 
   const [totalWeightage, setTotalWeightage] = useState(0);
+  const [expandedComponents, setExpandedComponents] = useState({});
   const [weightages, setWeightages] = useState({
-    CA: { enabled: false, weightage: 0, totalMarks: 0, selectedCOs: [] },
-    ESE: { enabled: false, weightage: 0, totalMarks: 0, selectedCOs: [] },
-    IA: { enabled: false, weightage: 0, totalMarks: 0, selectedCOs: [] },
-    TW: { enabled: false, weightage: 0, totalMarks: 0, selectedCOs: [] },
-    VIVA: { enabled: false, weightage: 0, totalMarks: 0, selectedCOs: [] },
+    CA: { 
+      enabled: false, 
+      weightage: 0, 
+      totalMarks: 0, 
+      selectedCOs: [], 
+      subcomponents: [],
+      hasSubcomponents: false,
+      isExpanded: false
+    },
+    ESE: { 
+      enabled: false, 
+      weightage: 0, 
+      totalMarks: 0, 
+      selectedCOs: [], 
+      subcomponents: [],
+      hasSubcomponents: false,
+      isExpanded: false
+    },
+    IA: { 
+      enabled: false, 
+      weightage: 0, 
+      totalMarks: 0, 
+      selectedCOs: [], 
+      subcomponents: [],
+      hasSubcomponents: false,
+      isExpanded: false
+    },
+    TW: { 
+      enabled: false, 
+      weightage: 0, 
+      totalMarks: 0, 
+      selectedCOs: [], 
+      subcomponents: [],
+      hasSubcomponents: false,
+      isExpanded: false
+    },
+    VIVA: { 
+      enabled: false, 
+      weightage: 0, 
+      totalMarks: 0, 
+      selectedCOs: [], 
+      subcomponents: [],
+      hasSubcomponents: false,
+      isExpanded: false
+    },
   });
 
   const [numCOs, setNumCOs] = useState(0);
@@ -48,6 +89,18 @@ const ManageComponents = ({ selectedSubject }) => {
     }));
   };
 
+  const calculateSubcomponentTotal = (subcomponents) => {
+    return subcomponents
+      .filter(sub => sub.enabled)
+      .reduce((total, sub) => total + (parseInt(sub.weightage) || 0), 0);
+  };
+
+  const calculateSubcomponentMarksTotal = (subcomponents) => {
+    return subcomponents
+      .filter(sub => sub.enabled)
+      .reduce((total, sub) => total + (parseInt(sub.totalMarks) || 0), 0);
+  };
+
   const handleWeightageChange = (component, field, value) => {
     setWeightages((prev) => {
       const updated = { ...prev };
@@ -65,6 +118,129 @@ const ManageComponents = ({ selectedSubject }) => {
         .filter((comp) => comp.enabled)
         .reduce((a, b) => a + b.weightage, 0);
       setTotalWeightage(total);
+      return updated;
+    });
+  };
+
+  const handleSubcomponentChange = (component, subIndex, field, value) => {
+    setWeightages((prev) => {
+      const updated = { ...prev };
+      const componentData = { ...updated[component] };
+      const subcomponents = [...componentData.subcomponents];
+      
+      if (field === "enabled") {
+        subcomponents[subIndex] = { ...subcomponents[subIndex], enabled: value };
+      } else if (field === "name") {
+        subcomponents[subIndex] = { ...subcomponents[subIndex], name: value };
+      } else if (field === "weightage") {
+        const newValue = parseInt(value) || 0;
+        subcomponents[subIndex] = { ...subcomponents[subIndex], weightage: newValue };
+      } else if (field === "totalMarks") {
+        const newValue = parseInt(value) || 0;
+        subcomponents[subIndex] = { ...subcomponents[subIndex], totalMarks: newValue };
+      }
+      
+      componentData.subcomponents = subcomponents;
+      
+      // Auto-calculate main component weightage and marks from subcomponents
+      if (componentData.hasSubcomponents) {
+        componentData.weightage = calculateSubcomponentTotal(subcomponents);
+        componentData.totalMarks = calculateSubcomponentMarksTotal(subcomponents);
+      }
+      
+      updated[component] = componentData;
+      
+      const total = Object.values(updated)
+        .filter((comp) => comp.enabled)
+        .reduce((a, b) => a + b.weightage, 0);
+      setTotalWeightage(total);
+      return updated;
+    });
+  };
+
+  const handleSubcomponentCOChange = (component, subIndex, coId, isChecked) => {
+    setWeightages((prev) => {
+      const updated = { ...prev };
+      const componentData = { ...updated[component] };
+      const subcomponents = [...componentData.subcomponents];
+      const subcomponent = { ...subcomponents[subIndex] };
+      
+      const currentSelectedCOs = Array.isArray(subcomponent.selectedCOs)
+        ? subcomponent.selectedCOs
+        : [];
+      
+      if (isChecked) {
+        if (!currentSelectedCOs.includes(coId)) {
+          subcomponent.selectedCOs = [...currentSelectedCOs, coId];
+        }
+      } else {
+        subcomponent.selectedCOs = currentSelectedCOs.filter((id) => id !== coId);
+      }
+      
+      subcomponents[subIndex] = subcomponent;
+      componentData.subcomponents = subcomponents;
+      updated[component] = componentData;
+      
+      return updated;
+    });
+  };
+
+  const addSubcomponent = (component) => {
+    setWeightages((prev) => {
+      const updated = { ...prev };
+      const componentData = { ...updated[component] };
+      
+      const newSubcomponent = {
+        id: Date.now(),
+        name: '',
+        enabled: false,
+        weightage: 0,
+        totalMarks: 0,
+        selectedCOs: []
+      };
+      
+      componentData.subcomponents = [...componentData.subcomponents, newSubcomponent];
+      componentData.hasSubcomponents = true;
+      componentData.isExpanded = true;
+      
+      updated[component] = componentData;
+      return updated;
+    });
+  };
+
+  const removeSubcomponent = (component, subIndex) => {
+    setWeightages((prev) => {
+      const updated = { ...prev };
+      const componentData = { ...updated[component] };
+      
+      const subcomponents = componentData.subcomponents.filter((_, index) => index !== subIndex);
+      componentData.subcomponents = subcomponents;
+      componentData.hasSubcomponents = subcomponents.length > 0;
+      
+      // Recalculate main component values
+      if (componentData.hasSubcomponents) {
+        componentData.weightage = calculateSubcomponentTotal(subcomponents);
+        componentData.totalMarks = calculateSubcomponentMarksTotal(subcomponents);
+      }
+      
+      updated[component] = componentData;
+      
+      const total = Object.values(updated)
+        .filter((comp) => comp.enabled)
+        .reduce((a, b) => a + b.weightage, 0);
+      setTotalWeightage(total);
+      
+      return updated;
+    });
+  };
+
+  const toggleComponentExpansion = (component) => {
+    setWeightages((prev) => {
+      const updated = { ...prev };
+      updated[component] = {
+        ...updated[component],
+        isExpanded: !updated[component].isExpanded
+      };
       return updated;
     });
   };
@@ -156,9 +332,37 @@ const ManageComponents = ({ selectedSubject }) => {
     });
   };
 
+  const validateSubcomponentWeightages = () => {
+    const errors = [];
+    
+    Object.entries(weightages).forEach(([componentName, data]) => {
+      if (data.enabled && data.hasSubcomponents) {
+        const enabledSubcomponents = data.subcomponents.filter(sub => sub.enabled);
+        if (enabledSubcomponents.length === 0) {
+          errors.push(`${componentName} has no enabled subcomponents`);
+        }
+        
+        // Check if any subcomponent has empty name
+        const unnamedSubs = enabledSubcomponents.filter(sub => !sub.name || sub.name.trim() === '');
+        if (unnamedSubs.length > 0) {
+          errors.push(`${componentName} has unnamed subcomponents`);
+        }
+      }
+    });
+    
+    return errors;
+  };
+
   const handleSave = async () => {
     if (!newSubject.code || !newSubject.name || !newSubject.credits) {
       alert("Please fill in all subject details");
+      return;
+    }
+
+    // Validate subcomponents
+    const validationErrors = validateSubcomponentWeightages();
+    if (validationErrors.length > 0) {
+      alert("Validation errors:\n" + validationErrors.join("\n"));
       return;
     }
 
@@ -167,12 +371,26 @@ const ManageComponents = ({ selectedSubject }) => {
 
     Object.entries(weightages).forEach(([componentName, data]) => {
       if (data.enabled) {
-        components.push({
+        const componentData = {
           name: componentName,
           weightage: data.weightage,
           totalMarks: data.totalMarks,
           selectedCOs: data.selectedCOs || [],
-        });
+        };
+        
+        // Add subcomponents if they exist
+        if (data.hasSubcomponents && data.subcomponents.length > 0) {
+          componentData.subcomponents = data.subcomponents
+            .filter(sub => sub.enabled)
+            .map(sub => ({
+              name: sub.name,
+              weightage: sub.weightage,
+              totalMarks: sub.totalMarks,
+              selectedCOs: sub.selectedCOs || []
+            }));
+        }
+        
+        components.push(componentData);
       }
     });
 
@@ -220,15 +438,50 @@ const ManageComponents = ({ selectedSubject }) => {
           type: "central",
         });
         setWeightages({
-          CA: { enabled: false, weightage: 0, totalMarks: 0, selectedCOs: [] },
-          ESE: { enabled: false, weightage: 0, totalMarks: 0, selectedCOs: [] },
-          IA: { enabled: false, weightage: 0, totalMarks: 0, selectedCOs: [] },
-          TW: { enabled: false, weightage: 0, totalMarks: 0, selectedCOs: [] },
+          CA: { 
+            enabled: false, 
+            weightage: 0, 
+            totalMarks: 0, 
+            selectedCOs: [], 
+            subcomponents: [],
+            hasSubcomponents: false,
+            isExpanded: false
+          },
+          ESE: { 
+            enabled: false, 
+            weightage: 0, 
+            totalMarks: 0, 
+            selectedCOs: [], 
+            subcomponents: [],
+            hasSubcomponents: false,
+            isExpanded: false
+          },
+          IA: { 
+            enabled: false, 
+            weightage: 0, 
+            totalMarks: 0, 
+            selectedCOs: [], 
+            subcomponents: [],
+            hasSubcomponents: false,
+            isExpanded: false
+          },
+          TW: { 
+            enabled: false, 
+            weightage: 0, 
+            totalMarks: 0, 
+            selectedCOs: [], 
+            subcomponents: [],
+            hasSubcomponents: false,
+            isExpanded: false
+          },
           VIVA: {
             enabled: false,
             weightage: 0,
             totalMarks: 0,
             selectedCOs: [],
+            subcomponents: [],
+            hasSubcomponents: false,
+            isExpanded: false
           },
         });
         setTotalWeightage(0);
@@ -242,8 +495,7 @@ const ManageComponents = ({ selectedSubject }) => {
           data: data,
         });
         alert(
-          `Failed to add subject: ${
-            data.error || data.details?.join("\n") || "Unknown error"
+          `Failed to add subject: ${data.error || data.details?.join("\n") || "Unknown error"
           }`
         );
       }
@@ -353,112 +605,328 @@ const ManageComponents = ({ selectedSubject }) => {
               <th>Weightage (%)</th>
               <th>Total Marks</th>
               <th>COs</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {Object.entries(weightages).map(([component, data]) => (
-              <tr key={component}>
-                <td>
-                  <input
-                    type="checkbox"
-                    className="component-checkbox"
-                    checked={data.enabled}
-                    onChange={(e) =>
-                      handleWeightageChange(
-                        component,
-                        "enabled",
-                        e.target.checked
-                      )
-                    }
-                  />
-                </td>
-                <td>
-                  {component === "CA"
-                    ? "Continuous Semester Evolution (CSE)"
-                    : component === "ESE"
-                    ? "End Semester Exam (ESE)"
-                    : component === "IA"
-                    ? "Internal Assessment (IA)"
-                    : component === "TW"
-                    ? "Term Work (TW)"
-                    : "Viva"}
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    className="weightage-input"
-                    value={data.weightage}
-                    disabled={!data.enabled}
-                    onChange={(e) =>
-                      handleWeightageChange(
-                        component,
-                        "weightage",
-                        e.target.value
-                      )
-                    }
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    min="0"
-                    className="marks-input"
-                    value={data.totalMarks}
-                    disabled={!data.enabled}
-                    onChange={(e) =>
-                      handleWeightageChange(
-                        component,
-                        "totalMarks",
-                        e.target.value
-                      )
-                    }
-                  />
-                </td>
-                <td className="co-selection-cell co-selection-cell-inline">
-                  {data.enabled &&
-                    courseOutcomes.length > 0 &&
-                    courseOutcomes.map((co) => (
-                      <div
-                        key={`${component}-${co.id}`}
-                        className="co-checkbox-item"
+              <React.Fragment key={component}>
+                {/* Main Component Row */}
+                <tr className="main-component-row">
+                  <td>
+                    <input
+                      type="checkbox"
+                      className="component-checkbox"
+                      checked={data.enabled}
+                      onChange={(e) =>
+                        handleWeightageChange(
+                          component,
+                          "enabled",
+                          e.target.checked
+                        )
+                      }
+                    />
+                  </td>
+                  <td>
+                    <div className="component-name-container">
+                      {data.hasSubcomponents && (
+                        <button
+                          type="button"
+                          className="expand-toggle"
+                          onClick={() => toggleComponentExpansion(component)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            marginRight: '8px',
+                            fontSize: '12px'
+                          }}
+                        >
+                          {data.isExpanded ? '▼' : '▶'}
+                        </button>
+                      )}
+                      {component === "CA"
+                        ? "Continuous Semester Evolution (CSE)"
+                        : component === "ESE"
+                          ? "End Semester Exam (ESE)"
+                          : component === "IA"
+                            ? "Internal Assessment (IA)"
+                            : component === "TW"
+                              ? "Term Work (TW)"
+                              : "Viva"}
+                    </div>
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      className="weightage-input"
+                      value={data.weightage}
+                      disabled={!data.enabled || data.hasSubcomponents}
+                      onChange={(e) =>
+                        handleWeightageChange(
+                          component,
+                          "weightage",
+                          e.target.value
+                        )
+                      }
+                      style={{
+                        backgroundColor: data.hasSubcomponents ? '#f5f5f5' : 'white'
+                      }}
+                    />
+                    {data.hasSubcomponents && (
+                      <small style={{ display: 'block', color: '#666', fontSize: '10px' }}>
+                        Auto-calculated
+                      </small>
+                    )}
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      className="marks-input"
+                      value={data.totalMarks}
+                      disabled={!data.enabled || data.hasSubcomponents}
+                      onChange={(e) =>
+                        handleWeightageChange(
+                          component,
+                          "totalMarks",
+                          e.target.value
+                        )
+                      }
+                      style={{
+                        backgroundColor: data.hasSubcomponents ? '#f5f5f5' : 'white'
+                      }}
+                    />
+                    {data.hasSubcomponents && (
+                      <small style={{ display: 'block', color: '#666', fontSize: '10px' }}>
+                        Auto-calculated
+                      </small>
+                    )}
+                  </td>
+                  <td className="co-selection-cell co-selection-cell-inline">
+                    {data.enabled &&
+                      courseOutcomes.length > 0 &&
+                      !data.hasSubcomponents &&
+                      courseOutcomes.map((co) => (
+                        <div
+                          key={`${component}-${co.id}`}
+                          className="co-checkbox-item"
+                        >
+                          <input
+                            type="checkbox"
+                            id={`${component}-${co.id}`}
+                            checked={data.selectedCOs.includes(co.id)}
+                            onChange={(e) =>
+                              handleComponentCOChange(
+                                component,
+                                co.id,
+                                e.target.checked
+                              )
+                            }
+                            disabled={!co.text || co.text.trim() === ""}
+                          />
+                          <label
+                            htmlFor={`${component}-${co.id}`}
+                            title={co.text || "CO not defined"}
+                          >
+                            {co.id}
+                          </label>
+                        </div>
+                      ))}
+                    {data.enabled && courseOutcomes.length === 0 && !data.hasSubcomponents && (
+                      <small>No COs defined</small>
+                    )}
+                    {!data.enabled && (
+                      <small>Enable component to assign COs</small>
+                    )}
+                    {data.hasSubcomponents && (
+                      <small style={{ color: '#666' }}>Defined in subcomponents</small>
+                    )}
+                  </td>
+                  <td>
+                    {data.enabled && (
+                      <button
+                        type="button"
+                        className="add-subcomponent-btn"
+                        onClick={() => addSubcomponent(component)}
+                        style={{
+                          background: '#4CAF50',
+                          color: 'white',
+                          border: 'none',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
                       >
+                        + Add Subcomponent
+                      </button>
+                    )}
+                  </td>
+                </tr>
+                
+                {/* Subcomponent Rows */}
+                {data.enabled && data.hasSubcomponents && data.isExpanded && 
+                  data.subcomponents.map((subcomponent, subIndex) => (
+                    <tr key={`${component}-sub-${subIndex}`} className="subcomponent-row" style={{ backgroundColor: '#f9f9f9' }}>
+                      <td style={{ paddingLeft: '30px' }}>
                         <input
                           type="checkbox"
-                          id={`${component}-${co.id}`}
-                          checked={data.selectedCOs.includes(co.id)}
+                          className="component-checkbox"
+                          checked={subcomponent.enabled}
                           onChange={(e) =>
-                            handleComponentCOChange(
+                            handleSubcomponentChange(
                               component,
-                              co.id,
+                              subIndex,
+                              "enabled",
                               e.target.checked
                             )
                           }
-                          disabled={!co.text || co.text.trim() === ""}
                         />
-                        <label
-                          htmlFor={`${component}-${co.id}`}
-                          title={co.text || "CO not defined"}
+                      </td>
+                      <td style={{ paddingLeft: '30px' }}>
+                        <input
+                          type="text"
+                          placeholder="Subcomponent name"
+                          value={subcomponent.name}
+                          onChange={(e) =>
+                            handleSubcomponentChange(
+                              component,
+                              subIndex,
+                              "name",
+                              e.target.value
+                            )
+                          }
+                          disabled={!subcomponent.enabled}
+                          style={{
+                            border: '1px solid #ddd',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            width: '100%'
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          className="weightage-input"
+                          value={subcomponent.weightage}
+                          disabled={!subcomponent.enabled}
+                          onChange={(e) =>
+                            handleSubcomponentChange(
+                              component,
+                              subIndex,
+                              "weightage",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          min="0"
+                          className="marks-input"
+                          value={subcomponent.totalMarks}
+                          disabled={!subcomponent.enabled}
+                          onChange={(e) =>
+                            handleSubcomponentChange(
+                              component,
+                              subIndex,
+                              "totalMarks",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </td>
+                      <td className="co-selection-cell co-selection-cell-inline">
+                        {subcomponent.enabled &&
+                          courseOutcomes.length > 0 &&
+                          courseOutcomes.map((co) => (
+                            <div
+                              key={`${component}-sub-${subIndex}-${co.id}`}
+                              className="co-checkbox-item"
+                            >
+                              <input
+                                type="checkbox"
+                                id={`${component}-sub-${subIndex}-${co.id}`}
+                                checked={subcomponent.selectedCOs.includes(co.id)}
+                                onChange={(e) =>
+                                  handleSubcomponentCOChange(
+                                    component,
+                                    subIndex,
+                                    co.id,
+                                    e.target.checked
+                                  )
+                                }
+                                disabled={!co.text || co.text.trim() === ""}
+                              />
+                              <label
+                                htmlFor={`${component}-sub-${subIndex}-${co.id}`}
+                                title={co.text || "CO not defined"}
+                              >
+                                {co.id}
+                              </label>
+                            </div>
+                          ))}
+                        {subcomponent.enabled && courseOutcomes.length === 0 && (
+                          <small>No COs defined</small>
+                        )}
+                        {!subcomponent.enabled && (
+                          <small>Enable subcomponent to assign COs</small>
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="remove-subcomponent-btn"
+                          onClick={() => removeSubcomponent(component, subIndex)}
+                          style={{
+                            background: '#f44336',
+                            color: 'white',
+                            border: 'none',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
                         >
-                          {co.id}
-                        </label>
-                      </div>
-                    ))}
-                  {data.enabled && courseOutcomes.length === 0 && (
-                    <small>No COs defined</small>
-                  )}
-                  {!data.enabled && (
-                    <small>Enable component to assign COs</small>
-                  )}
-                </td>
-              </tr>
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                }
+              </React.Fragment>
             ))}
           </tbody>
         </table>
 
         <div className="weightage-summary">
           <p>Total Weightage: {totalWeightage}%</p>
+          
+          {/* Show subcomponent weightage breakdown */}
+          {Object.entries(weightages).some(([_, data]) => data.enabled && data.hasSubcomponents) && (
+            <div style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
+              <strong>Subcomponent Breakdown:</strong>
+              {Object.entries(weightages)
+                .filter(([_, data]) => data.enabled && data.hasSubcomponents)
+                .map(([component, data]) => {
+                  const subTotal = calculateSubcomponentTotal(data.subcomponents);
+                  const componentName = component === "CA" ? "CSE" : component;
+                  return (
+                    <div key={component} style={{ marginLeft: '10px', fontSize: '12px' }}>
+                      {componentName}: {subTotal}% (from {data.subcomponents.filter(sub => sub.enabled).length} subcomponents)
+                    </div>
+                  );
+                })
+              }
+            </div>
+          )}
         </div>
 
         {totalWeightage !== 100 && (
@@ -483,204 +951,6 @@ const ManageComponents = ({ selectedSubject }) => {
         </div>
       </div>
 
-      {/* <div className="components-area">
-                <h3>Subject Components</h3>
-
-                <div className="table-responsive-wrapper">
-                    <table className="weightage-table">
-                        <thead>
-                            <tr>
-                                <th>Enable</th>
-                                <th>Component</th>
-                                <th>Add Sub</th>
-                                <th>Weightage (%)</th>
-                                <th>Total Marks</th>
-                                <th>COs</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Object.entries(weightages).map(([component, data]) => (
-                                <React.Fragment key={component}>
-                                  
-                                    <tr className="main-component-row">
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                className="component-checkbox"
-                                                checked={data.enabled}
-                                                onChange={(e) => handleWeightageChange(component, 'enabled', e.target.checked)}
-                                            />
-                                        </td>
-                                        <td className="component-name-cell">
-                                            {component === 'CA' ? 'Continuous Semester Evolution (CSE)' :
-                                                component === 'ESE' ? 'End Semester Exam (ESE)' :
-                                                    component === 'IA' ? 'Internal Assessment (IA)' :
-                                                        component === 'TW' ? 'Term Work (TW)' :
-                                                            'Viva'}
-                                        </td>
-                                        <td className="add-sub-cell">
-                                            {data.enabled ? (
-                                                <button
-                                                    type="button"
-                                                    className="add-sub-btn"
-                                                    onClick={() => handleAddSubComponent(component)}
-                                                    title="Add Sub-component"
-                                                >
-                                                    +
-                                                </button>
-                                            ) : (
-                                                <span className="disabled-cell">-</span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                className="weightage-input"
-                                                value={data.weightage}
-                                                disabled={!data.enabled}
-                                                onChange={(e) => handleWeightageChange(component, 'weightage', e.target.value)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                className="marks-input"
-                                                value={data.totalMarks}
-                                                disabled={!data.enabled}
-                                                onChange={(e) => handleWeightageChange(component, 'totalMarks', e.target.value)}
-                                            />
-                                        </td>
-                                        <td className="co-selection-cell co-selection-cell-inline">
-                                            {data.enabled && courseOutcomes.length > 0 && courseOutcomes.map(co => (
-                                                <div key={`${component}-${co.id}`} className="co-checkbox-item">
-                                                    <input
-                                                        type="checkbox"
-                                                        id={`${component}-${co.id}`}
-                                                        checked={data.selectedCOs.includes(co.id)}
-                                                        onChange={(e) => handleComponentCOChange(component, co.id, e.target.checked)}
-                                                        disabled={!co.text || co.text.trim() === ''}
-                                                    />
-                                                    <label htmlFor={`${component}-${co.id}`} title={co.text || 'CO not defined'}>
-                                                        {co.id}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                            {data.enabled && courseOutcomes.length === 0 && (
-                                                <small>No COs defined</small>
-                                            )}
-                                            {!data.enabled && (
-                                                <small>Enable component to assign COs</small>
-                                            )}
-                                        </td>
-                                    </tr>
-
-                            
-                                    {data.enabled && data.subComponents && data.subComponents.length > 0 && data.subComponents.map((subComp, index) => (
-                                        <tr key={`${component}-sub-${index}`} className="sub-component-row">
-                                            <td className="sub-enable-cell">
-                                                <span className="sub-component-marker">└─</span>
-                                            </td>
-                                            <td className="sub-component-name-cell">
-                                                <div className="sub-component-container">
-                                                    <select
-                                                        className="sub-component-dropdown"
-                                                        value={subComp.type || ''}
-                                                        onChange={(e) => handleSubComponentChange(component, index, 'type', e.target.value)}
-                                                    >
-                                                        <option value="">Select Type</option>
-                                                        <option value="Assignment">Assignment</option>
-                                                        <option value="Project">Project</option>
-                                                        <option value="Presentation">Presentation</option>
-                                                        <option value="Quiz">Quiz</option>
-                                                        <option value="Lab Work">Lab Work</option>
-                                                        <option value="Case Study">Case Study</option>
-                                                        <option value="Report">Report</option>
-                                                        <option value="Seminar">Seminar</option>
-                                                        <option value="Group Discussion">Group Discussion</option>
-                                                        <option value="Practical">Practical</option>
-                                                    </select>
-                                                </div>
-                                            </td>
-                                            <td className="sub-remove-cell">
-                                                <button
-                                                    type="button"
-                                                    className="remove-sub-btn"
-                                                    onClick={() => handleRemoveSubComponent(component, index)}
-                                                    title="Remove Sub-component"
-                                                >
-                                                    ×
-                                                </button>
-                                            </td>
-                                            <td>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max="100"
-                                                    className="weightage-input sub-weightage-input"
-                                                    value={subComp.weightage || ''}
-                                                    placeholder="0"
-                                                    onChange={(e) => handleSubComponentChange(component, index, 'weightage', e.target.value)}
-                                                />
-                                            </td>
-                                            <td>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    className="marks-input sub-marks-input"
-                                                    value={subComp.totalMarks || ''}
-                                                    placeholder="0"
-                                                    onChange={(e) => handleSubComponentChange(component, index, 'totalMarks', e.target.value)}
-                                                />
-                                            </td>
-                                            <td className="co-selection-cell co-selection-cell-inline">
-                                                {courseOutcomes.length > 0 ? courseOutcomes.map(co => (
-                                                    <div key={`${component}-sub-${index}-${co.id}`} className="co-checkbox-item">
-                                                        <input
-                                                            type="checkbox"
-                                                            id={`${component}-sub-${index}-${co.id}`}
-                                                            checked={subComp.selectedCOs?.includes(co.id) || false}
-                                                            onChange={(e) => handleSubComponentCOChange(component, index, co.id, e.target.checked)}
-                                                            disabled={!co.text || co.text.trim() === ''}
-                                                        />
-                                                        <label htmlFor={`${component}-sub-${index}-${co.id}`} title={co.text || 'CO not defined'}>
-                                                            {co.id}
-                                                        </label>
-                                                    </div>
-                                                )) : (
-                                                    <small>No COs defined</small>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </React.Fragment>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="weightage-summary">
-                    <p>Total Weightage: {totalWeightage}%</p>
-                </div>
-
-                {totalWeightage !== 100 && (
-                    <div style={{ color: 'red', textAlign: 'right', marginTop: '5px' }}>
-                        Total weightage must be 100%
-                    </div>
-                )}
-
-                <div className="last-button">
-                    <button
-                        onClick={handleSave}
-                        className="save-weightage-btn"
-                        disabled={totalWeightage !== 100 || !newSubject.code || !newSubject.name || !newSubject.credits}
-                    >
-                        Add Subject
-                    </button>
-                </div>
-            </div> */}
     </div>
   );
 };
