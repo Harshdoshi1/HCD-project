@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
-const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma, ComponentWeightage, ComponentMarks, AssignSubjects, CourseOutcome, SubjectComponentCo } = require('../models'); // Import models
+const { User, Faculty, Batch, Semester, Subject, UniqueSubDegree, UniqueSubDiploma, ComponentWeightage, ComponentMarks, AssignSubjects, CourseOutcome, SubjectComponentCo, SubComponents } = require('../models'); // Import models
 const BloomsTaxonomy = require('../models/bloomsTaxonomy');
 const CoBloomsTaxonomy = require('../models/coBloomsTaxonomy');
 
@@ -458,6 +458,51 @@ const addSubjectWithComponents = async (req, res) => {
         const marks = await ComponentMarks.create(marksData);
         console.log('Created marks:', marks);
 
+        // Process and create sub-components
+        const createdSubComponents = [];
+        console.log('Starting sub-component creation process...');
+        for (const component of components) {
+            if (component.subcomponents && Array.isArray(component.subcomponents) && component.subcomponents.length > 0) {
+                console.log(`Processing ${component.subcomponents.length} subcomponents for ${component.name}:`, component.subcomponents);
+                
+                for (const subComponent of component.subcomponents) {
+                    // Check if sub-component has a name (enabled is not always sent from frontend)
+                    if (subComponent.name && subComponent.name.trim() !== '') {
+                        try {
+                            console.log(`Creating sub-component: ${subComponent.name} for ${component.name}`);
+                            console.log('Sub-component data to create:', {
+                                componentWeightageId: weightage.id,
+                                componentType: component.name,
+                                subComponentName: subComponent.name,
+                                weightage: subComponent.weightage || 0,
+                                totalMarks: subComponent.totalMarks || 0,
+                                selectedCOs: subComponent.selectedCOs || [],
+                                isEnabled: subComponent.enabled !== undefined ? subComponent.enabled : true
+                            });
+                            
+                            const subComponentRecord = await SubComponents.create({
+                                componentWeightageId: weightage.id,
+                                componentType: component.name,
+                                subComponentName: subComponent.name,
+                                weightage: subComponent.weightage || 0,
+                                totalMarks: subComponent.totalMarks || 0,
+                                selectedCOs: subComponent.selectedCOs || [],
+                                isEnabled: subComponent.enabled !== undefined ? subComponent.enabled : true
+                            });
+                            createdSubComponents.push(subComponentRecord);
+                            console.log(`✅ Successfully created sub-component: ${subComponent.name} for ${component.name} with ID: ${subComponentRecord.id}`);
+                        } catch (subError) {
+                            console.error(`❌ Error creating sub-component ${subComponent.name}:`, subError);
+                            console.error('Sub-component error details:', subError.message);
+                            console.error('Full error:', subError);
+                        }
+                    } else {
+                        console.log(`Skipping sub-component with empty name:`, subComponent);
+                    }
+                }
+            }
+        }
+
         // Collect all created associations
         let allAssociations = [];
 
@@ -497,7 +542,8 @@ const addSubjectWithComponents = async (req, res) => {
             marks,
             courseOutcomes: createdCOs,
             subjectComponentCos: allAssociations,
-            message: 'Subject, components, course outcomes, and Blooms Taxonomy levels added successfully'
+            subComponents: createdSubComponents,
+            message: 'Subject, components, sub-components, course outcomes, and Blooms Taxonomy levels added successfully'
         });
 
     } catch (error) {
@@ -537,11 +583,22 @@ const getSubjectComponentsWithSubjectCode = async (req, res) => {
         console.log('Component weightage:', weightage);
         console.log('Component marks:', marks);
 
+        // Get sub-components if weightage exists
+        let subComponents = [];
+        if (weightage) {
+            subComponents = await SubComponents.findAll({
+                where: { componentWeightageId: weightage.id },
+                order: [['componentType', 'ASC'], ['subComponentName', 'ASC']]
+            });
+            console.log('Sub-components:', subComponents);
+        }
+
         // If no weightage or marks are found, return empty objects
         res.status(200).json({
             subject,
             weightage: weightage || {},
-            marks: marks || {}
+            marks: marks || {},
+            subComponents: subComponents || []
         });
     } catch (error) {
         console.error('Error getting subject components:', error);

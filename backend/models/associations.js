@@ -12,6 +12,10 @@ const CoBloomsTaxonomy = require('./coBloomsTaxonomy');
 const ClassSection = require('./classSection');
 const Semester = require('./semester');
 const Batch = require('./batch');
+const SubComponents = require('./subComponents');
+const StudentMarks = require('./studentMarks');
+const Student = require('./students');
+const User = require('./users');
 
 // Set up associations between StudentPoints and EventMaster without enforcing foreign key constraints
 StudentPoints.belongsTo(EventMaster, {
@@ -159,6 +163,96 @@ CoBloomsTaxonomy.belongsTo(BloomsTaxonomy, {
   as: 'bloomsTaxonomy'
 });
 
+// --- SubComponents Associations ---
+
+// ComponentWeightage has many SubComponents
+ComponentWeightage.hasMany(SubComponents, {
+  foreignKey: 'componentWeightageId',
+  as: 'subComponents'
+});
+
+// SubComponents belongs to ComponentWeightage
+SubComponents.belongsTo(ComponentWeightage, {
+  foreignKey: 'componentWeightageId',
+  as: 'componentWeightage'
+});
+
+// --- StudentMarks Associations ---
+
+// Student has many StudentMarks
+Student.hasMany(StudentMarks, {
+  foreignKey: 'studentId',
+  as: 'studentMarks'
+});
+
+// StudentMarks belongs to Student
+StudentMarks.belongsTo(Student, {
+  foreignKey: 'studentId',
+  as: 'student'
+});
+
+// User (Faculty) has many StudentMarks
+User.hasMany(StudentMarks, {
+  foreignKey: 'facultyId',
+  as: 'gradedMarks'
+});
+
+// StudentMarks belongs to User (Faculty)
+StudentMarks.belongsTo(User, {
+  foreignKey: 'facultyId',
+  as: 'faculty'
+});
+
+// UniqueSubDegree has many StudentMarks
+UniqueSubDegree.hasMany(StudentMarks, {
+  foreignKey: 'subjectId',
+  sourceKey: 'sub_code',
+  as: 'studentMarks'
+});
+
+// StudentMarks belongs to UniqueSubDegree
+StudentMarks.belongsTo(UniqueSubDegree, {
+  foreignKey: 'subjectId',
+  targetKey: 'sub_code',
+  as: 'subject'
+});
+
+// Semester has many StudentMarks
+Semester.hasMany(StudentMarks, {
+  foreignKey: 'semesterId',
+  as: 'studentMarks'
+});
+
+// StudentMarks belongs to Semester
+StudentMarks.belongsTo(Semester, {
+  foreignKey: 'semesterId',
+  as: 'semester'
+});
+
+// Batch has many StudentMarks
+Batch.hasMany(StudentMarks, {
+  foreignKey: 'batchId',
+  as: 'studentMarks'
+});
+
+// StudentMarks belongs to Batch
+StudentMarks.belongsTo(Batch, {
+  foreignKey: 'batchId',
+  as: 'batch'
+});
+
+// SubComponents has many StudentMarks (for sub-component marks)
+SubComponents.hasMany(StudentMarks, {
+  foreignKey: 'subComponentId',
+  as: 'studentMarks'
+});
+
+// StudentMarks belongs to SubComponents (optional, for sub-component marks)
+StudentMarks.belongsTo(SubComponents, {
+  foreignKey: 'subComponentId',
+  as: 'subComponent'
+});
+
 module.exports = {
   StudentPoints,
   EventMaster,
@@ -173,5 +267,9 @@ module.exports = {
   CoBloomsTaxonomy,
   ClassSection,
   Semester,
-  Batch
+  Batch,
+  SubComponents,
+  StudentMarks,
+  Student,
+  User
 };

@@ -18,6 +18,11 @@ const SubjectComponentCo = require('./subjectComponentCo');
 const ClassSection = require('./classSection');
 const EventOutcomes = require('./EventOutcomes');
 const EventOutcomeMapping = require('./EventOutcomeMapping');
+const SubComponents = require('./subComponents');
+const StudentMarks = require('./studentMarks');
+
+// Import associations to set up relationships
+require('./associations');
 
 // const CoCurricularActivity = require('./cocurricularActivity');
 // const ExtraCurricularActivity = require('./extraCurricularActivity');
@@ -69,5 +74,7 @@ module.exports = {
     ClassSection,
     EventOutcomes,
     EventOutcomeMapping,
+    SubComponents,
+    StudentMarks,
     syncDB
 };
