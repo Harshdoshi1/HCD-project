@@ -56,8 +56,8 @@ const getStudentAnalysisData = async (req, res) => {
             // First, try to get marks using raw SQL to see what's actually in the database
             const rawMarks = await sequelize.query(`
                 SELECT sm.*, sub.sub_name, sub.sub_code 
-                FROM studentmarks sm 
-                LEFT JOIN uniquesubdegrees sub ON sm.subjectId = sub.sub_code 
+                FROM StudentMarks sm 
+                LEFT JOIN UniqueSubDegrees sub ON sm.subjectId = sub.sub_code 
                 WHERE sm.studentId = :studentId 
                 ORDER BY sm.subjectId, sm.componentType
             `, {
@@ -293,10 +293,9 @@ const getBloomsTaxonomyDistribution = async (req, res) => {
                     END
                 ) as totalMarks,
                 COUNT(DISTINCT co.id) as coCount
-            FROM studentmarks sm 
-            LEFT JOIN uniquesubdegrees sub ON sm.subjectId = sub.sub_code 
-            LEFT JOIN subcomponents sc ON sm.subComponentId = sc.id
-            LEFT JOIN componentweightages cw ON sc.componentWeightageId = cw.id
+            FROM StudentMarks sm 
+            LEFT JOIN UniqueSubDegrees sub ON sm.subjectId = sub.sub_code 
+LEFT JOIN SubComponents sc ON sm.subComponentId = sc.id            LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
             LEFT JOIN subject_component_cos scc ON scc.subject_component_id = cw.id
             LEFT JOIN course_outcomes co ON scc.course_outcome_id = co.id
             LEFT JOIN co_blooms_taxonomy cbt ON co.id = cbt.course_outcome_id
@@ -457,10 +456,10 @@ const getSubjectWisePerformance = async (req, res) => {
                 sc.subComponentName as subComponentName,
                 sc.weightage as subComponentWeightage,
                 sc.totalMarks as subComponentTotalMarks
-            FROM studentmarks sm 
-            LEFT JOIN uniquesubdegrees sub ON sm.subjectId = sub.sub_code 
-            LEFT JOIN subcomponents sc ON sm.subComponentId = sc.id
-            LEFT JOIN componentweightages cw ON sc.componentWeightageId = cw.id
+           FROM StudentMarks sm 
+LEFT JOIN UniqueSubDegrees sub ON sm.subjectId = sub.sub_code 
+LEFT JOIN SubComponents sc ON sm.subComponentId = sc.id
+LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
             WHERE sm.studentId = :studentId 
             AND sm.enrollmentSemester = :semesterNumber
             ORDER BY sm.subjectId, sm.componentType, sm.isSubComponent
