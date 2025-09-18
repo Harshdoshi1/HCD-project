@@ -31,6 +31,8 @@ const StudentGrades = () => {
   const [gradeUpdating, setGradeUpdating] = useState(false);
   const [componentMarks, setComponentMarks] = useState(null);
   const [activeComponents, setActiveComponents] = useState([]);
+  const [subComponents, setSubComponents] = useState([]);
+  const [componentStructure, setComponentStructure] = useState({});
 
   // Function to validate grade value
   const validateGrade = (value, component) => {
@@ -68,14 +70,12 @@ const StudentGrades = () => {
     );
   };
 
-  // Function to fetch component marks by subject code
+  // Function to fetch component marks and sub-components by subject code
   const fetchComponentMarks = async (subjectCode) => {
     if (!subjectCode) return;
 
     try {
       console.log("Fetching components for subject:", subjectCode);
-
-      //fetch semester number from id using
 
       const response = await fetch(
         `http://localhost:5001/api/subjects/getSubjectComponentsWithSubjectCode/${subjectCode}`
@@ -100,23 +100,129 @@ const StudentGrades = () => {
         viva: componentMarksData.viva || 0,
       });
 
-      // Determine which components are active (non-zero) based on the component marks
+      // Set sub-components data
+      const subComponentsData = data.subComponents || [];
+      setSubComponents(subComponentsData);
+      console.log("Sub-components:", subComponentsData);
+
+      // Extract component weightage data to determine enabled components
+      const componentWeightageData = data.weightage || {};
+      console.log("Component weightage data:", componentWeightageData);
+
+      // Build component structure with sub-components based on weightage (not marks)
+      const structure = {
+        CA: { 
+          enabled: (componentWeightageData.ca || componentWeightageData.cse || 0) > 0, 
+          totalMarks: componentMarksData.cse || 100, 
+          weightage: componentWeightageData.ca || componentWeightageData.cse || 0,
+          subComponents: [] 
+        },
+        ESE: { 
+          enabled: (componentWeightageData.ese || 0) > 0, 
+          totalMarks: componentMarksData.ese || 100, 
+          weightage: componentWeightageData.ese || 0,
+          subComponents: [] 
+        },
+        IA: { 
+          enabled: (componentWeightageData.ia || 0) > 0, 
+          totalMarks: componentMarksData.ia || 100, 
+          weightage: componentWeightageData.ia || 0,
+          subComponents: [] 
+        },
+        TW: { 
+          enabled: (componentWeightageData.tw || 0) > 0, 
+          totalMarks: componentMarksData.tw || 100, 
+          weightage: componentWeightageData.tw || 0,
+          subComponents: [] 
+        },
+        VIVA: { 
+          enabled: (componentWeightageData.viva || 0) > 0, 
+          totalMarks: componentMarksData.viva || 100, 
+          weightage: componentWeightageData.viva || 0,
+          subComponents: [] 
+        }
+      };
+
+      console.log("Built component structure:", structure);
+
+      // Group sub-components by component type
+      subComponentsData.forEach(subComp => {
+        console.log("Processing sub-component:", subComp);
+        const componentType = subComp.componentType?.toUpperCase();
+        
+        // Map component types correctly
+        let mappedType = componentType;
+        if (componentType === 'CSE' || componentType === 'CA') {
+          mappedType = 'CA';
+        }
+        
+        if (structure[mappedType]) {
+          structure[mappedType].subComponents.push({
+            id: subComp.id,
+            name: subComp.subComponentName,
+            totalMarks: subComp.totalMarks,
+            weightage: subComp.weightage
+          });
+          console.log(`Added sub-component ${subComp.subComponentName} to ${mappedType}`);
+        } else {
+          console.warn(`Component type ${mappedType} not found in structure for sub-component:`, subComp);
+        }
+      });
+
+      // Apply fallback logic: if a component has sub-components, enable it regardless of weightage
+      Object.keys(structure).forEach(compType => {
+        if (!structure[compType].enabled && structure[compType].subComponents.length > 0) {
+          console.log(`Enabling ${compType} due to existing sub-components`);
+          structure[compType].enabled = true;
+          // Set a default total marks if not set
+          if (structure[compType].totalMarks === 0 || structure[compType].totalMarks === 100) {
+            structure[compType].totalMarks = structure[compType].subComponents.reduce((sum, sub) => sum + (sub.totalMarks || 0), 0);
+          }
+        }
+      });
+
+      setComponentStructure(structure);
+
+      // Determine which components are active
       const components = [];
-      if (componentMarksData.ese > 0) components.push("ESE");
-      if (componentMarksData.cse > 0) components.push("CSE");
-      if (componentMarksData.ia > 0) components.push("IA");
-      if (componentMarksData.tw > 0) components.push("TW");
-      if (componentMarksData.viva > 0) components.push("Viva");
+      Object.keys(structure).forEach(compType => {
+        if (structure[compType].enabled) {
+          components.push(compType === 'CA' ? 'CSE' : compType);
+        }
+      });
+
+      console.log("Final component structure after fallback:", structure);
 
       setActiveComponents(components);
       console.log("Active components:", components);
+      console.log("Component structure:", structure);
     } catch (error) {
       console.error("Error fetching subject components:", error);
       setError("Failed to fetch subject components: " + error.message);
     }
   };
 
-  // Handle grade submission
+  // Handle sub-component grade change
+  const handleSubComponentGradeChange = (studentId, componentType, subComponentId, value) => {
+    setStudentsData((prevData) =>
+      prevData.map((student) => {
+        if (student.id === studentId) {
+          const updatedGrades = { ...student.grades };
+          if (!updatedGrades.subComponents) {
+            updatedGrades.subComponents = {};
+          }
+          if (!updatedGrades.subComponents[componentType]) {
+            updatedGrades.subComponents[componentType] = {};
+          }
+          updatedGrades.subComponents[componentType][subComponentId] = parseFloat(value) || 0;
+          return { ...student, grades: updatedGrades };
+        }
+        return student;
+      })
+    );
+  };
+
+  // Handle grade submission with sub-components
   const handleGradeSubmit = async (studentId) => {
     if (!selectedSubject?.subCode || !studentId) {
       setError("Please select a subject and student");
@@ -131,14 +237,42 @@ const StudentGrades = () => {
       const faculty = JSON.parse(localStorage.getItem("user"));
       if (!faculty) throw new Error("Faculty information not found");
 
-      console.log("Submitting grades:", {
+      // Prepare marks data with sub-components
+      const marksData = {};
+      
+      // Process each component type
+      Object.keys(componentStructure).forEach(componentType => {
+        const component = componentStructure[componentType];
+        if (component.enabled) {
+          if (component.subComponents && component.subComponents.length > 0) {
+            // Has sub-components
+            marksData[componentType] = {
+              subComponents: component.subComponents.map(subComp => ({
+                subComponentId: subComp.id,
+                name: subComp.name,
+                marksObtained: student.grades?.subComponents?.[componentType]?.[subComp.id] || 0,
+                totalMarks: subComp.totalMarks
+              }))
+            };
+          } else {
+            // No sub-components, use main component marks
+            const componentKey = componentType === 'CA' ? 'cse' : componentType.toLowerCase();
+            marksData[componentType] = {
+              marksObtained: parseFloat(student.grades?.[componentKey]) || 0,
+              totalMarks: component.totalMarks
+            };
+          }
+        }
+      });
+
+      console.log("Submitting grades with sub-components:", {
         studentId,
         subjectId: selectedSubject.subCode,
-        grades: student.grades,
+        marksData,
       });
 
       const response = await fetch(
-        `http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subCode}`,
+        `http://localhost:5001/api/student-marks/update/${studentId}/${selectedSubject.subCode}`,
         {
           method: "POST",
           headers: {
@@ -146,13 +280,12 @@ const StudentGrades = () => {
           },
           body: JSON.stringify({
             facultyId: faculty.id,
-            ese: parseInt(student.grades?.ese) || 0,
-            cse: parseInt(student.grades?.cse) || 0,
-            ia: parseInt(student.grades?.ia) || 0,
-            tw: parseInt(student.grades?.tw) || 0,
-            viva: parseInt(student.grades?.viva) || 0,
-            response: student.response || "",
-            rating: ratings[studentId] || 0,
+            marks: marksData,
+            semesterId: selectedSemester.id,
+            batchId: selectedBatch.id,
+            enrollmentSemester: selectedSemester.semesterNumber,
+            facultyResponse: student.response || "",
+            facultyRating: ratings[studentId] || 0,
           }),
         }
       );
@@ -484,6 +617,51 @@ const StudentGrades = () => {
     fetchSubjects();
   }, [selectedBatch, selectedSemester]);
 
+  // Function to fetch existing student marks
+  const fetchExistingMarks = async (batchId, subjectCode, semesterId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/student-marks/grading/${batchId}/${selectedSemester.semesterNumber}/${subjectCode}`
+      );
+      
+      if (response.ok) {
+        const marksData = await response.json();
+        console.log("Existing marks data:", marksData);
+        
+        // Update students data with existing marks
+        setStudentsData(prevStudents => 
+          prevStudents.map(student => {
+            const existingMarks = marksData.students?.find(s => s.id === student.id);
+            if (existingMarks && existingMarks.studentMarks) {
+              const grades = { subComponents: {} };
+              
+              existingMarks.studentMarks.forEach(mark => {
+                if (mark.isSubComponent && mark.subComponentId) {
+                  if (!grades.subComponents[mark.componentType]) {
+                    grades.subComponents[mark.componentType] = {};
+                  }
+                  grades.subComponents[mark.componentType][mark.subComponentId] = mark.marksObtained;
+                } else {
+                  grades[mark.componentType.toLowerCase()] = mark.marksObtained;
+                }
+              });
+              
+              return {
+                ...student,
+                grades,
+                response: existingMarks.studentMarks[0]?.facultyResponse || "",
+                isGraded: existingMarks.studentMarks.length > 0
+              };
+            }
+            return student;
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching existing marks:", error);
+    }
+  };
+
   // Fetch students when subject changes
   useEffect(() => {
     if (!selectedBatch || !selectedSubject || !selectedSemester) return;
@@ -525,7 +703,7 @@ const StudentGrades = () => {
         );
         if (!response.ok) throw new Error("Failed to fetch students");
         const data = await response.json();
-        console.log("Students API Response:", data);
+        console.log("Fetched students:", data);
 
         const studentsWithGrades = data.map((student) => ({
           id: student.id,
@@ -541,6 +719,7 @@ const StudentGrades = () => {
           response: "",
         }));
 
+        console.log("Students with grades:", studentsWithGrades);
         setStudentsData(studentsWithGrades);
 
         // Initialize ratings
@@ -549,30 +728,25 @@ const StudentGrades = () => {
           initialRatings[student.id] = 0;
         });
         setRatings(initialRatings);
+
+        // Fetch component marks after setting students data
+        if (selectedSubject?.subCode) {
+          await fetchComponentMarks(selectedSubject.subCode);
+          // Fetch existing marks after component structure is loaded
+          await fetchExistingMarks(batchId, selectedSubject.subCode, selectedSemester.id);
+        }
       } catch (error) {
         console.error("Error fetching students:", error);
         setError("Failed to fetch students: " + error.message);
-        setStudentsData([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchStudents();
-  }, [selectedBatch, selectedSemester, selectedSubject]);
+  }, [selectedBatch, selectedSubject, selectedSemester]);
 
-  // Fetch component marks when subject changes
-  useEffect(() => {
-    if (!selectedSubject) return;
-    fetchComponentMarks(selectedSubject.subCode);
-  }, [selectedSubject]);
-
+  // Handle response submission
   const handleSubmitResponse = async (studentId) => {
-    if (!selectedSubject) {
-      setError("Please select a subject first");
-      return;
-    }
-
     try {
       const student = studentsData.find((s) => s.id === studentId);
       if (!student) throw new Error("Student not found");
@@ -878,36 +1052,75 @@ const StudentGrades = () => {
                   </div>
 
                   <div className="student-grade-components">
-                    {activeComponents.length > 0 ? (
+                    {Object.keys(componentStructure).length > 0 ? (
                       <div className="grade-components-mini">
-                        {activeComponents.map((component) => (
-                          <div key={component} className="grade-input-mini">
-                            <label>{component}:</label>
-                            <input
-                              type="text"
-                              value={
-                                student.grades?.[component.toLowerCase()] || "0"
-                              }
-                              onChange={(e) =>
-                                editingGrades === student.id &&
-                                handleGradeChange(
-                                  student.id,
-                                  component,
-                                  e.target.value
-                                )
-                              }
-                              disabled={editingGrades !== student.id}
-                              className={`mini-input ${
-                                student.isGraded ? "graded" : ""
-                              }`}
-                            />
-                            <span className="mini-max">
-                              /
-                              {componentMarks?.[component.toLowerCase()] ||
-                                "100"}
-                            </span>
-                          </div>
-                        ))}
+                        {Object.entries(componentStructure).map(([componentType, component]) => {
+                          if (!component.enabled) return null;
+                          
+                          return (
+                            <div key={componentType} className="component-section">
+                              <div className="component-header">
+                                <strong>{componentType === 'CA' ? 'CSE' : componentType}</strong>
+                                <span className="total-marks">/{component.totalMarks}</span>
+                              </div>
+                              
+                              {component.subComponents && component.subComponents.length > 0 ? (
+                                <div className="sub-components">
+                                  {component.subComponents.map((subComp) => (
+                                    <div key={subComp.id} className="sub-component-input">
+                                      <label>{subComp.name}:</label>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max={subComp.totalMarks}
+                                        value={
+                                          student.grades?.subComponents?.[componentType]?.[subComp.id] || 0
+                                        }
+                                        onChange={(e) =>
+                                          editingGrades === student.id &&
+                                          handleSubComponentGradeChange(
+                                            student.id,
+                                            componentType,
+                                            subComp.id,
+                                            e.target.value
+                                          )
+                                        }
+                                        disabled={editingGrades !== student.id}
+                                        className={`sub-input ${
+                                          student.isGraded ? "graded" : ""
+                                        }`}
+                                      />
+                                      <span className="sub-max">/{subComp.totalMarks}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="main-component-input">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={component.totalMarks}
+                                    value={
+                                      student.grades?.[componentType === 'CA' ? 'cse' : componentType.toLowerCase()] || 0
+                                    }
+                                    onChange={(e) =>
+                                      editingGrades === student.id &&
+                                      handleGradeChange(
+                                        student.id,
+                                        componentType === 'CA' ? 'CSE' : componentType,
+                                        e.target.value
+                                      )
+                                    }
+                                    disabled={editingGrades !== student.id}
+                                    className={`main-input ${
+                                      student.isGraded ? "graded" : ""
+                                    }`}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="no-components-mini">

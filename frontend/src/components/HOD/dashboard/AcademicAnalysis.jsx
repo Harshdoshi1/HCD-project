@@ -33,6 +33,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
   const [semesterPoints, setSemesterPoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [bloomsData, setBloomsData] = useState([]);
 
   // New state for enhanced features
   const [sortBy, setSortBy] = useState("subject");
@@ -45,9 +46,14 @@ const AcademicAnalysis = ({ student, academicData }) => {
       const currentSemester = parseInt(student.semester);
       setSelectedSemester(currentSemester);
       fetchSemesterData();
-      generateMockAcademicData();
     }
   }, [student]);
+
+  useEffect(() => {
+    if (student && selectedSemester) {
+      fetchRealAcademicData();
+    }
+  }, [student, selectedSemester]);
 
   // Fetch semester data similar to StudentAnalysis
   const fetchSemesterData = async () => {
@@ -82,150 +88,126 @@ const AcademicAnalysis = ({ student, academicData }) => {
   // Handle semester selection change
   const handleSemesterChange = (semester) => {
     setSelectedSemester(semester);
-    // Here you can add logic to fetch academic data for the selected semester
-    generateMockAcademicData();
+    // Fetch real academic data for the selected semester
+    fetchRealAcademicData();
   };
 
-  const generateMockAcademicData = () => {
-    const currentSemester = parseInt(student?.semester) || 4;
-
-    // Mock SPI/CPI data (preserved from original)
-    const mockSpiCpi = [];
-    for (let i = 1; i <= currentSemester; i++) {
-      mockSpiCpi.push({
-        semester: i,
-        spi: (7.5 + Math.random() * 2).toFixed(2),
-        cpi: (7.0 + Math.random() * 2).toFixed(2),
-        credits: 20 + Math.floor(Math.random() * 5),
-      });
+  const fetchRealAcademicData = async () => {
+    if (!student || !student.rollNo) {
+      console.log('No student data available for academic fetch');
+      return;
     }
-    setSpiCpiData(mockSpiCpi);
 
-    // Enhanced mock subject grades with detailed components (NEW)
-    const subjects = [
-      {
-        name: "Data Structures & Algorithms",
-        shortName: "Data Structures",
-        code: "CS301",
-        credits: 4,
-      },
-      {
-        name: "Database Management Systems",
-        shortName: "Database Mgmt",
-        code: "CS302",
-        credits: 4,
-      },
-      {
-        name: "Computer Networks",
-        shortName: "Computer Networks",
-        code: "CS303",
-        credits: 3,
-      },
-      {
-        name: "Operating Systems",
-        shortName: "Operating Systems",
-        code: "CS304",
-        credits: 4,
-      },
-      {
-        name: "Software Engineering",
-        shortName: "Software Engg",
-        code: "CS305",
-        credits: 3,
-      },
-      {
-        name: "Web Development",
-        shortName: "Web Development",
-        code: "CS306",
-        credits: 3,
-      },
-      {
-        name: "Machine Learning",
-        shortName: "Machine Learning",
-        code: "CS307",
-        credits: 4,
-      },
-      {
-        name: "Cyber Security",
-        shortName: "Cyber Security",
-        code: "CS308",
-        credits: 3,
-      },
-    ];
+    try {
+      setLoading(true);
+      const enrollmentNumber = student.rollNo;
+      
+      console.log(`Fetching real academic data for enrollment: ${enrollmentNumber}, semester: ${selectedSemester}`);
 
-    const mockGrades = subjects.map((subject, index) => {
-      // Enhanced grading system with ESE, IA, TW, Viva, CSE (NEW)
-      const ese = Math.floor(60 + Math.random() * 40); // ESE out of 100
-      const ia = Math.floor(15 + Math.random() * 10); // IA out of 25
-      const tw = Math.floor(15 + Math.random() * 10); // TW out of 25
-      const viva = Math.floor(8 + Math.random() * 7); // Viva out of 15
-      const cse = Math.floor(8 + Math.random() * 7); // CSE out of 15
+      // Fetch real academic performance data from backend
+      const [performanceResponse, bloomsResponse] = await Promise.all([
+        fetch(`http://localhost:5001/api/student-analysis/performance/${enrollmentNumber}/${selectedSemester}`),
+        fetch(`http://localhost:5001/api/student-analysis/blooms/${enrollmentNumber}/${selectedSemester}`)
+      ]);
+      
+      if (!performanceResponse.ok) {
+        throw new Error(`HTTP error! status: ${performanceResponse.status}`);
+      }
 
-      const totalMarks = ese + ia + tw + viva + cse;
-      const percentage = ((totalMarks / 180) * 100).toFixed(1);
-      const marks = Math.floor(70 + Math.random() * 30); // Keep original marks for compatibility
+      const performanceData = await performanceResponse.json();
+      console.log('Real academic data received:', performanceData);
 
-      let grade = "F";
-      if (percentage >= 90) grade = "A+";
-      else if (percentage >= 80) grade = "A";
-      else if (percentage >= 70) grade = "B+";
-      else if (percentage >= 60) grade = "B";
-      else if (percentage >= 50) grade = "C+";
-      else if (percentage >= 40) grade = "C";
-      else if (percentage >= 35) grade = "D";
+      // Handle Bloom's taxonomy data
+      let bloomsDistribution = [];
+      if (bloomsResponse.ok) {
+        const bloomsData = await bloomsResponse.json();
+        console.log('Bloom\'s taxonomy data received:', bloomsData);
+        bloomsDistribution = bloomsData.bloomsDistribution || [];
+      } else {
+        console.log('Bloom\'s taxonomy data not available, using fallback');
+      }
+      setBloomsData(bloomsDistribution);
 
-      return {
-        id: index + 1,
-        subject: subject.name,
-        shortName: subject.shortName, // Preserve original shortName
-        code: subject.code,
-        credits: subject.credits,
-        // New detailed components
-        ese: ese,
-        ia: ia,
-        tw: tw,
-        viva: viva,
-        cse: cse,
-        total: totalMarks,
-        percentage: parseFloat(percentage),
-        // Keep original fields for compatibility
-        grade: grade,
-        marks: marks, // Keep for original components
-        attendance: Math.floor(75 + Math.random() * 25),
-      };
-    });
+      if (performanceData.subjects && performanceData.subjects.length > 0) {
+        // Map the real data to match the expected format
+        const realSubjectGrades = performanceData.subjects.map((subject, index) => ({
+          id: index + 1,
+          subject: subject.subject,
+          shortName: subject.shortName,
+          code: subject.code,
+          credits: subject.credits,
+          ese: subject.ese,
+          ia: subject.ia,
+          tw: subject.tw,
+          viva: subject.viva,
+          cse: subject.cse,
+          total: subject.total,
+          percentage: parseFloat(subject.percentage),
+          grade: subject.grade,
+          marks: subject.total, // Use total for compatibility
+          attendance: Math.floor(75 + Math.random() * 25), // Keep mock attendance for now
+        }));
 
-    setSubjectGrades(mockGrades);
+        setSubjectGrades(realSubjectGrades);
+        console.log('Real subject grades set:', realSubjectGrades);
+      } else {
+        console.log('No real academic data found, using fallback');
+        // If no real data, set empty array or minimal data
+        setSubjectGrades([]);
+      }
 
-    // Mock faculty feedback (preserved from original)
-    const mockFeedback = [
-      {
-        faculty: "Dr. S. Johnson",
-        subject: "Data Structures",
-        feedback:
-          "Excellent problem-solving skills. Shows great understanding.",
-        rating: 4.5,
-        strengths: ["Problem Solving", "Algorithms"],
-        improvements: ["Time Complexity"],
-      },
-      {
-        faculty: "Prof. S. Wilson",
-        subject: "Database Mgmt",
-        feedback: "Good SQL concepts. Needs query optimization focus.",
-        rating: 4.0,
-        strengths: ["SQL Basics", "Design"],
-        improvements: ["Optimization", "Performance"],
-      },
-      {
-        faculty: "Dr. M. Brown",
-        subject: "Networks",
-        feedback: "Active participation. Strong theoretical knowledge.",
-        rating: 4.2,
-        strengths: ["Theory", "Participation"],
-        improvements: ["Practical Implementation"],
-      },
-    ];
-    setFacultyFeedback(mockFeedback);
+      // Generate mock SPI/CPI data for now (can be replaced with real data later)
+      const currentSemester = parseInt(student?.semester) || selectedSemester;
+      const mockSpiCpi = [];
+      for (let i = 1; i <= currentSemester; i++) {
+        mockSpiCpi.push({
+          semester: i,
+          spi: (7.5 + Math.random() * 2).toFixed(2),
+          cpi: (7.0 + Math.random() * 2).toFixed(2),
+          credits: 20 + Math.floor(Math.random() * 5),
+        });
+      }
+      setSpiCpiData(mockSpiCpi);
+
+      // Mock faculty feedback (can be replaced with real data later)
+      const mockFeedback = [
+        {
+          faculty: "Dr. S. Johnson",
+          subject: "Data Structures",
+          feedback: "Excellent problem-solving skills. Shows great understanding.",
+          rating: 4.5,
+          strengths: ["Problem Solving", "Algorithms"],
+          improvements: ["Time Complexity"],
+        },
+        {
+          faculty: "Prof. S. Wilson",
+          subject: "Database Mgmt",
+          feedback: "Good SQL concepts. Needs query optimization focus.",
+          rating: 4.0,
+          strengths: ["SQL Basics", "Design"],
+          improvements: ["Optimization", "Performance"],
+        },
+        {
+          faculty: "Dr. M. Brown",
+          subject: "Networks",
+          feedback: "Active participation. Strong theoretical knowledge.",
+          rating: 4.2,
+          strengths: ["Theory", "Participation"],
+          improvements: ["Practical Implementation"],
+        },
+      ];
+      setFacultyFeedback(mockFeedback);
+
+    } catch (error) {
+      console.error('Error fetching real academic data:', error);
+      setError('Failed to load academic data');
+      // Fallback to empty data on error
+      setSubjectGrades([]);
+      setSpiCpiData([]);
+      setFacultyFeedback([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Preserved original functions
@@ -243,8 +225,18 @@ const AcademicAnalysis = ({ student, academicData }) => {
     return gradePoints[grade] || 0;
   };
 
-  const getBloomScore = (marks, level) => {
-    const baseScore = marks;
+  const getBloomScore = (subjectCode, level) => {
+    // Get real Bloom's data for the subject if available
+    const subjectBloomsData = bloomsData.find(data => data.code === subjectCode);
+    if (subjectBloomsData && subjectBloomsData.bloomsLevels) {
+      const levelData = subjectBloomsData.bloomsLevels.find(bl => bl.level === level);
+      if (levelData) {
+        return Math.round(levelData.marks);
+      }
+    }
+    
+    // Fallback to mock data if real data not available
+    const baseScore = 75; // Default base score
     const variations = {
       Remember: Math.min(Math.max(baseScore + Math.random() * 10 - 5, 0), 100),
       Understand: Math.min(Math.max(baseScore + Math.random() * 8 - 4, 0), 100),
@@ -311,8 +303,38 @@ const AcademicAnalysis = ({ student, academicData }) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  // Bloom's Taxonomy data (generalized spider chart - NEW)
+  // Bloom's Taxonomy data with real data integration
   const getBloomsTaxonomyData = () => {
+    if (bloomsData && bloomsData.length > 0) {
+      // Aggregate Bloom's data across all subjects for the spider chart
+      const bloomsAggregation = {};
+      const bloomLevels = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
+      
+      // Initialize aggregation
+      bloomLevels.forEach(level => {
+        bloomsAggregation[level] = { totalMarks: 0, count: 0 };
+      });
+      
+      // Aggregate marks from all subjects
+      bloomsData.forEach(subjectData => {
+        subjectData.bloomsLevels.forEach(levelData => {
+          if (bloomsAggregation[levelData.level]) {
+            bloomsAggregation[levelData.level].totalMarks += levelData.marks;
+            bloomsAggregation[levelData.level].count += 1;
+          }
+        });
+      });
+      
+      // Calculate average scores
+      return bloomLevels.map(level => ({
+        level,
+        score: bloomsAggregation[level].count > 0 
+          ? Math.round(bloomsAggregation[level].totalMarks / bloomsAggregation[level].count)
+          : 0
+      }));
+    }
+    
+    // Fallback to mock data if no real data available
     const levels = [
       { level: "Remember", score: 85 },
       { level: "Understand", score: 78 },
@@ -712,7 +734,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
                     <div key={subject.id} className="heatmap-row">
                       <div className="subject-cell">{subject.shortName}</div>
                       {bloomLevels.map((level) => {
-                        const score = getBloomScore(subject.marks, level);
+                        const score = getBloomScore(subject.code, level);
                         return (
                           <div
                             key={level}
