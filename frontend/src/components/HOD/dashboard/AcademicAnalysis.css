@@ -17,6 +17,66 @@
   line-height: 1.6;
 }
 
+/* Semester Filter Styles (from StudentAnalysis) */
+.semester-filter-nonacademic {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8ecf0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.semester-label-nonacademic {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3674B5;
+  min-width: 140px;
+}
+
+.semester-buttons-nonacademic {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.semester-btn-nonacademic {
+  padding: 8px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.semester-btn-nonacademic:hover {
+  border-color: #3674B5;
+  color: #3674B5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(54, 116, 181, 0.1);
+}
+
+.semester-btn-nonacademic.active-nonacademic {
+  background: #3674B5;
+  border-color: #3674B5;
+  color: white;
+  box-shadow: 0 2px 8px rgba(54, 116, 181, 0.3);
+}
+
+.semester-btn-nonacademic.active-nonacademic:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
 /* Enhanced Header (NEW + Preserved) */
 .academic-header-enhanced {
   background: linear-gradient(135deg, #3674B5 0%, #4a86c7 100%);
@@ -170,9 +230,38 @@
 /* Main Content Grid - Enhanced */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 70% 30%;
   gap: 24px;
   align-items: start;
+}
+
+/* Left Column Styles */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Right Column Styles */
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Bloom Charts Section */
+.bloom-charts-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+  height: 450px;
+}
+
+@media (max-width: 1200px) {
+  .bloom-charts-section {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Enhanced Grades Section */
@@ -182,6 +271,16 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 1px solid #e8ecf0;
   overflow: hidden;
+}
+
+/* Full Width Grades Section */
+.grades-section-enhanced-full {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8ecf0;
+  overflow: hidden;
+  margin-bottom: 24px;
 }
 
 .section-header {
@@ -372,6 +471,131 @@
   gap: 24px;
 }
 
+/* Bottom Sections */
+.bottom-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+/* Achievements Section */
+.achievements-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8ecf0;
+  overflow: hidden;
+}
+
+.achievements-content {
+  padding: 20px;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f8fafc;
+  margin-bottom: 16px;
+  border-left: 4px solid #3674B5;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.achievement-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.achievement-item:last-child {
+  margin-bottom: 0;
+}
+
+.achievement-icon {
+  font-size: 24px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.achievement-details h4 {
+  color: #1e293b;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.achievement-details p {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.achievement-date {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Suggestions Section */
+.suggestions-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8ecf0;
+  overflow: hidden;
+}
+
+.suggestions-content {
+  padding: 20px;
+}
+
+.suggestion-category {
+  margin-bottom: 24px;
+}
+
+.suggestion-category:last-child {
+  margin-bottom: 0;
+}
+
+.suggestion-category h4 {
+  color: #3674B5;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggestion-category ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.suggestion-category li {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.suggestion-category li:before {
+  content: "•";
+  color: #3674B5;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.suggestion-category li:last-child {
+  margin-bottom: 0;
+}
+
 .chart-container-enhanced {
   background: white;
   border-radius: 12px;
@@ -435,6 +659,11 @@
   font-weight: 600;
   color: #3674B5;
   margin: 0;
+}
+
+.feedback-card {
+  height: 400px;
+  padding: 0px;
 }
 
 .subject-filter,
@@ -573,10 +802,9 @@
   border-radius: 50%;
 }
 
-/* Faculty Feedback (Preserved) */
 .feedback-compact {
-  padding: 8px;
-  max-height: 250px;
+  padding: 7px;
+  max-height: 330px;
   overflow-y: auto;
 }
 
@@ -704,6 +932,14 @@
   .charts-section-enhanced {
     grid-row: 2;
   }
+
+  .bloom-charts-section {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-sections {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
@@ -757,6 +993,31 @@
   .bloom-spider-chart {
     min-height: 300px;
   }
+
+  .semester-filter-nonacademic {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .semester-label-nonacademic {
+    min-width: auto;
+  }
+
+  .semester-buttons-nonacademic {
+    justify-content: center;
+  }
+
+  .bloom-charts-section {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .bottom-sections {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -780,5 +1041,15 @@
 
   .spider-chart-wrapper {
     padding: 10px;
+  }
+
+  .semester-buttons-nonacademic {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .semester-btn-nonacademic {
+    width: 100%;
+    justify-content: center;
   }
 }

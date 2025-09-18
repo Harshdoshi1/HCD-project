@@ -20,6 +20,9 @@ const EventOutcomes = require('./EventOutcomes');
 const EventOutcomeMapping = require('./EventOutcomeMapping');
 const SubComponents = require('./subComponents');
 const StudentMarks = require('./studentMarks');
+const StudentBloomsDistribution = require('./StudentBloomsDistribution');
+const BloomsTaxonomy = require('./bloomsTaxonomy');   
+
 
 // Import associations to set up relationships
 require('./associations');
@@ -76,5 +79,7 @@ module.exports = {
     EventOutcomeMapping,
     SubComponents,
     StudentMarks,
+    StudentBloomsDistribution,
+    BloomsTaxonomy,
     syncDB
 };

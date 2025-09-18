@@ -11,8 +11,7 @@ const subRoutes = require('./routes/sub_routes');
 // const studentCoCurricularRoutes = require('./routes/student_cocurricular_routes');
 // const studentExtracurricularRoutes = require('./routes/student_extracurricular_routes');
 const batchRoutes = require("./routes/batch_routes");
-const gettedmarksController = require("./controller/gettedMarksController");
-const students_points_routes = require("./routes/students_points_routes");
+const gettedmarksController = require("./controller/gettedmarksController");const students_points_routes = require("./routes/students_points_routes");
 const semesterRoutes = require("./routes/semester_routes");
 const studentEventRoutes = require("./routes/student_event_routes");
 const facultysideRoutes = require("./routes/facultyside_router");
@@ -26,6 +25,7 @@ const mainRouter = require('./routes/index');
 const student_event_routes = require('./routes/student_event_routes');
 const classSectionRoutes = require('./routes/classSection_routes');
 const studentMarksRoutes = require('./routes/studentMarks_routes');
+const studentAnalysisRoutes = require('./routes/studentAnalysis_routes');
 const app = express();
 
 // Enable CORS
@@ -68,6 +68,7 @@ app.use('/api/academic-details', academicDetailsRoutes);
 app.use('/api/blooms-taxonomy', bloomsTaxonomyRoutes);
 app.use('/api/course-outcomes', courseOutcomeRoutes);
 app.use('/api/student-marks', studentMarksRoutes);
+app.use('/api/student-analysis', studentAnalysisRoutes);
 
 
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);
@@ -104,5 +105,3 @@ syncDB().then(() => {
     console.error('Failed to start server:', error);
     process.exit(1);
 });
-
-

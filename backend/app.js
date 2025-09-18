@@ -6,7 +6,10 @@ const subRoutes = require('./routes/subRoutes');
 const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
 const subjectComponentCoRoutes = require('./routes/subjectComponentCoRoutes');
 const eventsRoutes = require('./routes/events');
+const studentEventRoutes = require('./routes/student_event_routes');
 const eventOutcomesRoutes = require('./routes/eventOutcomeRoutes');
+const studentAnalysisRoutes = require('./routes/studentAnalysis_routes');
+const bloomsDistributionRoutes = require('./routes/bloomsDistribution_routes');
 
 const app = express();
 
@@ -21,7 +24,10 @@ app.use('/api/subjects', subRoutes);
 app.use('/api/course-outcomes', courseOutcomeRoutes);
 app.use('/api/subject-component-cos', subjectComponentCoRoutes);
 app.use('/api', eventsRoutes);
+app.use('/api/events', studentEventRoutes);
 app.use('/api', eventOutcomesRoutes);
+app.use('/api/student-analysis', studentAnalysisRoutes);
+app.use('/api/blooms-distribution', bloomsDistributionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

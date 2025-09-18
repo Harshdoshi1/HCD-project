@@ -1,4 +1,5 @@
 const { StudentMarks, Student, User, UniqueSubDegree, Semester, Batch, SubComponents, ComponentWeightage, ComponentMarks } = require('../models');
+const { calculateAndStoreBloomsDistributionDirect } = require('./bloomsDistributionController');
 const { Op } = require('sequelize');
 
 // Get student marks with sub-components for a specific subject
@@ -163,6 +164,18 @@ const updateStudentMarks = async (req, res) => {
                 }
                 updatedMarks.push(updatedMark);
             }
+        }
+
+        // After successfully updating marks, trigger Bloom's distribution calculation
+        try {
+            const student = await Student.findByPk(studentId);
+            if (student) {
+                await calculateAndStoreBloomsDistributionDirect(student.enrollmentNumber, enrollmentSemester);
+                console.log(`Bloom's distribution calculated for student ${student.enrollmentNumber}, semester ${enrollmentSemester}`);
+            }
+        } catch (bloomsError) {
+            console.error('Error calculating Bloom\'s distribution:', bloomsError);
+            // Don't fail the main operation if Bloom's calculation fails
         }
 
         res.status(200).json({

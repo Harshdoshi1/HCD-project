@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './StudentAnalysis.css';
 import ReportGeneratorModal from './ReportGeneratorModal.jsx';
 import AcademicAnalysis from './AcademicAnalysis.jsx';
@@ -22,118 +22,9 @@ const StudentAnalysis = ({ student, onClose }) => {
     trendAnalysis: ''
   });
   const [activeTab, setActiveTab] = useState('academic');
-  const [bloomsData, setBloomsData] = useState([]);
-  const [loadingBlooms, setLoadingBlooms] = useState(false);
-  const [academicData, setAcademicData] = useState([]);
-  const [loadingAcademic, setLoadingAcademic] = useState(false);
 
   // For debugging
   console.log('Student data received:', student);
-
-  // Fetch comprehensive academic data from backend
-  const fetchAcademicData = async () => {
-    if (!student || !student.rollNo) {
-      setLoadingAcademic(false);
-      return;
-    }
-
-    setLoadingAcademic(true);
-    try {
-      const enrollmentNumber = student.rollNo;
-      console.log('Fetching comprehensive academic data for enrollment number:', enrollmentNumber);
-
-      // Get the current semester
-      const currentSemester = parseInt(student.semester) || 1;
-
-      // Fetch comprehensive academic analysis data
-      const response = await axios.get(`http://localhost:5001/api/student-analysis/comprehensive/${enrollmentNumber}/${currentSemester}`);
-      
-      console.log('Academic analysis response:', response.data);
-
-      if (response.data && response.data.academicData) {
-        setAcademicDetails(response.data);
-        
-        // Transform academic data for charts
-        const chartData = response.data.chartData || [];
-        setAcademicData(chartData);
-        
-        console.log('Academic data set successfully:', response.data.academicData);
-      } else {
-        console.log('No academic data found in response');
-        setAcademicDetails(null);
-        setAcademicData([]);
-      }
-    } catch (err) {
-      console.error('Error fetching academic data:', err);
-      setError('Failed to load academic data: ' + (err.response?.data?.error || err.message));
-      setAcademicDetails(null);
-      setAcademicData([]);
-    } finally {
-      setLoadingAcademic(false);
-    }
-  };
-
-  // Fetch subject-wise performance for a specific semester
-  const fetchSubjectWisePerformance = async (semester) => {
-    if (!student || !student.rollNo || !semester) {
-      console.log('Missing data for subject-wise performance fetch:', { student: !!student, rollNo: student?.rollNo, semester });
-      return;
-    }
-
-    try {
-      const enrollmentNumber = student.rollNo;
-      console.log(`Fetching subject-wise performance for enrollment: ${enrollmentNumber}, semester: ${semester}`);
-
-      const response = await axios.get(`http://localhost:5001/api/student-analysis/performance/${enrollmentNumber}/${semester}`);
-      
-      console.log('Subject-wise performance response:', response.data);
-
-      if (response.data && response.data.subjects) {
-        // Update academic details with semester-specific data
-        setAcademicDetails(prev => ({
-          ...prev,
-          currentSemesterData: {
-            semester: response.data.semester,
-            subjects: response.data.subjects,
-            summary: response.data.summary
-          }
-        }));
-      }
-    } catch (err) {
-      console.error('Error fetching subject-wise performance:', err);
-    }
-  };
-
-  // Function to fetch Bloom's taxonomy data for the selected semester
-  const fetchBloomsData = async (semester) => {
-    if (!student || !student.rollNo || !semester) {
-      console.log('Missing data for Bloom\'s fetch:', { student: !!student, rollNo: student?.rollNo, semester });
-      return;
-    }
-
-    setLoadingBlooms(true);
-    try {
-      const enrollmentNumber = student.rollNo;
-      console.log(`Fetching Bloom's data for enrollment: ${enrollmentNumber}, semester: ${semester}`);
-
-      // Fetch Bloom's taxonomy distribution from the new API
-      const response = await axios.get(`http://localhost:5001/api/student-analysis/blooms/${enrollmentNumber}/${semester}`);
-      
-      console.log('Bloom\'s data response:', response.data);
-
-      if (response.data && response.data.bloomsDistribution) {
-        setBloomsData(response.data.bloomsDistribution);
-      } else {
-        console.log('No Bloom\'s data found');
-        setBloomsData([]);
-      }
-    } catch (err) {
-      console.error('Error fetching Bloom\'s data:', err);
-      setBloomsData([]);
-    } finally {
-      setLoadingBlooms(false);
-    }
-  };
 
   // Fetch semester points data from student_points table
   useEffect(() => {
@@ -207,15 +98,8 @@ const StudentAnalysis = ({ student, onClose }) => {
         // Set the default selected semester to the current semester
         setSelectedSemester(currentSemester);
 
-        // Fetch activities and Bloom's data for the current semester by default
-        fetchActivities(currentSemester);
-        fetchBloomsData(currentSemester);
-        
-        // Fetch academic data
-        fetchAcademicData();
-        
-        // Fetch subject-wise performance for current semester
-        fetchSubjectWisePerformance(currentSemester);
+        // Fetch activities for the current semester by default
+        fetchActivitiesBySemester(enrollmentNumber, currentSemester);
       } catch (err) {
         console.error('Error in semester points fetching process:', err);
         setError('Failed to load semester points data');
@@ -228,67 +112,39 @@ const StudentAnalysis = ({ student, onClose }) => {
     fetchSemesterPoints();
   }, [student]);
 
-  // Function to fetch Bloom's taxonomy data for the selected semester
-  // const fetchBloomsData = async (semester) => {
-  //   if (!student || !student.rollNo || !semester) {
-  //     console.log('Missing data for Bloom\'s fetch:', { student: !!student, rollNo: student?.rollNo, semester });
-  //     return;
-  //   }
-
-  //   setLoadingBlooms(true);
-  //   try {
-  //     const enrollmentNumber = student.rollNo;
-  //     console.log(`Fetching Bloom's data for enrollment: ${enrollmentNumber}, semester: ${semester}`);
-
-  //     // Fetch Bloom's taxonomy distribution from the new API
-  //     const response = await axios.get(`http://localhost:5001/api/student-analysis/blooms/${enrollmentNumber}/${semester}`);
-      
-  //     console.log('Bloom\'s data response:', response.data);
-
-  //     if (response.data && response.data.bloomsDistribution) {
-  //       setBloomsData(response.data.bloomsDistribution);
-  //     } else {
-  //       console.log('No Bloom\'s data found');
-  //       setBloomsData([]);
-  //     }
-  //   } catch (err) {
-  //     console.error('Error fetching Bloom\'s data:', err);
-  //     setBloomsData([]);
-  //   } finally {
-  //     setLoadingBlooms(false);
-  //   }
-  // };
-
-  // Fetch activities for the selected semester
-  const fetchActivities = async (semester) => {
-    if (!student || !student.rollNo || !semester) {
-      console.log('Missing data for activity fetch:', { student: !!student, rollNo: student?.rollNo, semester });
-      return;
-    }
+  // Function to fetch activities for a specific semester
+  const fetchActivitiesBySemester = async (enrollmentNumber, semester) => {
+    if (!enrollmentNumber || !semester) return;
 
     setLoadingActivities(true);
     try {
-      const enrollmentNumber = student.rollNo;
-      console.log(`Fetching activities for enrollment: ${enrollmentNumber}, semester: ${semester}`);
-
-      // Fetch activities for this specific semester
+      // Fetch student points for the selected semester
       const response = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
         enrollmentNumber,
         semester: semester.toString()
       });
 
-      console.log('Activities response:', response.data);
+      console.log(`Activities for semester ${semester}:`, response.data);
 
       if (response.data && Array.isArray(response.data)) {
         // Extract event IDs from the response
-        const eventIds = response.data.map(item => item.eventId).filter(id => id);
-        console.log('Event IDs found:', eventIds);
+        const eventIds = [];
+        response.data.forEach(item => {
+          if (item.eventId) {
+            // Split the comma-separated event IDs and add them to our array
+            const ids = item.eventId.split(',').map(id => id.trim()).filter(id => id);
+            eventIds.push(...ids);
+          }
+        });
+
+        console.log('Extracted event IDs:', eventIds);
 
         if (eventIds.length > 0) {
-          // Convert event IDs to comma-separated string
+          // Convert the array of event IDs to a comma-separated string as required by the API
           const eventIdsString = eventIds.join(',');
+          console.log('Sending event IDs as string:', eventIdsString);
 
-          // Fetch detailed event information
+          // Fetch event details from EventMaster table
           const eventDetailsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsByIds', {
             eventIds: eventIdsString
           });
@@ -448,67 +304,74 @@ const StudentAnalysis = ({ student, onClose }) => {
   // Handle semester selection change
   const handleSemesterChange = (semester) => {
     setSelectedSemester(semester);
-    fetchActivities(semester);
-    fetchBloomsData(semester);
-    fetchSubjectWisePerformance(semester);
+    fetchActivitiesBySemester(student.rollNo, semester);
   };
 
-  // Prepare data for the line chart - now includes both academic and activity data
+  // If no student is provided, show a default view for the StudentAnalysis page
+  if (!student) {
+    return (
+      <div className="student-analysis-container">
+        <div className="analysis-header">
+          <h2>Student Analysis Dashboard</h2>
+        </div>
+        <div className="analysis-content">
+          <p>Select a student from the list to view their detailed analysis.</p>
+          <div className="empty-state">
+            <div className="empty-icon">📊</div>
+            <p>No student selected</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Prepare data for the line chart
   const prepareChartData = () => {
-    // If we have academic data from the API, use that for academic performance
-    if (academicData && academicData.length > 0) {
-      console.log('Using academic data from API for chart:', academicData);
-
-      // Combine academic data with activity data
-      const combinedData = academicData.map(academicPoint => {
-        // Find corresponding activity data for this semester
-        const activityPoint = semesterPoints.find(sp => sp.semester === academicPoint.semester);
-        
-        return {
-          semester: academicPoint.semester,
-          academicPercentage: academicPoint.percentage || 0,
-          marksObtained: academicPoint.marksObtained || 0,
-          totalMarks: academicPoint.totalMarks || 0,
-          coCurricular: activityPoint ? activityPoint.totalCocurricular : 0,
-          extraCurricular: activityPoint ? activityPoint.totalExtracurricular : 0
-        };
-      });
-
-      console.log('Combined chart data:', combinedData);
-      return combinedData;
-    }
-
-    // Fallback to activity data only if no academic data
+    // If we have fetched semester points data from the API, use that
     if (semesterPoints && semesterPoints.length > 0) {
-      console.log('Using activity data only for chart:', semesterPoints);
+      console.log('Using fetched semester points data for chart:', semesterPoints);
 
+      // Map the semester points data to the format expected by the chart
       const chartData = semesterPoints.map(point => ({
         semester: point.semester,
-        academicPercentage: 0, // No academic data available
-        marksObtained: 0,
-        totalMarks: 0,
         coCurricular: point.totalCocurricular || 0,
         extraCurricular: point.totalExtracurricular || 0
       }));
 
+      // Sort by semester
       chartData.sort((a, b) => a.semester - b.semester);
+
+      console.log('Chart data prepared from API data:', chartData);
       return chartData;
     }
 
-    // Final fallback
-    console.log('No data available, using fallback');
+    // Fallback to using student data if API data is not available
+    console.log('Falling back to student object data for chart');
+
+    // Get current semester as a number
     const currentSemester = parseInt(student.semester) || 1;
-    return [{
+
+    // Create a default data point for current semester
+    const currentSemesterData = {
       semester: currentSemester,
-      academicPercentage: 0,
-      marksObtained: 0,
-      totalMarks: 0,
-      coCurricular: 0,
-      extraCurricular: 0
-    }];
+      coCurricular: student.points?.coCurricular || 0,
+      extraCurricular: student.points?.extraCurricular || 0,
+    };
+
+    // Create data points for all semesters from 1 to current
+    const fallbackChartData = [];
+    for (let i = 1; i <= currentSemester; i++) {
+      fallbackChartData.push({
+        semester: i,
+        coCurricular: i === currentSemester ? currentSemesterData.coCurricular : 0,
+        extraCurricular: i === currentSemester ? currentSemesterData.extraCurricular : 0,
+      });
+    }
+
+    console.log('Fallback chart data:', fallbackChartData);
+    return fallbackChartData;
   };
 
-  // Generate analysis
   const generateAnalysis = () => {
     // Get the history data
     const history = student.history || [];
@@ -554,7 +417,6 @@ const StudentAnalysis = ({ student, onClose }) => {
     };
   };
 
-  // Generate suggestions
   const generateSuggestions = (analysis) => {
     const suggestions = [];
 
@@ -613,7 +475,6 @@ const StudentAnalysis = ({ student, onClose }) => {
     return suggestions;
   };
 
-  // Prepare category data
   const prepareCategoryData = () => {
     // If activities are loaded for the current semester, use that data
     if (activityList && activityList.length > 0) {
@@ -678,103 +539,6 @@ const StudentAnalysis = ({ student, onClose }) => {
     setShowReportGenerator(prev => !prev);
   };
 
-  // Bloom's taxonomy helper functions
-  const getBloomsLevels = () => {
-    return ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
-  };
-
-  const getBloomClass = (score) => {
-    if (score >= 85) return "excellent-bloom";
-    if (score >= 70) return "good-bloom";
-    if (score >= 55) return "average-bloom";
-    return "weak-bloom";
-  };
-
-  const getBloomsRadarData = () => {
-    if (!bloomsData || bloomsData.length === 0) return [];
-    
-    const bloomsAggregation = {};
-    const bloomLevels = getBloomsLevels();
-    
-    // Initialize aggregation
-    bloomLevels.forEach(level => {
-      bloomsAggregation[level] = { totalMarks: 0, count: 0 };
-    });
-    
-    // Aggregate marks from all subjects
-    bloomsData.forEach(subjectData => {
-      subjectData.bloomsLevels.forEach(levelData => {
-        if (bloomsAggregation[levelData.level]) {
-          bloomsAggregation[levelData.level].totalMarks += (levelData.percentage || levelData.marks || 0);
-          bloomsAggregation[levelData.level].count += 1;
-        }
-      });
-    });
-    
-    // Calculate average scores
-    return bloomLevels.map(level => ({
-      level,
-      score: bloomsAggregation[level].count > 0 
-        ? Math.round(bloomsAggregation[level].totalMarks / bloomsAggregation[level].count)
-        : 0
-    }));
-  };
-
-  const getBloomsBarData = () => {
-    if (!bloomsData || bloomsData.length === 0) return [];
-    
-    return bloomsData.map(subject => {
-      const barData = { subject: subject.subject.length > 10 ? subject.subject.substring(0, 10) + '...' : subject.subject };
-      
-      getBloomsLevels().forEach(level => {
-        const levelData = subject.bloomsLevels.find(bl => bl.level === level);
-        barData[level] = levelData ? Math.round(levelData.percentage || levelData.marks || 0) : 0;
-      });
-      
-      return barData;
-    });
-  };
-
-  const getStrongestBloomLevel = () => {
-    const radarData = getBloomsRadarData();
-    if (radarData.length === 0) return "No data available";
-    
-    const strongest = radarData.reduce((max, current) => 
-      current.score > max.score ? current : max
-    );
-    
-    return `${strongest.level} (${strongest.score}%) - Shows excellent ${strongest.level.toLowerCase()} skills`;
-  };
-
-  const getWeakestBloomLevel = () => {
-    const radarData = getBloomsRadarData();
-    if (radarData.length === 0) return "No data available";
-    
-    const weakest = radarData.reduce((min, current) => 
-      current.score < min.score ? current : min
-    );
-    
-    return `${weakest.level} (${weakest.score}%) - Needs improvement in ${weakest.level.toLowerCase()} skills`;
-  };
-
-  const getCognitiveBalance = () => {
-    const radarData = getBloomsRadarData();
-    if (radarData.length === 0) return "No data available";
-    
-    const scores = radarData.map(item => item.score);
-    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    const variance = scores.reduce((sum, score) => sum + Math.pow(score - average, 2), 0) / scores.length;
-    const standardDeviation = Math.sqrt(variance);
-    
-    if (standardDeviation < 10) {
-      return `Well-balanced cognitive development (σ=${standardDeviation.toFixed(1)})`;
-    } else if (standardDeviation < 20) {
-      return `Moderately balanced with some variation (σ=${standardDeviation.toFixed(1)})`;
-    } else {
-      return `Significant variation in cognitive levels (σ=${standardDeviation.toFixed(1)}) - Focus on weaker areas`;
-    }
-  };
-
   return (
     <div className="modal-backdrop enhanced-modal">
       <div className="modal-container enhanced-student-analysis-modal">
@@ -827,28 +591,7 @@ const StudentAnalysis = ({ student, onClose }) => {
           {/* Tab Content */}
           <div className="tab-content">
             {activeTab === 'academic' && (
-              <div className="academic-analysis-container">
-                {loadingAcademic ? (
-                  <div className="loading-message">
-                    <p>Loading academic data...</p>
-                  </div>
-                ) : academicDetails ? (
-                  <AcademicAnalysis 
-                    student={student} 
-                    academicData={academicDetails}
-                    selectedSemester={selectedSemester}
-                    onSemesterChange={handleSemesterChange}
-                  />
-                ) : (
-                  <div className="no-academic-data">
-                    <h3>📚 Academic Performance Analysis</h3>
-                    <div className="no-data-message">
-                      <p>No academic data available for this student.</p>
-                      <p className="data-note">Academic data will be available after faculty has entered marks for subjects.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <AcademicAnalysis student={student} academicData={academicDetails} />
             )}
 
             {activeTab === 'nonacademic' && (
@@ -859,15 +602,15 @@ const StudentAnalysis = ({ student, onClose }) => {
                   <div className="chart-container-nonacademic">
                     {loading ? (
                       <div className="loading-message">
-                        <p>Loading performance data...</p>
+                        <p>Loading semester points data...</p>
                       </div>
                     ) : error ? (
                       <div className="error-message">
                         <p>{error}</p>
                       </div>
-                    ) : (
+                    ) : chartData && chartData.length > 0 ? (
                       <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={prepareChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis
                             dataKey="semester"
@@ -877,21 +620,9 @@ const StudentAnalysis = ({ student, onClose }) => {
                             domain={[1, 'dataMax']}
                             allowDecimals={false}
                           />
-                          <YAxis label={{ value: 'Points/Percentage', angle: -90, position: 'insideLeft' }} />
-                          <Tooltip formatter={(value, name) => {
-                            if (name === 'academicPercentage') return [`${value}%`, 'Academic Performance'];
-                            return [`${value} points`, name];
-                          }} />
+                          <YAxis label={{ value: 'Points', angle: -90, position: 'insideLeft' }} />
+                          <Tooltip formatter={(value) => [`${value} points`, undefined]} />
                           <Legend />
-                          <Line
-                            type="monotone"
-                            dataKey="academicPercentage"
-                            stroke="#FF6B6B"
-                            name="Academic Performance"
-                            strokeWidth={2}
-                            dot={{ r: 6 }}
-                            activeDot={{ r: 8 }}
-                          />
                           <Line
                             type="monotone"
                             dataKey="coCurricular"
@@ -912,6 +643,10 @@ const StudentAnalysis = ({ student, onClose }) => {
                           />
                         </LineChart>
                       </ResponsiveContainer>
+                    ) : (
+                      <div className="no-data-message">
+                        <p>No performance history data available</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -994,138 +729,6 @@ const StudentAnalysis = ({ student, onClose }) => {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
-
-                {/* Bloom's Taxonomy Analysis Section */}
-                <div className="blooms-analysis-container">
-                  <h3>🧠 Bloom's Taxonomy Analysis</h3>
-                  
-                  {loadingBlooms ? (
-                    <div className="loading-message">
-                      <p>Loading Bloom's taxonomy data...</p>
-                    </div>
-                  ) : bloomsData && bloomsData.length > 0 ? (
-                    <>
-                      {/* Bloom's Taxonomy Radar Chart */}
-                      <div className="blooms-charts-section">
-                        <div className="blooms-radar-chart">
-                          <h4>📊 Overall Cognitive Performance</h4>
-                          <ResponsiveContainer width="100%" height={300}>
-                            <RadarChart data={getBloomsRadarData()}>
-                              <PolarGrid />
-                              <PolarAngleAxis dataKey="level" fontSize={12} />
-                              <PolarRadiusAxis angle={90} domain={[0, 100]} fontSize={10} />
-                              <Radar
-                                name="Performance"
-                                dataKey="score"
-                                stroke="#3674B5"
-                                fill="#3674B5"
-                                fillOpacity={0.3}
-                                strokeWidth={2}
-                                dot={{ fill: "#3674B5", strokeWidth: 1, r: 4 }}
-                              />
-                              <Tooltip formatter={(value) => [`${value}%`, "Score"]} />
-                            </RadarChart>
-                          </ResponsiveContainer>
-                        </div>
-
-                        {/* Subject-wise Bloom's Bar Chart */}
-                        <div className="blooms-bar-chart">
-                          <h4>📈 Subject-wise Bloom's Distribution</h4>
-                          <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={getBloomsBarData()}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="subject" fontSize={10} />
-                              <YAxis fontSize={10} />
-                              <Tooltip />
-                              <Legend />
-                              <Bar dataKey="Remember" stackId="a" fill="#FF6B6B" />
-                              <Bar dataKey="Understand" stackId="a" fill="#4ECDC4" />
-                              <Bar dataKey="Apply" stackId="a" fill="#45B7D1" />
-                              <Bar dataKey="Analyze" stackId="a" fill="#96CEB4" />
-                              <Bar dataKey="Evaluate" stackId="a" fill="#FFEAA7" />
-                              <Bar dataKey="Create" stackId="a" fill="#DDA0DD" />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-
-                      {/* Bloom's Taxonomy Heatmap */}
-                      <div className="blooms-heatmap-section">
-                        <h4>🔥 Bloom's Taxonomy Heatmap</h4>
-                        <div className="blooms-heatmap">
-                          <div className="heatmap-grid">
-                            <div className="heatmap-header">
-                              <div className="subject-col">Subject</div>
-                              <div className="bloom-col">Remember</div>
-                              <div className="bloom-col">Understand</div>
-                              <div className="bloom-col">Apply</div>
-                              <div className="bloom-col">Analyze</div>
-                              <div className="bloom-col">Evaluate</div>
-                              <div className="bloom-col">Create</div>
-                            </div>
-                            {bloomsData.map((subject, index) => (
-                              <div key={index} className="heatmap-row">
-                                <div className="subject-cell">{subject.subject.length > 15 ? subject.subject.substring(0, 15) + '...' : subject.subject}</div>
-                                {getBloomsLevels().map((level) => {
-                                  const levelData = subject.bloomsLevels.find(bl => bl.level === level);
-                                  const score = levelData ? Math.round(levelData.percentage || levelData.marks) : 0;
-                                  return (
-                                    <div
-                                      key={level}
-                                      className={`bloom-cell ${getBloomClass(score)}`}
-                                      title={`${subject.subject} - ${level}: ${score}%`}
-                                    >
-                                      {score}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="bloom-legend">
-                            <span className="legend-item">
-                              <span className="legend-dot excellent-bloom"></span>Excellent (85+)
-                            </span>
-                            <span className="legend-item">
-                              <span className="legend-dot good-bloom"></span>Good (70-84)
-                            </span>
-                            <span className="legend-item">
-                              <span className="legend-dot average-bloom"></span>Average (55-69)
-                            </span>
-                            <span className="legend-item">
-                              <span className="legend-dot weak-bloom"></span>Weak (&lt;55)
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Bloom's Insights */}
-                      <div className="blooms-insights">
-                        <h4>💡 Cognitive Analysis Insights</h4>
-                        <div className="insights-grid">
-                          <div className="insight-card">
-                            <h5>Strongest Cognitive Level</h5>
-                            <p>{getStrongestBloomLevel()}</p>
-                          </div>
-                          <div className="insight-card">
-                            <h5>Areas for Development</h5>
-                            <p>{getWeakestBloomLevel()}</p>
-                          </div>
-                          <div className="insight-card">
-                            <h5>Overall Cognitive Balance</h5>
-                            <p>{getCognitiveBalance()}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="no-data-message">
-                      <p>No Bloom's taxonomy data available for semester {selectedSemester}</p>
-                      <p className="data-note">Data will be available after academic marks are processed and CO mappings are complete.</p>
-                    </div>
-                  )}
                 </div>
 
                 {/* Performance Insights and Suggestions Container */}

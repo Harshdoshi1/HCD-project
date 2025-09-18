@@ -16,6 +16,7 @@ const SubComponents = require('./subComponents');
 const StudentMarks = require('./studentMarks');
 const Student = require('./students');
 const User = require('./users');
+const StudentBloomsDistribution = require('./StudentBloomsDistribution');
 
 // Set up associations between StudentPoints and EventMaster without enforcing foreign key constraints
 StudentPoints.belongsTo(EventMaster, {
@@ -253,6 +254,46 @@ StudentMarks.belongsTo(SubComponents, {
   as: 'subComponent'
 });
 
+// --- StudentBloomsDistribution Associations ---
+
+// StudentBloomsDistribution belongs to Student
+StudentBloomsDistribution.belongsTo(Student, {
+  foreignKey: 'studentId',
+  as: 'student'
+});
+
+// Student has many StudentBloomsDistribution
+Student.hasMany(StudentBloomsDistribution, {
+  foreignKey: 'studentId',
+  as: 'bloomsDistributions'
+});
+
+// StudentBloomsDistribution belongs to UniqueSubDegree
+StudentBloomsDistribution.belongsTo(UniqueSubDegree, {
+  foreignKey: 'subjectId',
+  targetKey: 'sub_code',
+  as: 'subject'
+});
+
+// UniqueSubDegree has many StudentBloomsDistribution
+UniqueSubDegree.hasMany(StudentBloomsDistribution, {
+  foreignKey: 'subjectId',
+  sourceKey: 'sub_code',
+  as: 'bloomsDistributions'
+});
+
+// StudentBloomsDistribution belongs to BloomsTaxonomy
+StudentBloomsDistribution.belongsTo(BloomsTaxonomy, {
+  foreignKey: 'bloomsTaxonomyId',
+  as: 'bloomsTaxonomy'
+});
+
+// BloomsTaxonomy has many StudentBloomsDistribution
+BloomsTaxonomy.hasMany(StudentBloomsDistribution, {
+  foreignKey: 'bloomsTaxonomyId',
+  as: 'bloomsDistributions'
+});
+
 module.exports = {
   StudentPoints,
   EventMaster,
@@ -271,5 +312,6 @@ module.exports = {
   SubComponents,
   StudentMarks,
   Student,
-  User
+  User,
+  StudentBloomsDistribution
 };

@@ -9,8 +9,7 @@ const BloomsTaxonomy = sequelize.define('BloomsTaxonomy', {
     },
     name: {
         type: DataTypes.STRING(50),
-        allowNull: false,
-        unique: true
+        allowNull: false
     },
     description: {
         type: DataTypes.TEXT,
