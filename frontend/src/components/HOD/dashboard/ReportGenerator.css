@@ -605,6 +605,7 @@
 }
 
 .modal-header-fullscreen {
+  margin-top: 40px;
   padding: 20px 30px;
   display: flex;
   justify-content: space-between;

@@ -801,47 +801,493 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                     </div>
                   )}
 
-                  {/* New Outcome-wise Heatmap */}
-                  <div className="preview-chart">
-                    <h4>🔥 Outcome-wise Weakness & Strength Heatmap</h4>
-                    <div className="heatmap-container">
-                      <div className="heatmap-grid">
-                        <div className="heatmap-row">
-                          <span className="subject-label">Data Structures</span>
-                          <div className="heatmap-cell strength">85%</div>
-                          <div className="heatmap-cell average">72%</div>
-                          <div className="heatmap-cell weakness">45%</div>
-                          <div className="heatmap-cell strength">88%</div>
+                  {/* Enhanced Batch-wise Bloom's Taxonomy Analysis */}
+                  {/* <div className="preview-chart">
+                    <h4>🧠 Batch-wise Bloom's Taxonomy Performance Analysis</h4>
+                    <p className="heatmap-description">
+                      This analysis shows the total points earned by the entire batch across different Bloom's taxonomy levels. 
+                      <strong>Green indicates strong performance</strong>, <strong>yellow shows developing areas</strong>, and <strong>red highlights areas needing focus</strong>.
+                    </p>
+                    
+                    <div className="enhanced-heatmap-container">
+                      <div className="heatmap-headers">
+                        <div className="category-header">Activity Category</div>
+                        <div className="outcome-header">
+                          <span className="outcome-title">Remember</span>
+                          <span className="outcome-subtitle">(Basic Knowledge)</span>
                         </div>
-                        <div className="heatmap-row">
-                          <span className="subject-label">Algorithms</span>
-                          <div className="heatmap-cell average">68%</div>
-                          <div className="heatmap-cell strength">82%</div>
-                          <div className="heatmap-cell weakness">38%</div>
-                          <div className="heatmap-cell average">65%</div>
+                        <div className="outcome-header">
+                          <span className="outcome-title">Understand</span>
+                          <span className="outcome-subtitle">(Comprehension)</span>
                         </div>
-                        <div className="heatmap-row">
-                          <span className="subject-label">Database Systems</span>
-                          <div className="heatmap-cell strength">92%</div>
-                          <div className="heatmap-cell strength">89%</div>
-                          <div className="heatmap-cell average">72%</div>
-                          <div className="heatmap-cell strength">85%</div>
+                        <div className="outcome-header">
+                          <span className="outcome-title">Apply</span>
+                          <span className="outcome-subtitle">(Practical Use)</span>
                         </div>
-                        <div className="heatmap-row">
-                          <span className="subject-label">Web Development</span>
-                          <div className="heatmap-cell average">75%</div>
-                          <div className="heatmap-cell weakness">42%</div>
-                          <div className="heatmap-cell strength">88%</div>
-                          <div className="heatmap-cell average">70%</div>
+                        <div className="outcome-header">
+                          <span className="outcome-title">Analyze</span>
+                          <span className="outcome-subtitle">(Critical Thinking)</span>
+                        </div>
+                        <div className="outcome-header">
+                          <span className="outcome-title">Total Points</span>
+                          <span className="outcome-subtitle">(Category Sum)</span>
                         </div>
                       </div>
-                      <div className="heatmap-legend">
-                        <span className="legend-item"><div className="legend-color strength"></div>Strength (&gt;80%)</span>
-                        <span className="legend-item"><div className="legend-color average"></div>Average (60-80%)</span>
-                        <span className="legend-item"><div className="legend-color weakness"></div>Weakness (&lt;60%)</span>
+
+                      <div className="enhanced-heatmap-grid">
+                        <div className="enhanced-heatmap-row">
+                          <div className="enhanced-subject-label">
+                            <span className="subject-name">Curricular Activities</span>
+                            <span className="subject-code">Academic Performance</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength" title="Remember: 2,450 points - Strong foundational knowledge across batch">
+                            <span className="cell-value">2,450</span>
+                            <span className="cell-icon">✓</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell average" title="Understand: 1,890 points - Good conceptual understanding">
+                            <span className="cell-value">1,890</span>
+                            <span className="cell-icon">⚠</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell weakness" title="Apply: 1,120 points - Needs improvement in practical application">
+                            <span className="cell-value">1,120</span>
+                            <span className="cell-icon">❌</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell average" title="Analyze: 1,650 points - Moderate analytical skills">
+                            <span className="cell-value">1,650</span>
+                            <span className="cell-icon">⚠</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell average overall" title="Total: 7,110 points - Good overall academic performance">
+                            <span className="cell-value">7,110</span>
+                            <span className="trend-indicator">→</span>
+                          </div>
+                        </div>
+
+                        <div className="enhanced-heatmap-row">
+                          <div className="enhanced-subject-label">
+                            <span className="subject-name">Co-Curricular Activities</span>
+                            <span className="subject-code">Technical & Skills</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell average" title="Remember: 1,680 points - Adequate technical knowledge retention">
+                            <span className="cell-value">1,680</span>
+                            <span className="cell-icon">⚠</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength" title="Understand: 2,340 points - Strong technical understanding">
+                            <span className="cell-value">2,340</span>
+                            <span className="cell-icon">✓</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength" title="Apply: 2,890 points - Excellent hands-on technical skills">
+                            <span className="cell-value">2,890</span>
+                            <span className="cell-icon">✓</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell average" title="Analyze: 1,780 points - Good problem-solving abilities">
+                            <span className="cell-value">1,780</span>
+                            <span className="cell-icon">⚠</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength overall" title="Total: 8,690 points - Strong co-curricular engagement">
+                            <span className="cell-value">8,690</span>
+                            <span className="trend-indicator">↑</span>
+                          </div>
+                        </div>
+
+                        <div className="enhanced-heatmap-row">
+                          <div className="enhanced-subject-label">
+                            <span className="subject-name">Extra-Curricular Activities</span>
+                            <span className="subject-code">Leadership & Social</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength" title="Remember: 2,120 points - Strong awareness of social responsibilities">
+                            <span className="cell-value">2,120</span>
+                            <span className="cell-icon">✓</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength" title="Understand: 2,450 points - Excellent understanding of teamwork">
+                            <span className="cell-value">2,450</span>
+                            <span className="cell-icon">✓</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell average" title="Apply: 1,890 points - Good leadership application">
+                            <span className="cell-value">1,890</span>
+                            <span className="cell-icon">⚠</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength" title="Analyze: 2,180 points - Strong strategic thinking">
+                            <span className="cell-value">2,180</span>
+                            <span className="cell-icon">✓</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength overall" title="Total: 8,640 points - Excellent extra-curricular participation">
+                            <span className="cell-value">8,640</span>
+                            <span className="trend-indicator">↑</span>
+                          </div>
+                        </div>
+
+                        <div className="enhanced-heatmap-row batch-total">
+                          <div className="enhanced-subject-label total-label">
+                            <span className="subject-name">Batch Total</span>
+                            <span className="subject-code">All Categories Combined</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell average overall" title="Remember Total: 6,250 points across all categories">
+                            <span className="cell-value">6,250</span>
+                            <span className="cell-icon">📊</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength overall" title="Understand Total: 6,680 points across all categories">
+                            <span className="cell-value">6,680</span>
+                            <span className="cell-icon">📊</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell average overall" title="Apply Total: 5,900 points across all categories">
+                            <span className="cell-value">5,900</span>
+                            <span className="cell-icon">📊</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell average overall" title="Analyze Total: 5,610 points across all categories">
+                            <span className="cell-value">5,610</span>
+                            <span className="cell-icon">📊</span>
+                          </div>
+                          <div className="enhanced-heatmap-cell strength overall total-cell" title="Grand Total: 24,440 points for entire batch">
+                            <span className="cell-value">24,440</span>
+                            <span className="trend-indicator">🏆</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="enhanced-heatmap-legend">
+                        <div className="legend-section">
+                          <h5>Performance Levels</h5>
+                          <div className="legend-items">
+                            <div className="legend-item">
+                              <div className="legend-color strength"></div>
+                              <div className="legend-text">
+                                <span className="legend-title">Strength (80%+)</span>
+                                <span className="legend-desc">Students excel in this outcome</span>
+                              </div>
+                            </div>
+                            <div className="legend-item">
+                              <div className="legend-color average"></div>
+                              <div className="legend-text">
+                                <span className="legend-title">Developing (60-79%)</span>
+                                <span className="legend-desc">Room for improvement</span>
+                              </div>
+                            </div>
+                            <div className="legend-item">
+                              <div className="legend-color weakness"></div>
+                              <div className="legend-text">
+                                <span className="legend-title">Needs Focus (&lt;60%)</span>
+                                <span className="legend-desc">Requires immediate attention</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="legend-section">
+                          <h5>Learning Outcomes (Bloom's Taxonomy)</h5>
+                          <div className="outcome-explanations">
+                            <div className="outcome-explanation">
+                              <strong>Remember:</strong> Recall facts, terms, and basic concepts
+                            </div>
+                            <div className="outcome-explanation">
+                              <strong>Understand:</strong> Explain ideas and concepts
+                            </div>
+                            <div className="outcome-explanation">
+                              <strong>Apply:</strong> Use information in new situations
+                            </div>
+                            <div className="outcome-explanation">
+                              <strong>Analyze:</strong> Draw connections and examine relationships
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="legend-section">
+                          <h5>Key Insights</h5>
+                          <div className="insights-summary">
+                            <div className="insight-item positive">
+                              <span className="insight-icon">✓</span>
+                              <span>Strength: Co-curricular and Extra-curricular activities show excellent engagement</span>
+                            </div>
+                            <div className="insight-item critical">
+                              <span className="insight-icon">⚠</span>
+                              <span>Focus Area: "Apply" level needs improvement in curricular activities</span>
+                            </div>
+                            <div className="insight-item recommendation">
+                              <span className="insight-icon">💡</span>
+                              <span>Recommendation: Bridge theory-practice gap through more hands-on academic projects</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
+
+                  <style jsx>{`
+                    .enhanced-heatmap-container {
+                      background: #f8f9fa;
+                      border-radius: 12px;
+                      padding: 20px;
+                      margin: 20px 0;
+                    }
+
+                    .heatmap-description {
+                      color: #666;
+                      font-size: 14px;
+                      margin-bottom: 20px;
+                      line-height: 1.5;
+                    }
+
+                    .heatmap-headers {
+                      display: grid;
+                      grid-template-columns: 200px repeat(5, 1fr);
+                      gap: 2px;
+                      margin-bottom: 10px;
+                      background: #e9ecef;
+                      border-radius: 8px;
+                      padding: 10px;
+                    }
+
+                    .category-header {
+                      font-weight: bold;
+                      color: #495057;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                    }
+
+                    .outcome-header {
+                      text-align: center;
+                      padding: 8px;
+                      background: #fff;
+                      border-radius: 6px;
+                      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                    }
+
+                    .outcome-title {
+                      display: block;
+                      font-weight: bold;
+                      color: #495057;
+                      font-size: 13px;
+                    }
+
+                    .outcome-subtitle {
+                      display: block;
+                      font-size: 11px;
+                      color: #6c757d;
+                      margin-top: 2px;
+                    }
+
+                    .enhanced-heatmap-grid {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 8px;
+                    }
+
+                    .enhanced-heatmap-row {
+                      display: grid;
+                      grid-template-columns: 200px repeat(5, 1fr);
+                      gap: 2px;
+                      align-items: center;
+                    }
+
+                    .enhanced-heatmap-row.batch-total {
+                      margin-top: 15px;
+                      padding-top: 15px;
+                      border-top: 3px solid #007bff;
+                    }
+
+                    .enhanced-subject-label.total-label {
+                      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                      border-left: 4px solid #1976d2;
+                      font-weight: bold;
+                    }
+
+                    .enhanced-heatmap-cell.total-cell {
+                      background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%);
+                      border: 3px solid #ff8f00;
+                      font-weight: bold;
+                      font-size: 18px;
+                    }
+
+                    .enhanced-subject-label {
+                      background: #fff;
+                      padding: 15px;
+                      border-radius: 8px;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                      border-left: 4px solid #007bff;
+                    }
+
+                    .subject-name {
+                      display: block;
+                      font-weight: bold;
+                      color: #495057;
+                      font-size: 14px;
+                    }
+
+                    .subject-code {
+                      display: block;
+                      font-size: 12px;
+                      color: #6c757d;
+                      margin-top: 2px;
+                    }
+
+                    .enhanced-heatmap-cell {
+                      background: #fff;
+                      padding: 12px;
+                      border-radius: 8px;
+                      text-align: center;
+                      position: relative;
+                      cursor: pointer;
+                      transition: all 0.3s ease;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      gap: 4px;
+                    }
+
+                    .enhanced-heatmap-cell:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                    }
+
+                    .enhanced-heatmap-cell.strength {
+                      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+                      border-left: 4px solid #28a745;
+                    }
+
+                    .enhanced-heatmap-cell.average {
+                      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+                      border-left: 4px solid #ffc107;
+                    }
+
+                    .enhanced-heatmap-cell.weakness {
+                      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+                      border-left: 4px solid #dc3545;
+                    }
+
+                    .enhanced-heatmap-cell.overall {
+                      border: 2px solid #007bff;
+                      font-weight: bold;
+                    }
+
+                    .cell-value {
+                      font-size: 16px;
+                      font-weight: bold;
+                      color: #495057;
+                    }
+
+                    .cell-icon {
+                      font-size: 14px;
+                    }
+
+                    .trend-indicator {
+                      font-size: 12px;
+                      color: #6c757d;
+                    }
+
+                    .enhanced-heatmap-legend {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      gap: 20px;
+                      margin-top: 30px;
+                      padding: 20px;
+                      background: #fff;
+                      border-radius: 12px;
+                      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    }
+
+                    .legend-section h5 {
+                      margin: 0 0 15px 0;
+                      color: #495057;
+                      font-size: 16px;
+                      border-bottom: 2px solid #e9ecef;
+                      padding-bottom: 8px;
+                    }
+
+                    .legend-items {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 10px;
+                    }
+
+                    .legend-item {
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                    }
+
+                    .legend-color {
+                      width: 20px;
+                      height: 20px;
+                      border-radius: 4px;
+                      flex-shrink: 0;
+                    }
+
+                    .legend-color.strength {
+                      background: linear-gradient(135deg, #28a745, #20c997);
+                    }
+
+                    .legend-color.average {
+                      background: linear-gradient(135deg, #ffc107, #fd7e14);
+                    }
+
+                    .legend-color.weakness {
+                      background: linear-gradient(135deg, #dc3545, #e74c3c);
+                    }
+
+                    .legend-text {
+                      display: flex;
+                      flex-direction: column;
+                    }
+
+                    .legend-title {
+                      font-weight: bold;
+                      color: #495057;
+                      font-size: 14px;
+                    }
+
+                    .legend-desc {
+                      font-size: 12px;
+                      color: #6c757d;
+                    }
+
+                    .outcome-explanations {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 8px;
+                    }
+
+                    .outcome-explanation {
+                      font-size: 13px;
+                      color: #495057;
+                      line-height: 1.4;
+                    }
+
+                    .insights-summary {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 10px;
+                    }
+
+                    .insight-item {
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      padding: 10px;
+                      border-radius: 6px;
+                      font-size: 13px;
+                    }
+
+                    .insight-item.critical {
+                      background: #fff5f5;
+                      border-left: 4px solid #dc3545;
+                    }
+
+                    .insight-item.positive {
+                      background: #f0fff4;
+                      border-left: 4px solid #28a745;
+                    }
+
+                    .insight-item.recommendation {
+                      background: #f8f9ff;
+                      border-left: 4px solid #007bff;
+                    }
+
+                    .insight-icon {
+                      font-size: 16px;
+                      flex-shrink: 0;
+                    }
+                  `}</style>
 
                   {includeRecommendations && (
                     <div className="preview-recommendations">
@@ -900,8 +1346,8 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

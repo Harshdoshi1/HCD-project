@@ -33,7 +33,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
-    padding: 1rem;
+    /* padding: 1rem; */
     box-shadow: 0 5px 6px rgba(54, 116, 181, 0.1);
     flex-wrap: wrap;
     gap: 1rem;
