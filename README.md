@@ -7,7 +7,7 @@ A role-based web application for academic and extracurricular evaluation used by
 ## 🔍 Overview
 
 This web portal enables:
-- **HODs** to assign subjects and define evaluation weightages , to manage student data and view reports.
+- **HODs** to assign subjects and define evaluation weightages, to manage student data and view reports.
 - **Faculty** to enter academic scores and track student activities.
   
 ---

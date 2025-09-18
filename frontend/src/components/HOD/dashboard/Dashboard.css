@@ -5,7 +5,6 @@
   padding: 2rem;
   background-color: #f8f9fa;
   margin-top: 0;
-
 }
 
 .main-content {
@@ -22,7 +21,6 @@
   max-width: 100%;
   box-sizing: border-box;
   flex-direction: column;
-
 }
 
 .dashboard-header {
@@ -46,9 +44,108 @@
   font-weight: 600;
 }
 
+.dashboard-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .dashboard-actions {
   display: flex;
   gap: 1rem;
+}
+
+/* Batch Filter Dropdown Styles */
+.batch-filter-container {
+  position: relative;
+  display: inline-block;
+}
+
+.batch-filter-selected {
+  background: linear-gradient(135deg, #3674B5 0%, #578FCA 100%);
+  color: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  min-width: 150px;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(54, 116, 181, 0.2);
+}
+
+.batch-filter-selected:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(54, 116, 181, 0.3);
+}
+
+.batch-dropdown-icon {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.batch-dropdown-icon.open {
+  transform: rotate(180deg);
+}
+
+.batch-filter-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+}
+
+.batch-filter-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.batch-filter-dropdown li {
+  padding: 0.8rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.batch-filter-dropdown li:last-child {
+  border-bottom: none;
+}
+
+.batch-filter-dropdown li:hover {
+  background: #f8f9fa;
+  color: #3674B5;
+}
+
+.batch-filter-dropdown li.active {
+  background: linear-gradient(135deg, rgba(54, 116, 181, 0.1) 0%, rgba(87, 143, 202, 0.1) 100%);
+  color: #3674B5;
+  font-weight: 600;
+}
+
+.batch-loading {
+  padding: 1rem;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.batch-error {
+  padding: 1rem;
+  text-align: center;
+  color: #dc3545;
+  font-size: 0.9rem;
 }
 
 .btn-primary {
@@ -68,24 +165,24 @@
 }
 
 .btn-secondary {
-  background-color: #fff;
-  color: #3674B5;
-  border: 2px solid #3674B5;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
   padding: 0.8rem 1.5rem;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
 }
 
 .btn-secondary:hover {
-  background-color: #f0f7fb;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
 
 .charts-row {
   background-color: #fff;
-  /* padding: 1.5rem; */
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
