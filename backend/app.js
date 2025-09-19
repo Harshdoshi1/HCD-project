@@ -23,9 +23,9 @@ app.use('/api/blooms-taxonomy', bloomsTaxonomyRoutes);
 app.use('/api/subjects', subRoutes);
 app.use('/api/course-outcomes', courseOutcomeRoutes);
 app.use('/api/subject-component-cos', subjectComponentCoRoutes);
-app.use('/api', eventsRoutes);
+// app.use('/api', eventsRoutes);
 app.use('/api/events', studentEventRoutes);
-app.use('/api', eventOutcomesRoutes);
+// app.use('/api', eventOutcomesRoutes);
 app.use('/api/student-analysis', studentAnalysisRoutes);
 app.use('/api/blooms-distribution', bloomsDistributionRoutes);
 

@@ -56,7 +56,26 @@ const getAllEventnames = async (req, res) => {
     });
   }
 };
+const getAllCoCurricularEventsNames = async (req, res) => {
+  try {
+    const events = await EventMaster.findAll({
+      where: { eventType: 'co-curricular' }
+    });
 
+    res.status(200).json({
+      success: true,
+      message: 'Co-curricular events fetched successfully',
+      data: events
+    });
+  } catch (error) {
+    console.error('Error fetching co-curricular events:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching co-curricular events',
+      error: error.message
+    });
+  }
+};
 const insertFetchedStudents = async (req, res) => {
   try {
     const { eventName, participants } = req.body;
@@ -205,39 +224,41 @@ const insertFetchedStudents = async (req, res) => {
   }
 };
 
-const getAllCoCurricularEventsNames = async (req, res) => {
-  try {
-    const events = await EventMaster.findAll({
-      where: { eventType: 'co-curricular' },
-      attributes: ['eventName'] // Only select the eventName attribute
-    });
-    res.status(200).json({
-      success: true,
-      message: 'Co-curricular events fetched successfully',
-      data: events
-    });
-  } catch (error) {
-    console.error('Error fetching co-curricular events:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching co-curricular events',
-      error: error.message
-    });
-  }
-};
+
+
 const getAllExtraCurricularEventsNames = async (req, res) => {
   try {
     const events = await EventMaster.findAll({
       where: { eventType: 'extra-curricular' },
-      attributes: ['eventName'] // Only select the eventName attribute
+      attributes: ['eventId', 'eventName', 'eventCategory', 'points']
     });
+
+    if (!events || events.length === 0) {
+      console.log("No extra-curricular events found");
+      return res.status(200).json({
+        success: true,
+        message: 'No extra-curricular events found',
+        data: []
+      });
+    }
+
+    // Format the response to match what the frontend expects
+    const formattedEvents = events.map(event => ({
+      eventId: event.eventId,
+      eventName: event.eventName,
+      eventCategory: event.eventCategory,
+      points: event.points
+    }));
+
+    console.log("✅ Extra-curricular events fetched:", JSON.stringify(formattedEvents, null, 2));
+
     res.status(200).json({
       success: true,
       message: 'Extra-curricular events fetched successfully',
-      data: events
+      data: formattedEvents
     });
   } catch (error) {
-    console.error('Error fetching extra-curricular events:', error);
+    console.error('❌ Error fetching extra-curricular events:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching extra-curricular events',
@@ -436,7 +457,7 @@ const fetchEventsbyEnrollandSemester = async (req, res) => {
         });
 
         if (allPoints.length > 0) {
-          return res.status(200).json({ 
+          return res.status(200).json({
             message: `Student has activities but none in semester ${semester}`,
             hasSomeActivities: true,
             otherSemesters: [...new Set(allPoints.map(p => p.semester))]
@@ -569,9 +590,9 @@ const fetchTotalActivityPoints = async (req, res) => {
     });
 
     if (!student) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: "Student not found with this enrollment number" 
+        message: "Student not found with this enrollment number"
       });
     }
 
