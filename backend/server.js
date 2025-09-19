@@ -11,7 +11,7 @@ const subRoutes = require('./routes/sub_routes');
 // const studentCoCurricularRoutes = require('./routes/student_cocurricular_routes');
 // const studentExtracurricularRoutes = require('./routes/student_extracurricular_routes');
 const batchRoutes = require("./routes/batch_routes");
-const gettedmarksController = require("./controller/gettedmarksController");const students_points_routes = require("./routes/students_points_routes");
+const gettedmarksController = require("./controller/gettedmarksController"); const students_points_routes = require("./routes/students_points_routes");
 const semesterRoutes = require("./routes/semester_routes");
 const studentEventRoutes = require("./routes/student_event_routes");
 const facultysideRoutes = require("./routes/facultyside_router");
@@ -52,8 +52,15 @@ app.use('/api/batches', batchRoutes);
 app.use('/api/faculties', facultyRoutes);
 app.use('/api/components', componentRoutes);
 app.use('/api/students', studentRoutes);
-app.use('/api/Events', students_points_routes);
+// Using only the events endpoint with proper case
 app.use('/api/events', student_event_routes);
+
+// Add a test route to verify the server is working
+app.get('/api/test', (req, res) => {
+  res.status(200).json({ success: true, message: 'API is working!' });
+});
+// If students_points_routes is needed, mount it with a different path to avoid conflict
+// app.use('/api/students-points', students_points_routes);
 
 // app.use('/api/students/extracurricular', studentExtracurricularRoutes);
 // app.use('/api/students/cocurricular', studentCoCurricularRoutes);
@@ -105,4 +112,3 @@ syncDB().then(() => {
     console.error('Failed to start server:', error);
     process.exit(1);
 });
- 
