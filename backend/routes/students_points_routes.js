@@ -8,6 +8,6 @@ const {
 } = require('../controller/StudentEventController.js');
 
 router.post('/createEvent', createEvent);
-router.post('/uploadExcell', insertFetchedStudents)
-router.get('/getAllEventNames', getAllEventnames)
+router.post('/uploadExcell', insertFetchedStudents);
+router.get('/getAllEventNames', getAllEventnames);
 module.exports = router;

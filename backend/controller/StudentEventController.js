@@ -149,8 +149,25 @@ const insertFetchedStudents = async (req, res) => {
           continue;
         }
 
-        const currentSemester = batch.currentSemester;
-        console.log('Current semester:', currentSemester);
+        // Prefer the student's recorded current semester (field is 'currnetsemester' in Students model),
+        // then fallback to any 'currentSemester' if present, then to batch's currentSemester
+        const currentSemester = Number(student.currnetsemester) || Number(student.currentSemester) || Number(batch.currentSemester);
+        console.log('Resolved current semester (student.currnetsemester -> student.currentSemester -> batch.currentSemester):', currentSemester);
+
+        // Resolve participation type to an ID (Excel may provide a label/string)
+        let participationTypeId = null;
+        if (participationType !== undefined && participationType !== null && participationType !== '') {
+          try {
+            if (typeof participationType === 'number') {
+              participationTypeId = participationType;
+            } else {
+              const pt = await ParticipationType.findOne({ where: { types: participationType } });
+              participationTypeId = pt ? pt.id : null;
+            }
+          } catch (e) {
+            console.warn('Could not resolve participationType to ID:', participationType, e.message);
+          }
+        }
 
         let studentPoints = await StudentPoints.findOne({
           where: { enrollmentNumber, semester: currentSemester }
@@ -163,7 +180,7 @@ const insertFetchedStudents = async (req, res) => {
             eventId: eventId.toString(),
             totalCocurricular: eventType === 'co-curricular' ? points : 0,
             totalExtracurricular: eventType === 'extra-curricular' ? points : 0,
-            participationTypeId: participationType
+            participationTypeId: participationTypeId
           });
           console.log('Created new student points record');
         } else {
@@ -173,7 +190,9 @@ const insertFetchedStudents = async (req, res) => {
           }
 
           studentPoints.eventId = existingEventIds.join(',');
-          studentPoints.participationTypeId = participationType;
+          if (participationTypeId) {
+            studentPoints.participationTypeId = participationTypeId;
+          }
 
           if (eventType === 'co-curricular') {
             studentPoints.totalCocurricular += points;

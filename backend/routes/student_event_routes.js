@@ -23,6 +23,7 @@ router.post('/', createEvent);
 
 // Get all event names
 router.get('/all', getAllEventnames);
+router.post('/uploadExcell', insertFetchedStudents);
 router.get('/allCoCurricularnames', getAllCoCurricularEventsNames);
 router.get('/allExtraCurricularnames', getAllExtraCurricularEventsNames);
 router.get('/allParticipationTypes', getAllParticipationTypes);

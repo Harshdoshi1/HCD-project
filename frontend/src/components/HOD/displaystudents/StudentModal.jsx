@@ -16,6 +16,8 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
     const [parsedData, setParsedData] = useState([]);
     const [resultOpen, setResultOpen] = useState(false);
     const [uploadResult, setUploadResult] = useState({ successCount: 0, failedCount: 0, failed: [] });
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -114,28 +116,48 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
             const data = await resp.json();
             if (!resp.ok) {
                 console.error('Bulk upload failed:', data);
+                const failedArr = Array.isArray(data.failed) ? data.failed : [];
+                const failedEnrollments = (failedArr.length ? failedArr : studentsPayload)
+                    .map((f) => (typeof f === 'string' ? f : (f.enrollment || f.enrollmentNumber || f.enroll || '-')))
+                    .filter(Boolean);
                 setUploadResult({
                     successCount: 0,
-                    failedCount: data.failed?.length || studentsPayload.length,
-                    failed: data.failed || [{ enrollment: '-', reason: data.error || data.message || 'Bulk upload failed' }]
+                    failedCount: failedArr.length || studentsPayload.length,
+                    failed: failedArr.length ? failedArr : failedEnrollments.map(e => ({ enrollment: e, reason: data.error || data.message || 'Bulk upload failed' }))
                 });
+                // Show toast with all failed enrollment numbers
+                if ((failedArr.length || studentsPayload.length) > 0) {
+                    setToastMessage(`Failed enrollments: ${failedEnrollments.join(', ')}`);
+                    setShowToast(true);
+                }
                 setResultOpen(true);
                 return;
             }
             // Show summary in result modal
+            const failedList = Array.isArray(data.failed) ? data.failed : [];
             setUploadResult({
                 successCount: data.successCount ?? studentsPayload.length,
-                failedCount: data.failedCount ?? 0,
-                failed: Array.isArray(data.failed) ? data.failed : []
+                failedCount: data.failedCount ?? failedList.length,
+                failed: failedList
             });
+            // If there are failures, show them via toast
+            if ((data.failedCount ?? failedList.length) > 0) {
+                const failedEnrollments = failedList
+                    .map((f) => (typeof f === 'string' ? f : (f.enrollment || f.enrollmentNumber || f.enroll || '-')))
+                    .filter(Boolean);
+                setToastMessage(`Failed enrollments: ${failedEnrollments.join(', ')}`);
+                setShowToast(true);
+            }
             setResultOpen(true);
         } catch (e) {
             console.error('Bulk upload error:', e);
             setUploadResult({
                 successCount: 0,
                 failedCount: studentsPayload.length,
-                failed: [{ enrollment: '-', reason: 'Network/server error during upload' }]
+                failed: studentsPayload.map(s => ({ enrollment: s.enrollment, reason: 'Network/server error during upload' }))
             });
+            setToastMessage(`Failed enrollments: ${studentsPayload.map(s => s.enrollment).join(', ')}`);
+            setShowToast(true);
             setResultOpen(true);
         }
 
@@ -278,6 +300,41 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                     </div>
                 )}
             </div>
+            {showToast && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        right: '20px',
+                        bottom: '20px',
+                        backgroundColor: '#333',
+                        color: '#fff',
+                        padding: '12px 16px',
+                        borderRadius: '6px',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                        maxWidth: '420px',
+                        zIndex: 10000,
+                        display: 'flex',
+                        gap: '12px'
+                    }}
+                    role="alert"
+                    aria-live="polite"
+                >
+                    <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{toastMessage}</div>
+                    <button
+                        onClick={() => setShowToast(false)}
+                        style={{
+                            background: 'transparent',
+                            color: '#fff',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '16px'
+                        }}
+                        aria-label="Close notification"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
             {resultOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content-add-student-model">
