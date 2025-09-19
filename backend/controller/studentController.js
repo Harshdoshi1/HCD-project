@@ -55,7 +55,7 @@ const createStudent = async (req, res) => {
     }
 };
 
-// Create multiple students
+// Create multiple students with duplicate detection and detailed result
 const createStudents = async (req, res) => {
     try {
         const students = req.body.students; // Expecting an array of student objects
@@ -64,12 +64,40 @@ const createStudents = async (req, res) => {
             return res.status(400).json({ error: "Invalid or empty students array" });
         }
 
-        // Get unique batch names from input
-        const batchNames = [...new Set(students.map(s => s.batchID))];
+        // Validate input rows and collect batch names
+        const failures = [];
+        const sanitized = [];
+        const batchNames = new Set();
+        const seenEnrollments = new Set();
+
+        students.forEach((s, idx) => {
+            const { name, email, batchID, enrollment, currentSemester } = s || {};
+            if (!name || !email || !batchID || !enrollment || currentSemester === undefined) {
+                failures.push({ row: idx + 1, enrollment, reason: 'Missing required fields' });
+                return;
+            }
+            const sem = parseInt(currentSemester);
+            if (isNaN(sem)) {
+                failures.push({ row: idx + 1, enrollment, reason: 'Semester must be a number' });
+                return;
+            }
+            // Check duplicates within the file itself
+            if (seenEnrollments.has(enrollment)) {
+                failures.push({ row: idx + 1, enrollment, reason: 'Duplicate enrollment in file' });
+                return;
+            }
+            seenEnrollments.add(enrollment);
+            batchNames.add(batchID);
+            sanitized.push({ name, email, batchID, enrollment, currentSemester: sem });
+        });
+
+        if (sanitized.length === 0) {
+            return res.status(400).json({ error: 'No valid rows to process', failed: failures, successCount: 0, failedCount: failures.length });
+        }
 
         // Fetch batch IDs for provided batch names
         const batches = await Batch.findAll({
-            where: { batchName: batchNames },
+            where: { batchName: Array.from(batchNames) },
             attributes: ['id', 'batchName']
         });
 
@@ -78,25 +106,62 @@ const createStudents = async (req, res) => {
             return acc;
         }, {});
 
-        // Check if all batch names exist
-        const invalidBatches = batchNames.filter(name => !batchMap[name]);
-        if (invalidBatches.length > 0) {
-            return res.status(400).json({ error: "Invalid batch names", invalidBatches });
+        // Check invalid batch names appearing in sanitized rows
+        const invalidBatchRows = sanitized
+            .filter(s => !batchMap[s.batchID])
+            .map((s, i) => ({ row: i + 1, enrollment: s.enrollment, reason: `Invalid batch name: ${s.batchID}` }));
+        if (invalidBatchRows.length) {
+            // Remove invalid rows from sanitized
+            const invalidSet = new Set(invalidBatchRows.map(r => r.enrollment));
+            failures.push(...invalidBatchRows);
+            for (let i = sanitized.length - 1; i >= 0; i--) {
+                if (invalidSet.has(sanitized[i].enrollment)) sanitized.splice(i, 1);
+            }
         }
 
-        // Prepare student data with correct batch IDs
-        const studentData = students.map(({ name, email, batchID, enrollment, currentSemester }) => ({
-            name,
-            email,
-            batchId: batchMap[batchID], // Replace batch name with batch ID
-            enrollmentNumber: enrollment,
-            currnetsemester: currentSemester // Note: using the field name as defined in the model
-        }));
+        // Check for existing students by enrollmentNumber
+        const enrollments = sanitized.map(s => s.enrollment);
+        const existing = await Student.findAll({
+            where: { enrollmentNumber: enrollments },
+            attributes: ['enrollmentNumber']
+        });
+        const existingSet = new Set(existing.map(e => e.enrollmentNumber));
 
-        // Bulk insert students
-        const createdStudents = await Student.bulkCreate(studentData);
+        const toCreate = [];
+        sanitized.forEach((s, idx) => {
+            if (existingSet.has(s.enrollment)) {
+                failures.push({ row: idx + 1, enrollment: s.enrollment, reason: 'Enrollment already exists' });
+            } else {
+                toCreate.push({
+                    name: s.name,
+                    email: s.email,
+                    batchId: batchMap[s.batchID],
+                    enrollmentNumber: s.enrollment,
+                    currnetsemester: s.currentSemester
+                });
+            }
+        });
 
-        res.status(201).json({ message: "Students added successfully", students: createdStudents });
+        let createdStudents = [];
+        if (toCreate.length > 0) {
+            try {
+                createdStudents = await Student.bulkCreate(toCreate, { validate: true });
+            } catch (e) {
+                // If any DB level errors occur, push a generic failure for all attempted rows
+                console.error('Bulk create error:', e);
+                toCreate.forEach(tc => failures.push({ enrollment: tc.enrollmentNumber, reason: 'Database error during insert' }));
+            }
+        }
+
+        const successCount = createdStudents.length;
+        const failedCount = failures.length;
+
+        return res.status(200).json({
+            message: 'Bulk upload processed',
+            successCount,
+            failedCount,
+            failed: failures,
+        });
     } catch (error) {
         console.error("Error creating students:", error);
         res.status(500).json({
