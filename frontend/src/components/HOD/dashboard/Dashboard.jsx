@@ -15,6 +15,7 @@ import StudentTable from './StudentTable';
 import EmailNotification from './EmailNotification';
 import ReportGenerator from './ReportGenerator';
 import './Dashboard.css';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const DashboardHOD = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
@@ -71,6 +72,63 @@ const DashboardHOD = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Map between URL segment and internal activeItem
+  const sectionToItem = {
+    '': 'dashboard',
+    dashboard: 'dashboard',
+    students: 'students',
+    faculty: 'faculty',
+    batches: 'batches',
+    subjects: 'subjects',
+    events: 'events',
+    'student-analysis': 'studentAnalysis',
+    studentAnalysis: 'studentAnalysis',
+  };
+
+  const itemToPath = {
+    dashboard: '',
+    students: 'students',
+    faculty: 'faculty',
+    batches: 'batches',
+    subjects: 'subjects',
+    events: 'events',
+    studentAnalysis: 'student-analysis',
+  };
+
+  // Sync state from URL on location change (supports direct URL + reload)
+  useEffect(() => {
+    if (!location.pathname.startsWith('/admin')) return;
+    const parts = location.pathname.replace(/^\/admin\/?/, '').split('/').filter(Boolean);
+    const section = parts[0] || '';
+    const item = sectionToItem[section] || 'dashboard';
+    if (activeItem !== item) {
+      setActiveItem(item);
+    }
+
+    // Students detail route: /admin/students/:id
+    if (item === 'students' && parts[1]) {
+      setSelectedStudentId(parts[1]);
+      setShowStudentDetails(true);
+    } else if (item === 'students') {
+      setShowStudentDetails(false);
+      setSelectedStudentId(null);
+    } else {
+      // Leaving students section resets detail view
+      setShowStudentDetails(false);
+      setSelectedStudentId(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  // Wrapper to update both state and URL when switching sections (via sidebar)
+  const handleSetActiveItem = (item) => {
+    setActiveItem(item);
+    const path = itemToPath[item] ?? '';
+    navigate(path ? `/admin/${path}` : '/admin', { replace: false });
+  };
 
   useEffect(() => {
     // Set initial loading state to false since we're not pre-loading data anymore
@@ -177,12 +235,15 @@ const DashboardHOD = () => {
   const handleStudentDetailsSelect = (studentId) => {
     setSelectedStudentId(studentId);
     setShowStudentDetails(true);
+    // Reflect in URL so reload/direct link works
+    navigate(`/admin/students/${studentId}`, { replace: false });
   };
 
   // Handler to go back to students list
   const handleBackToList = () => {
     setShowStudentDetails(false);
     setSelectedStudentId(null);
+    navigate('/admin/students', { replace: false });
   };
 
   if (loading) {
@@ -193,7 +254,7 @@ const DashboardHOD = () => {
     <div className={`dashboard-wrapper ${isSidebarCollapsed ? 'collapsed' : ''}`}>
       <Sidebar
         activeItem={activeItem}
-        setActiveItem={setActiveItem}
+        setActiveItem={handleSetActiveItem}
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
       />
