@@ -1,13 +1,14 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { PulseLoader } from 'react-spinners';
 
 function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -21,14 +22,20 @@ function Login() {
         const user = JSON.parse(localStorage.getItem('user'));
 
         if (token && user) {
-            // Redirect based on role
+            // If navigated here due to ProtectedRoute, go back to intended page
+            const from = location.state && location.state.from ? location.state.from : null;
+            if (from) {
+                navigate(from, { replace: true });
+                return;
+            }
+            // Otherwise redirect based on role
             if (user.role === 'HOD') {
-                navigate('/dashboardHOD');
+                navigate('/admin');
             } else if (user.role === 'Faculty') {
                 navigate('/dashboardFaculty');
             }
         }
-    }, [navigate]);
+    }, [navigate, location.state]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -61,9 +68,16 @@ function Login() {
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('email', data.user.email);
 
-            // Redirect based on role
+            // If user came from a protected page, send them back there first
+            const from = location.state && location.state.from ? location.state.from : null;
+            if (from) {
+                navigate(from, { replace: true });
+                return;
+            }
+
+            // Otherwise redirect based on role
             if (data.user.role === 'HOD') {
-                navigate('/dashboardHOD');
+                navigate('/admin');
             } else if (data.user.role === 'Faculty') {
                 navigate('/dashboardFaculty');
             } else {
