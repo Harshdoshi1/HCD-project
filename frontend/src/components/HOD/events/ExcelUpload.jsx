@@ -1,12 +1,12 @@
-import './ExcelUpload.css';
-import { useState, useEffect } from 'react';
-import { FileXls, Upload } from 'phosphor-react';
-import * as XLSX from 'xlsx';
+import "./ExcelUpload.css";
+import { useState, useEffect } from "react";
+import { FileXls, Upload } from "phosphor-react";
+import * as XLSX from "xlsx";
 
 const ExcelUpload = ({ onClose, onSuccess }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [eventName, setEventName] = useState('');
+  const [eventName, setEventName] = useState("");
   // const [eventDate, setEventDate] = useState('');
   const [allEventNames, setAllEventNames] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
@@ -16,29 +16,29 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
   useEffect(() => {
     const fetchEventNames = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/Events/getAllEventNames', {
-          method: 'GET',
+        const response = await fetch("http://localhost:5001/api/events/all", {
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch event names');
+          throw new Error("Failed to fetch event names");
         }
 
         const result = await response.json();
-        console.log('Fetched event names:', result);
+        console.log("Fetched event names:", result);
 
         if (result.success && Array.isArray(result.data)) {
           // Extract event names from the event objects
-          const eventNames = result.data.map(event => event.eventName);
+          const eventNames = result.data.map((event) => event.eventName);
           setAllEventNames(eventNames);
           // Initialize filtered events with all event names
           setFilteredEvents(eventNames);
         }
       } catch (error) {
-        console.error('Error fetching event names:', error);
+        console.error("Error fetching event names:", error);
       }
     };
 
@@ -50,12 +50,12 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
     setEventName(value);
 
     if (value.trim() && Array.isArray(allEventNames)) {
-      const filtered = allEventNames.filter(name =>
+      const filtered = allEventNames.filter((name) =>
         name.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredEvents(filtered);
       setShowSuggestions(true);
-    } else if (value.trim() === '') {
+    } else if (value.trim() === "") {
       // If input is empty, show all event names
       setFilteredEvents(allEventNames);
       setShowSuggestions(true);
@@ -65,9 +65,9 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
     }
 
     // For debugging
-    console.log('Current input:', value);
-    console.log('Filtered events:', filtered);
-    console.log('Show suggestions:', showSuggestions);
+    console.log("Current input:", value);
+    console.log("Filtered events:", filtered);
+    console.log("Show suggestions:", showSuggestions);
   };
 
   const handleSuggestionClick = (name) => {
@@ -77,17 +77,17 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile && selectedFile.name.endsWith('.xlsx')) {
+    if (selectedFile && selectedFile.name.endsWith(".xlsx")) {
       setFile(selectedFile);
     } else {
-      alert('Please select a valid Excel (.xlsx) file');
+      alert("Please select a valid Excel (.xlsx) file");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) {
-      alert('Please select an Excel file');
+      alert("Please select an Excel file");
       return;
     }
 
@@ -95,88 +95,105 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const workbook = XLSX.read(data, { type: "array" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
         // Log the entire Excel file data
-        console.log('Excel File Data:', jsonData);
+        console.log("Excel File Data:", jsonData);
 
         // Check if the file has any data
         if (!jsonData.length) {
-          alert('Excel file is empty');
+          alert("Excel file is empty");
           return;
         }
 
         // Get the column headers from the first row
         const headers = Object.keys(jsonData[0]);
-        console.log('Excel headers:', headers);
+        console.log("Excel headers:", headers);
 
         // Find enrollment and type columns (case-insensitive)
-        const enrollmentColumn = headers.find(h => 
-          h.toLowerCase().includes('enrol') || h.toLowerCase() === 'enrollment number' || h.toLowerCase() === 'enrollmentnumber'
+        const enrollmentColumn = headers.find(
+          (h) =>
+            h.toLowerCase().includes("enrol") ||
+            h.toLowerCase() === "enrollment number" ||
+            h.toLowerCase() === "enrollmentnumber"
         );
-        const typeColumn = headers.find(h => 
-          h.toLowerCase().includes('type') || h.toLowerCase() === 'participation type' || h.toLowerCase() === 'participationtype'
+        const typeColumn = headers.find(
+          (h) =>
+            h.toLowerCase().includes("type") ||
+            h.toLowerCase() === "participation type" ||
+            h.toLowerCase() === "participationtype"
         );
 
         if (!enrollmentColumn || !typeColumn) {
-          alert('Excel file must contain columns for Enrollment Number and Participation Type. Please check your column headers.');
+          alert(
+            "Excel file must contain columns for Enrollment Number and Participation Type. Please check your column headers."
+          );
           return;
         }
 
         // Format data for API
-        const participants = jsonData.map(row => ({
+        const participants = jsonData.map((row) => ({
           enrollmentNumber: row[enrollmentColumn].toString(),
-          participationType: row[typeColumn]
+          participationType: row[typeColumn],
         }));
 
         // Validate data
-        const invalidRows = participants.filter(p => 
-          !p.enrollmentNumber || !p.participationType || 
-          p.enrollmentNumber.trim() === '' || 
-          p.participationType.trim() === ''
+        const invalidRows = participants.filter(
+          (p) =>
+            !p.enrollmentNumber ||
+            !p.participationType ||
+            p.enrollmentNumber.trim() === "" ||
+            p.participationType.trim() === ""
         );
 
         if (invalidRows.length > 0) {
-          alert(`Found ${invalidRows.length} invalid rows. Please ensure all cells have valid data.`);
-          console.log('Invalid rows:', invalidRows);
+          alert(
+            `Found ${invalidRows.length} invalid rows. Please ensure all cells have valid data.`
+          );
+          console.log("Invalid rows:", invalidRows);
           return;
         }
 
         try {
           setUploading(true);
-          const response = await fetch('http://localhost:5001/api/Events/uploadExcell', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              eventName,
-              participants
-            })
-          });
+          const response = await fetch(
+            "http://localhost:5001/api/events/uploadExcell",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                eventName,
+                participants,
+              }),
+            }
+          );
 
           if (!response.ok) {
-            throw new Error('Failed to upload data');
+            throw new Error("Failed to upload data");
           }
 
           const result = await response.json();
-          console.log('Upload result:', result);
+          console.log("Upload result:", result);
 
           if (result.success) {
             // Show detailed success message
             const summary = result.data.summary;
-            alert(`Excel upload successful!\n\nTotal students: ${summary.total}\nSuccessfully processed: ${summary.successful}\nErrors: ${summary.failed}`);
+            alert(
+              `Excel upload successful!\n\nTotal students: ${summary.total}\nSuccessfully processed: ${summary.successful}\nErrors: ${summary.failed}`
+            );
             onSuccess && onSuccess();
             onClose && onClose();
           } else {
-            alert('Error uploading data: ' + result.message);
+            alert("Error uploading data: " + result.message);
           }
         } catch (error) {
-          console.error('Error uploading data:', error);
-          alert('Error uploading data: ' + error.message);
+          console.error("Error uploading data:", error);
+          alert("Error uploading data: " + error.message);
         } finally {
           setUploading(false);
         }
@@ -189,12 +206,12 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
 
     setUploading(true);
     try {
-      console.log('File selected:', file);
-      console.log('Event Details:', { eventName });
+      console.log("File selected:", file);
+      console.log("Event Details:", { eventName });
       onSuccess();
     } catch (error) {
-      console.error('Error uploading file:', error);
-      alert('Error uploading file: ' + error.message);
+      console.error("Error uploading file:", error);
+      alert("Error uploading file: " + error.message);
     } finally {
       setUploading(false);
     }
@@ -222,20 +239,25 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
                   onFocus={() => {
                     // On focus, show all events if input is empty, or filtered events if there's text
                     if (eventName.trim()) {
-                      setFilteredEvents(allEventNames.filter(name =>
-                        name.toLowerCase().includes(eventName.toLowerCase())
-                      ));
+                      setFilteredEvents(
+                        allEventNames.filter((name) =>
+                          name.toLowerCase().includes(eventName.toLowerCase())
+                        )
+                      );
                     } else {
                       setFilteredEvents(allEventNames);
                     }
                     setShowSuggestions(true);
-                    console.log('Focus: showing suggestions', allEventNames.length);
+                    console.log(
+                      "Focus: showing suggestions",
+                      allEventNames.length
+                    );
                   }}
                   onBlur={() => {
                     // Delay hiding suggestions to allow for clicks
                     setTimeout(() => {
                       setShowSuggestions(false);
-                      console.log('Blur: hiding suggestions');
+                      console.log("Blur: hiding suggestions");
                     }, 200);
                   }}
                   placeholder="Search event name..."
@@ -243,7 +265,10 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
                   autoComplete="off" // Prevent browser's default autocomplete
                 />
                 {showSuggestions && filteredEvents.length > 0 && (
-                  <div className="suggestions-dropdown" style={{ display: 'block' }}>
+                  <div
+                    className="suggestions-dropdown"
+                    style={{ display: "block" }}
+                  >
                     {filteredEvents.map((name, index) => (
                       <div
                         key={index}
@@ -261,7 +286,6 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
                 )}
               </div>
             </div>
-
           </div>
 
           <div className="upload-container">
@@ -278,7 +302,7 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
                   id="excelFile"
                   accept=".xlsx"
                   onChange={handleFileChange}
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                 />
               </label>
             </div>
@@ -291,14 +315,21 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
           )}
 
           <p className="note">
-            * Please ensure the Excel file contains the enrollment numbers of all participants.
+            * Please ensure the Excel file contains the enrollment numbers of
+            all participants.
           </p>
 
           <div className="form-buttons">
-            <button type="submit" className="upload-button" disabled={uploading || !file}>
-              {uploading ? 'Uploading...' : 'Upload File'}
+            <button
+              type="submit"
+              className="upload-button"
+              disabled={uploading || !file}
+            >
+              {uploading ? "Uploading..." : "Upload File"}
             </button>
-            <button type="button" onClick={onClose} className="cancel-button">Cancel</button>
+            <button type="button" onClick={onClose} className="cancel-button">
+              Cancel
+            </button>
           </div>
         </form>
       </div>
