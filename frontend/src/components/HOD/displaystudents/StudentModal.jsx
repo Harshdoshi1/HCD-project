@@ -14,6 +14,8 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [isManualEntry, setIsManualEntry] = useState(true);
     const [parsedData, setParsedData] = useState([]);
+    const [resultOpen, setResultOpen] = useState(false);
+    const [uploadResult, setUploadResult] = useState({ successCount: 0, failedCount: 0, failed: [] });
 
     useEffect(() => {
         if (isOpen) {
@@ -60,7 +62,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
             const workbook = XLSX.read(binaryString, { type: 'binary' });
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
-            const data = XLSX.utils.sheet_to_json(sheet);
+            const data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
             setParsedData(data);
         };
         reader.onerror = (error) => console.error("Error reading file:", error);
@@ -72,61 +74,69 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
             return;
         }
 
-        let successCount = 0;
-        let errorCount = 0;
-
-        for (const row of parsedData) {
-            try {
-                // Log the data being sent for debugging
-                console.log('Uploading student data:', {
-                    name: row.NAME,
-                    email: row.EMAIL,
-                    enrollment: row.ROLLNO,
-                    batchID: row.BATCH,
-                    currentSemester: row.CURRENTSEM
-                });
-
-                // Validate current semester is a number
-                const currentSem = parseInt(row.CURRENTSEM);
-                if (isNaN(currentSem)) {
-                    console.error('Invalid current semester value:', row.CURRENTSEM);
-                    errorCount++;
-                    continue;
-                }
-
-                const response = await fetch('http://localhost:5001/api/students/createStudent', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        name: row.NAME,
-                        email: row.EMAIL,
-                        enrollment: row.ROLLNO,
-                        batchID: row.BATCH,
-                        currentSemester: currentSem
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    console.error('Failed to upload row:', data);
-                    errorCount++;
-                } else {
-                    successCount++;
-                }
-            } catch (error) {
-                console.error('Error uploading student:', error);
-                errorCount++;
-            }
+        // Validate required headers and build payload using desired column names
+        const REQUIRED_HEADERS = ['Enrollment Number', 'Name', 'Email', 'Batch Name', 'Semester'];
+        const firstRow = parsedData[0] || {};
+        const presentHeaders = Object.keys(firstRow);
+        const missing = REQUIRED_HEADERS.filter(h => !presentHeaders.includes(h));
+        if (missing.length) {
+            alert(`Invalid file format. Missing columns: ${missing.join(', ')}\nExpected columns (in order): ${REQUIRED_HEADERS.join(' | ')}`);
+            return;
         }
 
-        // Provide detailed feedback
-        if (errorCount > 0) {
-            alert(`Upload completed with issues:\n${successCount} students added successfully\n${errorCount} students failed to upload\n\nCheck console for details.`);
-        } else {
-            alert(`All ${successCount} students uploaded successfully!`);
+        const studentsPayload = [];
+        for (const row of parsedData) {
+            const enrollment = row['Enrollment Number']?.toString().trim();
+            const name = row['Name']?.toString().trim();
+            const email = row['Email']?.toString().trim();
+            const batchID = row['Batch Name']?.toString().trim();
+            const currentSemester = parseInt(row['Semester']);
+
+            if (!enrollment || !name || !email || !batchID || isNaN(currentSemester)) {
+                console.warn('Skipping invalid row:', row);
+                continue;
+            }
+
+            studentsPayload.push({ enrollment, name, email, batchID, currentSemester });
+        }
+
+        if (studentsPayload.length === 0) {
+            alert('No valid rows found to upload. Please check your file content.');
+            return;
+        }
+
+        try {
+            const resp = await fetch('http://localhost:5001/api/students/bulkUpload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ students: studentsPayload })
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+                console.error('Bulk upload failed:', data);
+                setUploadResult({
+                    successCount: 0,
+                    failedCount: data.failed?.length || studentsPayload.length,
+                    failed: data.failed || [{ enrollment: '-', reason: data.error || data.message || 'Bulk upload failed' }]
+                });
+                setResultOpen(true);
+                return;
+            }
+            // Show summary in result modal
+            setUploadResult({
+                successCount: data.successCount ?? studentsPayload.length,
+                failedCount: data.failedCount ?? 0,
+                failed: Array.isArray(data.failed) ? data.failed : []
+            });
+            setResultOpen(true);
+        } catch (e) {
+            console.error('Bulk upload error:', e);
+            setUploadResult({
+                successCount: 0,
+                failedCount: studentsPayload.length,
+                failed: [{ enrollment: '-', reason: 'Network/server error during upload' }]
+            });
+            setResultOpen(true);
         }
 
         setSelectedFile(null);
@@ -224,7 +234,41 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                         </div>
                     </form>
                 ) : (
-                    <div >
+                    <div>
+                        <div style={{ marginBottom: '10px' }}>
+                            <strong>Accepted file format:</strong> Excel (.xlsx, .xls)
+                            <br />
+                            <strong>Example :</strong>
+                            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                                <thead>
+                                    <tr>
+                                        <th style={{ border: '1px solid #ddd', padding: '6px' }}>Enrollment Number</th>
+                                        <th style={{ border: '1px solid #ddd', padding: '6px' }}>Name</th>
+                                        <th style={{ border: '1px solid #ddd', padding: '6px' }}>Email</th>
+                                        <th style={{ border: '1px solid #ddd', padding: '6px' }}>Batch Name</th>
+                                        <th style={{ border: '1px solid #ddd', padding: '6px' }}>Semester</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>92200133001</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>Ritesh sanchala</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>ritesh@ggmail.com</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>Gegree 22-26</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>3</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>92200133002</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>Harsh Doshi</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>harsh@gmail.com</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>Degree 22-26</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>3</td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+
                         <input type="file" accept=".xls,.xlsx" onChange={handleFile} />
                         {selectedFile && <p>Selected file: {selectedFile.name}</p>}
                         <div className='file-upload-add-student'>
@@ -234,6 +278,51 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                     </div>
                 )}
             </div>
+            {resultOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content-add-student-model">
+                        <h3>Bulk Upload Summary</h3>
+                        <div style={{ marginBottom: '10px' }}>
+                            <strong>Successful entries:</strong> {uploadResult.successCount}
+                            <br />
+                            <strong>Failed entries:</strong> {uploadResult.failedCount}
+                        </div>
+                        {uploadResult.failedCount > 0 && (
+                            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                                    <thead>
+                                        <tr>
+                                            <th style={{ border: '1px solid #ddd', padding: '6px' }}>Enrollment</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '6px' }}>Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {uploadResult.failed.map((f, idx) => (
+                                            <tr key={idx}>
+                                                <td style={{ border: '1px solid #ddd', padding: '6px' }}>{f.enrollment || '-'}</td>
+                                                <td style={{ border: '1px solid #ddd', padding: '6px' }}>{f.reason || 'Failed'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                        <div className='file-upload-add-student' style={{ marginTop: '12px' }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setResultOpen(false);
+                                    // Refresh parent list upon close
+                                    onSuccess();
+                                    onClose();
+                                }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
