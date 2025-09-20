@@ -158,11 +158,11 @@
 }
 
 .student-basic-info-sgp {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 15px;
+    /* Three-column adaptive grid: Left (student), Middle (grades), Right (actions) */
+    display: grid;
+    grid-template-columns: minmax(220px, 280px) 1fr minmax(150px, 190px);
+    align-items: start;
+    gap: 16px;
 }
 
 .student-left-section {
@@ -216,11 +216,10 @@
 
 .student-actions-sgp {
     display: flex;
+    flex-direction: column;
     gap: 10px;
-    align-items: center;
-    justify-content: flex-end;
-    flex: 1;
-    min-width: 200px;
+    align-items: stretch;
+    justify-content: flex-start;
 }
 
 .grade-button,
@@ -357,23 +356,27 @@
 }
 
 .faculty-response {
-    margin-bottom: 20px;
-    padding: 15px;
+    margin-bottom: 16px;
+    padding: 12px;
     background-color: #f9fafb;
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    grid-column: 1 / -1; /* span full width of the details grid */
 }
 
 .faculty-response textarea {
-    width: 95%;
-    height: 150px;
+    width: 100%;
+    height: 80px;
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
-    margin-bottom: 15px;
     font-family: inherit;
     resize: vertical;
     font-size: 14px;
-    margin-right: 10px;
+    margin: 0;
 }
 
 .faculty-response textarea:focus {
@@ -412,6 +415,7 @@
     color: #f59e0b;
 }
 
+.submit-button,
 .submit-response-button {
     padding: 10px 15px;
     border-radius: 8px;
@@ -422,10 +426,10 @@
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: block;
-    width: 100%;
+    align-self: flex-end;
 }
 
+.submit-button:hover,
 .submit-response-button:hover {
     background-color: #0369a1;
 }
@@ -670,11 +674,11 @@
 }
 
 .grade-components-mini {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
+    /* Robust grid that adapts to any number of components */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    align-items: stretch;
 }
 
 .grade-input-mini {
@@ -702,20 +706,13 @@
 /* Responsive design for smaller screens */
 @media (max-width: 992px) {
     .student-basic-info-sgp {
-        flex-direction: column;
-        align-items: flex-start;
+        grid-template-columns: 1fr;
     }
-    
     .student-left-section,
     .student-grade-components,
     .student-actions-sgp {
         width: 100%;
-        justify-content: flex-start;
         margin-bottom: 10px;
-    }
-    
-    .student-actions-sgp {
-        justify-content: flex-start;
     }
 }
 
@@ -805,115 +802,129 @@
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .grade-input-mini {
         width: 100%;
     }
 }
 
 .component-section {
-  margin-bottom: 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 10px;
-  background-color: #f9f9f9;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    background-color: #ffffff;
 }
 
 .component-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-weight: bold;
-  color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #1f2937;
 }
 
 .total-marks {
-  font-size: 0.9em;
-  color: #666;
+    font-size: 0.9em;
+    color: #64748b;
 }
 
 .sub-components {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    /* Stack neatly; can be switched to 2-column grid if desired */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+@media (min-width: 1200px) {
+    .sub-components {
+        grid-template-columns: 1fr 1fr; /* two columns on wide screens */
+    }
 }
 
 .sub-component-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px;
-  background-color: white;
-  border-radius: 4px;
-  border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    background-color: #fafafa;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
 }
 
 .sub-component-input label {
-  min-width: 120px;
-  font-size: 0.9em;
-  color: #555;
+    min-width: 120px;
+    font-size: 0.9em;
+    color: #374151;
 }
 
-.sub-input, .main-input {
-  width: 60px;
-  padding: 4px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 0.9em;
+.sub-input,
+.main-input {
+    width: 60px;
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.9em;
 }
 
-.sub-input:focus, .main-input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+.sub-input:focus,
+.main-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-.sub-input:disabled, .main-input:disabled {
-  background-color: #f8f9fa;
-  color: #6c757d;
+.sub-input:disabled,
+.main-input:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
 }
 
-.sub-input.graded, .main-input.graded {
-  background-color: #d4edda;
-  border-color: #c3e6cb;
+.sub-input.graded,
+.main-input.graded {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
 }
 
 .sub-max {
-  font-size: 0.8em;
-  color: #666;
-  min-width: 30px;
+    font-size: 0.8em;
+    color: #666;
+    min-width: 30px;
 }
 
 .main-component-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px;
-  background-color: white;
-  border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background-color: #fafafa;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .component-section {
-    padding: 8px;
-  }
-  
-  .sub-component-input {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-  
-  .sub-component-input label {
-    min-width: auto;
-  }
-  
-  .sub-input, .main-input {
-    width: 80px;
-  }
+    .component-section {
+        padding: 8px;
+    }
+
+    .sub-component-input {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .sub-component-input label {
+        min-width: auto;
+    }
+
+    .sub-input,
+    .main-input {
+        width: 80px;
+    }
 }
 
 /* Graded badge and related styles */
