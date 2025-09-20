@@ -38,7 +38,7 @@
 
 .faculty-actions {
   display: flex;
-  gap: 1rem; /* spacing between buttons/items */
+  gap: 1rem;
 }
 
 .search-wrapper {

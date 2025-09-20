@@ -59,12 +59,12 @@ const StudentGrades = () => {
       prevData.map((student) =>
         student.id === studentId
           ? {
-              ...student,
-              grades: {
-                ...student.grades,
-                [component.toLowerCase()]: validatedValue,
-              },
-            }
+            ...student,
+            grades: {
+              ...student.grades,
+              [component.toLowerCase()]: validatedValue,
+            },
+          }
           : student
       )
     );
@@ -111,35 +111,35 @@ const StudentGrades = () => {
 
       // Build component structure with sub-components based on weightage (not marks)
       const structure = {
-        CA: { 
-          enabled: (componentWeightageData.ca || componentWeightageData.cse || 0) > 0, 
-          totalMarks: componentMarksData.cse || 100, 
+        CA: {
+          enabled: (componentWeightageData.ca || componentWeightageData.cse || 0) > 0,
+          totalMarks: componentMarksData.cse || 100,
           weightage: componentWeightageData.ca || componentWeightageData.cse || 0,
-          subComponents: [] 
+          subComponents: []
         },
-        ESE: { 
-          enabled: (componentWeightageData.ese || 0) > 0, 
-          totalMarks: componentMarksData.ese || 100, 
+        ESE: {
+          enabled: (componentWeightageData.ese || 0) > 0,
+          totalMarks: componentMarksData.ese || 100,
           weightage: componentWeightageData.ese || 0,
-          subComponents: [] 
+          subComponents: []
         },
-        IA: { 
-          enabled: (componentWeightageData.ia || 0) > 0, 
-          totalMarks: componentMarksData.ia || 100, 
+        IA: {
+          enabled: (componentWeightageData.ia || 0) > 0,
+          totalMarks: componentMarksData.ia || 100,
           weightage: componentWeightageData.ia || 0,
-          subComponents: [] 
+          subComponents: []
         },
-        TW: { 
-          enabled: (componentWeightageData.tw || 0) > 0, 
-          totalMarks: componentMarksData.tw || 100, 
+        TW: {
+          enabled: (componentWeightageData.tw || 0) > 0,
+          totalMarks: componentMarksData.tw || 100,
           weightage: componentWeightageData.tw || 0,
-          subComponents: [] 
+          subComponents: []
         },
-        VIVA: { 
-          enabled: (componentWeightageData.viva || 0) > 0, 
-          totalMarks: componentMarksData.viva || 100, 
+        VIVA: {
+          enabled: (componentWeightageData.viva || 0) > 0,
+          totalMarks: componentMarksData.viva || 100,
           weightage: componentWeightageData.viva || 0,
-          subComponents: [] 
+          subComponents: []
         }
       };
 
@@ -149,13 +149,13 @@ const StudentGrades = () => {
       subComponentsData.forEach(subComp => {
         console.log("Processing sub-component:", subComp);
         const componentType = subComp.componentType?.toUpperCase();
-        
+
         // Map component types correctly
         let mappedType = componentType;
         if (componentType === 'CSE' || componentType === 'CA') {
           mappedType = 'CA';
         }
-        
+
         if (structure[mappedType]) {
           structure[mappedType].subComponents.push({
             id: subComp.id,
@@ -239,7 +239,7 @@ const StudentGrades = () => {
 
       // Prepare marks data with sub-components
       const marksData = {};
-      
+
       // Process each component type
       Object.keys(componentStructure).forEach(componentType => {
         const component = componentStructure[componentType];
@@ -459,7 +459,7 @@ const StudentGrades = () => {
           const errorData = await response.json();
           throw new Error(
             errorData.error ||
-              `Error: ${response.status} ${response.statusText}`
+            `Error: ${response.status} ${response.statusText}`
           );
         }
         const data = await response.json();
@@ -495,7 +495,7 @@ const StudentGrades = () => {
           const errorData = await response.json();
           throw new Error(
             errorData.error ||
-              `Error: ${response.status} ${response.statusText}`
+            `Error: ${response.status} ${response.statusText}`
           );
         }
         const data = await response.json();
@@ -623,18 +623,18 @@ const StudentGrades = () => {
       const response = await fetch(
         `http://localhost:5001/api/student-marks/grading/${batchId}/${selectedSemester.semesterNumber}/${subjectCode}`
       );
-      
+
       if (response.ok) {
         const marksData = await response.json();
         console.log("Existing marks data:", marksData);
-        
+
         // Update students data with existing marks
-        setStudentsData(prevStudents => 
+        setStudentsData(prevStudents =>
           prevStudents.map(student => {
             const existingMarks = marksData.students?.find(s => s.id === student.id);
             if (existingMarks && existingMarks.studentMarks) {
               const grades = { subComponents: {} };
-              
+
               existingMarks.studentMarks.forEach(mark => {
                 if (mark.isSubComponent && mark.subComponentId) {
                   if (!grades.subComponents[mark.componentType]) {
@@ -645,7 +645,7 @@ const StudentGrades = () => {
                   grades[mark.componentType.toLowerCase()] = mark.marksObtained;
                 }
               });
-              
+
               return {
                 ...student,
                 grades,
@@ -1056,14 +1056,29 @@ const StudentGrades = () => {
                       <div className="grade-components-mini">
                         {Object.entries(componentStructure).map(([componentType, component]) => {
                           if (!component.enabled) return null;
-                          
+
+                          // Compute obtained marks for header display
+                          let obtained = 0;
+                          if (component.subComponents && component.subComponents.length > 0) {
+                            const subMarks = student.grades?.subComponents?.[componentType] || {};
+                            obtained = component.subComponents.reduce((sum, sub) => {
+                              const v = parseFloat(subMarks[sub.id] ?? 0);
+                              return sum + (isNaN(v) ? 0 : v);
+                            }, 0);
+                          } else {
+                            const key = componentType === 'CA' ? 'cse' : componentType.toLowerCase();
+                            const v = parseFloat(student.grades?.[key] ?? 0);
+                            obtained = isNaN(v) ? 0 : v;
+                          }
+                          const total = component.totalMarks || 0;
+
                           return (
                             <div key={componentType} className="component-section">
                               <div className="component-header">
                                 <strong>{componentType === 'CA' ? 'CSE' : componentType}</strong>
-                                <span className="total-marks">/{component.totalMarks}</span>
+                                <span className="total-marks">{obtained}/{total}</span>
                               </div>
-                              
+
                               {component.subComponents && component.subComponents.length > 0 ? (
                                 <div className="sub-components">
                                   {component.subComponents.map((subComp) => (
@@ -1086,11 +1101,11 @@ const StudentGrades = () => {
                                           )
                                         }
                                         disabled={editingGrades !== student.id}
-                                        className={`sub-input ${
-                                          student.isGraded ? "graded" : ""
-                                        }`}
+                                        className={`sub-input ${student.isGraded ? "graded" : ""}`}
                                       />
-                                      <span className="sub-max">/{subComp.totalMarks}</span>
+                                      <span className="sub-max">{parseFloat(
+                                        student.grades?.subComponents?.[componentType]?.[subComp.id] ?? 0
+                                      ) || 0}/{subComp.totalMarks}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -1112,10 +1127,9 @@ const StudentGrades = () => {
                                       )
                                     }
                                     disabled={editingGrades !== student.id}
-                                    className={`main-input ${
-                                      student.isGraded ? "graded" : ""
-                                    }`}
+                                    className={`main-input ${student.isGraded ? "graded" : ""}`}
                                   />
+                                  {/* For single components, header already shows obtained/total */}
                                 </div>
                               )}
                             </div>
@@ -1131,9 +1145,8 @@ const StudentGrades = () => {
 
                   <div className="student-actions-sgp">
                     <button
-                      className={`edit-grades-button ${
-                        editingGrades === student.id ? "active" : ""
-                      }`}
+                      className={`edit-grades-button ${editingGrades === student.id ? "active" : ""
+                        }`}
                       onClick={() =>
                         editingGrades === student.id
                           ? setEditingGrades(null)
@@ -1146,9 +1159,8 @@ const StudentGrades = () => {
                         : "Edit Marks"}
                     </button>
                     <button
-                      className={`response-button ${
-                        expandedStudent === student.id ? "active" : ""
-                      }`}
+                      className={`response-button ${expandedStudent === student.id ? "active" : ""
+                        }`}
                       onClick={() =>
                         setExpandedStudent(
                           expandedStudent === student.id ? null : student.id
