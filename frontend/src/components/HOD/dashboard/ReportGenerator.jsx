@@ -1,28 +1,53 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import { FileText, ChartBar, ChartPie, ChartLine, Download } from 'lucide-react';
-import { BarChart, Bar, PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import './ReportGenerator.css';
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import {
+  FileText,
+  ChartBar,
+  ChartPie,
+  ChartLine,
+  Download,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import "./ReportGenerator.css";
 
-const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatch, selectedSemester, onClose }) => {
-  const [reportType, setReportType] = useState('performance');
+const ReportGenerator = ({
+  students: initialStudents,
+  selectedBatch: initialBatch,
+  selectedSemester,
+  onClose,
+}) => {
+  const [reportType, setReportType] = useState("performance");
   const [selectedCharts, setSelectedCharts] = useState({
     distribution: true,
     trends: true,
     comparison: true,
     categorical: true,
-    progress: true
+    progress: true,
   });
-  const [format, setFormat] = useState('pdf');
+  const [format, setFormat] = useState("pdf");
   const [includeRecommendations, setIncludeRecommendations] = useState(true);
   const [includeTrends, setIncludeTrends] = useState(true);
-  const [batches, setBatches] = useState(['all']);
+  const [batches, setBatches] = useState(["all"]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [students, setStudents] = useState(initialStudents || []);
-  const [selectedBatch, setSelectedBatch] = useState(initialBatch || 'all');
+  const [selectedBatch, setSelectedBatch] = useState(initialBatch || "all");
   const [fetchingStudents, setFetchingStudents] = useState(false);
   const [studentError, setStudentError] = useState(null);
   const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -49,18 +74,20 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+      const response = await axios.get(
+        "http://localhost:5001/api/batches/getAllBatches"
+      );
       if (response.data && Array.isArray(response.data)) {
-        const batchNames = response.data.map(batch => batch.batchName);
-        const allBatches = ['all', ...batchNames];
+        const batchNames = response.data.map((batch) => batch.batchName);
+        const allBatches = ["all", ...batchNames];
         setBatches(allBatches);
       } else {
-        setError('Invalid batch data format');
-        setBatches(['all']);
+        setError("Invalid batch data format");
+        setBatches(["all"]);
       }
     } catch (err) {
-      setError('Failed to load batches');
-      setBatches(['all']);
+      setError("Failed to load batches");
+      setBatches(["all"]);
     } finally {
       setLoading(false);
     }
@@ -70,17 +97,21 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
     setFetchingStudents(true);
     setStudentError(null);
     try {
-      let url = '';
+      let url = "";
       let response;
 
-      if (batch === 'all') {
+      if (batch === "all") {
         // Fetch all students
-        url = 'http://localhost:5001/api/students/getAllStudents';
+        url = "http://localhost:5001/api/students/getAllStudents";
         response = await axios.get(url);
       } else {
         // First get the batch ID from the batch name
-        const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
-        const selectedBatchObj = batchesResponse.data.find(b => b.batchName === batch);
+        const batchesResponse = await axios.get(
+          "http://localhost:5001/api/batches/getAllBatches"
+        );
+        const selectedBatchObj = batchesResponse.data.find(
+          (b) => b.batchName === batch
+        );
 
         if (selectedBatchObj && selectedBatchObj.id) {
           // Fetch students by batch ID
@@ -92,61 +123,93 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
       }
 
       if (response && response.data) {
-        const formattedStudents = await Promise.all(Array.isArray(response.data) ? response.data.map(async student => {
-          // Initialize points object
-          let points = {
-            curricular: 0,
-            coCurricular: 0,
-            extraCurricular: 0
-          };
+        const formattedStudents = await Promise.all(
+          Array.isArray(response.data)
+            ? response.data.map(async (student) => {
+              // Initialize points object
+              let points = {
+                curricular: 0,
+                coCurricular: 0,
+                extraCurricular: 0,
+              };
 
-          // Fetch co-curricular and extra-curricular points
-          try {
-            const enrollmentNumber = student.enrollmentNumber || student.rollNo;
-            const semester = student.currnetsemester || selectedSemester || 'all';
+              // Fetch co-curricular and extra-curricular points
+              try {
+                const enrollmentNumber =
+                  student.enrollmentNumber || student.rollNo;
+                const semester =
+                  student.currnetsemester || selectedSemester || "all";
 
-            if (enrollmentNumber && semester) {
-              const pointsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
-                enrollmentNumber,
-                semester
-              });
+                if (enrollmentNumber && semester) {
+                  const pointsResponse = await axios.post(
+                    "http://localhost:5001/api/events/fetchEventsbyEnrollandSemester",
+                    {
+                      enrollmentNumber,
+                      semester,
+                    }
+                  );
 
-              if (pointsResponse.data && Array.isArray(pointsResponse.data)) {
-                // Sum up all co-curricular and extra-curricular points
-                pointsResponse.data.forEach(activity => {
-                  points.coCurricular += parseInt(activity.totalCocurricular || 0);
-                  points.extraCurricular += parseInt(activity.totalExtracurricular || 0);
-                });
-              } else if (pointsResponse.data && pointsResponse.data.totalCocurricular) {
-                // If it's a single object with the totals
-                points.coCurricular = parseInt(pointsResponse.data.totalCocurricular || 0);
-                points.extraCurricular = parseInt(pointsResponse.data.totalExtracurricular || 0);
+                  if (
+                    pointsResponse.data &&
+                    Array.isArray(pointsResponse.data)
+                  ) {
+                    // Sum up all co-curricular and extra-curricular points
+                    pointsResponse.data.forEach((activity) => {
+                      points.coCurricular += parseInt(
+                        activity.totalCocurricular || 0
+                      );
+                      points.extraCurricular += parseInt(
+                        activity.totalExtracurricular || 0
+                      );
+                    });
+                  } else if (
+                    pointsResponse.data &&
+                    pointsResponse.data.totalCocurricular
+                  ) {
+                    // If it's a single object with the totals
+                    points.coCurricular = parseInt(
+                      pointsResponse.data.totalCocurricular || 0
+                    );
+                    points.extraCurricular = parseInt(
+                      pointsResponse.data.totalExtracurricular || 0
+                    );
+                  }
+                }
+              } catch (error) {
+                console.error("Error fetching student points:", error);
+                // Keep the default values if there's an error
               }
-            }
-          } catch (error) {
-            console.error('Error fetching student points:', error);
-            // Keep the default values if there's an error
-          }
 
-          return {
-            id: student.id || Math.random().toString(36).substr(2, 9),
-            name: student.name || student.studentName || 'Unknown',
-            rollNo: student.enrollmentNumber || student.rollNo || 'N/A',
-            batch: student.batchName || (student.Batch ? student.Batch.batchName : batch),
-            semester: student.semesterNumber || student.currnetsemester || selectedSemester || 'N/A',
-            email: student.email || 'N/A',
-            parentEmail: student.parentEmail || 'N/A',
-            points: points
-          };
-        }) : []);
+              return {
+                id: student.id || Math.random().toString(36).substr(2, 9),
+                name: student.name || student.studentName || "Unknown",
+                rollNo: student.enrollmentNumber || student.rollNo || "N/A",
+                batch:
+                  student.batchName ||
+                  (student.Batch ? student.Batch.batchName : batch),
+                semester:
+                  student.semesterNumber ||
+                  student.currnetsemester ||
+                  selectedSemester ||
+                  "N/A",
+                email: student.email || "N/A",
+                parentEmail: student.parentEmail || "N/A",
+                points: points,
+              };
+            })
+            : []
+        );
 
         setStudents(formattedStudents);
       } else {
         setStudents([]);
       }
     } catch (err) {
-      console.error('Error fetching students:', err);
-      setStudentError('Failed to load students. ' + (err.response?.data?.message || err.message));
+      console.error("Error fetching students:", err);
+      setStudentError(
+        "Failed to load students. " +
+        (err.response?.data?.message || err.message)
+      );
       setStudents([]);
     } finally {
       setFetchingStudents(false);
@@ -154,26 +217,28 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
   };
 
   const handleChartToggle = (chartName) => {
-    setSelectedCharts(prev => ({
+    setSelectedCharts((prev) => ({
       ...prev,
-      [chartName]: !prev[chartName]
+      [chartName]: !prev[chartName],
     }));
   };
 
   const handleGenerateReport = async () => {
     setGeneratingPdf(true);
-    console.log('Generating report with selected charts:', selectedCharts);
+    console.log("Generating report with selected charts:", selectedCharts);
 
     try {
       // Create a new PDF document
-      const doc = new jsPDF('p', 'mm', 'a4');
+      const doc = new jsPDF("p", "mm", "a4");
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
 
       // Title and metadata
-      const title = `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report - ${selectedBatch !== 'all' ? `Batch ${selectedBatch}` : 'All Batches'}`;
+      const title = `${reportType.charAt(0).toUpperCase() + reportType.slice(1)
+        } Report - ${selectedBatch !== "all" ? `Batch ${selectedBatch}` : "All Batches"
+        }`;
       doc.setFontSize(18);
-      doc.text(title, pageWidth / 2, 20, { align: 'center' });
+      doc.text(title, pageWidth / 2, 20, { align: "center" });
 
       doc.setFontSize(10);
       const date = new Date().toLocaleDateString();
@@ -187,11 +252,11 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
         const reportCanvas = await html2canvas(reportRef.current, {
           scale: 1.5,
           logging: false,
-          useCORS: true
+          useCORS: true,
         });
 
         // Calculate scaling to fit on page while maintaining aspect ratio
-        const reportImgData = reportCanvas.toDataURL('image/png');
+        const reportImgData = reportCanvas.toDataURL("image/png");
         const imgWidth = pageWidth - 30; // margins
         const imgHeight = (reportCanvas.height * imgWidth) / reportCanvas.width;
 
@@ -200,29 +265,43 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
           const ratio = reportCanvas.width / (pageWidth - 30);
           const totalHeight = reportCanvas.height;
           const pageContentHeight = pageHeight - 50;
-          const pagesNeeded = Math.ceil(totalHeight / (pageContentHeight * ratio));
+          const pagesNeeded = Math.ceil(
+            totalHeight / (pageContentHeight * ratio)
+          );
 
           for (let i = 0; i < pagesNeeded; i++) {
             if (i > 0) doc.addPage();
 
             // Calculate source and destination heights
             const srcY = i * pageContentHeight * ratio;
-            const srcHeight = Math.min(pageContentHeight * ratio, totalHeight - srcY);
+            const srcHeight = Math.min(
+              pageContentHeight * ratio,
+              totalHeight - srcY
+            );
             const destHeight = srcHeight / ratio;
 
             doc.text(`Page ${i + 1} of ${pagesNeeded}`, 10, 10);
             doc.addImage(
-              reportImgData, 'PNG',
-              15, 20,
-              imgWidth, destHeight,
-              null, 'FAST',
+              reportImgData,
+              "PNG",
+              15,
+              20,
+              imgWidth,
+              destHeight,
+              null,
+              "FAST",
               // Set source clipping
-              { sourceX: 0, sourceY: srcY, sourceWidth: reportCanvas.width, sourceHeight: srcHeight }
+              {
+                sourceX: 0,
+                sourceY: srcY,
+                sourceWidth: reportCanvas.width,
+                sourceHeight: srcHeight,
+              }
             );
           }
         } else {
           // If it fits on a single page
-          doc.addImage(reportImgData, 'PNG', 15, 40, imgWidth, imgHeight);
+          doc.addImage(reportImgData, "PNG", 15, 40, imgWidth, imgHeight);
         }
       }
 
@@ -230,55 +309,91 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
       if (includeRecommendations) {
         doc.addPage();
         doc.setFontSize(16);
-        doc.text('Performance Analytics Summary', pageWidth / 2, 20, { align: 'center' });
+        doc.text("Performance Analytics Summary", pageWidth / 2, 20, {
+          align: "center",
+        });
 
         doc.setFontSize(12);
         yPos = 40;
 
         // Sample performance metrics
-        const avgCoCurricular = students.reduce((sum, student) => sum + student.points.coCurricular, 0) / students.length || 0;
-        const avgExtraCurricular = students.reduce((sum, student) => sum + student.points.extraCurricular, 0) / students.length || 0;
+        const avgCoCurricular =
+          students.reduce(
+            (sum, student) => sum + student.points.coCurricular,
+            0
+          ) / students.length || 0;
+        const avgExtraCurricular =
+          students.reduce(
+            (sum, student) => sum + student.points.extraCurricular,
+            0
+          ) / students.length || 0;
 
-        doc.text(`Average Co-Curricular Points: ${avgCoCurricular.toFixed(2)}`, 20, yPos);
+        doc.text(
+          `Average Co-Curricular Points: ${avgCoCurricular.toFixed(2)}`,
+          20,
+          yPos
+        );
         yPos += 10;
-        doc.text(`Average Extra-Curricular Points: ${avgExtraCurricular.toFixed(2)}`, 20, yPos);
+        doc.text(
+          `Average Extra-Curricular Points: ${avgExtraCurricular.toFixed(2)}`,
+          20,
+          yPos
+        );
         yPos += 10;
 
         // Top performers
         const topPerformers = [...students]
-          .sort((a, b) => (b.points.coCurricular + b.points.extraCurricular) - (a.points.coCurricular + a.points.extraCurricular))
+          .sort(
+            (a, b) =>
+              b.points.coCurricular +
+              b.points.extraCurricular -
+              (a.points.coCurricular + a.points.extraCurricular)
+          )
           .slice(0, 5);
 
         yPos += 10;
-        doc.text('Top Performers:', 20, yPos);
+        doc.text("Top Performers:", 20, yPos);
         yPos += 8;
 
         topPerformers.forEach((student, index) => {
-          const totalPoints = student.points.coCurricular + student.points.extraCurricular;
-          doc.text(`${index + 1}. ${student.name}: ${totalPoints} points`, 30, yPos);
+          const totalPoints =
+            student.points.coCurricular + student.points.extraCurricular;
+          doc.text(
+            `${index + 1}. ${student.name}: ${totalPoints} points`,
+            30,
+            yPos
+          );
           yPos += 8;
         });
 
         // Add recommendations
         yPos += 10;
-        doc.text('Recommendations:', 20, yPos);
+        doc.text("Recommendations:", 20, yPos);
         yPos += 8;
 
         const recommendations = [];
 
         if (avgCoCurricular < 50) {
-          recommendations.push('Implement additional workshops to improve co-curricular participation.');
+          recommendations.push(
+            "Implement additional workshops to improve co-curricular participation."
+          );
         }
 
         if (avgExtraCurricular < 50) {
-          recommendations.push('Create more opportunities for students to engage in extra-curricular activities.');
+          recommendations.push(
+            "Create more opportunities for students to engage in extra-curricular activities."
+          );
         }
 
         if (avgCoCurricular >= 50 && avgExtraCurricular >= 50) {
-          recommendations.push('Maintain the current balance of activities while focusing on areas of individual improvement.');
+          recommendations.push(
+            "Maintain the current balance of activities while focusing on areas of individual improvement."
+          );
         }
 
-        recommendations.push('Consider peer mentoring programs where top performers can guide other students.');
+        recommendations.push(
+          "Consider peer mentoring programs where top performers can guide other students."
+        );
 
         recommendations.forEach((recommendation, index) => {
           doc.text(`• ${recommendation}`, 30, yPos);
@@ -287,13 +402,14 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
       }
 
       // Save the PDF file
-      const filename = `${reportType}_report_${selectedBatch !== 'all' ? selectedBatch : 'all'}_${date}.pdf`.replace(/[/\:*?"<>|]/g, '_');
+      const filename = `${reportType}_report_${selectedBatch !== "all" ? selectedBatch : "all"
+        }_${date}.pdf`.replace(/[/\:*?"<>|]/g, "_");
       doc.save(filename);
 
-      console.log('PDF generated successfully');
+      console.log("PDF generated successfully");
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
     } finally {
       setGeneratingPdf(false);
     }
@@ -304,28 +420,34 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
       return {
         averages: { curricular: 0, coCurricular: 0, extraCurricular: 0 },
         topPerformers: [],
-        needsImprovement: []
+        needsImprovement: [],
       };
     }
 
-    const totals = students.reduce((acc, student) => {
-      return {
-        curricular: acc.curricular + student.points.curricular,
-        coCurricular: acc.coCurricular + student.points.coCurricular,
-        extraCurricular: acc.extraCurricular + student.points.extraCurricular
-      };
-    }, { curricular: 0, coCurricular: 0, extraCurricular: 0 });
+    const totals = students.reduce(
+      (acc, student) => {
+        return {
+          curricular: acc.curricular + student.points.curricular,
+          coCurricular: acc.coCurricular + student.points.coCurricular,
+          extraCurricular: acc.extraCurricular + student.points.extraCurricular,
+        };
+      },
+      { curricular: 0, coCurricular: 0, extraCurricular: 0 }
+    );
 
     const count = students.length;
     const averages = {
       curricular: Math.round(totals.curricular / count),
       coCurricular: Math.round(totals.coCurricular / count),
-      extraCurricular: Math.round(totals.extraCurricular / count)
+      extraCurricular: Math.round(totals.extraCurricular / count),
     };
 
-    const totalPoints = students.map(student => ({
+    const totalPoints = students.map((student) => ({
       ...student,
-      totalPoints: student.points.curricular + student.points.coCurricular + student.points.extraCurricular
+      totalPoints:
+        student.points.curricular +
+        student.points.coCurricular +
+        student.points.extraCurricular,
     }));
 
     const topPerformers = [...totalPoints]
@@ -346,13 +468,14 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
     if (students.length === 0) return [];
 
     // Calculate combined points for each student
-    const combinedPoints = students.map(student => {
-      const totalPoints = student.points.coCurricular + student.points.extraCurricular;
+    const combinedPoints = students.map((student) => {
+      const totalPoints =
+        student.points.coCurricular + student.points.extraCurricular;
       return {
         name: student.name,
         coCurricular: student.points.coCurricular,
         extraCurricular: student.points.extraCurricular,
-        combined: totalPoints
+        combined: totalPoints,
       };
     });
 
@@ -365,20 +488,23 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
 
     // Define point ranges for categorization
     const ranges = [
-      { name: '0-20', min: 0, max: 20, count: 0 },
-      { name: '21-40', min: 21, max: 40, count: 0 },
-      { name: '41-60', min: 41, max: 60, count: 0 },
-      { name: '61-80', min: 61, max: 80, count: 0 },
-      { name: '81-100', min: 81, max: 100, count: 0 },
-      { name: '100+', min: 101, max: Infinity, count: 0 }
+      { name: "0-20", min: 0, max: 20, count: 0 },
+      { name: "21-40", min: 21, max: 40, count: 0 },
+      { name: "41-60", min: 41, max: 60, count: 0 },
+      { name: "61-80", min: 61, max: 80, count: 0 },
+      { name: "81-100", min: 81, max: 100, count: 0 },
+      { name: "100+", min: 101, max: Infinity, count: 0 },
     ];
 
     // Count students in each point range based on total points (co-curricular + extra-curricular)
-    students.forEach(student => {
-      const totalPoints = student.points.coCurricular + student.points.extraCurricular;
+    students.forEach((student) => {
+      const totalPoints =
+        student.points.coCurricular + student.points.extraCurricular;
 
       // Find range for total points
-      const range = ranges.find(range => totalPoints >= range.min && totalPoints <= range.max);
+      const range = ranges.find(
+        (range) => totalPoints >= range.min && totalPoints <= range.max
+      );
       if (range) range.count++;
     });
 
@@ -390,24 +516,28 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
 
     // Define point ranges for categorization
     const ranges = [
-      { name: '0-20', min: 0, max: 20, coCount: 0, extraCount: 0 },
-      { name: '21-40', min: 21, max: 40, coCount: 0, extraCount: 0 },
-      { name: '41-60', min: 41, max: 60, coCount: 0, extraCount: 0 },
-      { name: '61-80', min: 61, max: 80, coCount: 0, extraCount: 0 },
-      { name: '81+', min: 81, max: Infinity, coCount: 0, extraCount: 0 }
+      { name: "0-20", min: 0, max: 20, coCount: 0, extraCount: 0 },
+      { name: "21-40", min: 21, max: 40, coCount: 0, extraCount: 0 },
+      { name: "41-60", min: 41, max: 60, coCount: 0, extraCount: 0 },
+      { name: "61-80", min: 61, max: 80, coCount: 0, extraCount: 0 },
+      { name: "81+", min: 81, max: Infinity, coCount: 0, extraCount: 0 },
     ];
 
     // Count students in each point range
-    students.forEach(student => {
+    students.forEach((student) => {
       const coPoints = student.points.coCurricular;
       const extraPoints = student.points.extraCurricular;
 
       // Find range for co-curricular points
-      const coRange = ranges.find(range => coPoints >= range.min && coPoints <= range.max);
+      const coRange = ranges.find(
+        (range) => coPoints >= range.min && coPoints <= range.max
+      );
       if (coRange) coRange.coCount++;
 
       // Find range for extra-curricular points
-      const extraRange = ranges.find(range => extraPoints >= range.min && extraPoints <= range.max);
+      const extraRange = ranges.find(
+        (range) => extraPoints >= range.min && extraPoints <= range.max
+      );
       if (extraRange) extraRange.extraCount++;
     });
 
@@ -416,18 +546,23 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
 
   const prepareDistributionData = () => {
     const pointRanges = [
-      { name: '0-20', range: [0, 20], count: 0 },
-      { name: '21-40', range: [21, 40], count: 0 },
-      { name: '41-60', range: [41, 60], count: 0 },
-      { name: '61-80', range: [61, 80], count: 0 },
-      { name: '81-100', range: [81, 100], count: 0 }
+      { name: "0-20", range: [0, 20], count: 0 },
+      { name: "21-40", range: [21, 40], count: 0 },
+      { name: "41-60", range: [41, 60], count: 0 },
+      { name: "61-80", range: [61, 80], count: 0 },
+      { name: "81-100", range: [81, 100], count: 0 },
     ];
 
-    students.forEach(student => {
-      const totalPoints = student.points.curricular + student.points.coCurricular + student.points.extraCurricular;
+    students.forEach((student) => {
+      const totalPoints =
+        student.points.curricular +
+        student.points.coCurricular +
+        student.points.extraCurricular;
       const avgPoints = Math.round(totalPoints / 3);
 
-      const range = pointRanges.find(r => avgPoints >= r.range[0] && avgPoints <= r.range[1]);
+      const range = pointRanges.find(
+        (r) => avgPoints >= r.range[0] && avgPoints <= r.range[1]
+      );
       if (range) range.count++;
     });
 
@@ -438,44 +573,50 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
     if (students.length === 0) return [];
 
     return [
-      { name: 'Co-Curricular', value: stats.averages.coCurricular },
-      { name: 'Extra-Curricular', value: stats.averages.extraCurricular }
+      { name: "Co-Curricular", value: stats.averages.coCurricular },
+      { name: "Extra-Curricular", value: stats.averages.extraCurricular },
     ];
   };
 
   const prepareTrendsData = () => {
     // Get all semesters from students
     const allSemesters = new Set();
-    students.forEach(student => {
+    students.forEach((student) => {
       if (student.history) {
-        student.history.forEach(h => allSemesters.add(h.semester));
+        student.history.forEach((h) => allSemesters.add(h.semester));
       }
       allSemesters.add(student.semester);
     });
 
     // Sort semesters
-    const sortedSemesters = [...allSemesters].sort((a, b) => parseInt(a) - parseInt(b));
+    const sortedSemesters = [...allSemesters].sort(
+      (a, b) => parseInt(a) - parseInt(b)
+    );
 
     // Calculate average points per semester
-    return sortedSemesters.map(semester => {
-      const semesterStudents = students.filter(s =>
-        s.semester === semester ||
-        (s.history && s.history.some(h => h.semester === semester))
+    return sortedSemesters.map((semester) => {
+      const semesterStudents = students.filter(
+        (s) =>
+          s.semester === semester ||
+          (s.history && s.history.some((h) => h.semester === semester))
       );
 
-      if (semesterStudents.length === 0) return { semester, curricular: 0, coCurricular: 0, extraCurricular: 0 };
+      if (semesterStudents.length === 0)
+        return { semester, curricular: 0, coCurricular: 0, extraCurricular: 0 };
 
       const totals = { curricular: 0, coCurricular: 0, extraCurricular: 0 };
       let count = 0;
 
-      semesterStudents.forEach(student => {
+      semesterStudents.forEach((student) => {
         if (student.semester === semester) {
           totals.curricular += student.points.curricular;
           totals.coCurricular += student.points.coCurricular;
           totals.extraCurricular += student.points.extraCurricular;
           count++;
         } else if (student.history) {
-          const historyItem = student.history.find(h => h.semester === semester);
+          const historyItem = student.history.find(
+            (h) => h.semester === semester
+          );
           if (historyItem) {
             totals.curricular += historyItem.points.curricular;
             totals.coCurricular += historyItem.points.coCurricular;
@@ -489,12 +630,12 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
         semester,
         curricular: Math.round(totals.curricular / count),
         coCurricular: Math.round(totals.coCurricular / count),
-        extraCurricular: Math.round(totals.extraCurricular / count)
+        extraCurricular: Math.round(totals.extraCurricular / count),
       };
     });
   };
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28"];
 
   const distributionData = prepareDistributionData();
   const categoryData = prepareCategoryData();
@@ -505,24 +646,22 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
 
   return (
     <div className="report-generator-fullscreen">
-      {loading && batches.length <= 1 && <span className="loading-text">Loading batches...</span>}
-      {fetchingStudents && <span className="loading-text">Loading students...</span>}
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
+      {loading && batches.length <= 1 && (
+        <span className="loading-text">Loading batches...</span>
       )}
-      {studentError && (
-        <div className="error-message">
-          {studentError}
-        </div>
+      {fetchingStudents && (
+        <span className="loading-text">Loading students...</span>
       )}
+      {error && <div className="error-message">{error}</div>}
+      {studentError && <div className="error-message">{studentError}</div>}
       <div className="report-content">
         <div className="modal-container-fullscreen">
-          <div className="modal-header-fullscreen">
+          <div className="modal-header-fullscreen" style={{ marginTop: "60px" }}>
             <div className="header-left">
-              <h2>📊 Advanced Analytics Dashboard</h2>
-              <p className="header-subtitle">Comprehensive Performance Analysis & Reporting</p>
+              <h2>Batch Analytics</h2>
+              <p className="header-subtitle">
+                Comprehensive Performance Analysis & Reporting
+              </p>
             </div>
             <div className="header-controls">
               <select
@@ -533,11 +672,13 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
               >
                 {batches.map((batch) => (
                   <option key={batch} value={batch}>
-                    {batch === 'all' ? 'All Batches' : `Batch ${batch}`}
+                    {batch === "all" ? "All Batches" : `Batch ${batch}`}
                   </option>
                 ))}
               </select>
-              <button className="close-btn-fullscreen" onClick={onClose}>&times;</button>
+              <button className="close-btn-fullscreen" onClick={onClose}>
+                &times;
+              </button>
             </div>
           </div>
           <div className="modal-content-fullscreen">
@@ -566,7 +707,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                         <input
                           type="checkbox"
                           checked={selectedCharts.distribution}
-                          onChange={() => handleChartToggle('distribution')}
+                          onChange={() => handleChartToggle("distribution")}
                         />
                         <ChartBar className="chart-icon" />
                         Points Distribution
@@ -575,7 +716,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                         <input
                           type="checkbox"
                           checked={selectedCharts.trends}
-                          onChange={() => handleChartToggle('trends')}
+                          onChange={() => handleChartToggle("trends")}
                         />
                         <ChartLine className="chart-icon" />
                         Performance Trends
@@ -584,7 +725,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                         <input
                           type="checkbox"
                           checked={selectedCharts.categorical}
-                          onChange={() => handleChartToggle('categorical')}
+                          onChange={() => handleChartToggle("categorical")}
                         />
                         <ChartPie className="chart-icon" />
                         Category Breakdown
@@ -593,7 +734,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                         <input
                           type="checkbox"
                           checked={selectedCharts.comparison}
-                          onChange={() => handleChartToggle('comparison')}
+                          onChange={() => handleChartToggle("comparison")}
                         />
                         <ChartBar className="chart-icon" />
                         Comparative Analysis
@@ -602,7 +743,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                         <input
                           type="checkbox"
                           checked={selectedCharts.progress}
-                          onChange={() => handleChartToggle('progress')}
+                          onChange={() => handleChartToggle("progress")}
                         />
                         <ChartLine className="chart-icon" />
                         Progress Tracking
@@ -614,7 +755,9 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                       <input
                         type="checkbox"
                         checked={includeRecommendations}
-                        onChange={(e) => setIncludeRecommendations(e.target.checked)}
+                        onChange={(e) =>
+                          setIncludeRecommendations(e.target.checked)
+                        }
                       />
                       <label>Include Recommendations</label>
                     </div>
@@ -636,19 +779,58 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                     <h4>Performance Distribution</h4>
                     <div className="stats-grid">
                       <div className="stat-item">
-                        <span className="stat-label">Top Performers (&gt;80%)</span>
-                        <span className="stat-value">{Math.round(students.filter(s => (s.points?.coCurricular || 0) + (s.points?.extraCurricular || 0) > 80).length / students.length * 100)}%</span>
+                        <span className="stat-label">
+                          Top Performers (&gt;80%)
+                        </span>
+                        <span className="stat-value">
+                          {Math.round(
+                            (students.filter(
+                              (s) =>
+                                (s.points?.coCurricular || 0) +
+                                (s.points?.extraCurricular || 0) >
+                                80
+                            ).length /
+                              students.length) *
+                            100
+                          )}
+                          %
+                        </span>
                       </div>
                       <div className="stat-item">
-                        <span className="stat-label">Average Performers (50-80%)</span>
-                        <span className="stat-value">{Math.round(students.filter(s => {
-                          const total = (s.points?.coCurricular || 0) + (s.points?.extraCurricular || 0);
-                          return total >= 50 && total <= 80;
-                        }).length / students.length * 100)}%</span>
+                        <span className="stat-label">
+                          Average Performers (50-80%)
+                        </span>
+                        <span className="stat-value">
+                          {Math.round(
+                            (students.filter((s) => {
+                              const total =
+                                (s.points?.coCurricular || 0) +
+                                (s.points?.extraCurricular || 0);
+                              return total >= 50 && total <= 80;
+                            }).length /
+                              students.length) *
+                            100
+                          )}
+                          %
+                        </span>
                       </div>
                       <div className="stat-item">
-                        <span className="stat-label">Low Performers (&lt;50%)</span>
-                        <span className="stat-value">{Math.round(students.filter(s => (s.points?.coCurricular || 0) + (s.points?.extraCurricular || 0) < 50).length / students.length * 100)}%</span>
+                        <span className="stat-label">
+                          Low Performers (&lt;50%)
+                        </span>
+                        <span className="stat-value">
+                          {Math.round(
+                            (students.filter(
+                              (s) =>
+                                (s.points?.coCurricular || 0) +
+                                (s.points?.extraCurricular || 0) <
+                                50
+                            ).length /
+                              students.length) *
+                            100
+                          )}
+                          %
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -661,42 +843,60 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                       <div className="bloom-level">
                         <span className="level-name">Remember</span>
                         <div className="level-bar">
-                          <div className="level-fill" style={{ width: '85%' }}></div>
+                          <div
+                            className="level-fill"
+                            style={{ width: "85%" }}
+                          ></div>
                         </div>
                         <span className="level-percentage">85%</span>
                       </div>
                       <div className="bloom-level">
                         <span className="level-name">Understand</span>
                         <div className="level-bar">
-                          <div className="level-fill" style={{ width: '78%' }}></div>
+                          <div
+                            className="level-fill"
+                            style={{ width: "78%" }}
+                          ></div>
                         </div>
                         <span className="level-percentage">78%</span>
                       </div>
                       <div className="bloom-level">
                         <span className="level-name">Apply</span>
                         <div className="level-bar">
-                          <div className="level-fill" style={{ width: '65%' }}></div>
+                          <div
+                            className="level-fill"
+                            style={{ width: "65%" }}
+                          ></div>
                         </div>
                         <span className="level-percentage">65%</span>
                       </div>
                       <div className="bloom-level">
                         <span className="level-name">Analyze</span>
                         <div className="level-bar">
-                          <div className="level-fill" style={{ width: '52%' }}></div>
+                          <div
+                            className="level-fill"
+                            style={{ width: "52%" }}
+                          ></div>
                         </div>
                         <span className="level-percentage">52%</span>
                       </div>
                       <div className="bloom-level">
                         <span className="level-name">Evaluate</span>
                         <div className="level-bar">
-                          <div className="level-fill" style={{ width: '48%' }}></div>
+                          <div
+                            className="level-fill"
+                            style={{ width: "48%" }}
+                          ></div>
                         </div>
                         <span className="level-percentage">48%</span>
                       </div>
                       <div className="bloom-level">
                         <span className="level-name">Create</span>
                         <div className="level-bar">
-                          <div className="level-fill" style={{ width: '35%' }}></div>
+                          <div
+                            className="level-fill"
+                            style={{ width: "35%" }}
+                          ></div>
                         </div>
                         <span className="level-percentage">35%</span>
                       </div>
@@ -710,15 +910,27 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                   <h3>📊 Live Analytics Preview</h3>
                   {selectedCharts.distribution && (
                     <div className="preview-chart" ref={distributionChartRef}>
-                      <h4>📈 Points Distribution - {selectedBatch !== 'all' ? `Batch ${selectedBatch}` : 'All Batches'}</h4>
+                      <h4>
+                        📈 Points Distribution -{" "}
+                        {selectedBatch !== "all"
+                          ? `Batch ${selectedBatch}`
+                          : "All Batches"}
+                      </h4>
                       <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={totalPointsDistributionData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <BarChart
+                          data={totalPointsDistributionData}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" />
                           <YAxis />
                           <Tooltip />
                           <Legend />
-                          <Bar dataKey="count" fill="#3674B5" name="Number of Students by Total Points (Co+Extra)" />
+                          <Bar
+                            dataKey="count"
+                            fill="#3674B5"
+                            name="Number of Students by Total Points (Co+Extra)"
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -727,15 +939,33 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                     <div className="preview-chart" ref={trendsChartRef}>
                       <h4>📊 Performance Trends</h4>
                       <ResponsiveContainer width="100%" height={250}>
-                        <LineChart data={trendsData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <LineChart
+                          data={trendsData}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="semester" />
                           <YAxis />
                           <Tooltip />
                           <Legend />
-                          <Line type="monotone" dataKey="curricular" stroke="#0088FE" name="Curricular" />
-                          <Line type="monotone" dataKey="coCurricular" stroke="#00C49F" name="Co-Curricular" />
-                          <Line type="monotone" dataKey="extraCurricular" stroke="#FFBB28" name="Extra-Curricular" />
+                          <Line
+                            type="monotone"
+                            dataKey="curricular"
+                            stroke="#0088FE"
+                            name="Curricular"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="coCurricular"
+                            stroke="#00C49F"
+                            name="Co-Curricular"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="extraCurricular"
+                            stroke="#FFBB28"
+                            name="Extra-Curricular"
+                          />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -754,10 +984,15 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                             fill="#8884d8"
                             dataKey="value"
                             nameKey="name"
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }) =>
+                              `${name}: ${(percent * 100).toFixed(0)}%`
+                            }
                           >
                             {categoryData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={['#3674B5', '#28a745', '#ffc107'][index]} />
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={["#3674B5", "#28a745", "#ffc107"][index]}
+                              />
                             ))}
                           </Pie>
                           <Tooltip />
@@ -771,14 +1006,30 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                     <div className="preview-chart" ref={topStudentsChartRef}>
                       <h4>🏆 Top Performers vs Average vs Low Performers</h4>
                       <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={combinedPointsData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <BarChart
+                          data={combinedPointsData}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                          <XAxis
+                            dataKey="name"
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                          />
                           <YAxis />
                           <Tooltip />
                           <Legend />
-                          <Bar dataKey="coCurricular" fill="#00C49F" name="Co-Curricular Points" />
-                          <Bar dataKey="extraCurricular" fill="#FFBB28" name="Extra-Curricular Points" />
+                          <Bar
+                            dataKey="coCurricular"
+                            fill="#00C49F"
+                            name="Co-Curricular Points"
+                          />
+                          <Bar
+                            dataKey="extraCurricular"
+                            fill="#FFBB28"
+                            name="Extra-Curricular Points"
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -788,14 +1039,25 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                     <div className="preview-chart" ref={pointsRangeChartRef}>
                       <h4>📊 Participation Index & Engagement Metrics</h4>
                       <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={pointsRangeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <BarChart
+                          data={pointsRangeData}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" />
                           <YAxis />
                           <Tooltip />
                           <Legend />
-                          <Bar dataKey="coCount" fill="#00C49F" name="Students (Co-Curricular)" />
-                          <Bar dataKey="extraCount" fill="#FFBB28" name="Students (Extra-Curricular)" />
+                          <Bar
+                            dataKey="coCount"
+                            fill="#00C49F"
+                            name="Students (Co-Curricular)"
+                          />
+                          <Bar
+                            dataKey="extraCount"
+                            fill="#FFBB28"
+                            name="Students (Extra-Curricular)"
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -1049,7 +1311,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                       padding: 8px;
                       background: #fff;
                       border-radius: 6px;
-                      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
                     }
 
                     .outcome-title {
@@ -1086,13 +1348,21 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                     }
 
                     .enhanced-subject-label.total-label {
-                      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                      background: linear-gradient(
+                        135deg,
+                        #e3f2fd 0%,
+                        #bbdefb 100%
+                      );
                       border-left: 4px solid #1976d2;
                       font-weight: bold;
                     }
 
                     .enhanced-heatmap-cell.total-cell {
-                      background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%);
+                      background: linear-gradient(
+                        135deg,
+                        #fff3e0 0%,
+                        #ffcc02 100%
+                      );
                       border: 3px solid #ff8f00;
                       font-weight: bold;
                       font-size: 18px;
@@ -1102,7 +1372,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                       background: #fff;
                       padding: 15px;
                       border-radius: 8px;
-                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                       border-left: 4px solid #007bff;
                     }
 
@@ -1128,7 +1398,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                       position: relative;
                       cursor: pointer;
                       transition: all 0.3s ease;
-                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                       display: flex;
                       flex-direction: column;
                       align-items: center;
@@ -1137,21 +1407,33 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
 
                     .enhanced-heatmap-cell:hover {
                       transform: translateY(-2px);
-                      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
                     }
 
                     .enhanced-heatmap-cell.strength {
-                      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+                      background: linear-gradient(
+                        135deg,
+                        #d4edda 0%,
+                        #c3e6cb 100%
+                      );
                       border-left: 4px solid #28a745;
                     }
 
                     .enhanced-heatmap-cell.average {
-                      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+                      background: linear-gradient(
+                        135deg,
+                        #fff3cd 0%,
+                        #ffeaa7 100%
+                      );
                       border-left: 4px solid #ffc107;
                     }
 
                     .enhanced-heatmap-cell.weakness {
-                      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+                      background: linear-gradient(
+                        135deg,
+                        #f8d7da 0%,
+                        #f5c6cb 100%
+                      );
                       border-left: 4px solid #dc3545;
                     }
 
@@ -1177,13 +1459,16 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
 
                     .enhanced-heatmap-legend {
                       display: grid;
-                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      grid-template-columns: repeat(
+                        auto-fit,
+                        minmax(300px, 1fr)
+                      );
                       gap: 20px;
                       margin-top: 30px;
                       padding: 20px;
                       background: #fff;
                       border-radius: 12px;
-                      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                     }
 
                     .legend-section h5 {
@@ -1294,20 +1579,43 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
                       <h4>💡 Strategic Recommendations</h4>
                       <ul className="recommendations-list">
                         {stats.averages.curricular < 50 && (
-                          <li>Implement additional academic support sessions to improve curricular performance.</li>
+                          <li>
+                            Implement additional academic support sessions to
+                            improve curricular performance.
+                          </li>
                         )}
                         {stats.averages.coCurricular < 50 && (
-                          <li>Organize more technical workshops and encourage participation in co-curricular activities.</li>
+                          <li>
+                            Organize more technical workshops and encourage
+                            participation in co-curricular activities.
+                          </li>
                         )}
                         {stats.averages.extraCurricular < 50 && (
-                          <li>Create more opportunities for students to engage in extra-curricular activities.</li>
+                          <li>
+                            Create more opportunities for students to engage in
+                            extra-curricular activities.
+                          </li>
                         )}
-                        {Object.values(stats.averages).every(val => val >= 50) && (
-                          <li>Maintain the current balance of activities while focusing on areas of individual improvement.</li>
-                        )}
-                        <li>Consider peer mentoring programs where top performers can guide students who need improvement.</li>
-                        <li>Focus curriculum revision on subjects showing consistent underperformance in outcome analysis.</li>
-                        <li>Implement targeted interventions for students in the "Apply" and "Analyze" Bloom's taxonomy levels.</li>
+                        {Object.values(stats.averages).every(
+                          (val) => val >= 50
+                        ) && (
+                            <li>
+                              Maintain the current balance of activities while
+                              focusing on areas of individual improvement.
+                            </li>
+                          )}
+                        <li>
+                          Consider peer mentoring programs where top performers
+                          can guide students who need improvement.
+                        </li>
+                        <li>
+                          Focus curriculum revision on subjects showing
+                          consistent underperformance in outcome analysis.
+                        </li>
+                        <li>
+                          Implement targeted interventions for students in the
+                          "Apply" and "Analyze" Bloom's taxonomy levels.
+                        </li>
                       </ul>
                     </div>
                   )}
@@ -1316,7 +1624,7 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
             </div>
           </div>
         </div>
-        <div className="modal-footer">
+        <div className="batch-report-modal-footer">
           <div className="format-selector">
             <select
               value={format}
@@ -1329,14 +1637,24 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
             </select>
           </div>
           <div className="action-buttons">
-            <button className="btn-cancel" onClick={onClose} disabled={generatingPdf}>Cancel</button>
+            <button
+              className="btn-cancel"
+              onClick={onClose}
+              disabled={generatingPdf}
+            >
+              Cancel
+            </button>
             <button
               className="btn-generate"
               onClick={handleGenerateReport}
-              disabled={!Object.values(selectedCharts).some(Boolean) || generatingPdf}
+              disabled={
+                !Object.values(selectedCharts).some(Boolean) || generatingPdf
+              }
             >
               {generatingPdf ? (
-                <span className="generating-label">Generating {format.toUpperCase()}...</span>
+                <span className="generating-label">
+                  Generating {format.toUpperCase()}...
+                </span>
               ) : (
                 <>
                   <Download size={16} className="download-icon" />
@@ -1346,8 +1664,8 @@ const ReportGenerator = ({ students: initialStudents, selectedBatch: initialBatc
             </button>
           </div>
         </div>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 };
 

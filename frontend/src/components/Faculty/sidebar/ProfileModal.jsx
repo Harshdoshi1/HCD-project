@@ -28,11 +28,27 @@ const ProfileModal = ({ isOpen, onClose }) => {
         setError(null);
 
         try {
-            // Get email from localStorage
+            // Get user and email from localStorage
             const storedEmail = localStorage.getItem('email');
+            const storedUserRaw = localStorage.getItem('user');
+            let nameFromUser = '';
+            try {
+                nameFromUser = storedUserRaw ? JSON.parse(storedUserRaw)?.name || '' : '';
+            } catch (_) {
+                nameFromUser = '';
+            }
+            const storedUsername = localStorage.getItem('username');
 
             if (!storedEmail) {
                 throw new Error('No email found in local storage');
+            }
+
+            // Prefer localStorage user.name, then username, to avoid 404s
+            if (nameFromUser || storedUsername) {
+                setUsername(nameFromUser || storedUsername);
+                setEmail(storedEmail);
+                setLoading(false);
+                return; // skip network call when local data is sufficient
             }
 
             // Fetch user data from the backend
@@ -49,10 +65,20 @@ const ProfileModal = ({ isOpen, onClose }) => {
             }
         } catch (err) {
             console.error('Error fetching faculty data:', err);
-            setError('Failed to load profile data: ' + (err.message || 'Unknown error'));
-            // Set defaults to avoid undefined values
-            setUsername("");
-            setEmail(localStorage.getItem('email') || "");
+            // Graceful fallback to localStorage values without noisy error
+            const fallbackUserRaw = localStorage.getItem('user');
+            let fallbackName = '';
+            try { fallbackName = fallbackUserRaw ? JSON.parse(fallbackUserRaw)?.name || '' : ''; } catch (_) { fallbackName = ''; }
+            const fallbackUsername = fallbackName || localStorage.getItem('username') || "";
+            const fallbackEmail = localStorage.getItem('email') || "";
+            setUsername(fallbackUsername);
+            setEmail(fallbackEmail);
+            // Only show error if we truly have nothing to display
+            if (!fallbackUsername && !fallbackEmail) {
+                setError('Failed to load profile data: ' + (err.message || 'Unknown error'));
+            } else {
+                setError(null);
+            }
         } finally {
             setLoading(false);
         }
@@ -79,6 +105,9 @@ const ProfileModal = ({ isOpen, onClose }) => {
                     localStorage.setItem('email', email);
                 }
 
+                // Persist username locally as well
+                localStorage.setItem('username', username);
+
                 onClose();
             } else {
                 toast.error('Failed to update profile');
@@ -97,7 +126,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
                     <div className="input-group-hod">
                         <FiUser className="icon" />
-                        <input type="text" className="fpm" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                        <input type="text" className="fpm" placeholder="Username" value={username} readOnly disabled />
                     </div>
 
                     <div className="input-group-hod">
