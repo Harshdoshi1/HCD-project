@@ -4,6 +4,7 @@ import './StudentGradesExcell.css';
 
 const StudentGradesExcell = ({ isOpen, onClose }) => {
     const [file, setFile] = useState(null);
+    const fileInputRef = React.useRef(null);
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState(null);
     const [previewData, setPreviewData] = useState(null);
@@ -16,6 +17,12 @@ const StudentGradesExcell = ({ isOpen, onClose }) => {
             setFile(selectedFile);
             previewExcel(selectedFile); // Basic preview
             previewExcelWithXLSX(selectedFile); // Advanced preview with XLSX validation
+        }
+    };
+
+    const openFileDialog = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
         }
     };
 
@@ -188,15 +195,22 @@ const StudentGradesExcell = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="file-upload-container">
-                        <div className="file-upload-area">
+                        <div className="file-upload-area" onClick={openFileDialog} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openFileDialog(); }}>
                             <FaFileExcel className="excel-icon" />
                             <h3>Upload Excel File</h3>
                             <p>Drag and drop or click to browse</p>
+                            <div className="file-actions">
+                                <button type="button" className="choose-file-button" onClick={(e) => { e.stopPropagation(); openFileDialog(); }}>
+                                    Choose File
+                                </button>
+                                {file && <span className="selected-file-name">{file.name}</span>}
+                            </div>
                             <input
                                 type="file"
                                 accept=".xlsx, .xls"
                                 onChange={handleFileChange}
                                 className="file-input"
+                                ref={fileInputRef}
                             />
                         </div>
 

@@ -47,16 +47,16 @@
 
 //       // Fetch comprehensive academic analysis data
 //       const response = await axios.get(`http://localhost:5001/api/student-analysis/comprehensive/${enrollmentNumber}/${currentSemester}`);
-      
+
 //       console.log('Academic analysis response:', response.data);
 
 //       if (response.data && response.data.academicData) {
 //         setAcademicDetails(response.data);
-        
+
 //         // Transform academic data for charts
 //         const chartData = response.data.chartData || [];
 //         setAcademicData(chartData);
-        
+
 //         console.log('Academic data set successfully:', response.data.academicData);
 //       } else {
 //         console.log('No academic data found in response');
@@ -85,7 +85,7 @@
 //       console.log(`Fetching subject-wise performance for enrollment: ${enrollmentNumber}, semester: ${semester}`);
 
 //       const response = await axios.get(`http://localhost:5001/api/student-analysis/performance/${enrollmentNumber}/${semester}`);
-      
+
 //       console.log('Subject-wise performance response:', response.data);
 
 //       if (response.data && response.data.subjects) {
@@ -118,7 +118,7 @@
 
 //       // Fetch Bloom's taxonomy distribution from the new API
 //       const response = await axios.get(`http://localhost:5001/api/student-analysis/blooms/${enrollmentNumber}/${semester}`);
-      
+
 //       console.log('Bloom\'s data response:', response.data);
 
 //       if (response.data && response.data.bloomsDistribution) {
@@ -210,10 +210,10 @@
 //         // Fetch activities and Bloom's data for the current semester by default
 //         fetchActivities(currentSemester);
 //         fetchBloomsData(currentSemester);
-        
+
 //         // Fetch academic data
 //         fetchAcademicData();
-        
+
 //         // Fetch subject-wise performance for current semester
 //         fetchSubjectWisePerformance(currentSemester);
 //       } catch (err) {
@@ -242,7 +242,7 @@
 
 //   //     // Fetch Bloom's taxonomy distribution from the new API
 //   //     const response = await axios.get(`http://localhost:5001/api/student-analysis/blooms/${enrollmentNumber}/${semester}`);
-      
+
 //   //     console.log('Bloom\'s data response:', response.data);
 
 //   //     if (response.data && response.data.bloomsDistribution) {
@@ -463,7 +463,7 @@
 //       const combinedData = academicData.map(academicPoint => {
 //         // Find corresponding activity data for this semester
 //         const activityPoint = semesterPoints.find(sp => sp.semester === academicPoint.semester);
-        
+
 //         return {
 //           semester: academicPoint.semester,
 //           academicPercentage: academicPoint.percentage || 0,
@@ -692,15 +692,15 @@
 
 //   const getBloomsRadarData = () => {
 //     if (!bloomsData || bloomsData.length === 0) return [];
-    
+
 //     const bloomsAggregation = {};
 //     const bloomLevels = getBloomsLevels();
-    
+
 //     // Initialize aggregation
 //     bloomLevels.forEach(level => {
 //       bloomsAggregation[level] = { totalMarks: 0, count: 0 };
 //     });
-    
+
 //     // Aggregate marks from all subjects
 //     bloomsData.forEach(subjectData => {
 //       subjectData.bloomsLevels.forEach(levelData => {
@@ -710,11 +710,11 @@
 //         }
 //       });
 //     });
-    
+
 //     // Calculate average scores
 //     return bloomLevels.map(level => ({
 //       level,
-//       score: bloomsAggregation[level].count > 0 
+//       score: bloomsAggregation[level].count > 0
 //         ? Math.round(bloomsAggregation[level].totalMarks / bloomsAggregation[level].count)
 //         : 0
 //     }));
@@ -722,15 +722,15 @@
 
 //   const getBloomsBarData = () => {
 //     if (!bloomsData || bloomsData.length === 0) return [];
-    
+
 //     return bloomsData.map(subject => {
 //       const barData = { subject: subject.subject.length > 10 ? subject.subject.substring(0, 10) + '...' : subject.subject };
-      
+
 //       getBloomsLevels().forEach(level => {
 //         const levelData = subject.bloomsLevels.find(bl => bl.level === level);
 //         barData[level] = levelData ? Math.round(levelData.percentage || levelData.marks || 0) : 0;
 //       });
-      
+
 //       return barData;
 //     });
 //   };
@@ -738,34 +738,34 @@
 //   const getStrongestBloomLevel = () => {
 //     const radarData = getBloomsRadarData();
 //     if (radarData.length === 0) return "No data available";
-    
-//     const strongest = radarData.reduce((max, current) => 
+
+//     const strongest = radarData.reduce((max, current) =>
 //       current.score > max.score ? current : max
 //     );
-    
+
 //     return `${strongest.level} (${strongest.score}%) - Shows excellent ${strongest.level.toLowerCase()} skills`;
 //   };
 
 //   const getWeakestBloomLevel = () => {
 //     const radarData = getBloomsRadarData();
 //     if (radarData.length === 0) return "No data available";
-    
-//     const weakest = radarData.reduce((min, current) => 
+
+//     const weakest = radarData.reduce((min, current) =>
 //       current.score < min.score ? current : min
 //     );
-    
+
 //     return `${weakest.level} (${weakest.score}%) - Needs improvement in ${weakest.level.toLowerCase()} skills`;
 //   };
 
 //   const getCognitiveBalance = () => {
 //     const radarData = getBloomsRadarData();
 //     if (radarData.length === 0) return "No data available";
-    
+
 //     const scores = radarData.map(item => item.score);
 //     const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
 //     const variance = scores.reduce((sum, score) => sum + Math.pow(score - average, 2), 0) / scores.length;
 //     const standardDeviation = Math.sqrt(variance);
-    
+
 //     if (standardDeviation < 10) {
 //       return `Well-balanced cognitive development (σ=${standardDeviation.toFixed(1)})`;
 //     } else if (standardDeviation < 20) {
@@ -833,8 +833,8 @@
 //                     <p>Loading academic data...</p>
 //                   </div>
 //                 ) : academicDetails ? (
-//                   <AcademicAnalysis 
-//                     student={student} 
+//                   <AcademicAnalysis
+//                     student={student}
 //                     academicData={academicDetails}
 //                     selectedSemester={selectedSemester}
 //                     onSemesterChange={handleSemesterChange}
@@ -999,7 +999,7 @@
 //                 {/* Bloom's Taxonomy Analysis Section */}
 //                 <div className="blooms-analysis-container">
 //                   <h3>🧠 Bloom's Taxonomy Analysis</h3>
-                  
+
 //                   {loadingBlooms ? (
 //                     <div className="loading-message">
 //                       <p>Loading Bloom's taxonomy data...</p>
@@ -1207,7 +1207,7 @@
 //                             <div className="metric-item">
 //                               <span className="metric-label">Avg Points/Activity</span>
 //                               <span className="metric-value">
-//                                 {activityList.length > 0 
+//                                 {activityList.length > 0
 //                                   ? Math.round(activityList.reduce((sum, act) => sum + (act.points || 0), 0) / activityList.length)
 //                                   : 0}
 //                               </span>
@@ -1221,9 +1221,9 @@
 //                             <div className="metric-item">
 //                               <span className="metric-label">Leadership Roles</span>
 //                               <span className="metric-value">
-//                                 {activityList.filter(act => 
-//                                   act.position && 
-//                                   (act.position.toLowerCase().includes('leader') || 
+//                                 {activityList.filter(act =>
+//                                   act.position &&
+//                                   (act.position.toLowerCase().includes('leader') ||
 //                                    act.position.toLowerCase().includes('head') ||
 //                                    act.position.toLowerCase().includes('captain'))
 //                                 ).length}
@@ -1316,47 +1316,6 @@
 // };
 
 // export default StudentAnalysis;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
@@ -2679,71 +2638,6 @@ const StudentAnalysis = ({ student, onClose }) => {
                       <h3>🎯 Domain Affinity & Networking</h3>
 
                       {/* Domain Affinity Radar Chart */}
-                      <div className="analytics-feature">
-                        <h4>🎯 Domain Affinity Analysis</h4>
-                        <p className="feature-description">
-                          Visual representation of student's natural inclination
-                          towards different technology domains based on
-                          participation patterns.
-                        </p>
-                        <div className="radar-chart-container">
-                          <ResponsiveContainer width="100%" height={350}>
-                            <RadarChart data={domainAffinityData}>
-                              <PolarGrid />
-                              <PolarAngleAxis
-                                dataKey="domain"
-                                tick={{ fontSize: 11 }}
-                              />
-                              <PolarRadiusAxis
-                                angle={90}
-                                domain={[0, 100]}
-                                tick={{ fontSize: 9 }}
-                              />
-                              <Radar
-                                name="Domain Affinity"
-                                dataKey="score"
-                                stroke="#8884d8"
-                                fill="#8884d8"
-                                fillOpacity={0.3}
-                                strokeWidth={2}
-                              />
-                              <Tooltip
-                                formatter={(value) => [
-                                  `${value}%`,
-                                  "Affinity Score",
-                                ]}
-                              />
-                              <Legend />
-                            </RadarChart>
-                          </ResponsiveContainer>
-                        </div>
-                        <div className="domain-insights">
-                          <div className="top-domains">
-                            <h5>🏆 Top Domain Affinities:</h5>
-                            <div className="domain-list">
-                              {domainAffinityData
-                                .sort((a, b) => b.score - a.score)
-                                .slice(0, 3)
-                                .map((domain, index) => (
-                                  <div
-                                    key={domain.domain}
-                                    className="domain-item"
-                                  >
-                                    <span className="domain-rank">
-                                      #{index + 1}
-                                    </span>
-                                    <span className="domain-name">
-                                      {domain.domain}
-                                    </span>
-                                    <span className="domain-score">
-                                      {domain.score}%
-                                    </span>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
 
                       {/* Networking & Collaboration Index */}
                       <div className="analytics-feature">

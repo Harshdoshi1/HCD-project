@@ -64,6 +64,7 @@
   background-color: #3674B5;
   color: white;
   border-radius: 8px 8px 0 0;
+  position: relative; /* allow absolute positioning for close button */
 }
 
 .student-detail-header h3 {
@@ -73,12 +74,16 @@
 }
 
 .modal-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
   background: none;
   border: none;
   font-size: 24px;
   cursor: pointer;
   color: white;
   transition: opacity 0.3s;
+  line-height: 1;
 }
 
 .modal-close-btn:hover {
