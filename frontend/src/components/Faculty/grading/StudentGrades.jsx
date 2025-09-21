@@ -897,12 +897,11 @@ const StudentGrades = () => {
     setEditingGrades(editingGrades === studentId ? null : studentId);
   };
 
-  const filteredStudents = studentsData.filter((student) => {
-    const searchTerm = searchQuery.toLowerCase();
-    return (
-      student.name.toLowerCase().includes(searchTerm) ||
-      student.enrollmentNo.toLowerCase().includes(searchTerm)
-    );
+  const filteredStudents = (Array.isArray(studentsData) ? studentsData : []).filter((student) => {
+    const searchTerm = (searchQuery || "").toString().toLowerCase();
+    const name = (student?.name || "").toString().toLowerCase();
+    const enrollment = (student?.enrollmentNo || "").toString().toLowerCase();
+    return name.includes(searchTerm) || enrollment.includes(searchTerm);
   });
 
   const renderRatingStars = (studentId) => {
