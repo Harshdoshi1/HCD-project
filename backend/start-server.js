@@ -32,6 +32,7 @@ app.get('/api/health', (req, res) => {
 
 // Start Server
 const PORT = process.env.PORT || 5001;
+const PUBLIC_BASE = process.env.PUBLIC_BASE_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
 
 console.log('Starting server...');
 console.log('Environment variables:');
@@ -44,9 +45,9 @@ console.log('- PORT:', PORT);
 // Try to start server without database sync first
 app.listen(PORT, () => {
     console.log(`✅ Server started successfully on port ${PORT}`);
-    console.log(`🌐 Server URL: http://localhost:${PORT}`);
-    console.log(`🔍 Test endpoint: http://localhost:${PORT}/api/test`);
-    console.log(`💚 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🌐 Server URL: ${PUBLIC_BASE}`);
+    console.log(`🔍 Test endpoint: ${PUBLIC_BASE.replace(/\/$/, '')}/api/test`);
+    console.log(`💚 Health check: ${PUBLIC_BASE.replace(/\/$/, '')}/api/health`);
 
     // Now try to sync database
     console.log('\n🔄 Attempting to sync database...');

@@ -27,12 +27,22 @@ function safeEnv(key) {
     return undefined;
 }
 
-const HOSTED_BASE = safeEnv('REACT_APP_API_URL'); // expected to end with /api
-const LOCAL_BASE = safeEnv('REACT_APP_LOCAL_API_URL') || 'http://localhost:5001/api';
+function getEnv(...keys) {
+    for (const k of keys) {
+        const v = safeEnv(k);
+        if (typeof v !== 'undefined' && v !== null && String(v).length > 0) return v;
+    }
+    return undefined;
+}
+
+// Support both CRA and Vite env variable conventions
+// Expected to end with /api
+let HOSTED_BASE = getEnv('REACT_APP_API_URL', 'VITE_API_URL');
+const LOCAL_BASE = getEnv('REACT_APP_LOCAL_API_URL', 'VITE_LOCAL_API_URL') || 'http://localhost:5001/api';
 
 function shouldUseLocal() {
     try {
-        const envFlag = safeEnv('REACT_APP_USE_LOCAL');
+        const envFlag = getEnv('REACT_APP_USE_LOCAL', 'VITE_USE_LOCAL');
         if (envFlag === 'true') return true;
         if (typeof window !== 'undefined') {
             const ls = window.localStorage?.getItem('USE_LOCAL_API');
@@ -43,6 +53,19 @@ function shouldUseLocal() {
         }
     } catch (_) { }
     return false;
+}
+
+// As a last resort in production, infer hosted base when running on the Render frontend domain
+if (!shouldUseLocal() && !HOSTED_BASE) {
+    try {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+            const host = window.location.hostname;
+            // If deployed on studentprogresstracker.onrender.com and no env set, fallback to known backend URL
+            if (host.includes('studentprogresstracker.onrender.com')) {
+                HOSTED_BASE = 'https://hcd-project-1.onrender.com/api';
+            }
+        }
+    } catch (_) { }
 }
 
 export const API_BASE_URL = shouldUseLocal() ? LOCAL_BASE : (HOSTED_BASE || LOCAL_BASE);
