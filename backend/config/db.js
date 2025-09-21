@@ -59,16 +59,19 @@
 // connectDB();
 
 // module.exports = sequelize;
-
 const { Sequelize } = require('sequelize');
 const fs = require('fs');
 require('dotenv').config();
 
-let sslOptions = { require: true, rejectUnauthorized: true };
+let sslOptions = { require: true };
 
-// If running locally, we have a CA file path
+// If running locally with a CA file, validate SSL
 if (process.env.DB_SSL_CA && fs.existsSync(process.env.DB_SSL_CA)) {
   sslOptions.ca = fs.readFileSync(process.env.DB_SSL_CA).toString();
+  sslOptions.rejectUnauthorized = true; // validate certificate locally
+} else {
+  // On Render / cloud: allow self-signed certificate
+  sslOptions.rejectUnauthorized = false;
 }
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
