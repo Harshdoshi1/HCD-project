@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import './StudentModal.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
     const [studentData, setStudentData] = useState({
@@ -23,7 +24,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
         if (isOpen) {
             const fetchBatches = async () => {
                 try {
-                    const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
+                    const response = await fetch(buildUrl('/batches/getAllBatches'));
                     if (!response.ok) throw new Error("Failed to fetch batches");
                     const data = await response.json();
 
@@ -108,7 +109,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
         }
 
         try {
-            const resp = await fetch('http://localhost:5001/api/students/bulkUpload', {
+            const resp = await fetch(buildUrl('/students/bulkUpload'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ students: studentsPayload })
@@ -189,7 +190,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                 currentSemester: currentSem
             });
 
-            const response = await fetch('http://localhost:5001/api/students/createStudent', {
+            const response = await fetch(buildUrl('/students/createStudent'), {
                 method: 'POST',
                 body: JSON.stringify({
                     name: studentData.name,

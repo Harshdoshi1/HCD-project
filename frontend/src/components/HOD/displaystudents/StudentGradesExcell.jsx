@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaFileExcel, FaUpload, FaTimes } from 'react-icons/fa';
 import './StudentGradesExcell.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const StudentGradesExcell = ({ isOpen, onClose }) => {
     const [file, setFile] = useState(null);
@@ -88,7 +89,7 @@ const StudentGradesExcell = ({ isOpen, onClose }) => {
 
         try {
             console.log('Sending upload request...');
-            const response = await fetch('http://localhost:5001/api/studentCPI/upload', {
+            const response = await fetch(buildUrl('/studentCPI/upload'), {
                 method: 'POST',
                 body: formData,
             });

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { buildUrl } from '../utils/apiConfig';
 
 /**
  * Email Service for sending emails from the application
@@ -6,7 +7,6 @@ import axios from 'axios';
  */
 class EmailService {
   constructor() {
-    this.baseUrl = 'http://localhost:5001/api';
     this.senderEmail = 'krishmamtora26@gmail.com';
   }
 
@@ -25,7 +25,7 @@ class EmailService {
       console.log('Preparing to send email with PDF attachment');
       console.log('Email recipient:', emailData.email);
       console.log('Email subject:', emailData.subject);
-      
+
       // Create a FormData object to send the PDF file
       const formData = new FormData();
       formData.append('to', emailData.email);
@@ -49,10 +49,10 @@ class EmailService {
         console.log(pair[0] + ': ' + (pair[0] === 'attachment' ? 'File data' : pair[1]));
       }
 
-      console.log('Sending request to:', `${this.baseUrl}/email/send`);
-      
+      console.log('Sending request to:', buildUrl('/email/send'));
+
       // Make the actual API call
-      const response = await axios.post(`${this.baseUrl}/email/send`, formData, {
+      const response = await axios.post(buildUrl('/email/send'), formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
@@ -63,7 +63,7 @@ class EmailService {
       return response.data;
     } catch (error) {
       console.error('Error sending email:', error);
-      
+
       // More detailed error logging
       if (error.response) {
         // The request was made and the server responded with a status code
@@ -78,7 +78,7 @@ class EmailService {
         // Something happened in setting up the request that triggered an Error
         console.error('Error message:', error.message);
       }
-      
+
       throw new Error('Failed to send email. Please try again later.');
     }
   }

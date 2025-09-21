@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import ReportGenerator from "./ReportGenerator";
 import "./AcademicAnalysis.css";
+import { buildUrl } from '../../../utils/apiConfig';
 const AcademicAnalysis = ({ student, academicData }) => {
   const [selectedSemester, setSelectedSemester] = useState(4);
   const [selectedSubject, setSelectedSubject] = useState("all");
@@ -106,8 +107,8 @@ const AcademicAnalysis = ({ student, academicData }) => {
 
       // Fetch real academic performance data from backend
       const [performanceResponse, bloomsResponse] = await Promise.all([
-        fetch(`http://localhost:5001/api/student-analysis/performance/${enrollmentNumber}/${selectedSemester}`),
-        fetch(`http://localhost:5001/api/student-analysis/blooms/${enrollmentNumber}/${selectedSemester}`)
+        fetch(buildUrl(`/student-analysis/performance/${enrollmentNumber}/${selectedSemester}`)),
+        fetch(buildUrl(`/student-analysis/blooms/${enrollmentNumber}/${selectedSemester}`))
       ]);
       
       if (!performanceResponse.ok) {

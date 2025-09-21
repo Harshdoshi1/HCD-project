@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FiMail, FiLock } from "react-icons/fi";
 import "./ProfileModal.css";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const ChangePasswordModal = ({ email, onClose }) => {
     const [resetEmail, setResetEmail] = useState("");
@@ -35,7 +36,7 @@ const ChangePasswordModal = ({ email, onClose }) => {
             
             try {
                 // Send password reset email
-                const response = await axios.post("http://localhost:5001/api/auth/send-reset-email", {
+                const response = await axios.post(buildUrl('/auth/send-reset-email'), {
                     email: resetEmail,
                     token,
                     senderEmail: "krishmamtora26@gmail.com"
@@ -83,7 +84,7 @@ const ChangePasswordModal = ({ email, onClose }) => {
         
         try {
             // Update password in the database
-            const response = await axios.post("http://localhost:5001/api/auth/reset-password", {
+            const response = await axios.post(buildUrl('/auth/reset-password'), {
                 email: resetEmail,
                 token: resetToken,
                 newPassword

@@ -2,6 +2,7 @@ import "./ExcelUpload.css";
 import { useState, useEffect } from "react";
 import { FileXls, Upload } from "phosphor-react";
 import * as XLSX from "xlsx";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const ExcelUpload = ({ onClose, onSuccess }) => {
   const [file, setFile] = useState(null);
@@ -16,7 +17,7 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
   useEffect(() => {
     const fetchEventNames = async () => {
       try {
-        const response = await fetch("http://localhost:5001/api/events/all", {
+        const response = await fetch(buildUrl('/events/all'), {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -160,7 +161,7 @@ const ExcelUpload = ({ onClose, onSuccess }) => {
         try {
           setUploading(true);
           const response = await fetch(
-            "http://localhost:5001/api/events/uploadExcell",
+            buildUrl('/events/uploadExcell'),
             {
               method: "POST",
               headers: {

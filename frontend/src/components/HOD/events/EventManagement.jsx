@@ -3,6 +3,7 @@ import { Plus, Upload, Filter } from 'lucide-react';
 import AddEventForm from './AddEventForm';
 import ExcelUpload from './ExcelUpload';
 import './EventManagement.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const EventManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -29,7 +30,7 @@ const EventManagement = () => {
   }
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/events/all');
+      const response = await fetch(buildUrl('/events/all'));
       const data = await response.json();
 
       if (data.success) {

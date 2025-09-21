@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import "./AddEventForm.css";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const AddEventForm = ({ onClose, onSuccess }) => {
   const [outcomes, setOutcomes] = useState({
@@ -36,10 +37,10 @@ const AddEventForm = ({ onClose, onSuccess }) => {
       console.log("Fetching event outcomes...");
 
       const technicalResponse = await fetch(
-        "http://localhost:5001/api/event-outcomes/type/Technical"
+        buildUrl('/event-outcomes/type/Technical')
       );
       const nonTechnicalResponse = await fetch(
-        "http://localhost:5001/api/event-outcomes/type/Non-Technical"
+        buildUrl('/event-outcomes/type/Non-Technical')
       );
 
       console.log("Technical response status:", technicalResponse.status);
@@ -103,7 +104,7 @@ const AddEventForm = ({ onClose, onSuccess }) => {
 
     try {
       const response = await fetch(
-        "http://localhost:5001/api/events/createEvent",
+        buildUrl('/events/createEvent'),
         {
           method: "POST",
           headers: {

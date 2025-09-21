@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './BatchOverviewModal.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
     const [batchInfo, setBatchInfo] = useState(null);
@@ -20,7 +21,7 @@ const BatchOverviewModal = ({ isOpen, onClose, batch }) => {
         setError(null);
 
         try {
-            const response = await fetch(`http://localhost:5001/api/class-sections/getSemesterWiseBatchInfo/${encodeURIComponent(batch.batchName)}`);
+            const response = await fetch(buildUrl(`/class-sections/getSemesterWiseBatchInfo/${encodeURIComponent(batch.batchName)}`));
             if (!response.ok) {
                 throw new Error('Failed to fetch batch information');
             }

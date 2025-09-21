@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './StudentTable.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStudentSelect }) => {
   const [students, setStudents] = useState([]);
@@ -55,7 +56,7 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
       // Different API calls based on filter selections
       if (selectedBatch === 'all' && selectedSemester === 'all') {
         // Fetch all students
-        url = 'http://localhost:5001/api/students/getAllStudents';
+        url = buildUrl('/students/getAllStudents');
         console.log('Fetching from URL:', url);
         response = await axios.get(url);
         console.log('All students response:', response.data);
@@ -63,7 +64,7 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
         // First get the batch ID from the batch name
         try {
           // Get all batches
-          const batchesResponse = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+          const batchesResponse = await axios.get(buildUrl('/batches/getAllBatches'));
           console.log('Batches response:', batchesResponse.data);
 
           // Find the batch ID for the selected batch name
@@ -71,7 +72,7 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
 
           if (selectedBatchObj && selectedBatchObj.id) {
             // Fetch students by batch ID
-            url = `http://localhost:5001/api/students/getStudentsByBatch/${selectedBatchObj.id}`;
+            url = buildUrl(`/students/getStudentsByBatch/${selectedBatchObj.id}`);
             console.log('Fetching from URL:', url);
             response = await axios.get(url);
             console.log('Students by batch response:', response.data);
@@ -87,7 +88,7 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
         }
       } else if (selectedBatch !== 'all' && selectedSemester !== 'all') {
         // Fetch students by both batch and semester
-        url = `http://localhost:5001/api/marks/students/${selectedBatch}/${selectedSemester}`;
+        url = buildUrl(`/marks/students/${selectedBatch}/${selectedSemester}`);
         console.log('Fetching from URL:', url);
         response = await axios.get(url);
         console.log('Students by batch and semester response:', response.data);
@@ -136,7 +137,7 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
             if (enrollmentNumber && semester) {
               console.log('Fetching points for student:', enrollmentNumber, 'semester:', semester);
 
-              const pointsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+              const pointsResponse = await axios.post(buildUrl('/events/fetchEventsbyEnrollandSemester'), {
                 enrollmentNumber,
                 semester
               });
@@ -314,7 +315,7 @@ const StudentTable = ({ selectedBatch, selectedSemester, onPointsFilter, onStude
     // Fetch detailed academic data for the student if we have enrollment number
     if (student && student.rollNo) {
       try {
-        const response = await axios.get(`http://localhost:5001/api/studentCPI/enrollment/${student.rollNo}`);
+        const response = await axios.get(buildUrl(`/studentCPI/enrollment/${student.rollNo}`));
         if (response.data) {
           // Backend returns an array of records ordered by Semester.semesterNumber ASC
           const records = Array.isArray(response.data) ? response.data : [];

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const AddFaculty = ({ onSuccess }) => {
     const [facultyData, setFacultyData] = useState({
@@ -26,7 +27,7 @@ const AddFaculty = ({ onSuccess }) => {
         };
 
         try {
-            const response = await fetch('http://localhost:5001/api/faculties/addFaculty', {
+            const response = await fetch(buildUrl('/faculties/addFaculty'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
