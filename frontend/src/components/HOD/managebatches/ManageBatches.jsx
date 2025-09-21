@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./ManageBatches.css";
 import PassStudents from "./PassStudents";
 import BatchOverviewModal from "./BatchOverviewModal";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const ManageBatches = () => {
   const [batches, setBatches] = useState([]);
@@ -61,9 +62,7 @@ const ManageBatches = () => {
   const fetchBatches = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        "http://localhost:5001/api/batches/getAllBatches"
-      );
+      const response = await fetch(buildUrl('/batches/getAllBatches'));
       if (!response.ok) throw new Error("Failed to fetch batches");
       const data = await response.json();
       setBatches(data);
@@ -90,14 +89,11 @@ const ManageBatches = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        "http://localhost:5001/api/batches/addBatch",
-        {
+      const response = await fetch(buildUrl('/batches/addBatch'), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newBatch),
-        }
-      );
+        });
       if (!response.ok) throw new Error("Failed to add batch");
 
       await fetchBatches();
@@ -154,14 +150,11 @@ const ManageBatches = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        "http://localhost:5001/api/semesters/addSemester",
-        {
+      const response = await fetch(buildUrl('/semesters/addSemester'), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(semesterData),
-        }
-      );
+        });
       if (!response.ok) throw new Error("Failed to add semester");
 
       await fetchBatches();
@@ -211,8 +204,6 @@ const ManageBatches = () => {
     }
 
     setIsLoading(true);
-    setError(null);
-
     try {
       const formData = new FormData();
       formData.append("excelFile", semesterToAdd.excelFile);
@@ -220,13 +211,10 @@ const ManageBatches = () => {
       formData.append("batchId", selectedBatch.id);
       formData.append("numberOfClasses", semesterToAdd.numberOfClasses);
 
-      const response = await fetch(
-        "http://localhost:5001/api/excel-upload/upload-all-classes",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(buildUrl('/excel-upload/upload-all-classes'), {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -264,13 +252,10 @@ const ManageBatches = () => {
       const formData = new FormData();
       formData.append("excelFile", semesterToAdd.excelFile);
 
-      const response = await fetch(
-        "http://localhost:5001/api/excel-upload/preview-all-classes",
-        {
+      const response = await fetch(buildUrl('/excel-upload/preview-all-classes'), {
           method: "POST",
           body: formData,
-        }
-      );
+        });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -564,10 +549,7 @@ const ManageBatches = () => {
                           type="button"
                           className="button secondary-button"
                           onClick={() =>
-                            window.open(
-                              "http://localhost:5001/api/excel-upload/template",
-                              "_blank"
-                            )
+                            window.open(buildUrl('/excel-upload/template'), "_blank")
                           }
                           style={{ fontSize: "12px", padding: "6px 12px" }}
                         >
@@ -577,10 +559,7 @@ const ManageBatches = () => {
                           type="button"
                           className="button info-button"
                           onClick={() =>
-                            window.open(
-                              "http://localhost:5001/api/excel-upload/instructions",
-                              "_blank"
-                            )
+                            window.open(buildUrl('/excel-upload/instructions'), "_blank")
                           }
                           style={{ fontSize: "12px", padding: "6px 12px" }}
                         >

@@ -3,6 +3,7 @@ import { FaFileExcel, FaUpload, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import './GradesUploadModal.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const GradesUploadModal = ({ isOpen, onClose }) => {
     const [file, setFile] = useState(null);
@@ -83,7 +84,7 @@ const GradesUploadModal = ({ isOpen, onClose }) => {
                     const jsonData = XLSX.utils.sheet_to_json(worksheet);
                     
                     // Send the parsed data to the server
-                    const response = await axios.post('http://localhost:5001/api/grades/upload', {
+                    const response = await axios.post(buildUrl('/grades/upload'), {
                         gradesData: jsonData
                     });
                     

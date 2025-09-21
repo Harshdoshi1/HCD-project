@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Calendar, Trophy, Filter, Plus } from 'lucide-react';
 import './StudentCoCurricularActivity.css';
 import AddCoCurricularActivityForm from './components/AddCoCurricularActivityForm';
-
-const API_BASE_URL = 'http://localhost:5000/api/students/cocurricular';
+import { buildUrl } from '../../../../utils/apiConfig';
 
 const StudentCoCurricularActivity = ({ student, selectedSemester }) => {
     const [activityFilter, setActivityFilter] = useState('all');
@@ -30,8 +29,8 @@ const StudentCoCurricularActivity = ({ student, selectedSemester }) => {
         try {
             setLoading(true);
             const url = activityFilter === 'all'
-                ? `${API_BASE_URL}/student/${student.id}`
-                : `${API_BASE_URL}/student/${student.id}/semester/${selectedSemester}`;
+                ? buildUrl(`/students/cocurricular/student/${student.id}`)
+                : buildUrl(`/students/cocurricular/student/${student.id}/semester/${selectedSemester}`);
 
             const response = await fetch(url);
             if (!response.ok) {
@@ -75,8 +74,8 @@ const StudentCoCurricularActivity = ({ student, selectedSemester }) => {
         e.preventDefault();
         try {
             const url = showEditForm
-                ? `${API_BASE_URL}/update/${newActivity._id}`
-                : `${API_BASE_URL}/add`;
+                ? buildUrl(`/students/cocurricular/update/${newActivity._id}`)
+                : buildUrl('/students/cocurricular/add');
 
             const method = showEditForm ? 'PUT' : 'POST';
             const response = await fetch(url, {
@@ -111,7 +110,7 @@ const StudentCoCurricularActivity = ({ student, selectedSemester }) => {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/delete/${activityId}`, {
+            const response = await fetch(buildUrl(`/students/cocurricular/delete/${activityId}`), {
                 method: 'DELETE'
             });
 

@@ -10,6 +10,7 @@ import Chart from 'chart.js/auto';
 // Import email service
 import emailService from '../../../services/emailService';
 import './ReportGeneratorModal.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetails, activityList, categoryData, performanceInsights, chartData }) => {
   // Store cached activities by semester
@@ -53,7 +54,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
 
       try {
         console.log(`Fetching semesters for batch: ${student.batchId}`);
-        const response = await axios.get(`http://localhost:5001/api/semesters/batch/${student.batchId}`);
+        const response = await axios.get(buildUrl(`/semesters/batch/${student.batchId}`));
 
         if (response.data && Array.isArray(response.data)) {
           // Sort semesters by semester number
@@ -84,7 +85,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
       try {
         console.log(`Fetching CPI/SPI data for student: ${student.rollNo}`);
         // Use the controller endpoint we examined in studentCPIController.js
-        const response = await axios.get(`http://localhost:5001/api/student-cpi/enrollment/${student.rollNo}`);
+        const response = await axios.get(buildUrl(`/student-cpi/enrollment/${student.rollNo}`));
 
         if (response.data && Array.isArray(response.data)) {
           console.log('Student CPI/SPI data:', response.data);
@@ -108,7 +109,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
 
     try {
       console.log(`Fetching subjects for batch ${batchId}, semester ${semesterId}`);
-      const response = await axios.get(`http://localhost:5001/api/subjects/batch/${batchId}/semester/${semesterId}`);
+      const response = await axios.get(buildUrl(`/subjects/batch/${batchId}/semester/${semesterId}`));
 
       if (response.data && Array.isArray(response.data)) {
         console.log(`Subjects for semester ${semesterId}:`, response.data);
@@ -129,7 +130,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
 
     try {
       console.log(`Fetching marks for student ${studentId}, subject ${subjectCode}`);
-      const response = await axios.get(`http://localhost:5001/api/marks/student/${studentId}/subject/${subjectCode}`);
+      const response = await axios.get(buildUrl(`/marks/student/${studentId}/subject/${subjectCode}`));
 
       if (response.data) {
         console.log(`Marks for student ${studentId}, subject ${subjectCode}:`, response.data);
@@ -150,7 +151,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
 
     try {
       // Directly fetch academic details from the API for this specific semester
-      const response = await axios.get(`http://localhost:5001/api/academic-details/student/${student.rollNo}/semester/${semester}`);
+      const response = await axios.get(buildUrl(`/academic-details/student/${student.rollNo}/semester/${semester}`));
 
       if (!response.data || !response.data.success) {
         console.warn(`No academic data found for semester ${semester}`);
@@ -1105,7 +1106,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                 console.log(`Fetching activities for semester ${semester} - Step 1: Get event IDs`);
 
                 // Step 1: Fetch events by enrollment and semester
-                const response = await axios.post('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+                const response = await axios.post(buildUrl('/events/fetchEventsbyEnrollandSemester'), {
                   enrollmentNumber: student.rollNo,
                   semester: semester.toString()
                 });
@@ -1131,7 +1132,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
                     console.log(`Fetching activities for semester ${semester} - Step 2: Get event details for IDs: ${eventIdsString}`);
 
                     // Step 2: Fetch event details from EventMaster table
-                    const eventDetailsResponse = await axios.post('http://localhost:5001/api/events/fetchEventsByIds', {
+                    const eventDetailsResponse = await axios.post(buildUrl('/events/fetchEventsByIds'), {
                       eventIds: eventIdsString
                     });
 
@@ -1350,7 +1351,7 @@ const ReportGeneratorModal = ({ student, onClose, semesterPoints, academicDetail
           try {
             // Fetch academic details for this specific semester
             console.log(`Fetching academic details for semester ${semester}`);
-            const response = await axios.get(`http://localhost:5001/api/academic-details/student/${student.rollNo}/semester/${semester}`);
+            const response = await axios.get(buildUrl(`/academic-details/student/${student.rollNo}/semester/${semester}`));
 
             let semesterAcademics = null;
             if (response.data && response.data.success) {

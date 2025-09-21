@@ -16,6 +16,7 @@ import EmailNotification from "./EmailNotification";
 import ReportGenerator from "./ReportGenerator";
 import "./Dashboard.css";
 import { useLocation, useNavigate } from "react-router-dom";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const DashboardHOD = () => {
   const [activeItem, setActiveItem] = useState("dashboard");
@@ -158,7 +159,7 @@ const DashboardHOD = () => {
     try {
       console.log("Fetching batches...");
       const response = await axios.get(
-        "http://localhost:5001/api/batches/getAllBatches"
+        buildUrl('/batches/getAllBatches')
       );
       console.log("Batch API response:", response.data);
 

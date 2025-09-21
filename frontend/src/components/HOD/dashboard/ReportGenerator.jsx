@@ -25,6 +25,7 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import "./ReportGenerator.css";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const ReportGenerator = ({
   students: initialStudents,
@@ -75,7 +76,7 @@ const ReportGenerator = ({
     setError(null);
     try {
       const response = await axios.get(
-        "http://localhost:5001/api/batches/getAllBatches"
+        buildUrl('/batches/getAllBatches')
       );
       if (response.data && Array.isArray(response.data)) {
         const batchNames = response.data.map((batch) => batch.batchName);
@@ -102,12 +103,12 @@ const ReportGenerator = ({
 
       if (batch === "all") {
         // Fetch all students
-        url = "http://localhost:5001/api/students/getAllStudents";
+        url = buildUrl('/students/getAllStudents');
         response = await axios.get(url);
       } else {
         // First get the batch ID from the batch name
         const batchesResponse = await axios.get(
-          "http://localhost:5001/api/batches/getAllBatches"
+          buildUrl('/batches/getAllBatches')
         );
         const selectedBatchObj = batchesResponse.data.find(
           (b) => b.batchName === batch
@@ -115,7 +116,7 @@ const ReportGenerator = ({
 
         if (selectedBatchObj && selectedBatchObj.id) {
           // Fetch students by batch ID
-          url = `http://localhost:5001/api/students/getStudentsByBatch/${selectedBatchObj.id}`;
+          url = buildUrl(`/students/getStudentsByBatch/${selectedBatchObj.id}`);
           response = await axios.get(url);
         } else {
           throw new Error(`Batch ID not found for batch name: ${batch}`);
@@ -142,7 +143,7 @@ const ReportGenerator = ({
 
                 if (enrollmentNumber && semester) {
                   const pointsResponse = await axios.post(
-                    "http://localhost:5001/api/events/fetchEventsbyEnrollandSemester",
+                    buildUrl('/events/fetchEventsbyEnrollandSemester'),
                     {
                       enrollmentNumber,
                       semester,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './PassStudents.css';
 import { Search } from 'lucide-react';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const PassStudents = ({ isOpen, onClose }) => {
     const [batches, setBatches] = useState([]);
@@ -25,7 +26,7 @@ const PassStudents = ({ isOpen, onClose }) => {
     const fetchBatches = async () => {
         setLoading(true);
         try {
-            const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
+            const response = await fetch(buildUrl('/batches/getAllBatches'));
             if (!response.ok) throw new Error("Failed to fetch batches");
             const data = await response.json();
             setBatches(data);
@@ -50,7 +51,7 @@ const PassStudents = ({ isOpen, onClose }) => {
     const fetchSemesters = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${selectedBatch.batchName}`);
+            const response = await fetch(buildUrl(`/semesters/getSemestersByBatch/${selectedBatch.batchName}`));
             if (!response.ok) throw new Error("Failed to fetch semesters");
             const data = await response.json();
             setSemesters(data);
@@ -76,7 +77,7 @@ const PassStudents = ({ isOpen, onClose }) => {
     const fetchStudents = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5001/api/students/getStudentsByBatch/${selectedBatch.id}`);
+            const response = await fetch(buildUrl(`/students/getStudentsByBatch/${selectedBatch.id}`));
             if (!response.ok) throw new Error("Failed to fetch students");
             const data = await response.json();
             setStudents(data);
@@ -176,7 +177,7 @@ const PassStudents = ({ isOpen, onClose }) => {
 
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/students/updateStudentSemesters', {
+            const response = await fetch(buildUrl('/students/updateStudentSemesters'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Book, Award, Trophy } from 'lucide-react';
 import './Overview.css';
+import { buildUrl } from '../../../../utils/apiConfig';
 
 const Overview = ({ student }) => {
   const [academicData, setAcademicData] = useState({
@@ -25,7 +26,7 @@ const Overview = ({ student }) => {
       setAcademicData(prev => ({ ...prev, loading: true, error: null }));
       console.log('Fetching student academic data for enrollment number:', enrollmentNumber);
       
-      const response = await fetch(`http://localhost:5001/api/studentCPI/enrollment/${enrollmentNumber}`);
+      const response = await fetch(buildUrl(`/studentCPI/enrollment/${enrollmentNumber}`));
       console.log('Response status:', response.status);
       
       if (!response.ok) {

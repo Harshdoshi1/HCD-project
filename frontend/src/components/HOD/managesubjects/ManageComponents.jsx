@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./ManageComponents.css";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const ManageComponents = ({ selectedSubject }) => {
   const [newSubject, setNewSubject] = useState({
@@ -69,7 +70,7 @@ const ManageComponents = ({ selectedSubject }) => {
     const fetchBloomsLevels = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5001/api/blooms-taxonomy"
+          buildUrl('/blooms-taxonomy')
         );
         if (response.ok) {
           const data = await response.json();
@@ -411,7 +412,7 @@ const ManageComponents = ({ selectedSubject }) => {
 
       // Call the API endpoint to add subject with components
       const response = await fetch(
-        "http://localhost:5001/api/subjects/addSubjectWithComponents",
+        buildUrl('/subjects/addSubjectWithComponents'),
         {
           method: "POST",
           headers: {

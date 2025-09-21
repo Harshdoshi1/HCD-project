@@ -5,6 +5,7 @@ import Select from 'react-select';
 import StudentModal from './StudentModal';
 import StudentGradesExcell from './StudentGradesExcell';
 import './StudentsList.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const StudentsList = ({ onStudentSelect }) => {
     const [selectedBatch, setSelectedBatch] = useState('');
@@ -24,7 +25,7 @@ const StudentsList = ({ onStudentSelect }) => {
 
     const fetchStudents = async () => {
         try {
-            const response = await fetch('http://localhost:5001/api/students/getAllStudents');
+            const response = await fetch(buildUrl('/students/getAllStudents'));
             if (!response.ok) {
                 throw new Error('Failed to fetch students');
             }
