@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ActivityForm.css';
+import { buildUrl } from '../../../../utils/apiConfig';
 
 const ActivityForm = ({ formType, activity, onSubmit, onClose, isEdit, currentSemester, activityType }) => {
     const [formData, setFormData] = useState({
@@ -62,19 +63,17 @@ const ActivityForm = ({ formType, activity, onSubmit, onClose, isEdit, currentSe
             };
 
             // Determine the API endpoint based on formType
-            let apiUrl = '';
+            let apiBase = '';
             if (formType === 'co-curricular') {
-                apiUrl = 'http://localhost:5001/api/students/cocurricular/';
+                apiBase = buildUrl('/students/cocurricular');
             } else if (formType === 'extra-curricular') {
-                apiUrl = 'http://localhost:5001/api/students/extracurricular/';
+                apiBase = buildUrl('/students/extracurricular');
             } else {
                 throw new Error('Invalid form type specified');
             }
 
             // Add ID if editing
-            if (isEdit && activity?.id) {
-                apiUrl += activity.id;
-            }
+            const apiUrl = isEdit && activity?.id ? `${apiBase}/${activity.id}` : apiBase;
 
             // Make API call
             const response = await fetch(apiUrl, {

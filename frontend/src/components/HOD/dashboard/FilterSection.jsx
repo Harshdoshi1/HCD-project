@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './FilterSection.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const FilterSection = ({ selectedBatch, onFilterChange }) => {
   const [batches, setBatches] = useState(['all']);
@@ -26,7 +27,7 @@ const FilterSection = ({ selectedBatch, onFilterChange }) => {
     setError(null);
     try {
       console.log('Fetching batches...');
-      const response = await axios.get('http://localhost:5001/api/batches/getAllBatches');
+      const response = await axios.get(buildUrl('/batches/getAllBatches'));
       console.log('Batch API response:', response.data);
       
       if (response.data && Array.isArray(response.data)) {

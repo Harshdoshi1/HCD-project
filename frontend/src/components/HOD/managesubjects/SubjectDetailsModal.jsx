@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './SubjectDetailsModal.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const SubjectDetailsModal = ({ isOpen, onClose, subject }) => {
     const [marksData, setMarksData] = useState(null);
@@ -20,7 +21,7 @@ const SubjectDetailsModal = ({ isOpen, onClose, subject }) => {
                 let weightagesFetchError = null;
 
                 try {
-                    const marksResponse = await axios.get(`http://localhost:5001/api/components/marksBySubject/${subject.sub_code}`);
+                    const marksResponse = await axios.get(buildUrl(`/components/marksBySubject/${subject.sub_code}`));
                     setMarksData(marksResponse.data);
                 } catch (err) {
                     console.error("Error fetching subject marks:", err);
@@ -28,7 +29,7 @@ const SubjectDetailsModal = ({ isOpen, onClose, subject }) => {
                 }
 
                 try {
-                    const weightagesResponse = await axios.get(`http://localhost:5001/api/weightages/weightagesBySubject/${subject.sub_code}`);
+                    const weightagesResponse = await axios.get(buildUrl(`/weightages/weightagesBySubject/${subject.sub_code}`));
                     // API returns an array, typically we expect one weightage set per subject for this view
                     setWeightagesData(weightagesResponse.data && weightagesResponse.data.length > 0 ? weightagesResponse.data[0] : null);
                 } catch (err) {

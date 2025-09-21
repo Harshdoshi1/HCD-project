@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Book, Users, CalendarDays, Filter, Grid, Award, Clock, MoreHorizontal, Download, Search, Sliders, X } from "lucide-react";
 import './AssignedSubjects.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const SubjectCard = ({ subject }) => {
     return (
@@ -92,7 +93,7 @@ const AssignedSubjects = () => {
         const fetchSubjects = async () => {
             setIsLoading(true);
             try {
-                const response = await fetch(`http://localhost:5001/api/faculties/getSubjectsByFaculty/${facultyId}`);
+                const response = await fetch(buildUrl(`/faculties/getSubjectsByFaculty/${facultyId}`));
                 if (!response.ok) {
                     throw new Error('Failed to fetch subjects');
                 }

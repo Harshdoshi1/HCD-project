@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { PulseLoader } from 'react-spinners';
+import { buildUrl } from '../../utils/apiConfig';
 
 function Login() {
     const navigate = useNavigate();
@@ -43,7 +44,7 @@ function Login() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5001/api/users/login', {
+            const response = await fetch(buildUrl('/users/login'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

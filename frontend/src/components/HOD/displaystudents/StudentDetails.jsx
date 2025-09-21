@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Mail, Phone, User } from 'lucide-react';
 import './StudentDetail.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 // Import the new components
 import Overview from './components/Overview';
@@ -37,7 +38,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
         setIsLoading(true);
         try {
             // Get all students and filter by enrollment number
-            const response = await fetch('http://localhost:5001/api/students/getAllStudents');
+            const response = await fetch(buildUrl('/students/getAllStudents'));
             if (!response.ok) {
                 throw new Error('Failed to fetch students data');
             }
@@ -108,7 +109,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
     const fetchExtraCurricularActivities = async (enrollmentNumber) => {
         try {
 
-            const response = await fetch(`http://localhost:5001/api/students/extracurricular/student/${enrollmentNumber}`);
+            const response = await fetch(buildUrl(`/students/extracurricular/student/${enrollmentNumber}`));
 
             // If the API returns an error, use mock data
             if (!response.ok) {
@@ -226,8 +227,8 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
     const handleDeleteActivity = async (activityId, type) => {
         try {
             const endpoint = type === 'co'
-                ? `http://localhost:5001/api/students/cocurricular/${activityId}`
-                : `http://localhost:5001/api/students/extracurricular/${activityId}`;
+                ? buildUrl(`/students/cocurricular/${activityId}`)
+                : buildUrl(`/students/extracurricular/${activityId}`);
 
             const response = await fetch(endpoint, {
                 method: 'DELETE'

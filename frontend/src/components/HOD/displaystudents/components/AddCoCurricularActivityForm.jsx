@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './AddCoCurricularActivityForm.css';
+import { buildUrl } from '../../../../utils/apiConfig';
 
 const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId, isEditing = false }) => {
     const [formData, setFormData] = useState({
@@ -17,7 +18,7 @@ const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId, 
     useEffect(() => {
         const fetchActivities = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/events/allCoCurricularnames');
+                const response = await fetch(buildUrl('/events/allCoCurricularnames'));
                 const data = await response.json();
                 if (data.success) {
                     setActivities(data.data);
@@ -29,7 +30,7 @@ const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId, 
 
         const fetchParticipationTypes = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/events/allParticipationTypes');
+                const response = await fetch(buildUrl('/events/allParticipationTypes'));
                 const data = await response.json();
                 if (data.success) {
                     setParticipationTypes(data.data);
@@ -47,7 +48,7 @@ const AddCoCurricularActivityForm = ({ activity, onClose, onSubmit, semesterId, 
         e.preventDefault();
 
         try {
-            const response = await fetch('http://localhost:5001/api/events/insertIntoStudentPoints', {
+            const response = await fetch(buildUrl('/events/insertIntoStudentPoints'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const Charts = ({ student, category }) => {
   const [activityPoints, setActivityPoints] = useState({
@@ -19,7 +20,7 @@ const Charts = ({ student, category }) => {
     setIsLoading(true);
     try {
       // First, fetch event IDs for the student
-      const idsResponse = await fetch('http://localhost:5001/api/events/fetchEventsIDsbyEnroll', {
+      const idsResponse = await fetch(buildUrl('/events/fetchEventsIDsbyEnroll'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ const Charts = ({ student, category }) => {
 
         if (allEventIds) {
           // Fetch co-curricular events
-          const coResponse = await fetch('http://localhost:5001/api/events/fetchEventsByEventIds', {
+          const coResponse = await fetch(buildUrl('/events/fetchEventsByEventIds'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -59,7 +60,7 @@ const Charts = ({ student, category }) => {
           });
 
           // Fetch extra-curricular events
-          const extraResponse = await fetch('http://localhost:5001/api/events/fetchEventsByEventIds', {
+          const extraResponse = await fetch(buildUrl('/events/fetchEventsByEventIds'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

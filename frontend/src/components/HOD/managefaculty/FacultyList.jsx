@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import FacultyCard from './FacultyCard';
 import './Faculty.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const FacultyList = ({ searchTerm, onSelectFaculty }) => {
     const [facultyMembers, setFacultyMembers] = useState([]);
@@ -10,7 +11,7 @@ const FacultyList = ({ searchTerm, onSelectFaculty }) => {
     useEffect(() => {
         const fetchFacultyData = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllUsers");
+                const response = await fetch(buildUrl('/users/getAllUsers'));
                 if (!response.ok) {
                     throw new Error('Failed to fetch faculty data');
                 }

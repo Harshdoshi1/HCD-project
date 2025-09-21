@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const StudentTable = ({
   onViewDetails,
@@ -14,7 +15,7 @@ const StudentTable = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/students/getAllStudents');
+        const response = await fetch(buildUrl('/students/getAllStudents'));
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

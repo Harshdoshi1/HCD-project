@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './AddFacultyModal.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const AddFacultyModal = ({ onClose, onSuccess }) => {
     const [facultyData, setFacultyData] = useState({
@@ -25,7 +26,7 @@ const AddFacultyModal = ({ onClose, onSuccess }) => {
         };
 
         try {
-            const response = await fetch('http://localhost:5001/api/faculties/addFaculty', {
+            const response = await fetch(buildUrl('/faculties/addFaculty'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(facultyDetails),

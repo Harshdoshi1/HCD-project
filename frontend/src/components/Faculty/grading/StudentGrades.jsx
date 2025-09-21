@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import "./StudentGrades.css";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const StudentGrades = () => {
   const [batches, setBatches] = useState([]);
@@ -78,7 +79,7 @@ const StudentGrades = () => {
       console.log("Fetching components for subject:", subjectCode);
 
       const response = await fetch(
-        `http://localhost:5001/api/subjects/getSubjectComponentsWithSubjectCode/${subjectCode}`
+        buildUrl(`/subjects/getSubjectComponentsWithSubjectCode/${subjectCode}`)
       );
       if (!response.ok) {
         const errorData = await response.json();
@@ -272,7 +273,7 @@ const StudentGrades = () => {
       });
 
       const response = await fetch(
-        `http://localhost:5001/api/student-marks/update/${studentId}/${selectedSubject.subCode}`,
+        buildUrl(`/student-marks/update/${studentId}/${selectedSubject.subCode}`),
         {
           method: "POST",
           headers: {
@@ -342,7 +343,7 @@ const StudentGrades = () => {
       //fetch semesterID from semesterNumber
       const semesterID = selectedSemester.id;
       const response = await fetch(
-        `http://localhost:5001/api/marks/students/${batchId}/${selectedSemester.semesterNumber}`
+        buildUrl(`/marks/students/${batchId}/${selectedSemester.semesterNumber}`)
       );
 
       if (!response.ok) {
@@ -453,7 +454,7 @@ const StudentGrades = () => {
       try {
         console.log("Fetching all batches...");
         const response = await fetch(
-          "http://localhost:5001/api/batches/getAllBatches"
+          buildUrl('/batches/getAllBatches')
         );
         if (!response.ok) {
           const errorData = await response.json();
@@ -489,7 +490,7 @@ const StudentGrades = () => {
       try {
         console.log("Fetching semesters for batch:", selectedBatch.batchName);
         const response = await fetch(
-          `http://localhost:5001/api/semesters/getSemestersByBatch/${selectedBatch.batchName}`
+          buildUrl(`/semesters/getSemestersByBatch/${selectedBatch.batchName}`)
         );
         if (!response.ok) {
           const errorData = await response.json();
@@ -532,7 +533,7 @@ const StudentGrades = () => {
 
         // First, get the batch ID from batch name
         const batchIdResponse = await fetch(
-          `http://localhost:5001/api/facultyside/marks/getBatchId/${selectedBatch.batchName}`,
+          buildUrl(`/facultyside/marks/getBatchId/${selectedBatch.batchName}`),
           {
             method: "POST",
             headers: {
@@ -553,7 +554,7 @@ const StudentGrades = () => {
 
         // Use the new API endpoint that filters by faculty name with the batch ID
         const response = await fetch(
-          `http://localhost:5001/api/facultyside/marks/getsubjectByBatchAndSemester/${batchId}/${selectedSemester.semesterNumber}/${faculty.name}`
+          buildUrl(`/facultyside/marks/getsubjectByBatchAndSemester/${batchId}/${selectedSemester.semesterNumber}/${faculty.name}`)
         );
 
         if (!response.ok) throw new Error("Failed to fetch subjects");
@@ -566,7 +567,7 @@ const StudentGrades = () => {
             try {
               // Get subject name from subject code
               const subjectNameResponse = await fetch(
-                `http://localhost:5001/api/facultyside/marks/getSubjectName/${subject.subjectCode}`,
+                buildUrl(`/facultyside/marks/getSubjectName/${subject.subjectCode}`),
                 {
                   method: "POST",
                   headers: {
@@ -621,7 +622,7 @@ const StudentGrades = () => {
   const fetchExistingMarks = async (batchId, subjectCode, semesterId) => {
     try {
       const response = await fetch(
-        `http://localhost:5001/api/student-marks/grading/${batchId}/${selectedSemester.semesterNumber}/${subjectCode}`
+        buildUrl(`/student-marks/grading/${batchId}/${selectedSemester.semesterNumber}/${subjectCode}`)
       );
 
       if (response.ok) {
@@ -671,7 +672,7 @@ const StudentGrades = () => {
       try {
         // Get batch ID first
         const batchIdResponse = await fetch(
-          `http://localhost:5001/api/facultyside/marks/getBatchId/${selectedBatch.batchName}`,
+          buildUrl(`/facultyside/marks/getBatchId/${selectedBatch.batchName}`),
           {
             method: "POST",
             headers: {
@@ -699,7 +700,7 @@ const StudentGrades = () => {
         // );
         // Use the new API endpoint that filters by both batch and semester
         const response = await fetch(
-          `http://localhost:5001/api/marks/students/${batchId}/${selectedSemester.semesterNumber}`
+          buildUrl(`/marks/students/${batchId}/${selectedSemester.semesterNumber}`)
         );
         if (!response.ok) throw new Error("Failed to fetch students");
         const data = await response.json();
@@ -752,7 +753,7 @@ const StudentGrades = () => {
       if (!student) throw new Error("Student not found");
 
       const response = await fetch(
-        `http://localhost:5001/api/marks/update/${studentId}/${selectedSubject.subCode}`,
+        buildUrl(`/marks/update/${studentId}/${selectedSubject.subCode}`),
         {
           method: "POST",
           headers: {
@@ -825,7 +826,7 @@ const StudentGrades = () => {
         try {
           // Get batch ID from batch name
           const batchIdResponse = await fetch(
-            `http://localhost:5001/api/facultyside/marks/getBatchId/${selectedBatch.batchName}`,
+            buildUrl(`/facultyside/marks/getBatchId/${selectedBatch.batchName}`),
             {
               method: "POST",
               headers: {
@@ -843,7 +844,7 @@ const StudentGrades = () => {
           const getCurrentSemester = async (batchId) => {
             try {
               const response = await fetch(
-                `http://localhost:5001/api/semesters/getSemesterNumberById/${batchId}`
+                buildUrl(`/semesters/getSemesterNumberById/${batchId}`)
               );
 
               if (!response.ok) {

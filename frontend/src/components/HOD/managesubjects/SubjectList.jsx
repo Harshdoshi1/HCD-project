@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import "./SubjectList.css";
 import SubjectDetailsModal from './SubjectDetailsModal'; // Import the modal component
+import { buildUrl } from '../../../utils/apiConfig';
 
 const SubjectList = ({ onSelectSubject }) => {
     const [filters, setFilters] = useState({
@@ -22,7 +23,7 @@ const SubjectList = ({ onSelectSubject }) => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
+                const response = await fetch(buildUrl('/batches/getAllBatches'));
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data);
@@ -45,7 +46,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 const encodedBatchName = encodeURIComponent(filters.batch);
                 console.log(`Fetching semesters for batch: ${filters.batch} (encoded: ${encodedBatchName})`);
 
-                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${encodedBatchName}`);
+                const response = await fetch(buildUrl(`/semesters/getSemestersByBatch/${encodedBatchName}`));
                 if (!response.ok) {
                     if (response.status === 404) {
                         console.log(`No semesters found for batch: ${filters.batch}`);
@@ -82,7 +83,7 @@ const SubjectList = ({ onSelectSubject }) => {
                 console.log(`Fetching subjects for batch: ${filters.batch} and semester: ${filters.semester}`);
 
                 const response = await fetch(
-                    `http://localhost:5001/api/subjects/getSubjects/${encodedBatchName}/${filters.semester}`
+                    buildUrl(`/subjects/getSubjects/${encodedBatchName}/${filters.semester}`)
                 );
 
                 if (!response.ok) {

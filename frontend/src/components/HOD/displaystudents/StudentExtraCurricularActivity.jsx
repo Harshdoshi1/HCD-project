@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Calendar, Trophy, Filter, Plus } from 'lucide-react';
 import './StudentCoCurricularActivity.css';
 import ExtraCurricularActivityForm from './components/ExtraCurricularActivityForm';
-
-const API_BASE_URL = 'http://localhost:5000/api/extracurricular';
+import { buildUrl } from '../../../../utils/apiConfig';
 
 const StudentExtraCurricularActivity = ({ student, selectedSemester }) => {
     const [activityFilter, setActivityFilter] = useState('all');
@@ -30,8 +29,8 @@ const StudentExtraCurricularActivity = ({ student, selectedSemester }) => {
         try {
             setLoading(true);
             const url = activityFilter === 'all'
-                ? `${API_BASE_URL}/student/${student.id}`
-                : `${API_BASE_URL}/student/${student.id}/semester/${selectedSemester}`;
+                ? buildUrl(`/extracurricular/student/${student.id}`)
+                : buildUrl(`/extracurricular/student/${student.id}/semester/${selectedSemester}`);
 
             const response = await fetch(url);
             if (!response.ok) {
@@ -75,8 +74,8 @@ const StudentExtraCurricularActivity = ({ student, selectedSemester }) => {
         e.preventDefault();
         try {
             const url = showEditForm
-                ? `${API_BASE_URL}/update/${newActivity._id}`
-                : `${API_BASE_URL}/add`;
+                ? buildUrl(`/extracurricular/update/${newActivity._id}`)
+                : buildUrl('/extracurricular/add');
 
             const method = showEditForm ? 'PUT' : 'POST';
             const response = await fetch(url, {
@@ -111,7 +110,7 @@ const StudentExtraCurricularActivity = ({ student, selectedSemester }) => {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/delete/${activityId}`, {
+            const response = await fetch(buildUrl(`/extracurricular/delete/${activityId}`), {
                 method: 'DELETE'
             });
 

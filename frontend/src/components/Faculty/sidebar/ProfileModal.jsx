@@ -5,6 +5,7 @@ import { FiUser, FiMail } from "react-icons/fi";
 import { RiLockPasswordLine } from "react-icons/ri";
 import ChangePasswordModal from "./ChangePasswordModal";
 import "./ProfileModal.css";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const ProfileModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
@@ -52,7 +53,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
             }
 
             // Fetch user data from the backend
-            const response = await axios.get(`http://localhost:5001/api/users/byEmail/${storedEmail}`);
+            const response = await axios.get(buildUrl(`/users/byEmail/${storedEmail}`));
 
             if (response.data && response.data.id) {
                 const userData = response.data;
@@ -92,7 +93,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
             }
 
             // Update user data in the database
-            const response = await axios.put(`http://localhost:5001/api/users/${facultyId}`, {
+            const response = await axios.put(buildUrl(`/users/${facultyId}`), {
                 username,
                 email
             });

@@ -36,7 +36,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
       // Test batches API
       console.log("1. Testing batches API...");
       const batchesResponse = await axios.get(
-        "http://localhost:5001/api/batches/getAllBatches"
+        buildUrl('/batches/getAllBatches')
       );
       console.log("Batches API response:", batchesResponse.data);
 
@@ -55,7 +55,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
 
         try {
           const semestersResponse = await axios.get(
-            `http://localhost:5001/api/semesters/batch/${firstBatch.id}`
+            buildUrl(`/semesters/batch/${firstBatch.id}`)
           );
           console.log("Semesters API response:", semestersResponse.data);
 
@@ -73,18 +73,18 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
             try {
               // Fetch semester ID from semester number
               const semesterIdResponse = await axios.get(
-                `http://localhost:5001/api/semesters/id/${firstSemester.semesterNumber}`
+                buildUrl(`/semesters/id/${firstSemester.semesterNumber}`)
               );
               const semesterID = semesterIdResponse.data.semesterId;
               //Fetch BatchId from batchname
               const batchIdResponse = await axios.get(
-                `http://localhost:5001/api/batches/getBatchIdByName/${firstBatch.batchName}`
+                buildUrl(`/batches/getBatchIdByName/${firstBatch.batchName}`)
               );
               const batchID = batchIdResponse.data.batchId;
 
               try {
                 const marksResponse = await axios.get(
-                  `http://localhost:5001/api/marks/students/${batchID}/${semesterID}`
+                  buildUrl(`/marks/students/${batchID}/${semesterID}`)
                 );
                 console.log("Marks API response:", marksResponse.data);
               } catch (err) {
@@ -127,7 +127,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
       if (selectedBatch !== "all") {
         try {
           const batchesResponse = await axios.get(
-            "http://localhost:5001/api/batches/getAllBatches"
+            buildUrl('/batches/getAllBatches')
           );
           const selectedBatchObj = batchesResponse.data.find(
             (batch) => batch.batchName === selectedBatch
@@ -146,7 +146,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
       if (batchId) {
         try {
           const semestersResponse = await axios.get(
-            `http://localhost:5001/api/semesters/batch/${batchId}`
+            buildUrl(`/semesters/batch/${batchId}`)
           );
           if (semestersResponse.data && Array.isArray(semestersResponse.data)) {
             semestersData = semestersResponse.data.sort(
@@ -172,7 +172,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
 
             const studentsResponse = await axios
               .get(
-                `http://localhost:5001/api/marks/students/${selectedBatch}/${semester.semesterNumber}`
+                buildUrl(`/marks/students/${selectedBatch}/${semester.semesterNumber}`)
               )
               .catch((err) => {
                 console.error(`Error fetching students data: ${err.message}`);
@@ -191,7 +191,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
               for (const student of students) {
                 try {
                   const pointsResponse = await axios.post(
-                    "http://localhost:5001/api/events/fetchEventsbyEnrollandSemester",
+                    buildUrl('/events/fetchEventsbyEnrollandSemester'),
                     {
                       enrollmentNumber:
                         student.enrollmentNumber || student.rollNo,
@@ -230,7 +230,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
               // This would ideally come from a real API endpoint
               const academicResponse = await axios
                 .get(
-                  `http://localhost:5001/api/academic-performance/batch/${batchId}/semester/${semester.semesterNumber}`
+                  buildUrl(`/academic-performance/batch/${batchId}/semester/${semester.semesterNumber}`)
                 )
                 .catch(() => ({
                   data: { averageScore: Math.floor(Math.random() * 40) + 60 },
@@ -268,7 +268,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
           console.log(`Fetching students for batch ID ${batchId}...`);
           const batchStudentsResponse = await axios
             .get(
-              `http://localhost:5001/api/students/getStudentsByBatch/${batchId}`
+              buildUrl(`/students/getStudentsByBatch/${batchId}`)
             )
             .catch((err) => {
               console.error(`Error fetching batch students: ${err.message}`);
@@ -291,7 +291,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
                   );
                   const cpiResponse = await axios
                     .get(
-                      `http://localhost:5001/api/student-cpi/enrollment/${student.enrollmentNumber}`
+                      buildUrl(`/student-cpi/enrollment/${student.enrollmentNumber}`)
                     )
                     .catch((err) => {
                       console.error(`Error fetching CPI data: ${err.message}`);
@@ -346,7 +346,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
 
                   for (const semNumber of semestersWithData) {
                     const pointsResponse = await axios.post(
-                      "http://localhost:5001/api/events/fetchEventsbyEnrollandSemester",
+                      buildUrl('/events/fetchEventsbyEnrollandSemester'),
                       {
                         enrollmentNumber: student.enrollmentNumber,
                         semester: semNumber,
@@ -422,7 +422,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         try {
           // Get all batches to generate representative data
           const batchesResponse = await axios.get(
-            "http://localhost:5001/api/batches/getAllBatches"
+            buildUrl('/batches/getAllBatches')
           );
 
           if (batchesResponse.data && Array.isArray(batchesResponse.data)) {
@@ -434,7 +434,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
             for (const batch of batchesResponse.data) {
               try {
                 const semestersResponse = await axios.get(
-                  `http://localhost:5001/api/semesters/batch/${batch.id}`
+                  buildUrl(`/semesters/batch/${batch.id}`)
                 );
                 if (
                   semestersResponse.data &&
@@ -511,14 +511,14 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
       // Different API calls based on filter selections
       if (selectedBatch === "all" && selectedSemester === "all") {
         // Fetch all students
-        url = "http://localhost:5001/api/students/getAllStudents";
+        url = buildUrl('/students/getAllStudents');
         response = await axios.get(url);
       } else if (selectedBatch !== "all" && selectedSemester === "all") {
         // First get the batch ID from the batch name
         try {
           // Get all batches
           const batchesResponse = await axios.get(
-            "http://localhost:5001/api/batches/getAllBatches"
+            buildUrl('/batches/getAllBatches')
           );
           console.log("Batches response:", batchesResponse.data);
 
@@ -529,7 +529,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
 
           if (selectedBatchObj && selectedBatchObj.id) {
             // Fetch students by batch ID
-            url = `http://localhost:5001/api/students/getStudentsByBatch/${selectedBatchObj.id}`;
+            url = buildUrl(`/students/getStudentsByBatch/${selectedBatchObj.id}`);
             console.log("Fetching from URL:", url);
             response = await axios.get(url);
           } else {
@@ -548,7 +548,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         }
       } else if (selectedBatch !== "all" && selectedSemester !== "all") {
         // Fetch students by both batch and semester
-        url = `http://localhost:5001/api/marks/students/${selectedBatch}/${selectedSemester}`;
+        url = buildUrl(`/marks/students/${selectedBatch}/${selectedSemester}`);
         response = await axios.get(url);
       } else {
         // Invalid filter combination (all batches but specific semester)
@@ -573,85 +573,85 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
         // Process student data to match the expected format
         const formattedStudents = Array.isArray(dataToProcess)
           ? await Promise.all(
-              dataToProcess.map(async (student) => {
-                // Initialize points object with curricular as 0
-                let points = {
-                  curricular: 0, // Keep curricular points as zero as requested
-                  coCurricular: 0,
-                  extraCurricular: 0,
-                };
+            dataToProcess.map(async (student) => {
+              // Initialize points object with curricular as 0
+              let points = {
+                curricular: 0, // Keep curricular points as zero as requested
+                coCurricular: 0,
+                extraCurricular: 0,
+              };
 
-                // Fetch co-curricular and extra-curricular points from student_points table
-                try {
-                  const enrollmentNumber =
-                    student.enrollmentNumber || student.rollNo;
-                  const semester = student.currnetsemester || selectedSemester;
+              // Fetch co-curricular and extra-curricular points from student_points table
+              try {
+                const enrollmentNumber =
+                  student.enrollmentNumber || student.rollNo;
+                const semester = student.currnetsemester || selectedSemester;
 
-                  if (enrollmentNumber && semester) {
-                    const pointsResponse = await axios.post(
-                      "http://localhost:5001/api/events/fetchEventsbyEnrollandSemester",
-                      {
-                        enrollmentNumber,
-                        semester,
-                      }
-                    );
-
-                    console.log(
-                      "Student points response in PerformanceOverview:",
-                      pointsResponse.data
-                    );
-
-                    if (
-                      pointsResponse.data &&
-                      Array.isArray(pointsResponse.data)
-                    ) {
-                      // Sum up all co-curricular and extra-curricular points
-                      pointsResponse.data.forEach((activity) => {
-                        points.coCurricular += parseInt(
-                          activity.totalCocurricular || 0
-                        );
-                        points.extraCurricular += parseInt(
-                          activity.totalExtracurricular || 0
-                        );
-                      });
-                    } else if (
-                      pointsResponse.data &&
-                      pointsResponse.data.totalCocurricular
-                    ) {
-                      // If it's a single object with the totals
-                      points.coCurricular = parseInt(
-                        pointsResponse.data.totalCocurricular || 0
-                      );
-                      points.extraCurricular = parseInt(
-                        pointsResponse.data.totalExtracurricular || 0
-                      );
+                if (enrollmentNumber && semester) {
+                  const pointsResponse = await axios.post(
+                    buildUrl('/events/fetchEventsbyEnrollandSemester'),
+                    {
+                      enrollmentNumber,
+                      semester,
                     }
-                  }
-                } catch (error) {
-                  console.error(
-                    "Error fetching student points in PerformanceOverview:",
-                    error
                   );
-                  // Keep the default values if there's an error
-                }
 
-                return {
-                  id: student.id || Math.random().toString(36).substr(2, 9),
-                  name: student.name || student.studentName || "Unknown",
-                  rollNo: student.enrollmentNumber || student.rollNo || "N/A",
-                  batch:
-                    student.batchName ||
-                    (student.Batch ? student.Batch.batchName : selectedBatch),
-                  semester:
-                    student.semesterNumber ||
-                    student.currnetsemester ||
-                    selectedSemester,
-                  points: points,
-                  // Add empty history array for new API data that might not have history
-                  history: student.history || [],
-                };
-              })
-            )
+                  console.log(
+                    "Student points response in PerformanceOverview:",
+                    pointsResponse.data
+                  );
+
+                  if (
+                    pointsResponse.data &&
+                    Array.isArray(pointsResponse.data)
+                  ) {
+                    // Sum up all co-curricular and extra-curricular points
+                    pointsResponse.data.forEach((activity) => {
+                      points.coCurricular += parseInt(
+                        activity.totalCocurricular || 0
+                      );
+                      points.extraCurricular += parseInt(
+                        activity.totalExtracurricular || 0
+                      );
+                    });
+                  } else if (
+                    pointsResponse.data &&
+                    pointsResponse.data.totalCocurricular
+                  ) {
+                    // If it's a single object with the totals
+                    points.coCurricular = parseInt(
+                      pointsResponse.data.totalCocurricular || 0
+                    );
+                    points.extraCurricular = parseInt(
+                      pointsResponse.data.totalExtracurricular || 0
+                    );
+                  }
+                }
+              } catch (error) {
+                console.error(
+                  "Error fetching student points in PerformanceOverview:",
+                  error
+                );
+                // Keep the default values if there's an error
+              }
+
+              return {
+                id: student.id || Math.random().toString(36).substr(2, 9),
+                name: student.name || student.studentName || "Unknown",
+                rollNo: student.enrollmentNumber || student.rollNo || "N/A",
+                batch:
+                  student.batchName ||
+                  (student.Batch ? student.Batch.batchName : selectedBatch),
+                semester:
+                  student.semesterNumber ||
+                  student.currnetsemester ||
+                  selectedSemester,
+                points: points,
+                // Add empty history array for new API data that might not have history
+                history: student.history || [],
+              };
+            })
+          )
           : [];
 
         setStudents(formattedStudents);
@@ -688,7 +688,7 @@ const PerformanceOverview = ({ selectedBatch, selectedSemester }) => {
       extraCurricular: Math.round(totals.extraCurricular / count),
       total: Math.round(
         (totals.curricular + totals.coCurricular + totals.extraCurricular) /
-          (count * 3)
+        (count * 3)
       ),
     };
   };

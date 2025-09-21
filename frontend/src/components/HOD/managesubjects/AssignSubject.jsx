@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./AssignSubject.css";
+import { buildUrl } from '../../../utils/apiConfig';
 
 const AssignSubject = () => {
     const [filters, setFilters] = useState({
@@ -24,7 +25,7 @@ const AssignSubject = () => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
+                const response = await fetch(buildUrl('/batches/getAllBatches'));
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data);
@@ -42,8 +43,8 @@ const AssignSubject = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch("http://localhost:5001/api/subjects/getAllUniqueSubjects");
-            
+            const response = await fetch(buildUrl('/subjects/getAllUniqueSubjects'));
+
             if (!response.ok) {
                 if (response.status === 404) {
                     setAvailableSubjects([]);
@@ -86,9 +87,9 @@ const AssignSubject = () => {
                 // If both batch and semester are selected
                 if (filters.semester !== "all") {
                     const response = await fetch(
-                        `http://localhost:5001/api/subjects/getSubjectsByBatchAndSemesterWithDetails/${filters.batch}/${filters.semester}`
+                        buildUrl(`/subjects/getSubjectsByBatchAndSemesterWithDetails/${filters.batch}/${filters.semester}`)
                     );
-                    
+
                     if (!response.ok) {
                         if (response.status === 404) {
                             setAvailableSubjects([]);
@@ -104,9 +105,9 @@ const AssignSubject = () => {
                 } else {
                     // If only batch is selected
                     const response = await fetch(
-                        `http://localhost:5001/api/subjects/getSubjectsByBatchWithDetails/${filters.batch}`
+                        buildUrl(`/subjects/getSubjectsByBatchWithDetails/${filters.batch}`)
                     );
-                    
+
                     if (!response.ok) {
                         if (response.status === 404) {
                             setAvailableSubjects([]);
@@ -144,9 +145,9 @@ const AssignSubject = () => {
                 // Properly encode the batch name for the URL
                 const encodedBatchName = encodeURIComponent(filters.batch);
                 console.log(`Fetching semesters for batch: ${filters.batch} (encoded: ${encodedBatchName})`);
-                
-                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${encodedBatchName}`);
-                
+
+                const response = await fetch(buildUrl(`/semesters/getSemestersByBatch/${encodedBatchName}`));
+
                 if (!response.ok) {
                     if (response.status === 404) {
                         console.log(`No semesters found for batch: ${filters.batch}`);
@@ -155,7 +156,7 @@ const AssignSubject = () => {
                     }
                     throw new Error(`Failed to fetch semesters: ${response.status} ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
                 console.log(`Fetched ${data.length} semesters for batch: ${filters.batch}`, data);
                 setSemesters(data);
@@ -181,9 +182,9 @@ const AssignSubject = () => {
                 // Properly encode the batch name for the URL
                 const encodedBatchName = encodeURIComponent(assignFilters.batch);
                 console.log(`Fetching semesters for assigned batch: ${assignFilters.batch} (encoded: ${encodedBatchName})`);
-                
-                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${encodedBatchName}`);
-                
+
+                const response = await fetch(buildUrl(`/semesters/getSemestersByBatch/${encodedBatchName}`));
+
                 if (!response.ok) {
                     if (response.status === 404) {
                         console.log(`No semesters found for assigned batch: ${assignFilters.batch}`);
@@ -192,7 +193,7 @@ const AssignSubject = () => {
                     }
                     throw new Error(`Failed to fetch semesters: ${response.status} ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
                 console.log(`Fetched ${data.length} semesters for assigned batch: ${assignFilters.batch}`, data);
                 setAssignSemesters(data);
@@ -285,11 +286,11 @@ const AssignSubject = () => {
             const subjects = selectedSubjects.map((subject) => {
                 // Get the subject name from either subjectName or sub_name property
                 const subjectName = subject.subjectName || subject.sub_name;
-                
+
                 if (!subjectName) {
                     throw new Error(`Missing subject name for subject code: ${subject.sub_code}`);
                 }
-                
+
                 return {
                     subjectName: subjectName,
                     semesterNumber: parseInt(assignFilters.semester),
@@ -299,14 +300,14 @@ const AssignSubject = () => {
 
             console.log("Assigning subjects:", subjects);
 
-            const response = await fetch("http://localhost:5001/api/subjects/assignSubject", {
+            const response = await fetch(buildUrl('/subjects/assignSubject'), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ subjects }),
             });
 
             const data = await response.json();
-            
+
             if (response.ok) {
                 alert("Subjects assigned successfully!");
                 setSelectedSubjects([]); // Clear selection after saving

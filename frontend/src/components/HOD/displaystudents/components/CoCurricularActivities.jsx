@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Filter, Plus } from 'lucide-react';
 import './Activities.css';
 import './StudentActivityContainer.css';
+import { buildUrl } from '../../../../utils/apiConfig';
 
 const CoCurricularActivities = ({
   studentEnrollment,
@@ -19,7 +20,7 @@ const CoCurricularActivities = ({
   const fetchAllActivitiesidforstudent = async () => {
     try {
       console.log('Fetching activities for enrollment:', studentEnrollment);
-      const response = await fetch('http://localhost:5001/api/events/fetchEventsIDsbyEnroll', {
+      const response = await fetch(buildUrl('/events/fetchEventsIDsbyEnroll'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +65,7 @@ const CoCurricularActivities = ({
       // If eventIds is already a string, use it directly, otherwise join the array
       const eventIdsString = typeof eventIds === 'string' ? eventIds : eventIds.join(',');
 
-      const response = await fetch('http://localhost:5001/api/events/fetchEventsByEventIds', {
+      const response = await fetch(buildUrl('/events/fetchEventsByEventIds'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +91,7 @@ const CoCurricularActivities = ({
   };
   const fetchAllActivitiesWithSemesterAndEnrollment = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/events/fetchEventsbyEnrollandSemester', {
+      const response = await fetch(buildUrl('/events/fetchEventsbyEnrollandSemester'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

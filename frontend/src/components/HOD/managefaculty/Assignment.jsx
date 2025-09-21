@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import './AssignFaculty.css';
+import { buildUrl } from '../../../utils/apiConfig';
 
 const FacultyAssignment = ({ selectedFaculty }) => {
     const [assignment, setAssignment] = useState({
@@ -18,7 +19,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/batches/getAllBatches");
+                const response = await fetch(buildUrl('/batches/getAllBatches'));
                 if (!response.ok) throw new Error("Failed to fetch batches");
                 const data = await response.json();
                 setBatches(data.map(batch => ({ value: batch.batchName, label: batch.batchName })));
@@ -32,7 +33,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
     useEffect(() => {
         const fetchFaculties = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/users/getAllUsers");
+                const response = await fetch(buildUrl('/users/getAllUsers'));
                 if (!response.ok) throw new Error("Failed to fetch faculty members");
                 const data = await response.json();
                 console.log("Fetched Users:", data);
@@ -51,7 +52,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         if (!assignment.batch) return;
         const fetchSemesters = async () => {
             try {
-                const response = await fetch(`http://localhost:5001/api/semesters/getSemestersByBatch/${assignment.batch.value}`);
+                const response = await fetch(buildUrl(`/semesters/getSemestersByBatch/${assignment.batch.value}`));
                 if (!response.ok) throw new Error("Failed to fetch semesters");
                 const data = await response.json();
                 setSemesters(data.map(sem => ({ value: sem.semesterNumber, label: `Semester ${sem.semesterNumber}` })));
@@ -70,7 +71,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
                     batch: assignment.batch.value,
                     semester: assignment.semester.value
                 });
-                const response = await fetch(`http://localhost:5001/api/subjects/getSubjects/${assignment.batch.value}/${assignment.semester.value}`);
+                const response = await fetch(buildUrl(`/subjects/getSubjects/${assignment.batch.value}/${assignment.semester.value}`));
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 console.log('Subject API Response:', data);
@@ -113,7 +114,7 @@ const FacultyAssignment = ({ selectedFaculty }) => {
         e.preventDefault();
 
         try {
-            const response = await fetch("http://localhost:5001/api/faculties/createAssignSubject", {
+            const response = await fetch(buildUrl('/faculties/createAssignSubject'), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
