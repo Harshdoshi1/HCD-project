@@ -7,7 +7,7 @@ const {
     getBatchIdfromName,
     getSubjectNamefromCode
 
-} = require("../controller/gettedMarksController");
+} = require("../controller/gettedmarksController");
 
 router.post('/marks/getBatchId/:batchName', getBatchIdfromName);
 router.post('/marks/getSubjectName/:subjectCode', getSubjectNamefromCode);
