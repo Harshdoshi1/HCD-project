@@ -265,99 +265,99 @@ const generateAcademicInsights = (academicData, overallPercentage) => {
 const getBloomsTaxonomyDistribution = async (req, res) => {
     try {
         const { enrollmentNumber, semesterNumber } = req.params;
+        const student = await Student.findOne({ where: { enrollmentNumber } });
+        if (!student) return res.status(404).json({ error: 'Student not found' });
 
-        console.log(`Fetching Bloom's distribution for enrollment: ${enrollmentNumber}, semester: ${semesterNumber}`);
+        // 1. Single, comprehensive query with the CORRECT join condition
+        const results = await sequelize.query(`
+            SELECT
+                sm.subjectId, sub.sub_name, sm.marksObtained, sm.totalMarks AS subComponentTotalMarks,
+                sm.componentType, sc.id AS subComponentId, sc.weightage AS subComponentWeightage,
+                cw.id AS componentWeightageId, cw.ese, cw.ia, cw.tw, cw.viva, cw.ca,
+                co.id AS coId, bt.name AS bloomsLevel
+            FROM StudentMarks sm
+            JOIN SubComponents sc ON sm.subComponentId = sc.id
+            JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
+            JOIN UniqueSubDegrees sub ON sm.subjectId = sub.sub_code
+            LEFT JOIN subject_component_cos scc ON scc.subject_component_id = sc.id -- Corrected JOIN
+            LEFT JOIN course_outcomes co ON scc.course_outcome_id = co.id
+            LEFT JOIN co_blooms_taxonomy cbt ON cbt.course_outcome_id = co.id
+            LEFT JOIN blooms_taxonomy bt ON cbt.blooms_taxonomy_id = bt.id
+            WHERE sm.studentId = :studentId AND sm.enrollmentSemester = :semesterNumber
+        `, { replacements: { studentId: student.id, semesterNumber }, type: sequelize.QueryTypes.SELECT });
 
-        // Find the student
-        const student = await Student.findOne({
-            where: { enrollmentNumber: enrollmentNumber }
-        });
+        const subjectBloomsData = {};
 
-        if (!student) {
-            return res.status(404).json({ error: 'Student not found' });
+        // 2. Process each unique student mark to avoid double-counting
+        const uniqueMarks = results.filter((v, i, a) => a.findIndex(t => (t.subComponentId === v.subComponentId)) === i);
+
+        for (const mark of uniqueMarks) {
+            if (!mark.subComponentId) continue;
+
+            // 3. Calculate effective marks for the sub-component
+            let componentTotal = 0;
+            switch (mark.componentType) {
+                case 'ESE': componentTotal = mark.ese; break;
+                case 'IA': componentTotal = mark.ia; break;
+                case 'TW': componentTotal = mark.tw; break;
+                case 'VIVA': componentTotal = mark.viva; break;
+                case 'CA': componentTotal = mark.ca; break;
+            }
+            if (componentTotal === 0) continue;
+
+            const effectiveTotal = (componentTotal * (mark.subComponentWeightage / 100));
+            const effectiveObtained = (mark.marksObtained / mark.subComponentTotalMarks) * effectiveTotal;
+
+            // 4. Distribute marks to relevant COs
+            const cosForSubComponent = results.filter(r => r.subComponentId === mark.subComponentId && r.coId);
+            const uniqueCoIds = [...new Set(cosForSubComponent.map(r => r.coId))];
+            if (uniqueCoIds.length === 0) continue;
+
+            const marksPerCo = effectiveObtained / uniqueCoIds.length;
+            const totalPerCo = effectiveTotal / uniqueCoIds.length;
+
+            // 5. Distribute marks from COs to Bloom's Levels
+            for (const coId of uniqueCoIds) {
+                const bloomsForCo = results.filter(r => r.coId === coId && r.bloomsLevel);
+                const uniqueBloomLevels = [...new Set(bloomsForCo.map(r => r.bloomsLevel))];
+                if (uniqueBloomLevels.length === 0) continue;
+
+                const marksPerBloom = marksPerCo / uniqueBloomLevels.length;
+                const totalPerBloom = totalPerCo / uniqueBloomLevels.length;
+
+                for (const bloomLevel of uniqueBloomLevels) {
+                    if (!subjectBloomsData[mark.subjectId]) {
+                        subjectBloomsData[mark.subjectId] = { subject: mark.sub_name, code: mark.subjectId, bloomsLevels: {} };
+                    }
+                    if (!subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel]) {
+                        subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel] = { obtained: 0, possible: 0 };
+                    }
+                    subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel].obtained += marksPerBloom;
+                    subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel].possible += totalPerBloom;
+                }
+            }
         }
 
-        // Get Bloom's taxonomy distribution using complex query
-        const bloomsDistribution = await sequelize.query(`
-            SELECT 
-                sm.subjectId,
-                sub.sub_name,
-                bt.name as bloomsLevel,
-                bt.id as bloomsId,
-                SUM(
-                    CASE 
-                        WHEN sm.isSubComponent = 1 AND sc.weightage IS NOT NULL THEN
-                            (sm.marksObtained / sm.totalMarks) * (sc.totalMarks * (sc.weightage / 100))
-                        ELSE 
-                            sm.marksObtained
-                    END
-                ) as totalMarks,
-                COUNT(DISTINCT co.id) as coCount
-            FROM StudentMarks sm 
-            LEFT JOIN UniqueSubDegrees sub ON sm.subjectId = sub.sub_code 
-LEFT JOIN SubComponents sc ON sm.subComponentId = sc.id            LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
-            LEFT JOIN subject_component_cos scc ON scc.subject_component_id = cw.id
-            LEFT JOIN course_outcomes co ON scc.course_outcome_id = co.id
-            LEFT JOIN co_blooms_taxonomy cbt ON co.id = cbt.course_outcome_id
-            LEFT JOIN blooms_taxonomy bt ON cbt.blooms_taxonomy_id = bt.id
-            WHERE sm.studentId = :studentId 
-            AND sm.enrollmentSemester = :semesterNumber
-            AND bt.id IS NOT NULL
-            GROUP BY sm.subjectId, bt.id
-            ORDER BY sm.subjectId, bt.id
-        `, {
-            replacements: { 
-                studentId: student.id,
-                semesterNumber: parseInt(semesterNumber)
-            },
-            type: sequelize.QueryTypes.SELECT
-        });
-
-        console.log(`Found ${bloomsDistribution.length} Bloom's distribution records`);
-
-        // Process the data by subject
-        const subjectBloomsData = {};
-        bloomsDistribution.forEach(record => {
-            const subjectCode = record.subjectId;
-            const subjectName = record.sub_name || subjectCode;
-
-            if (!subjectBloomsData[subjectCode]) {
-                subjectBloomsData[subjectCode] = {
-                    subject: subjectName,
-                    code: subjectCode,
-                    bloomsLevels: {}
-                };
-            }
-
-            // Distribute marks among COs and then to Bloom's levels
-            const marksPerCO = record.coCount > 0 ? record.totalMarks / record.coCount : record.totalMarks;
-            
-            if (!subjectBloomsData[subjectCode].bloomsLevels[record.bloomsLevel]) {
-                subjectBloomsData[subjectCode].bloomsLevels[record.bloomsLevel] = 0;
-            }
-            
-            subjectBloomsData[subjectCode].bloomsLevels[record.bloomsLevel] += marksPerCO;
-        });
-
-        // Convert to array format for frontend
+        // 6. Format for frontend response
         const bloomsData = Object.values(subjectBloomsData).map(subject => ({
-            ...subject,
-            bloomsLevels: Object.entries(subject.bloomsLevels).map(([level, marks]) => ({
+            subject: subject.subject,
+            code: subject.code,
+            bloomsLevels: Object.entries(subject.bloomsLevels).map(([level, data]) => ({
                 level,
-                marks: Math.round(marks * 100) / 100
+                score: data.possible > 0 ? Math.round((data.obtained / data.possible) * 100) : 0
             }))
         }));
 
-        res.status(200).json({
-            semester: parseInt(semesterNumber),
-            bloomsDistribution: bloomsData
-        });
+        res.status(200).json({ semester: parseInt(semesterNumber), bloomsDistribution: bloomsData });
 
     } catch (error) {
         console.error('Error fetching Bloom\'s taxonomy distribution:', error);
         res.status(500).json({ error: error.message });
     }
 };
+
+
+
 
 // Get subject-wise performance
 const getSubjectWisePerformance = async (req, res) => {
@@ -491,6 +491,7 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
                     viva: 0,
                     cse: 0,
                     total: 0,
+                    totalPossible: 0, // Add totalPossible for dynamic calculation
                     percentage: 0,
                     grade: 'F'
                 };
@@ -499,19 +500,6 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
             const componentType = mark.componentType.toUpperCase();
             let effectiveMarks = parseFloat(mark.marksObtained) || 0;
 
-            // Calculate weighted marks for subcomponents
-            if (mark.isSubComponent && mark.subComponentWeightage && mark.subComponentTotalMarks) {
-                // Formula: weighted marks = (obtained marks ÷ total marks) × (subcomponent total marks × subcomponent weightage%)
-                const obtainedMarks = parseFloat(mark.marksObtained) || 0;
-                const totalMarks = parseFloat(mark.totalMarks) || 1;
-                const subComponentTotalMarks = parseFloat(mark.subComponentTotalMarks) || 0;
-                const subComponentWeightage = parseFloat(mark.subComponentWeightage) || 0;
-                
-                effectiveMarks = (obtainedMarks / totalMarks) * (subComponentTotalMarks * (subComponentWeightage / 100));
-                
-                console.log(`Weighted calculation for ${subjectCode} ${componentType} ${mark.subComponentName}: 
-                    (${obtainedMarks}/${totalMarks}) × (${subComponentTotalMarks} × ${subComponentWeightage}%) = ${effectiveMarks}`);
-            }
             
             // Map component types to table columns
             switch(componentType) {
@@ -534,6 +522,7 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
             }
 
             subjectData[subjectCode].total += effectiveMarks;
+            subjectData[subjectCode].totalPossible += parseFloat(mark.totalMarks) || 0;
             
             // Use grade if available
             if (mark.grades && mark.grades !== 'F') {
@@ -543,9 +532,9 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
 
         // Calculate percentages and final grades
         Object.values(subjectData).forEach(subject => {
-            // Assuming total marks are: ESE(100) + IA(25) + TW(25) + VIVA(15) + CSE(15) = 180
-            const totalPossible = 180;
-            subject.percentage = subject.total > 0 ? ((subject.total / totalPossible) * 100).toFixed(1) : 0;
+            subject.percentage = subject.totalPossible > 0 
+                ? ((subject.total / subject.totalPossible) * 100).toFixed(1) 
+                : 0;
             
             // Calculate grade based on percentage if not already set
             if (subject.grade === 'F') {
