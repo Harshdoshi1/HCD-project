@@ -231,7 +231,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
     if (subjectBloomsData && subjectBloomsData.bloomsLevels) {
       const levelData = subjectBloomsData.bloomsLevels.find(bl => bl.level === level);
       if (levelData) {
-        return Math.round(levelData.marks);
+        return Math.round(levelData.score);
       }
     }
     
@@ -319,7 +319,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
       bloomsData.forEach(subjectData => {
         subjectData.bloomsLevels.forEach(levelData => {
           if (bloomsAggregation[levelData.level]) {
-            bloomsAggregation[levelData.level].totalMarks += levelData.marks;
+            bloomsAggregation[levelData.level].totalMarks += levelData.score;
             bloomsAggregation[levelData.level].count += 1;
           }
         });
