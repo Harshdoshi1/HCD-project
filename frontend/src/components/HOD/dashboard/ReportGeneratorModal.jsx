@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+// Import jsPDF correctly
 import jsPDF from "jspdf";
+// Import autotable plugin
 import autoTable from "jspdf-autotable";
+// Import Chart.js
 import Chart from "chart.js/auto";
+// Import email service
 import emailService from "../../../services/emailService";
 import "./ReportGeneratorModal.css";
 import { buildUrl } from "../../../utils/apiConfig";
@@ -17,7 +21,9 @@ const ReportGeneratorModal = ({
   performanceInsights,
   chartData,
 }) => {
+  // Store cached activities by semester
   const [cachedActivities, setCachedActivities] = useState({});
+  // Create refs for chart canvases
   const performanceTrendsChartRef = useRef(null);
   const performanceTrendsChartInstance = useRef(null);
   const [selectedOptions, setSelectedOptions] = useState({
@@ -31,6 +37,7 @@ const ReportGeneratorModal = ({
   const [selectedSemesters, setSelectedSemesters] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
+  // Simply use student.batch directly as it's displayed in StudentAnalysis.jsx
   const [batchName, setBatchName] = useState(student.batch || "N/A");
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailData, setEmailData] = useState({
@@ -39,23 +46,28 @@ const ReportGeneratorModal = ({
     description: "",
   });
 
+  // State for semesters, subjects, and marks
   const [availableSemesters, setAvailableSemesters] = useState([]);
   const [subjectsBySemester, setSubjectsBySemester] = useState({});
   const [studentMarks, setStudentMarks] = useState({});
   const [studentCPIs, setStudentCPIs] = useState([]);
 
+  // Fetch available semesters for the student's batch
   useEffect(() => {
     const fetchSemestersForBatch = async () => {
       if (!student || !student.batchId) {
         console.log("Missing student batch information");
         return;
       }
+
       try {
         console.log(`Fetching semesters for batch: ${student.batchId}`);
         const response = await axios.get(
           buildUrl(`/semesters/batch/${student.batchId}`)
         );
+
         if (response.data && Array.isArray(response.data)) {
+          // Sort semesters by semester number
           const sortedSemesters = response.data.sort(
             (a, b) => a.semesterNumber - b.semesterNumber
           );
@@ -77,6 +89,7 @@ const ReportGeneratorModal = ({
     fetchSemestersForBatch();
   }, [student]);
 
+  // Fetch student CPI/SPI data
   useEffect(() => {
     const fetchStudentCPI = async () => {
       if (!student || !student.rollNo) {
@@ -86,6 +99,7 @@ const ReportGeneratorModal = ({
 
       try {
         console.log(`Fetching CPI/SPI data for student: ${student.rollNo}`);
+        // Use the controller endpoint we examined in studentCPIController.js
         const response = await axios.get(
           buildUrl(`/student-cpi/enrollment/${student.rollNo}`)
         );
@@ -851,7 +865,34 @@ const ReportGeneratorModal = ({
             yPos += 5;
           }
 
-          // Removed 'Areas for Improvement' section per request
+          // Areas for Improvement section - only include for selected semesters
+          if (
+            improvementInsights.length > 0 &&
+            selectedSemesters.includes(semester)
+          ) {
+            if (yPos > 250) {
+              doc.addPage();
+              yPos = 20;
+            }
+
+            doc.setFontSize(11);
+            doc.setFont(undefined, "bold");
+            doc.text(`Areas for Improvement - Semester ${semester}:`, 30, yPos);
+            doc.setFont(undefined, "normal");
+            yPos += 7;
+
+            improvementInsights.forEach((insight) => {
+              if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+              }
+
+              doc.text(`• ${insight.text}`, 30, yPos);
+              yPos += 7;
+            });
+
+            yPos += 5;
+          }
 
           // Participation Pattern section
           if (
@@ -1525,7 +1566,21 @@ const ReportGeneratorModal = ({
             yPos += 5;
           }
 
-          // Removed 'Areas for Improvement' section per request
+          // Areas for Improvement
+          if (
+            performanceInsights.areasForImprovement &&
+            performanceInsights.areasForImprovement.length > 0
+          ) {
+            doc.setFontSize(11);
+            doc.text("Areas for Improvement:", 20, yPos);
+            yPos += 5;
+
+            performanceInsights.areasForImprovement.forEach((area) => {
+              doc.text(`• ${area.category}: ${area.points} points`, 25, yPos);
+              yPos += 5;
+            });
+            yPos += 5;
+          }
 
           // Participation Pattern
           if (performanceInsights.participationPattern) {
