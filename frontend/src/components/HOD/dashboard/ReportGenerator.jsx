@@ -248,62 +248,85 @@ const ReportGenerator = ({
       doc.setFontSize(12);
       let yPos = 40;
 
-      // Capture entire report section
-      if (reportRef.current) {
-        const reportCanvas = await html2canvas(reportRef.current, {
-          scale: 1.5,
-          logging: false,
-          useCORS: true,
-        });
+      // Helper to capture a DOM node and add to PDF with pagination
+      const captureAndAdd = async (nodeRef, heading) => {
+        if (!nodeRef?.current) return;
+        try {
+          // Optional heading for each chart block
+          const marginX = 15;
+          const maxWidth = pageWidth - marginX * 2;
+          const maxHeight = pageHeight - 50; // leave space for header/footer
 
-        // Calculate scaling to fit on page while maintaining aspect ratio
-        const reportImgData = reportCanvas.toDataURL("image/png");
-        const imgWidth = pageWidth - 30; // margins
-        const imgHeight = (reportCanvas.height * imgWidth) / reportCanvas.width;
-
-        if (imgHeight > pageHeight - 50) {
-          // If image is too tall, split it across multiple pages
-          const ratio = reportCanvas.width / (pageWidth - 30);
-          const totalHeight = reportCanvas.height;
-          const pageContentHeight = pageHeight - 50;
-          const pagesNeeded = Math.ceil(
-            totalHeight / (pageContentHeight * ratio)
-          );
-
-          for (let i = 0; i < pagesNeeded; i++) {
-            if (i > 0) doc.addPage();
-
-            // Calculate source and destination heights
-            const srcY = i * pageContentHeight * ratio;
-            const srcHeight = Math.min(
-              pageContentHeight * ratio,
-              totalHeight - srcY
-            );
-            const destHeight = srcHeight / ratio;
-
-            doc.text(`Page ${i + 1} of ${pagesNeeded}`, 10, 10);
-            doc.addImage(
-              reportImgData,
-              "PNG",
-              15,
-              20,
-              imgWidth,
-              destHeight,
-              null,
-              "FAST",
-              // Set source clipping
-              {
-                sourceX: 0,
-                sourceY: srcY,
-                sourceWidth: reportCanvas.width,
-                sourceHeight: srcHeight,
-              }
-            );
+          // Add heading
+          if (heading) {
+            // If not enough space for heading + minimal chart height, new page
+            if (yPos + 10 > pageHeight - 20) {
+              doc.addPage();
+              yPos = 20;
+            }
+            doc.setFontSize(14);
+            doc.text(heading, marginX, yPos);
+            yPos += 8;
           }
-        } else {
-          // If it fits on a single page
-          doc.addImage(reportImgData, "PNG", 15, 40, imgWidth, imgHeight);
+
+          const canvas = await html2canvas(nodeRef.current, {
+            scale: 2,
+            logging: false,
+            useCORS: true,
+            backgroundColor: null,
+          });
+          const imgData = canvas.toDataURL("image/png");
+
+          // Compute draw size maintaining aspect ratio
+          const drawWidth = maxWidth;
+          const drawHeight = (canvas.height * drawWidth) / canvas.width;
+
+          // If doesn't fit in remaining space, move to next page
+          if (yPos + drawHeight > maxHeight) {
+            doc.addPage();
+            yPos = 20;
+            if (heading) {
+              doc.setFontSize(14);
+              doc.text(heading, marginX, yPos);
+              yPos += 8;
+            }
+          }
+
+          doc.addImage(imgData, "PNG", marginX, yPos, drawWidth, drawHeight, undefined, "FAST");
+          yPos += drawHeight + 10; // spacing after chart
+        } catch (e) {
+          console.warn("Failed to capture section:", heading, e);
         }
+      };
+
+      // Capture and add each selected chart explicitly so none are skipped
+      if (selectedCharts.distribution) {
+        await captureAndAdd(
+          distributionChartRef,
+          `Points Distribution - ${selectedBatch !== "all" ? `Batch ${selectedBatch}` : "All Batches"}`
+        );
+      }
+
+      if (selectedCharts.trends) {
+        await captureAndAdd(trendsChartRef, "Performance Trends");
+      }
+
+      if (selectedCharts.categorical) {
+        await captureAndAdd(categoryChartRef, "Category Breakdown");
+      }
+
+      if (selectedCharts.comparison) {
+        await captureAndAdd(
+          topStudentsChartRef,
+          "Top Performers vs Average vs Low Performers"
+        );
+      }
+
+      if (selectedCharts.progress) {
+        await captureAndAdd(
+          pointsRangeChartRef,
+          "Participation Index & Engagement Metrics"
+        );
       }
 
       // Add analytics summary if recommendations are included
@@ -396,18 +419,16 @@ const ReportGenerator = ({
           "Consider peer mentoring programs where top performers can guide other students."
         );
 
-        recommendations.forEach((recommendation, index) => {
+        recommendations.forEach((recommendation) => {
           doc.text(`• ${recommendation}`, 30, yPos);
           yPos += 8;
         });
       }
 
       // Save the PDF file
-      const filename = `${reportType}_report_${selectedBatch !== "all" ? selectedBatch : "all"
-        }_${date}.pdf`.replace(/[/\:*?"<>|]/g, "_");
+      const filename = `${reportType}_report_${selectedBatch !== "all" ? selectedBatch : "all"}_${date}.pdf`.replace(/[\/\:*?"<>|]/g, "_");
       doc.save(filename);
 
-      console.log("PDF generated successfully");
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF. Please try again.");
