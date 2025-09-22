@@ -271,7 +271,7 @@ const StudentDetails = ({ studentId, handleBackToList = () => window.history.bac
     if (isLoading) {
         return (
             <div className="student-details-container">
-                <div className="loading-spinner">Loading student data...</div>
+                {/* <div className="loading-spinner">Loading student data...</div> */}
             </div>
         );
     }

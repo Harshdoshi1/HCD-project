@@ -317,7 +317,7 @@ const StudentAnalysis = ({ student, onClose }) => {
         <div className="analysis-content">
           <p>Select a student from the list to view their detailed analysis.</p>
           <div className="empty-state">
-            <div className="empty-icon">📊</div>
+            <div className="empty-icon"></div>
             <p>No student selected</p>
           </div>
         </div>
@@ -550,13 +550,13 @@ const StudentAnalysis = ({ student, onClose }) => {
                 className={`tab-btn ${activeTab === 'academic' ? 'active' : ''}`}
                 onClick={() => setActiveTab('academic')}
               >
-                📚 Academic
+                Academic
               </button>
               <button
                 className={`tab-btn ${activeTab === 'nonacademic' ? 'active' : ''}`}
                 onClick={() => setActiveTab('nonacademic')}
               >
-                🎯 Co/Extra-Curricular
+                Co/Extra-Curricular
               </button>
             </div>
           </div>
@@ -597,7 +597,7 @@ const StudentAnalysis = ({ student, onClose }) => {
             {activeTab === 'nonacademic' && (
               <div className="nonacademic-analysis-container">
                 <div className="analysis-section-nonacademic">
-                  <h3>🎯 Co-Curricular & Extra-Curricular Performance Trends</h3>
+                  <h3> Co-Curricular & Extra-Curricular Performance Trends</h3>
 
                   <div className="chart-container-nonacademic">
                     {loading ? (
@@ -706,7 +706,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                   </div>
 
                   <div className="pie-chart-section">
-                    <h4>📊 Performance Breakdown</h4>
+                    <h4> Performance Breakdown</h4>
                     <ResponsiveContainer width="100%" height={220}>
                       <PieChart>
                         <Pie
@@ -734,7 +734,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                 {/* Performance Insights and Suggestions Container */}
                 <div className="insights-suggestions-container">
                   <div className="insights-section">
-                    <h3>🎯 Performance Insights</h3>
+                    <h3> Performance Insights</h3>
                     {loadingActivities ? (
                       <div className="loading-message">
                         <p>Analyzing performance data...</p>
@@ -810,7 +810,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                             <div className="metric-item">
                               <span className="metric-label">Avg Points/Activity</span>
                               <span className="metric-value">
-                                {activityList.length > 0 
+                                {activityList.length > 0
                                   ? Math.round(activityList.reduce((sum, act) => sum + (act.points || 0), 0) / activityList.length)
                                   : 0}
                               </span>
@@ -824,11 +824,11 @@ const StudentAnalysis = ({ student, onClose }) => {
                             <div className="metric-item">
                               <span className="metric-label">Leadership Roles</span>
                               <span className="metric-value">
-                                {activityList.filter(act => 
-                                  act.position && 
-                                  (act.position.toLowerCase().includes('leader') || 
-                                   act.position.toLowerCase().includes('head') ||
-                                   act.position.toLowerCase().includes('captain'))
+                                {activityList.filter(act =>
+                                  act.position &&
+                                  (act.position.toLowerCase().includes('leader') ||
+                                    act.position.toLowerCase().includes('head') ||
+                                    act.position.toLowerCase().includes('captain'))
                                 ).length}
                               </span>
                             </div>
