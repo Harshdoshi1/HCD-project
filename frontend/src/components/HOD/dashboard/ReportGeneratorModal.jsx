@@ -865,7 +865,34 @@ const ReportGeneratorModal = ({
             yPos += 5;
           }
 
-          // Removed 'Areas for Improvement' section per request
+          // Areas for Improvement section - only include for selected semesters
+          if (
+            improvementInsights.length > 0 &&
+            selectedSemesters.includes(semester)
+          ) {
+            if (yPos > 250) {
+              doc.addPage();
+              yPos = 20;
+            }
+
+            doc.setFontSize(11);
+            doc.setFont(undefined, "bold");
+            doc.text(`Areas for Improvement - Semester ${semester}:`, 30, yPos);
+            doc.setFont(undefined, "normal");
+            yPos += 7;
+
+            improvementInsights.forEach((insight) => {
+              if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+              }
+
+              doc.text(`• ${insight.text}`, 30, yPos);
+              yPos += 7;
+            });
+
+            yPos += 5;
+          }
 
           // Participation Pattern section
           if (
@@ -1539,7 +1566,21 @@ const ReportGeneratorModal = ({
             yPos += 5;
           }
 
-          // Removed 'Areas for Improvement' section per request
+          // Areas for Improvement
+          if (
+            performanceInsights.areasForImprovement &&
+            performanceInsights.areasForImprovement.length > 0
+          ) {
+            doc.setFontSize(11);
+            doc.text("Areas for Improvement:", 20, yPos);
+            yPos += 5;
+
+            performanceInsights.areasForImprovement.forEach((area) => {
+              doc.text(`• ${area.category}: ${area.points} points`, 25, yPos);
+              yPos += 5;
+            });
+            yPos += 5;
+          }
 
           // Participation Pattern
           if (performanceInsights.participationPattern) {
