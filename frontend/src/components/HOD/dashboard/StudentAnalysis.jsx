@@ -1416,7 +1416,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                           </div>
                           <div className="diversity-breakdown">
                             <h5>📊 Category Participation:</h5>
-                            <ResponsiveContainer width="100%" height={250}>
+                            <ResponsiveContainer width="80%" height={250}>
                               <PieChart>
                                 <Pie
                                   data={diversityData.sunburstData}
