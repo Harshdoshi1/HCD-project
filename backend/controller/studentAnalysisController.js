@@ -8,7 +8,6 @@ const getStudentAnalysisData = async (req, res) => {
     try {
         const { enrollmentNumber } = req.params;
 
-        console.log('Fetching analysis data for enrollment number:', enrollmentNumber);
 
         // Find the student
         const student = await Student.findOne({
@@ -19,7 +18,6 @@ const getStudentAnalysisData = async (req, res) => {
             return res.status(404).json({ error: 'Student not found' });
         }
 
-        console.log('Found student:', student.id, student.name);
 
         // Get student's batch and current semester
         const batch = await Batch.findByPk(student.batchId);
@@ -27,9 +25,7 @@ const getStudentAnalysisData = async (req, res) => {
             return res.status(404).json({ error: 'Student batch not found' });
         }
 
-        console.log('Found batch:', batch.id, batch.batchName);
         const currentSemester = batch.currentSemester || 1;
-        console.log('Current semester:', currentSemester);
 
         // Fetch academic data for all semesters up to current
         const academicData = [];
@@ -44,16 +40,10 @@ const getStudentAnalysisData = async (req, res) => {
             });
 
             if (!semester) {
-                console.log(`No semester record found for semester ${semesterNum} and batch ${student.batchId}`);
                 continue;
             }
             
-            console.log(`Found semester record:`, semester.id, `for semester ${semesterNum}`);
-
-            // Get all marks for this student in this semester using raw query to check actual table structure
-            console.log(`Looking for marks for student ${student.id} in semester ${semester.id}`);
-            
-            // First, try to get marks using raw SQL to see what's actually in the database
+            // Get all marks for this student in this semester using raw query
             const rawMarks = await sequelize.query(`
                 SELECT sm.*, sub.sub_name, sub.sub_code 
                 FROM StudentMarks sm 
@@ -65,11 +55,6 @@ const getStudentAnalysisData = async (req, res) => {
                 type: sequelize.QueryTypes.SELECT
             });
 
-            console.log(`Found ${rawMarks.length} marks records using raw query for student ${student.id}`);
-            
-            if (rawMarks.length > 0) {
-                console.log('Sample mark record:', JSON.stringify(rawMarks[0], null, 2));
-            }
 
             // Process marks by subject using raw data
             const subjectMarks = {};
@@ -157,9 +142,6 @@ const getStudentAnalysisData = async (req, res) => {
             marksObtained: semester.totalMarksObtained,
             totalMarks: semester.totalMarksPossible
         }));
-
-        console.log('Final academic data:', JSON.stringify(academicData, null, 2));
-        console.log('Chart data:', JSON.stringify(chartData, null, 2));
 
         res.status(200).json({
             student: {

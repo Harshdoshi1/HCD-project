@@ -9,7 +9,6 @@ const sequelize = require('../config/db');
 const createEvent = async (req, res) => {
   try {
     const { eventId, eventName, eventType, eventCategory, points, duration, eventDate, eventOutcomes } = req.body;
-    console.log("Testing ", eventId, eventName, eventType, eventCategory, points, duration, eventDate, eventOutcomes);
     const event = await EventMaster.create({
       eventId,
       eventName,
@@ -79,7 +78,6 @@ const getAllCoCurricularEventsNames = async (req, res) => {
 const insertFetchedStudents = async (req, res) => {
   try {
     const { eventName, participants } = req.body;
-    console.log('Request body:', req.body);
 
     // Input validation
     if (!eventName || typeof eventName !== 'string') {
@@ -96,9 +94,6 @@ const insertFetchedStudents = async (req, res) => {
       });
     }
 
-    console.log('Processing event:', eventName);
-    console.log('Number of participants:', participants.length);
-    console.log('Sample participants:', participants.slice(0, 3));
 
     // Fetch event details from EventMaster table
     const event = await EventMaster.findOne({
@@ -112,7 +107,6 @@ const insertFetchedStudents = async (req, res) => {
       });
     }
 
-    console.log('Found event:', event.eventName, 'ID:', event.eventId);
 
     const { eventId, eventType, points } = event;
 
@@ -122,7 +116,6 @@ const insertFetchedStudents = async (req, res) => {
     for (const participant of participants) {
       try {
         const { enrollmentNumber, participationType } = participant;
-        console.log('Processing enrollment:', enrollmentNumber, 'Type:', participationType);
 
         // Find the student's batch using their enrollment number
         const student = await Student.findOne({
@@ -136,7 +129,6 @@ const insertFetchedStudents = async (req, res) => {
         }
 
         const batchId = student.batchId;
-        console.log('Found student with batchId:', batchId);
 
         // Find the current semester of the batch
         const batch = await Batch.findOne({
@@ -152,7 +144,6 @@ const insertFetchedStudents = async (req, res) => {
         // Prefer the student's recorded current semester (field is 'currnetsemester' in Students model),
         // then fallback to any 'currentSemester' if present, then to batch's currentSemester
         const currentSemester = Number(student.currnetsemester) || Number(student.currentSemester) || Number(batch.currentSemester);
-        console.log('Resolved current semester (student.currnetsemester -> student.currentSemester -> batch.currentSemester):', currentSemester);
 
         // Resolve participation type to an ID (Excel may provide a label/string)
         let participationTypeId = null;
@@ -182,7 +173,6 @@ const insertFetchedStudents = async (req, res) => {
             totalExtracurricular: eventType === 'extra-curricular' ? points : 0,
             participationTypeId: participationTypeId
           });
-          console.log('Created new student points record');
         } else {
           const existingEventIds = studentPoints.eventId ? studentPoints.eventId.split(',') : [];
           if (!existingEventIds.includes(eventId.toString())) {
@@ -201,7 +191,6 @@ const insertFetchedStudents = async (req, res) => {
           }
 
           await studentPoints.save();
-          console.log('Updated existing student points record');
         }
 
         processedStudents.push({
@@ -253,7 +242,6 @@ const getAllExtraCurricularEventsNames = async (req, res) => {
     });
 
     if (!events || events.length === 0) {
-      console.log("No extra-curricular events found");
       return res.status(200).json({
         success: true,
         message: 'No extra-curricular events found',
@@ -269,7 +257,6 @@ const getAllExtraCurricularEventsNames = async (req, res) => {
       points: event.points
     }));
 
-    console.log("✅ Extra-curricular events fetched:", JSON.stringify(formattedEvents, null, 2));
 
     res.status(200).json({
       success: true,
@@ -345,7 +332,6 @@ const insertIntoStudentPoints = async (req, res) => {
         totalExtracurricular: eventType === 'extra-curricular' ? points : 0,
         participationTypeId
       });
-      console.log('Created new student points record');
     } else {
       // Update the existing record
       const existingEventIds = studentPoints.eventId ? studentPoints.eventId.split(',') : [];
@@ -364,7 +350,6 @@ const insertIntoStudentPoints = async (req, res) => {
       studentPoints.participationTypeId = participationTypeId;
 
       await studentPoints.save();
-      console.log('Updated existing student points record');
     }
 
     res.status(200).json({
@@ -451,7 +436,6 @@ const fetchEventsbyEnrollandSemester = async (req, res) => {
       `;
     }
 
-    console.log('Executing SQL:', query, replacements);
 
     // Execute the query
     const [results] = await sequelize.query(query, {
