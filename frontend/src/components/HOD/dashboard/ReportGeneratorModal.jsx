@@ -52,99 +52,6 @@ const ReportGeneratorModal = ({
   const [studentMarks, setStudentMarks] = useState({});
   const [studentCPIs, setStudentCPIs] = useState([]);
 
-  // Fixed universe of categories for Diversity (exactly 6)
-  const getFixedCategories = () => [
-    'Technical',
-    'Non-Technical',
-    'Sports',
-    'Cultural',
-    'Research',
-    'Leadership'
-  ];
-
-  // Helper: compute diversity stats and category points for a given semester
-  const computeDiversityForSemester = (semester) => {
-    // Prefer fetched/processed activities for this semester
-    let semActivities = [];
-    if (cachedActivities && cachedActivities[semester]) {
-      semActivities = cachedActivities[semester];
-    } else if (activityList && activityList.length > 0) {
-      semActivities = activityList.filter(a => a.semester === semester);
-    }
-
-    // Points per category
-    const categoryPoints = {};
-    semActivities.forEach(a => {
-      const rawCat = a?.category || a?.eventCategory || 'Other';
-      // Map raw categories into fixed buckets if possible
-      let cat = rawCat;
-      const normalized = String(rawCat).toLowerCase();
-      if (normalized.includes('tech')) cat = 'Technical';
-      else if (normalized.includes('non') || normalized.includes('soft') || normalized.includes('management')) cat = 'Non-Technical';
-      else if (normalized.includes('sport') || normalized.includes('game')) cat = 'Sports';
-      else if (normalized.includes('cult') || normalized.includes('dance') || normalized.includes('music') || normalized.includes('art')) cat = 'Cultural';
-      else if (normalized.includes('research') || normalized.includes('paper') || normalized.includes('publication')) cat = 'Research';
-      else if (normalized.includes('leader') || normalized.includes('organizer') || normalized.includes('captain')) cat = 'Leadership';
-      const pts = typeof a?.points === 'number'
-        ? a.points
-        : (parseInt(a?.coCurricularPoints || 0) + parseInt(a?.extraCurricularPoints || 0));
-      categoryPoints[cat] = (categoryPoints[cat] || 0) + (isNaN(pts) ? 0 : pts);
-    });
-
-    // Build labels/values for the fixed universe (ensure exactly 6 categories)
-    const labels = getFixedCategories();
-    const values = labels.map(l => categoryPoints[l] || 0);
-
-    const totalCats = labels.length;
-    const exploredCats = values.filter(v => v > 0).length;
-    const diversityScore = totalCats > 0 ? Math.round((exploredCats / totalCats) * 100) : 0;
-
-    // Sorted entries for textual output (desc by points, but only from fixed labels)
-    const entries = labels
-      .map((l) => [l, categoryPoints[l] || 0])
-      .sort((a, b) => b[1] - a[1]);
-
-    return { totalCats, exploredCats, diversityScore, entries, labels, values };
-  };
-
-  // Offscreen Chart.js doughnut renderer -> returns dataURL and intrinsic size
-  const renderDiversityPie = (labels, values) => {
-    if (!labels || !values || labels.length === 0) return null;
-    const canvas = document.createElement('canvas');
-    canvas.width = 800; canvas.height = 500;
-    canvas.style.position = 'absolute';
-    canvas.style.left = '-9999px';
-    canvas.style.top = '-9999px';
-    document.body.appendChild(canvas);
-
-    const palette = ['#3674B5', '#00C49F', '#FFBB28', '#FF8042', '#8E44AD', '#2ECC71'];
-
-    const chart = new Chart(canvas.getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{
-          data: values,
-          backgroundColor: labels.map((_, i) => palette[i % palette.length]),
-          borderWidth: 1,
-          borderColor: '#ffffff'
-        }]
-      },
-      options: {
-        responsive: false,
-        animation: false,
-        plugins: { legend: { position: 'right' }, title: { display: false } },
-        cutout: '55%'
-      }
-    });
-
-    chart.update();
-    const url = chart.toBase64Image();
-    chart.destroy();
-    document.body.removeChild(canvas);
-    return { url, width: 800, height: 500 };
-  };
-
   // Fetch available semesters for the student's batch
   useEffect(() => {
     const fetchSemestersForBatch = async () => {
@@ -449,18 +356,8 @@ const ReportGeneratorModal = ({
 
       // Use the full PDF generation function instead of the simplified email version
       // to ensure all content is included in the email PDF
-      let pdfDoc = await generatePDF(true);
-      // Guard: ensure we actually received a jsPDF instance
-      if (!pdfDoc || typeof pdfDoc.output !== 'function') {
-        // Try a dedicated email generator if present
-        if (typeof generatePDFForEmail === 'function') {
-          pdfDoc = await generatePDFForEmail();
-        }
-      }
-      if (!pdfDoc || typeof pdfDoc.output !== 'function') {
-        throw new Error('Failed to generate PDF document for email.');
-      }
-      const pdfBlob = pdfDoc.output('blob');
+      const pdfDoc = await generatePDF(true);
+      const pdfBlob = pdfDoc.output("blob");
 
       // Send the email with the PDF attachment
       const response = await emailService.sendEmailWithPdf(emailData, pdfBlob);
@@ -752,7 +649,7 @@ const ReportGeneratorModal = ({
               parseInt(activity.extraCurricularPoints || 0);
             const type =
               parseInt(activity.coCurricularPoints || 0) >
-                parseInt(activity.extraCurricularPoints || 0)
+              parseInt(activity.extraCurricularPoints || 0)
                 ? "co-curricular"
                 : "extra-curricular";
             return [
@@ -968,7 +865,34 @@ const ReportGeneratorModal = ({
             yPos += 5;
           }
 
-          // Areas for Improvement section intentionally omitted
+          // Areas for Improvement section - only include for selected semesters
+          if (
+            improvementInsights.length > 0 &&
+            selectedSemesters.includes(semester)
+          ) {
+            if (yPos > 250) {
+              doc.addPage();
+              yPos = 20;
+            }
+
+            doc.setFontSize(11);
+            doc.setFont(undefined, "bold");
+            doc.text(`Areas for Improvement - Semester ${semester}:`, 30, yPos);
+            doc.setFont(undefined, "normal");
+            yPos += 7;
+
+            improvementInsights.forEach((insight) => {
+              if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+              }
+
+              doc.text(`• ${insight.text}`, 30, yPos);
+              yPos += 7;
+            });
+
+            yPos += 5;
+          }
 
           // Participation Pattern section
           if (
@@ -1038,50 +962,7 @@ const ReportGeneratorModal = ({
         yPos = 20;
       }
 
-      // 5. Diversity & Insights (plain text per-category points)
-      {
-        const { totalCats, exploredCats, diversityScore, entries, labels, values } = computeDiversityForSemester(semester);
-
-        doc.setFontSize(14);
-        doc.setTextColor(54, 116, 181);
-        doc.text(`Diversity & Insights - Semester ${semester}`, 20, yPos);
-        yPos += 8;
-
-        doc.setFontSize(11);
-        doc.setTextColor(0, 0, 0);
-        const expl = 'Analyzes the breadth of student engagement across different activity categories for well-rounded development.';
-        const explWrapped = doc.splitTextToSize(expl, pageWidth - 40);
-        doc.text(explWrapped, 20, yPos);
-        yPos += explWrapped.length * 5 + 4;
-
-        // Pie chart for category distribution (semester-wise)
-        const pie = renderDiversityPie(labels, values);
-        if (pie && pie.url) {
-          const maxWidth = pageWidth - 40;
-          const drawW = Math.min(maxWidth, pie.width);
-          const drawH = pie.height * (drawW / pie.width);
-          if (yPos + drawH > pageHeight - 30) { doc.addPage(); yPos = 20; }
-          doc.addImage(pie.url, 'PNG', 20, yPos, drawW, drawH, undefined, 'FAST');
-          yPos += drawH + 8;
-        }
-
-        doc.text(`Diversity Score: ${diversityScore}%`, 20, yPos);
-        yPos += 6;
-        const denom = totalCats > 0 ? totalCats : 0;
-        doc.text(`${exploredCats} of ${denom} categories explored`, 20, yPos);
-        yPos += 8;
-
-        const catLine = entries.length > 0
-          ? 'Category Participation: ' + entries.map(([k, v]) => `${k}: ${v}`).join('  |  ')
-          : 'Category Participation: No activities found for this semester';
-        const catWrapped = doc.splitTextToSize(catLine, pageWidth - 40);
-        doc.setFontSize(10);
-        doc.setTextColor(60, 60, 60);
-        doc.text(catWrapped, 20, yPos);
-        yPos += catWrapped.length * 5 + 8;
-      }
-
-      // 6. Academic Details (if selected)
+      // 5. Academic Details (if selected)
       if (selectedOptions.academicDetails) {
         // Fetch the academic details for this semester
         const academicData = await fetchSemesterAcademicData(semester);
@@ -1685,7 +1566,21 @@ const ReportGeneratorModal = ({
             yPos += 5;
           }
 
-          // Areas for Improvement section intentionally omitted
+          // Areas for Improvement
+          if (
+            performanceInsights.areasForImprovement &&
+            performanceInsights.areasForImprovement.length > 0
+          ) {
+            doc.setFontSize(11);
+            doc.text("Areas for Improvement:", 20, yPos);
+            yPos += 5;
+
+            performanceInsights.areasForImprovement.forEach((area) => {
+              doc.text(`• ${area.category}: ${area.points} points`, 25, yPos);
+              yPos += 5;
+            });
+            yPos += 5;
+          }
 
           // Participation Pattern
           if (performanceInsights.participationPattern) {
@@ -1720,48 +1615,7 @@ const ReportGeneratorModal = ({
           yPos = 20;
         }
 
-        // 5. Diversity & Insights (plain text per-category points)
-        {
-          const { totalCats, exploredCats, diversityScore, entries } = computeDiversityForSemester(semester);
-
-          doc.setFontSize(12);
-          doc.setTextColor(0, 0, 0);
-          doc.text(`Diversity & Insights - Semester ${semester}`, 20, yPos);
-          yPos += 6;
-
-          const expl2 = 'Analyzes the breadth of student engagement across different activity categories for well-rounded development.';
-          const explWrapped2 = doc.splitTextToSize(expl2, pageWidth - 40);
-          doc.text(explWrapped2, 20, yPos);
-          yPos += explWrapped2.length * 5 + 4;
-
-          // Pie chart for category distribution (semester-wise)
-          const pie2 = renderDiversityPie(labels, values);
-          if (pie2 && pie2.url) {
-            const maxWidth2 = pageWidth - 40;
-            const drawW2 = Math.min(maxWidth2, pie2.width);
-            const drawH2 = pie2.height * (drawW2 / pie2.width);
-            if (yPos + drawH2 > pageHeight - 30) { doc.addPage(); yPos = 20; }
-            doc.addImage(pie2.url, 'PNG', 20, yPos, drawW2, drawH2, undefined, 'FAST');
-            yPos += drawH2 + 8;
-          }
-
-          doc.setFontSize(11);
-          doc.text(`Diversity Score: ${diversityScore}%`, 20, yPos);
-          yPos += 6;
-          const denom2 = totalCats > 0 ? totalCats : 0;
-          doc.text(`${exploredCats} of ${denom2} categories explored`, 20, yPos);
-          yPos += 8;
-
-          const catLine2 = entries.length > 0
-            ? 'Category Participation: ' + entries.map(([k, v]) => `${k}: ${v}`).join('  |  ')
-            : 'Category Participation: No activities found for this semester';
-          const catWrapped2 = doc.splitTextToSize(catLine2, pageWidth - 40);
-          doc.setFontSize(10); doc.setTextColor(60, 60, 60);
-          doc.text(catWrapped2, 20, yPos);
-          yPos += catWrapped2.length * 5 + 8;
-        }
-
-        // 6. Academic Details (if selected)
+        // 5. Academic Details (if selected)
         if (selectedOptions.academicDetails) {
           try {
             // Fetch academic details for this specific semester
@@ -1795,7 +1649,8 @@ const ReportGeneratorModal = ({
               // Add SPI/CPI if available
               if (semesterAcademics.semesterInfo) {
                 doc.text(
-                  `SPI: ${semesterAcademics.semesterInfo.spi || "N/A"}   CPI: ${semesterAcademics.semesterInfo.cpi || "N/A"
+                  `SPI: ${semesterAcademics.semesterInfo.spi || "N/A"}   CPI: ${
+                    semesterAcademics.semesterInfo.cpi || "N/A"
                   }`,
                   20,
                   yPos
@@ -1810,15 +1665,20 @@ const ReportGeneratorModal = ({
               const academicData = semesterAcademics.subjects.map((subject) => [
                 subject.name || "N/A",
                 subject.code || "N/A",
-                `${subject.studentMarks.ese || 0}/${subject.componentMarks.ese || 0
+                `${subject.studentMarks.ese || 0}/${
+                  subject.componentMarks.ese || 0
                 }`,
-                `${subject.studentMarks.cse || 0}/${subject.componentMarks.cse || 0
+                `${subject.studentMarks.cse || 0}/${
+                  subject.componentMarks.cse || 0
                 }`,
-                `${subject.studentMarks.ia || 0}/${subject.componentMarks.ia || 0
+                `${subject.studentMarks.ia || 0}/${
+                  subject.componentMarks.ia || 0
                 }`,
-                `${subject.studentMarks.tw || 0}/${subject.componentMarks.tw || 0
+                `${subject.studentMarks.tw || 0}/${
+                  subject.componentMarks.tw || 0
                 }`,
-                `${subject.studentMarks.viva || 0}/${subject.componentMarks.viva || 0
+                `${subject.studentMarks.viva || 0}/${
+                  subject.componentMarks.viva || 0
                 }`,
                 subject.studentMarks.grades || "N/A",
               ]);
