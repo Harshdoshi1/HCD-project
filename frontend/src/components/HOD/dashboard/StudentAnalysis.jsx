@@ -389,7 +389,7 @@ const StudentAnalysis = ({ student, onClose }) => {
         <div className="analysis-content">
           <p>Select a student from the list to view their detailed analysis.</p>
           <div className="empty-state">
-            <div className="empty-icon">📊</div>
+            <div className="empty-icon"></div>
             <p>No student selected</p>
           </div>
         </div>
@@ -719,29 +719,29 @@ const StudentAnalysis = ({ student, onClose }) => {
   const generateNetworkingData = () => {
     const collaborationScore = activityList
       ? activityList.reduce((score, activity) => {
-        // Team-based activities get higher collaboration scores
-        if (
-          activity.category === "Hackathon" ||
-          activity.category === "Tech Competition"
-        ) {
-          score += 15;
-        }
-        if (
-          activity.position &&
-          (activity.position.toLowerCase().includes("leader") ||
-            activity.position.toLowerCase().includes("head") ||
-            activity.position.toLowerCase().includes("captain"))
-        ) {
-          score += 20;
-        }
-        if (
-          activity.category === "Workshop" ||
-          activity.category === "Seminar"
-        ) {
-          score += 8;
-        }
-        return score;
-      }, 30)
+          // Team-based activities get higher collaboration scores
+          if (
+            activity.category === "Hackathon" ||
+            activity.category === "Tech Competition"
+          ) {
+            score += 15;
+          }
+          if (
+            activity.position &&
+            (activity.position.toLowerCase().includes("leader") ||
+              activity.position.toLowerCase().includes("head") ||
+              activity.position.toLowerCase().includes("captain"))
+          ) {
+            score += 20;
+          }
+          if (
+            activity.category === "Workshop" ||
+            activity.category === "Seminar"
+          ) {
+            score += 8;
+          }
+          return score;
+        }, 30)
       : 45; // Base score
 
     const networkStrength = Math.min(100, collaborationScore);
@@ -781,17 +781,17 @@ const StudentAnalysis = ({ student, onClose }) => {
       networkNodes,
       teamProjects: activityList
         ? activityList.filter(
-          (a) =>
-            a.category === "Hackathon" || a.category === "Tech Competition"
-        ).length
+            (a) =>
+              a.category === "Hackathon" || a.category === "Tech Competition"
+          ).length
         : 2,
       leadershipRoles: activityList
         ? activityList.filter(
-          (a) =>
-            a.position &&
-            (a.position.toLowerCase().includes("leader") ||
-              a.position.toLowerCase().includes("head"))
-        ).length
+            (a) =>
+              a.position &&
+              (a.position.toLowerCase().includes("leader") ||
+                a.position.toLowerCase().includes("head"))
+          ).length
         : 1,
     };
   };
@@ -929,18 +929,20 @@ const StudentAnalysis = ({ student, onClose }) => {
             <h2>Comprehensive Student Analysis: {student.name}</h2>
             <div className="header-tabs">
               <button
-                className={`tab-btn ${activeTab === "academic" ? "active" : ""
-                  }`}
+                className={`tab-btn ${
+                  activeTab === "academic" ? "active" : ""
+                }`}
                 onClick={() => setActiveTab("academic")}
               >
-                📚 Academic
+                Academic
               </button>
               <button
-                className={`tab-btn ${activeTab === "nonacademic" ? "active" : ""
-                  }`}
+                className={`tab-btn ${
+                  activeTab === "nonacademic" ? "active" : ""
+                }`}
                 onClick={() => setActiveTab("nonacademic")}
               >
-                🎯 Co/Extra-Curricular
+                Co/Extra-Curricular
               </button>
             </div>
           </div>
@@ -986,9 +988,7 @@ const StudentAnalysis = ({ student, onClose }) => {
             {activeTab === "nonacademic" && (
               <div className="nonacademic-analysis-container">
                 <div className="analysis-section-nonacademic">
-                  <h3>
-                    🎯 Co-Curricular & Extra-Curricular Performance Trends
-                  </h3>
+                  <h3>Co-Curricular & Extra-Curricular Performance Trends</h3>
 
                   <div className="chart-container-nonacademic">
                     {loading ? (
@@ -1074,10 +1074,11 @@ const StudentAnalysis = ({ student, onClose }) => {
                         {semesterPoints.map((point) => (
                           <button
                             key={point.semester}
-                            className={`semester-btn-nonacademic ${selectedSemester === point.semester
-                              ? "active-nonacademic"
-                              : ""
-                              }`}
+                            className={`semester-btn-nonacademic ${
+                              selectedSemester === point.semester
+                                ? "active-nonacademic"
+                                : ""
+                            }`}
                             onClick={() => handleSemesterChange(point.semester)}
                           >
                             Semester {point.semester}
@@ -1122,7 +1123,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                   </div>
 
                   <div className="pie-chart-section">
-                    <h4>📊 Performance Breakdown</h4>
+                    <h4> Performance Breakdown</h4>
                     <ResponsiveContainer width="100%" height={220}>
                       <PieChart>
                         <Pie
@@ -1155,7 +1156,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                 {/* Performance Insights and Suggestions Container */}
                 <div className="insights-suggestions-container">
                   <div className="insights-section">
-                    <h3>🎯 Performance Insights</h3>
+                    <h3> Performance Insights</h3>
                     {loadingActivities ? (
                       <div className="loading-message">
                         <p>Analyzing performance data...</p>
@@ -1198,7 +1199,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                           <div className="insight-card">
                             <h4>Areas for Improvement</h4>
                             {performanceInsights.areasForImprovement.length >
-                              0 ? (
+                            0 ? (
                               <div className="insight-list">
                                 <p className="insight-header">
                                   Suggested areas to explore:
@@ -1263,11 +1264,11 @@ const StudentAnalysis = ({ student, onClose }) => {
                               <span className="metric-value">
                                 {activityList.length > 0
                                   ? Math.round(
-                                    activityList.reduce(
-                                      (sum, act) => sum + (act.points || 0),
-                                      0
-                                    ) / activityList.length
-                                  )
+                                      activityList.reduce(
+                                        (sum, act) => sum + (act.points || 0),
+                                        0
+                                      ) / activityList.length
+                                    )
                                   : 0}
                               </span>
                             </div>
@@ -1314,8 +1315,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                   {/* Advanced Analytics Features - Two Column Layout */}
                   <div className="insights-suggestions-container">
                     <div className="insights-section">
-                      <h3>🎯 Domain Affinity & Networking</h3>
-
+                      <h3> Domain Affinity & Networking</h3>
 
                       <div className="analytics-feature">
                         <p className="feature-description">
@@ -1415,7 +1415,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                             </div>
                           </div>
                           <div className="diversity-breakdown">
-                            <h5>📊 Category Participation:</h5>
+                            <h5>Category Participation:</h5>
                             <ResponsiveContainer width="80%" height={250}>
                               <PieChart>
                                 <Pie
@@ -1458,15 +1458,15 @@ const StudentAnalysis = ({ student, onClose }) => {
                         <div className="diversity-insights">
                           <div className="insight-grid">
                             <div className="insight-card diversity-card">
-                              <h6>🎯 Profile Type</h6>
+                              <h6> Profile Type</h6>
                               <p>
                                 {diversityData.diversityIndex >= 80
                                   ? "Well-Rounded Explorer"
                                   : diversityData.diversityIndex >= 60
-                                    ? "Balanced Participant"
-                                    : diversityData.diversityIndex >= 40
-                                      ? "Focused Specialist"
-                                      : "Emerging Participant"}
+                                  ? "Balanced Participant"
+                                  : diversityData.diversityIndex >= 40
+                                  ? "Focused Specialist"
+                                  : "Emerging Participant"}
                               </p>
                             </div>
                             <div className="insight-card diversity-card">
@@ -1482,7 +1482,6 @@ const StudentAnalysis = ({ student, onClose }) => {
                           </div>
                         </div>
                       </div>
-
                     </div>
                   </div>
                 </div>

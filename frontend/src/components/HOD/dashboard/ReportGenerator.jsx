@@ -25,7 +25,7 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import "./ReportGenerator.css";
-import { buildUrl } from '../../../utils/apiConfig';
+import { buildUrl } from "../../../utils/apiConfig";
 
 const ReportGenerator = ({
   students: initialStudents,
@@ -75,9 +75,7 @@ const ReportGenerator = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(
-        buildUrl('/batches/getAllBatches')
-      );
+      const response = await axios.get(buildUrl("/batches/getAllBatches"));
       if (response.data && Array.isArray(response.data)) {
         const batchNames = response.data.map((batch) => batch.batchName);
         const allBatches = ["all", ...batchNames];
@@ -103,12 +101,12 @@ const ReportGenerator = ({
 
       if (batch === "all") {
         // Fetch all students
-        url = buildUrl('/students/getAllStudents');
+        url = buildUrl("/students/getAllStudents");
         response = await axios.get(url);
       } else {
         // First get the batch ID from the batch name
         const batchesResponse = await axios.get(
-          buildUrl('/batches/getAllBatches')
+          buildUrl("/batches/getAllBatches")
         );
         const selectedBatchObj = batchesResponse.data.find(
           (b) => b.batchName === batch
@@ -143,7 +141,7 @@ const ReportGenerator = ({
 
                 if (enrollmentNumber && semester) {
                   const pointsResponse = await axios.post(
-                    buildUrl('/events/fetchEventsbyEnrollandSemester'),
+                    buildUrl("/events/fetchEventsbyEnrollandSemester"),
                     {
                       enrollmentNumber,
                       semester,
@@ -292,7 +290,16 @@ const ReportGenerator = ({
             }
           }
 
-          doc.addImage(imgData, "PNG", marginX, yPos, drawWidth, drawHeight, undefined, "FAST");
+          doc.addImage(
+            imgData,
+            "PNG",
+            marginX,
+            yPos,
+            drawWidth,
+            drawHeight,
+            undefined,
+            "FAST"
+          );
           yPos += drawHeight + 10; // spacing after chart
         } catch (e) {
           console.warn("Failed to capture section:", heading, e);
@@ -303,7 +310,8 @@ const ReportGenerator = ({
       if (selectedCharts.distribution) {
         await captureAndAdd(
           distributionChartRef,
-          `Points Distribution - ${selectedBatch !== "all" ? `Batch ${selectedBatch}` : "All Batches"}`
+          `Points Distribution - ${selectedBatch !== "all" ? `Batch ${selectedBatch}` : "All Batches"
+          }`
         );
       }
 
@@ -426,9 +434,9 @@ const ReportGenerator = ({
       }
 
       // Save the PDF file
-      const filename = `${reportType}_report_${selectedBatch !== "all" ? selectedBatch : "all"}_${date}.pdf`.replace(/[\/\:*?"<>|]/g, "_");
+      const filename = `${reportType}_report_${selectedBatch !== "all" ? selectedBatch : "all"
+        }_${date}.pdf`.replace(/[\/\:*?"<>|]/g, "_");
       doc.save(filename);
-
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF. Please try again.");
@@ -678,7 +686,10 @@ const ReportGenerator = ({
       {studentError && <div className="error-message">{studentError}</div>}
       <div className="report-content">
         <div className="modal-container-fullscreen">
-          <div className="modal-header-fullscreen" style={{ marginTop: "60px" }}>
+          <div
+            className="modal-header-fullscreen"
+            style={{ marginTop: "60px" }}
+          >
             <div className="header-left">
               <h2>Batch Analytics</h2>
               <p className="header-subtitle">
@@ -796,7 +807,7 @@ const ReportGenerator = ({
 
                 {/* New Advanced Analysis Sections */}
                 <div className="advanced-analysis-section">
-                  <h3>🎯 Class/Batch-Level Comparative Analysis</h3>
+                  <h3> Class/Batch-Level Comparative Analysis</h3>
                   <div className="analysis-card">
                     <h4>Performance Distribution</h4>
                     <div className="stats-grid">
@@ -859,7 +870,7 @@ const ReportGenerator = ({
                 </div>
 
                 <div className="blooms-analysis-section">
-                  <h3>🧠 Bloom's Taxonomy Distribution</h3>
+                  <h3>Bloom's Taxonomy Distribution</h3>
                   <div className="analysis-card">
                     <div className="blooms-levels">
                       <div className="bloom-level">
@@ -929,11 +940,11 @@ const ReportGenerator = ({
 
               <div className="right-column">
                 <div className="report-preview" ref={reportRef}>
-                  <h3>📊 Live Analytics Preview</h3>
+                  <h3> Live Analytics Preview</h3>
                   {selectedCharts.distribution && (
                     <div className="preview-chart" ref={distributionChartRef}>
                       <h4>
-                        📈 Points Distribution -{" "}
+                        Points Distribution -{" "}
                         {selectedBatch !== "all"
                           ? `Batch ${selectedBatch}`
                           : "All Batches"}
@@ -959,7 +970,7 @@ const ReportGenerator = ({
                   )}
                   {selectedCharts.trends && (
                     <div className="preview-chart" ref={trendsChartRef}>
-                      <h4>📊 Performance Trends</h4>
+                      <h4>Performance Trends</h4>
                       <ResponsiveContainer width="100%" height={250}>
                         <LineChart
                           data={trendsData}
@@ -994,7 +1005,7 @@ const ReportGenerator = ({
                   )}
                   {selectedCharts.categorical && (
                     <div className="preview-chart" ref={categoryChartRef}>
-                      <h4>🥧 Category Breakdown</h4>
+                      <h4>Category Breakdown</h4>
                       <ResponsiveContainer width="100%" height={250}>
                         <PieChart>
                           <Pie
@@ -1059,7 +1070,7 @@ const ReportGenerator = ({
 
                   {selectedCharts.progress && (
                     <div className="preview-chart" ref={pointsRangeChartRef}>
-                      <h4>📊 Participation Index & Engagement Metrics</h4>
+                      <h4>Participation Index & Engagement Metrics</h4>
                       <ResponsiveContainer width="100%" height={250}>
                         <BarChart
                           data={pointsRangeData}

@@ -21,7 +21,7 @@ import {
 } from "recharts";
 import ReportGenerator from "./ReportGenerator";
 import "./AcademicAnalysis.css";
-import { buildUrl } from '../../../utils/apiConfig';
+import { buildUrl } from "../../../utils/apiConfig";
 const AcademicAnalysis = ({ student, academicData }) => {
   const [selectedSemester, setSelectedSemester] = useState(4);
   const [selectedSubject, setSelectedSubject] = useState("all");
@@ -95,64 +95,76 @@ const AcademicAnalysis = ({ student, academicData }) => {
 
   const fetchRealAcademicData = async () => {
     if (!student || !student.rollNo) {
-      console.log('No student data available for academic fetch');
+      console.log("No student data available for academic fetch");
       return;
     }
 
     try {
       setLoading(true);
       const enrollmentNumber = student.rollNo;
-      
-      console.log(`Fetching real academic data for enrollment: ${enrollmentNumber}, semester: ${selectedSemester}`);
+
+      console.log(
+        `Fetching real academic data for enrollment: ${enrollmentNumber}, semester: ${selectedSemester}`
+      );
 
       // Fetch real academic performance data from backend
       const [performanceResponse, bloomsResponse] = await Promise.all([
-        fetch(buildUrl(`/student-analysis/performance/${enrollmentNumber}/${selectedSemester}`)),
-        fetch(buildUrl(`/student-analysis/blooms/${enrollmentNumber}/${selectedSemester}`))
+        fetch(
+          buildUrl(
+            `/student-analysis/performance/${enrollmentNumber}/${selectedSemester}`
+          )
+        ),
+        fetch(
+          buildUrl(
+            `/student-analysis/blooms/${enrollmentNumber}/${selectedSemester}`
+          )
+        ),
       ]);
-      
+
       if (!performanceResponse.ok) {
         throw new Error(`HTTP error! status: ${performanceResponse.status}`);
       }
 
       const performanceData = await performanceResponse.json();
-      console.log('Real academic data received:', performanceData);
+      console.log("Real academic data received:", performanceData);
 
       // Handle Bloom's taxonomy data
       let bloomsDistribution = [];
       if (bloomsResponse.ok) {
         const bloomsData = await bloomsResponse.json();
-        console.log('Bloom\'s taxonomy data received:', bloomsData);
+        console.log("Bloom's taxonomy data received:", bloomsData);
         bloomsDistribution = bloomsData.bloomsDistribution || [];
       } else {
-        console.log('Bloom\'s taxonomy data not available, using fallback');
+        console.log("Bloom's taxonomy data not available, using fallback");
       }
       setBloomsData(bloomsDistribution);
 
       if (performanceData.subjects && performanceData.subjects.length > 0) {
         // Map the real data to match the expected format
-        const realSubjectGrades = performanceData.subjects.map((subject, index) => ({
-          id: index + 1,
-          subject: subject.subject,
-          shortName: subject.shortName,
-          code: subject.code,
-          credits: subject.credits,
-          ese: subject.ese,
-          ia: subject.ia,
-          tw: subject.tw,
-          viva: subject.viva,
-          cse: subject.cse,
-          total: subject.total,
-          percentage: parseFloat(subject.percentage),
-          grade: subject.grade,
-          marks: subject.total, // Use total for compatibility
-          attendance: Math.floor(75 + Math.random() * 25), // Keep mock attendance for now
-        }));
+        const realSubjectGrades = performanceData.subjects.map(
+          (subject, index) => ({
+            id: index + 1,
+            subject: subject.subject,
+            shortName: subject.shortName,
+            code: subject.code,
+            credits: subject.credits,
+            ese: subject.ese,
+            ia: subject.ia,
+            tw: subject.tw,
+            viva: subject.viva,
+            cse: subject.cse,
+            total: subject.total,
+            percentage: parseFloat(subject.percentage),
+            grade: subject.grade,
+            marks: subject.total, // Use total for compatibility
+            attendance: Math.floor(75 + Math.random() * 25), // Keep mock attendance for now
+          })
+        );
 
         setSubjectGrades(realSubjectGrades);
-        console.log('Real subject grades set:', realSubjectGrades);
+        console.log("Real subject grades set:", realSubjectGrades);
       } else {
-        console.log('No real academic data found, using fallback');
+        console.log("No real academic data found, using fallback");
         // If no real data, set empty array or minimal data
         setSubjectGrades([]);
       }
@@ -175,7 +187,8 @@ const AcademicAnalysis = ({ student, academicData }) => {
         {
           faculty: "Dr. S. Johnson",
           subject: "Data Structures",
-          feedback: "Excellent problem-solving skills. Shows great understanding.",
+          feedback:
+            "Excellent problem-solving skills. Shows great understanding.",
           rating: 4.5,
           strengths: ["Problem Solving", "Algorithms"],
           improvements: ["Time Complexity"],
@@ -198,10 +211,9 @@ const AcademicAnalysis = ({ student, academicData }) => {
         },
       ];
       setFacultyFeedback(mockFeedback);
-
     } catch (error) {
-      console.error('Error fetching real academic data:', error);
-      setError('Failed to load academic data');
+      console.error("Error fetching real academic data:", error);
+      setError("Failed to load academic data");
       // Fallback to empty data on error
       setSubjectGrades([]);
       setSpiCpiData([]);
@@ -228,14 +240,18 @@ const AcademicAnalysis = ({ student, academicData }) => {
 
   const getBloomScore = (subjectCode, level) => {
     // Get real Bloom's data for the subject if available
-    const subjectBloomsData = bloomsData.find(data => data.code === subjectCode);
+    const subjectBloomsData = bloomsData.find(
+      (data) => data.code === subjectCode
+    );
     if (subjectBloomsData && subjectBloomsData.bloomsLevels) {
-      const levelData = subjectBloomsData.bloomsLevels.find(bl => bl.level === level);
+      const levelData = subjectBloomsData.bloomsLevels.find(
+        (bl) => bl.level === level
+      );
       if (levelData) {
         return Math.round(levelData.score);
       }
     }
-    
+
     // Fallback to mock data if real data not available
     const baseScore = 75; // Default base score
     const variations = {
@@ -309,32 +325,43 @@ const AcademicAnalysis = ({ student, academicData }) => {
     if (bloomsData && bloomsData.length > 0) {
       // Aggregate Bloom's data across all subjects for the spider chart
       const bloomsAggregation = {};
-      const bloomLevels = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
-      
+      const bloomLevels = [
+        "Remember",
+        "Understand",
+        "Apply",
+        "Analyze",
+        "Evaluate",
+        "Create",
+      ];
+
       // Initialize aggregation
-      bloomLevels.forEach(level => {
+      bloomLevels.forEach((level) => {
         bloomsAggregation[level] = { totalMarks: 0, count: 0 };
       });
-      
+
       // Aggregate marks from all subjects
-      bloomsData.forEach(subjectData => {
-        subjectData.bloomsLevels.forEach(levelData => {
+      bloomsData.forEach((subjectData) => {
+        subjectData.bloomsLevels.forEach((levelData) => {
           if (bloomsAggregation[levelData.level]) {
             bloomsAggregation[levelData.level].totalMarks += levelData.score;
             bloomsAggregation[levelData.level].count += 1;
           }
         });
       });
-      
+
       // Calculate average scores
-      return bloomLevels.map(level => ({
+      return bloomLevels.map((level) => ({
         level,
-        score: bloomsAggregation[level].count > 0 
-          ? Math.round(bloomsAggregation[level].totalMarks / bloomsAggregation[level].count)
-          : 0
+        score:
+          bloomsAggregation[level].count > 0
+            ? Math.round(
+                bloomsAggregation[level].totalMarks /
+                  bloomsAggregation[level].count
+              )
+            : 0,
       }));
     }
-    
+
     // Fallback to mock data if no real data available
     const levels = [
       { level: "Remember", score: 85 },
@@ -487,7 +514,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
           {/* Enhanced Grades Table */}
           <div className="grades-section-enhanced">
             <div className="section-header">
-              <h3>📚 Current Grades</h3>
+              <h3> Current Grades</h3>
               <div className="table-controls">
                 <div className="control-group">
                   <label htmlFor="sort-by">Sort by:</label>
@@ -661,7 +688,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
             {/* Bloom's Taxonomy Analysis Chart */}
             <div className="chart-container-enhanced bloom-spider-chart">
               <div className="card-header">
-                <h3>🧠 Bloom's Taxonomy Analysis</h3>
+                <h3> Bloom's Taxonomy Analysis</h3>
               </div>
               <div className="spider-chart-wrapper">
                 <ResponsiveContainer width="100%" height={280}>
@@ -704,7 +731,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
             {/* Subject-wise Bloom's Heatmap */}
             <div className="bloom-card">
               <div className="card-header">
-                <h3>📊 Subject-wise Bloom's Heatmap</h3>
+                <h3> Subject-wise Bloom's Heatmap</h3>
                 <div className="subject-filter">
                   <select
                     value={selectedSubject}
@@ -817,7 +844,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
           {/* Subject Overview Radar Chart */}
           <div className="chart-card">
             <div className="card-header">
-              <h3>🎯 Subject Overview</h3>
+              <h3> Subject Overview</h3>
             </div>
             <div className="chart-container">
               <ResponsiveContainer width="100%" height={200}>
@@ -841,7 +868,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
           {/* Faculty Feedback Section */}
           <div className="feedback-card">
             <div className="card-header">
-              <h3>👨‍🏫 Faculty Insights</h3>
+              <h3> Faculty Insights</h3>
               <button
                 className="expand-btn"
                 onClick={() => toggleSection("feedback")}
@@ -906,7 +933,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
               </div>
             </div>
             <div className="achievement-item">
-              <div className="achievement-icon">📜</div>
+              <div className="achievement-icon"></div>
               <div className="achievement-details">
                 <h4>Best Project Award</h4>
                 <p>Database Management System project recognized</p>
@@ -914,7 +941,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
               </div>
             </div>
             <div className="achievement-item">
-              <div className="achievement-icon">🎯</div>
+              <div className="achievement-icon"></div>
               <div className="achievement-details">
                 <h4>Consistent Performance</h4>
                 <p>Maintained above 80% in all subjects</p>
@@ -927,11 +954,11 @@ const AcademicAnalysis = ({ student, academicData }) => {
         {/* Suggestions Section */}
         <div className="suggestions-section">
           <div className="section-header">
-            <h3>💡 Suggestions & Recommendations</h3>
+            <h3> Suggestions & Recommendations</h3>
           </div>
           <div className="suggestions-content">
             <div className="suggestion-category">
-              <h4>📚 Academic Improvements</h4>
+              <h4>Academic Improvements</h4>
               <ul>
                 <li>Focus on improving problem-solving speed in algorithms</li>
                 <li>Practice more complex database queries and optimization</li>
@@ -939,7 +966,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
               </ul>
             </div>
             <div className="suggestion-category">
-              <h4>🎯 Skill Development</h4>
+              <h4> Skill Development</h4>
               <ul>
                 <li>Consider learning advanced JavaScript frameworks</li>
                 <li>Participate in coding competitions to enhance skills</li>
