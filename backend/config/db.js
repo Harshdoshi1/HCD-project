@@ -62,6 +62,7 @@
 const { Sequelize } = require('sequelize');
 const fs = require('fs');
 require('dotenv').config();
+const { URL } = require('url'); // Import the URL class
 
 let sslOptions = { require: true };
 
@@ -74,7 +75,21 @@ if (process.env.DB_SSL_CA && fs.existsSync(process.env.DB_SSL_CA)) {
   sslOptions.rejectUnauthorized = false;
 }
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+// Clean the DATABASE_URL to remove the invalid 'ssl-mode' parameter
+let dbUrl = process.env.DATABASE_URL;
+if (dbUrl) {
+  try {
+    const url = new URL(dbUrl);
+    if (url.searchParams.has('ssl-mode')) {
+      url.searchParams.delete('ssl-mode');
+      dbUrl = url.toString();
+    }
+  } catch (error) {
+    console.error('Could not parse DATABASE_URL:', error);
+  }
+}
+
+const sequelize = new Sequelize(dbUrl, { // Use the cleaned URL
   dialect: 'mysql',
   logging: false,
 
