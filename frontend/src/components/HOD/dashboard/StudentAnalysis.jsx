@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -24,7 +23,7 @@ import {
 import "./StudentAnalysis.css";
 import ReportGeneratorModal from "./ReportGeneratorModal.jsx";
 import AcademicAnalysis from "./AcademicAnalysis.jsx";
-import { buildUrl } from '../../../utils/apiConfig';
+import { buildUrl } from "../../../utils/apiConfig";
 
 const StudentAnalysis = ({ student, onClose }) => {
   // State for storing semester points data
@@ -74,7 +73,7 @@ const StudentAnalysis = ({ student, onClose }) => {
           try {
             // Use the existing fetchEventsbyEnrollandSemester endpoint
             const response = await axios.post(
-              buildUrl('/events/fetchEventsbyEnrollandSemester'),
+              buildUrl("/events/fetchEventsbyEnrollandSemester"),
               {
                 enrollmentNumber,
                 semester: semester.toString(),
@@ -158,7 +157,7 @@ const StudentAnalysis = ({ student, onClose }) => {
     try {
       // Fetch student points for the selected semester
       const response = await axios.post(
-        buildUrl('/events/fetchEventsbyEnrollandSemester'),
+        buildUrl("/events/fetchEventsbyEnrollandSemester"),
         {
           enrollmentNumber,
           semester: semester.toString(),
@@ -190,7 +189,7 @@ const StudentAnalysis = ({ student, onClose }) => {
 
           // Fetch event details from EventMaster table
           const eventDetailsResponse = await axios.post(
-            buildUrl('/events/fetchEventsByIds'),
+            buildUrl("/events/fetchEventsByIds"),
             {
               eventIds: eventIdsString,
             }
@@ -1076,8 +1075,8 @@ const StudentAnalysis = ({ student, onClose }) => {
                           <button
                             key={point.semester}
                             className={`semester-btn-nonacademic ${selectedSemester === point.semester
-                                ? "active-nonacademic"
-                                : ""
+                              ? "active-nonacademic"
+                              : ""
                               }`}
                             onClick={() => handleSemesterChange(point.semester)}
                           >
@@ -1317,11 +1316,8 @@ const StudentAnalysis = ({ student, onClose }) => {
                     <div className="insights-section">
                       <h3>🎯 Domain Affinity & Networking</h3>
 
-                      {/* Domain Affinity Radar Chart */}
 
-                      {/* Networking & Collaboration Index */}
                       <div className="analytics-feature">
-                        <h4>🤝 Networking & Collaboration Index</h4>
                         <p className="feature-description">
                           Measures collaborative engagement through team
                           projects, leadership roles, and network diversity.
@@ -1395,11 +1391,10 @@ const StudentAnalysis = ({ student, onClose }) => {
                     </div>
 
                     <div className="suggestions-section">
-                      <h3>🌈 Diversity & Insights</h3>
+                      <h3>Diversity & Insights</h3>
 
                       {/* Participation Diversity Index */}
                       <div className="analytics-feature">
-                        <h4>🌈 Participation Diversity Index</h4>
                         <p className="feature-description">
                           Analyzes the breadth of student engagement across
                           different activity categories for well-rounded
@@ -1488,57 +1483,6 @@ const StudentAnalysis = ({ student, onClose }) => {
                         </div>
                       </div>
 
-                      {/* Advanced Analytics Summary */}
-                      <div className="analytics-feature">
-                        <h4>📊 Analytics Summary</h4>
-                        <div className="analytics-summary">
-                          <div className="summary-grid">
-                            <div className="summary-item">
-                              <div className="summary-icon">🎯</div>
-                              <div className="summary-content">
-                                <div className="summary-label">Top Domain</div>
-                                <div className="summary-value">
-                                  {
-                                    domainAffinityData.sort(
-                                      (a, b) => b.score - a.score
-                                    )[0]?.domain
-                                  }
-                                </div>
-                              </div>
-                            </div>
-                            <div className="summary-item">
-                              <div className="summary-icon">🤝</div>
-                              <div className="summary-content">
-                                <div className="summary-label">
-                                  Collaboration Level
-                                </div>
-                                <div className="summary-value">
-                                  {networkingData.collaborationIndex >= 80
-                                    ? "High"
-                                    : networkingData.collaborationIndex >= 60
-                                      ? "Medium"
-                                      : "Low"}
-                                </div>
-                              </div>
-                            </div>
-                            {/* <div className="summary-item">
-                              <div className="summary-icon">🌈</div>
-                              <div className="summary-content">
-                                <div className="summary-label">
-                                  Diversity Level
-                                </div>
-                                <div className="summary-value">
-                                  {diversityData.diversityIndex >= 80
-                                    ? "Excellent"
-                                    : diversityData.diversityIndex >= 60
-                                    ? "Good"
-                                    : "Needs Improvement"}
-                                </div>
-                              </div>
-                            </div> */}
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>

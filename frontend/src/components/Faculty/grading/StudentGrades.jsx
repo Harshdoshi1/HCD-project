@@ -41,11 +41,25 @@ const StudentGrades = () => {
     if (isNaN(numValue)) return 0;
     if (numValue < 0) return 0;
 
-    // Check if we have component marks and limit the value to the maximum allowed
+    // Prefer dynamic totals from componentStructure if available
+    if (component && componentStructure && Object.keys(componentStructure).length > 0) {
+      const key = component.toUpperCase() === 'CSE' ? 'CA' : component.toUpperCase();
+      const comp = componentStructure[key];
+      if (comp && typeof comp.totalMarks === 'number') {
+        const maxValue = comp.totalMarks;
+        if (numValue > maxValue) return maxValue;
+        return numValue;
+      }
+    }
+
+    // Fallback to componentMarks (backend marks config) and then to 100
     if (componentMarks && component) {
       const maxValue = componentMarks[component.toLowerCase()] || 100;
       if (numValue > maxValue) return maxValue;
-    } else if (numValue > 100) {
+      return numValue;
+    }
+
+    if (numValue > 100) {
       return 100;
     }
 
@@ -170,15 +184,16 @@ const StudentGrades = () => {
         }
       });
 
-      // Apply fallback logic: if a component has sub-components, enable it regardless of weightage
+      // If a component has sub-components, enable it and set totalMarks as the sum of subcomponent totals
       Object.keys(structure).forEach(compType => {
-        if (!structure[compType].enabled && structure[compType].subComponents.length > 0) {
-          console.log(`Enabling ${compType} due to existing sub-components`);
-          structure[compType].enabled = true;
-          // Set a default total marks if not set
-          if (structure[compType].totalMarks === 0 || structure[compType].totalMarks === 100) {
-            structure[compType].totalMarks = structure[compType].subComponents.reduce((sum, sub) => sum + (sub.totalMarks || 0), 0);
+        const hasSubs = structure[compType].subComponents.length > 0;
+        if (hasSubs) {
+          if (!structure[compType].enabled) {
+            console.log(`Enabling ${compType} due to existing sub-components`);
+            structure[compType].enabled = true;
           }
+          const sumTotal = structure[compType].subComponents.reduce((sum, sub) => sum + (Number(sub.totalMarks) || 0), 0);
+          structure[compType].totalMarks = sumTotal;
         }
       });
 

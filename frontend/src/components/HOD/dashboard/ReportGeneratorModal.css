@@ -87,7 +87,9 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: 100%;
 }
+
 
 .report-generator-modal .modal-footer {
   padding: 20px 24px;
