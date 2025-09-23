@@ -428,15 +428,14 @@ const addSubjectWithComponents = async (req, res) => {
         }
 
         // Map component names from frontend to database
-        // Important: DB fields are lowercase of these values: ese, cse, ia, tw, viva
-        // Some UIs may use 'CA' to mean 'CSE'. Normalize both 'CA' and 'CSE' to 'CSE'.
+        // Both ComponentWeightage and ComponentMarks now use 'cse'
         const componentMap = {
-            'CA': 'CSE',
-            'CSE': 'CSE',
-            'ESE': 'ESE',
-            'IA': 'IA',
-            'TW': 'TW',
-            'VIVA': 'VIVA'
+            'CA': 'cse',
+            'CSE': 'cse',
+            'ESE': 'ese',
+            'IA': 'ia',
+            'TW': 'tw',
+            'VIVA': 'viva'
         };
 
         // Prepare weightage and marks data
@@ -446,11 +445,10 @@ const addSubjectWithComponents = async (req, res) => {
         // Process components
         for (const component of components) {
             const dbField = componentMap[component.name];
+            
             if (dbField) {
-                // Convert to lowercase for DB fields: ese, cse, ia, tw, viva
-                const dbKey = dbField.toLowerCase();
-                weightageData[dbKey] = component.weightage;
-                marksData[dbKey] = component.totalMarks;
+                weightageData[dbField] = component.weightage;
+                marksData[dbField] = component.totalMarks;
             }
         }
 

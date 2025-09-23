@@ -154,11 +154,11 @@ const addSubjectWithComponents = async (req, res) => {
     // Map marks
     const marksMap = mapComponents(componentsMarks);
 
-    // Insert into ComponentWeightage
+    // Insert into ComponentWeightage (now uses 'cse' field like ComponentMarks)
     const newWeightage = await ComponentWeightage.create({
       subjectId: subjectRecord.sub_code,
       ese: weightageMap.ESE,
-      cse: weightageMap.CSE,
+      cse: weightageMap.CSE,  // Both tables now use 'cse' field
       ia: weightageMap.IA,
       tw: weightageMap.TW,
       viva: weightageMap.VIVA
