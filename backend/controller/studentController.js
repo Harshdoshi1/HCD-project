@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 // Create a new student
 const createStudent = async (req, res) => {
     try {
-        const { name, email, batchID, enrollment, currentSemester } = req.body;
+        const { name, email, batchID, enrollment, currentSemester, currentClassName } = req.body;
 
         // Input validation
         if (!name || !email || !batchID || !enrollment || !currentSemester) {
@@ -40,7 +40,8 @@ const createStudent = async (req, res) => {
             email,
             batchId: batch.id,
             enrollmentNumber: enrollment,
-            currnetsemester: currentSemester // Note: using the field name as defined in the model
+            currnetsemester: currentSemester, // Note: using the field name as defined in the model
+            currentClassName: currentClassName || null
         });
 
         console.log("Created student:", student.toJSON());
@@ -71,7 +72,7 @@ const createStudents = async (req, res) => {
         const seenEnrollments = new Set();
 
         students.forEach((s, idx) => {
-            const { name, email, batchID, enrollment, currentSemester } = s || {};
+            const { name, email, batchID, enrollment, currentSemester, currentClassName } = s || {};
             if (!name || !email || !batchID || !enrollment || currentSemester === undefined) {
                 failures.push({ row: idx + 1, enrollment, reason: 'Missing required fields' });
                 return;
@@ -88,7 +89,7 @@ const createStudents = async (req, res) => {
             }
             seenEnrollments.add(enrollment);
             batchNames.add(batchID);
-            sanitized.push({ name, email, batchID, enrollment, currentSemester: sem });
+            sanitized.push({ name, email, batchID, enrollment, currentSemester: sem, currentClassName });
         });
 
         if (sanitized.length === 0) {
@@ -137,7 +138,8 @@ const createStudents = async (req, res) => {
                     email: s.email,
                     batchId: batchMap[s.batchID],
                     enrollmentNumber: s.enrollment,
-                    currnetsemester: s.currentSemester
+                    currnetsemester: s.currentSemester,
+                    currentClassName: s.currentClassName || null
                 });
             }
         });
@@ -200,12 +202,12 @@ const updateStudent = async (req, res) => {
         const student = await Student.findByPk(req.params.id);
         if (!student) return res.status(404).json({ message: 'Student not found' });
 
-        await student.update({ 
-            name, 
-            email, 
-            batchId, 
-            enrollmentNumber, 
-            currnetsemester: currentSemester 
+        await student.update({
+            name,
+            email,
+            batchId,
+            enrollmentNumber,
+            currnetsemester: currentSemester
         });
         res.status(200).json(student);
     } catch (error) {
@@ -230,25 +232,25 @@ const deleteStudent = async (req, res) => {
 const updateStudentSemesters = async (req, res) => {
     try {
         const { studentIds, newSemester } = req.body;
-        
+
         if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
             return res.status(400).json({ message: 'No student IDs provided' });
         }
-        
+
         if (newSemester === undefined || isNaN(parseInt(newSemester))) {
             return res.status(400).json({ message: 'Invalid semester value' });
         }
-        
+
         // Update all selected students
-        const updatePromises = studentIds.map(id => 
+        const updatePromises = studentIds.map(id =>
             Student.update(
                 { currnetsemester: parseInt(newSemester) },
                 { where: { id } }
             )
         );
-        
+
         await Promise.all(updatePromises);
-        
+
         res.status(200).json({ message: 'Student semesters updated successfully' });
     } catch (error) {
         console.error('Error updating student semesters:', error);
@@ -260,17 +262,17 @@ const updateStudentSemesters = async (req, res) => {
 const getStudentsByBatch = async (req, res) => {
     try {
         const { batchId } = req.params;
-        
+
         if (!batchId) {
             return res.status(400).json({ message: 'Batch ID is required' });
         }
-        
+
         const students = await Student.findAll({
             where: { batchId: parseInt(batchId) },
             attributes: ['id', 'name', 'enrollmentNumber', 'currnetsemester'],
             order: [['name', 'ASC']]
         });
-        
+
         res.status(200).json(students);
     } catch (error) {
         console.error('Error fetching students by batch:', error);
@@ -284,14 +286,14 @@ const loginStudent = async (req, res) => {
         const { email, enrollmentNumber } = req.body;
 
         // Find student by email
-        const student = await Student.findOne({ 
+        const student = await Student.findOne({
             where: { email },
             include: [{ model: Batch, attributes: ['batchName'] }]
         });
 
         if (!student) {
             console.log('Student not found for email:', email);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Invalid email or enrollment number',
                 error: 'Student not found'
             });
@@ -300,7 +302,7 @@ const loginStudent = async (req, res) => {
         // Verify enrollment number
         if (student.enrollmentNumber !== enrollmentNumber) {
             console.log('Invalid enrollment number for email:', email);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Invalid email or enrollment number',
                 error: 'Invalid enrollment number'
             });
@@ -315,25 +317,24 @@ const loginStudent = async (req, res) => {
         );
 
         console.log('Login successful for email:', email);
-        res.status(200).json({ 
-            message: 'Login successful', 
-            token, 
+        res.status(200).json({
+            message: 'Login successful',
+            token,
             user: {
                 id: student.id,
                 name: student.name,
                 email: student.email,
                 enrollmentNumber: student.enrollmentNumber,
                 currentSemester: student.currnetsemester,
-                hardwarePoints: student.hardwarePoints,
-                softwarePoints: student.softwarePoints,
+
                 batch: student.Batch ? student.Batch.batchName : null
             }
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ 
-            message: 'Server Error', 
-            error: error.message 
+        res.status(500).json({
+            message: 'Server Error',
+            error: error.message
         });
     }
 };
@@ -342,19 +343,19 @@ const loginStudent = async (req, res) => {
 const getCurrentSemesterPoints = async (req, res) => {
     try {
         const { enrollmentNumber, semester } = req.params;
-        
+
         if (!enrollmentNumber || !semester) {
-            return res.status(400).json({ 
-                message: 'Enrollment number and semester are required' 
+            return res.status(400).json({
+                message: 'Enrollment number and semester are required'
             });
         }
 
         // Require the StudentPoints model
         const StudentPoints = require('../models/StudentPoints');
-        
+
         // Find points for the specified student and semester
         const points = await StudentPoints.findAll({
-            where: { 
+            where: {
                 enrollmentNumber,
                 semester: parseInt(semester)
             },
@@ -365,38 +366,38 @@ const getCurrentSemesterPoints = async (req, res) => {
                 'totalExtracurricular'
             ]
         });
-        
+
         // If no points records found
         if (!points || points.length === 0) {
-            return res.status(200).json({ 
+            return res.status(200).json({
                 enrollmentNumber,
                 semester: parseInt(semester),
                 totalCocurricular: 0,
                 totalExtracurricular: 0
             });
         }
-        
+
         // Calculate total points if multiple records exist
         let totalCocurricular = 0;
         let totalExtracurricular = 0;
-        
+
         points.forEach(point => {
             totalCocurricular += point.totalCocurricular;
             totalExtracurricular += point.totalExtracurricular;
         });
-        
+
         res.status(200).json({
             enrollmentNumber,
             semester: parseInt(semester),
             totalCocurricular,
             totalExtracurricular
         });
-        
+
     } catch (error) {
         console.error('Error fetching current semester points:', error);
-        res.status(500).json({ 
-            message: 'Failed to fetch current semester points', 
-            error: error.message 
+        res.status(500).json({
+            message: 'Failed to fetch current semester points',
+            error: error.message
         });
     }
 };
@@ -407,16 +408,16 @@ const getAllStudentsCurrentSemesterPoints = async (req, res) => {
         // Require the StudentPoints model and Student model
         const StudentPoints = require('../models/StudentPoints');
         const Student = require('../models/students');
-        
+
         // Get all students to find their current semesters
         const students = await Student.findAll({
             attributes: ['id', 'name', 'enrollmentNumber', 'currnetsemester', 'email']
         });
-        
+
         if (!students || students.length === 0) {
             return res.status(404).json({ message: 'No students found' });
         }
-        
+
         // Create a map to store semester by enrollment number
         const studentSemesters = {};
         students.forEach(student => {
@@ -427,20 +428,20 @@ const getAllStudentsCurrentSemesterPoints = async (req, res) => {
                 semester: student.currnetsemester
             };
         });
-        
+
         // Get enrollment numbers
         const enrollmentNumbers = students.map(s => s.enrollmentNumber);
-        
+
         // Fetch points for all students
         const pointsRecords = await StudentPoints.findAll({
             where: {
                 enrollmentNumber: enrollmentNumbers
             }
         });
-        
+
         // Process points by student and semester
         const resultMap = {};
-        
+
         // Initialize result with zero points for all students
         enrollmentNumbers.forEach(enrollment => {
             const student = studentSemesters[enrollment];
@@ -454,36 +455,36 @@ const getAllStudentsCurrentSemesterPoints = async (req, res) => {
                 totalExtracurricular: 0
             };
         });
-        
+
         // Add up points for current semester
         pointsRecords.forEach(point => {
             const enrollment = point.enrollmentNumber;
             const studentInfo = studentSemesters[enrollment];
-            
+
             // Only add points for the student's current semester
             if (studentInfo && point.semester === studentInfo.semester) {
                 resultMap[enrollment].totalCocurricular += point.totalCocurricular;
                 resultMap[enrollment].totalExtracurricular += point.totalExtracurricular;
             }
         });
-        
+
         // Convert map to array for response
         const results = Object.values(resultMap);
-        
+
         res.status(200).json(results);
     } catch (error) {
         console.error('Error fetching all students current semester points:', error);
-        res.status(500).json({ 
-            message: 'Failed to fetch students points', 
-            error: error.message 
+        res.status(500).json({
+            message: 'Failed to fetch students points',
+            error: error.message
         });
     }
 };
 
-module.exports = { 
-    deleteStudent, 
-    updateStudent, 
-    getStudentById, 
+module.exports = {
+    deleteStudent,
+    updateStudent,
+    getStudentById,
     getAllStudents,
     createStudent,
     createStudents,

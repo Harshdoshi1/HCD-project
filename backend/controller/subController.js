@@ -355,7 +355,7 @@ const addSubjectWithComponents = async (req, res) => {
 
         // Create subject with required fields
         const validType = type && ['central', 'department'].includes(type) ? type : 'central';
-        
+
         console.log('Creating subject with type:', validType);
 
         const subjectRecord = await UniqueSubDegree.create({
@@ -428,12 +428,15 @@ const addSubjectWithComponents = async (req, res) => {
         }
 
         // Map component names from frontend to database
+        // Important: DB fields are lowercase of these values: ese, cse, ia, tw, viva
+        // Some UIs may use 'CA' to mean 'CSE'. Normalize both 'CA' and 'CSE' to 'CSE'.
         const componentMap = {
-            'CA': 'CA',   // Keep as CA instead of cse
-            'ESE': 'ESE',  // Keep as ESE
-            'IA': 'IA',    // Keep as IA
-            'TW': 'TW',    // Keep as TW
-            'VIVA': 'VIVA' // Keep as VIVA
+            'CA': 'CSE',
+            'CSE': 'CSE',
+            'ESE': 'ESE',
+            'IA': 'IA',
+            'TW': 'TW',
+            'VIVA': 'VIVA'
         };
 
         // Prepare weightage and marks data
@@ -444,8 +447,10 @@ const addSubjectWithComponents = async (req, res) => {
         for (const component of components) {
             const dbField = componentMap[component.name];
             if (dbField) {
-                weightageData[dbField.toLowerCase()] = component.weightage; // Convert to lowercase for DB fields
-                marksData[dbField.toLowerCase()] = component.totalMarks; // Convert to lowercase for DB fields
+                // Convert to lowercase for DB fields: ese, cse, ia, tw, viva
+                const dbKey = dbField.toLowerCase();
+                weightageData[dbKey] = component.weightage;
+                marksData[dbKey] = component.totalMarks;
             }
         }
 
@@ -464,7 +469,7 @@ const addSubjectWithComponents = async (req, res) => {
         for (const component of components) {
             if (component.subcomponents && Array.isArray(component.subcomponents) && component.subcomponents.length > 0) {
                 console.log(`Processing ${component.subcomponents.length} subcomponents for ${component.name}:`, component.subcomponents);
-                
+
                 for (const subComponent of component.subcomponents) {
                     // Check if sub-component has a name (enabled is not always sent from frontend)
                     if (subComponent.name && subComponent.name.trim() !== '') {
@@ -479,7 +484,7 @@ const addSubjectWithComponents = async (req, res) => {
                                 selectedCOs: subComponent.selectedCOs || [],
                                 isEnabled: subComponent.enabled !== undefined ? subComponent.enabled : true
                             });
-                            
+
                             const subComponentRecord = await SubComponents.create({
                                 componentWeightageId: weightage.id,
                                 componentType: component.name,
@@ -510,7 +515,7 @@ const addSubjectWithComponents = async (req, res) => {
         for (const coRecord of createdCOs) { // Iterate through each created Course Outcome
             const associatedComponentNames = [];
             // Find all components from the input `components` array that are associated with this coRecord
-            for (const inputComponent of components) { 
+            for (const inputComponent of components) {
                 // Ensure componentMap has the component and selectedCOs is valid
                 if (componentMap[inputComponent.name] && inputComponent.selectedCOs && Array.isArray(inputComponent.selectedCOs)) {
                     if (inputComponent.selectedCOs.includes(coRecord.co_code)) {
@@ -554,7 +559,7 @@ const addSubjectWithComponents = async (req, res) => {
             stack: error.stack,
             errors: error.errors
         });
-        res.status(500).json({ 
+        res.status(500).json({
             error: error.message,
             type: error.name,
             details: error.errors?.map(e => e.message) || []

@@ -479,37 +479,37 @@ exports.getStudentCPIByEmail = async (req, res) => {
 exports.getStudentComponentMarksAndSubjectsByEmail = async (req, res) => {
     try {
         const { email } = req.body;
-        
+
         // Find student by email
         const student = await Student.findOne({
             where: { email },
             include: [{ model: Batch }]
         });
-        
+
         if (!student) {
             return res.status(404).json({ message: 'Student not found with this email' });
         }
-        
+
         // Get all semesters for the student's batch
         const semesters = await Semester.findAll({
             where: { batchId: student.batchId },
             order: [['semesterNumber', 'ASC']]
         });
-        
+
         if (!semesters || semesters.length === 0) {
             return res.status(404).json({ message: 'No semesters found for this student' });
         }
-        
+
         // Get all student CPI records
         const cpiRecords = await StudentCPI.findAll({
             where: { enrollmentNumber: student.enrollmentNumber },
             include: [{ model: Semester }],
             order: [[Semester, 'semesterNumber', 'ASC']]
         });
-        
+
         // Prepare response data
         const semesterData = [];
-        
+
         for (const semester of semesters) {
             // Find subjects for this semester and batch
             const subjects = await Subject.findAll({
@@ -518,38 +518,38 @@ exports.getStudentComponentMarksAndSubjectsByEmail = async (req, res) => {
                     batchId: student.batchId
                 }
             });
-            
+
             const subjectsWithMarks = [];
-            
+
             // Log the subjects for debugging
             console.log('Subjects found:', subjects);
-            
+
             for (const subject of subjects) {
                 // Check if we have all required fields
                 if (!subject || !subject.subjectName) {
                     console.log('Invalid subject data:', subject);
                     continue;
                 }
-                
+
                 // Try to find matching unique subject 
                 // Note: We're using a direct query instead of relying on a foreign key relationship
                 const uniqueSubjects = await UniqueSubDegree.findAll();
-                const uniqueSubject = uniqueSubjects.find(us => 
+                const uniqueSubject = uniqueSubjects.find(us =>
                     us.sub_name.toLowerCase() === subject.subjectName.toLowerCase());
-                
+
                 if (!uniqueSubject) {
                     console.log(`No matching UniqueSubDegree found for subject: ${subject.subjectName}`);
                     continue;
                 }
-                
+
                 const subCode = uniqueSubject.sub_code;
                 console.log(`Found matching subject code: ${subCode} for subject: ${subject.subjectName}`);
-                
+
                 // Get component marks for this subject and student
                 const componentMarks = await ComponentMarks.findAll({
                     where: { subjectId: subCode }
                 });
-                
+
                 // Get student's specific marks
                 const studentMarks = await Gettedmarks.findOne({
                     where: {
@@ -557,12 +557,12 @@ exports.getStudentComponentMarksAndSubjectsByEmail = async (req, res) => {
                         subjectId: subCode
                     }
                 });
-                
+
                 // Get component weightage
                 const componentWeightage = await ComponentWeightage.findOne({
                     where: { subjectId: subCode }
                 });
-                
+
                 subjectsWithMarks.push({
                     subjectId: subject.id,
                     subjectCode: uniqueSubject.sub_code,
@@ -585,10 +585,10 @@ exports.getStudentComponentMarksAndSubjectsByEmail = async (req, res) => {
                     grades: studentMarks ? studentMarks.grades : null // Include grades from gettedmarks
                 });
             }
-            
+
             // Find CPI/SPI for this semester
             const semesterCPI = cpiRecords.find(record => record.semesterId === semester.id);
-            
+
             semesterData.push({
                 semesterId: semester.id,
                 semesterNumber: semester.semesterNumber,
@@ -600,7 +600,7 @@ exports.getStudentComponentMarksAndSubjectsByEmail = async (req, res) => {
                 subjects: subjectsWithMarks
             });
         }
-        
+
         return res.status(200).json({
             student: {
                 id: student.id,
@@ -608,12 +608,11 @@ exports.getStudentComponentMarksAndSubjectsByEmail = async (req, res) => {
                 email: student.email,
                 enrollmentNumber: student.enrollmentNumber,
                 batch: student.Batch.batchName,
-                hardwarePoints: student.hardwarePoints,
-                softwarePoints: student.softwarePoints
+
             },
             semesters: semesterData
         });
-        
+
     } catch (error) {
         console.error('Error fetching student component marks and subjects:', error);
         return res.status(500).json({ message: 'Server error', error: error.message });

@@ -129,13 +129,17 @@ const addSubjectWithComponents = async (req, res) => {
       if (Array.isArray(components)) {
         components.forEach(comp => {
           if (comp.name && typeof comp.value === 'number') {
-            const key = comp.name.toUpperCase();
+            let key = comp.name.toUpperCase();
+            // Normalize 'CA' to 'CSE' to match database column
+            if (key === 'CA') key = 'CSE';
             if (map.hasOwnProperty(key)) {
               map[key] = comp.value;
             }
           } else if (comp.name && typeof comp.weightage === 'number') {
             // fallback for weightage
-            const key = comp.name.toUpperCase();
+            let key = comp.name.toUpperCase();
+            // Normalize 'CA' to 'CSE' to match database column
+            if (key === 'CA') key = 'CSE';
             if (map.hasOwnProperty(key)) {
               map[key] = comp.weightage;
             }
