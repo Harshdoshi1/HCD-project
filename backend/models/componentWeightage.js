@@ -41,7 +41,7 @@ const ComponentWeightage = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
-    ca: {
+    cse: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
