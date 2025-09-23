@@ -1,4 +1,4 @@
-const { 
+const {
     StudentMarks,
     ComponentWeightage,
     SubComponents,
@@ -23,16 +23,16 @@ const { Op } = require('sequelize');
  */
 const calculateWeightedMarks = (marksObtained, totalMarks, weightagePercentage, maxSubjectMarks = 150) => {
     if (totalMarks === 0 || !totalMarks) return 0;
-    
+
     // Calculate the allocated marks for this component based on weightage
     const allocatedMarks = (weightagePercentage / 100) * maxSubjectMarks;
-    
+
     // Calculate the percentage of marks obtained in this component
     const percentageObtained = marksObtained / totalMarks;
-    
+
     // Calculate weighted marks
     const weightedMarks = percentageObtained * allocatedMarks;
-    
+
     return parseFloat(weightedMarks.toFixed(2));
 };
 
@@ -47,12 +47,17 @@ const calculateWeightedMarks = (marksObtained, totalMarks, weightagePercentage, 
 const getCOsAndBloomsMapping = async (subjectId, componentWeightageId, componentType, subComponentId = null) => {
     const coBloomsMapping = {};
     let selectedCOs = [];
-    
+
+    console.log(`Getting CO mapping for: subjectId=${subjectId}, componentWeightageId=${componentWeightageId}, componentType=${componentType}, subComponentId=${subComponentId}`);
+
     if (subComponentId) {
         // For subcomponents, get COs from SubComponents table
         const subComponent = await SubComponents.findByPk(subComponentId);
         if (subComponent && subComponent.selectedCOs) {
             selectedCOs = subComponent.selectedCOs;
+            console.log(`Found ${selectedCOs.length} COs for subcomponent ${subComponentId}`);
+        } else {
+            console.log(`No COs found for subcomponent ${subComponentId}`);
         }
     } else {
         // For main components, get COs from SubjectComponentCo table
@@ -66,11 +71,14 @@ const getCOsAndBloomsMapping = async (subjectId, componentWeightageId, component
                 as: 'courseOutcome'
             }]
         });
-        
+
+        console.log(`Found ${componentCOs.length} CO mappings for component ${componentType}`);
         selectedCOs = componentCOs.map(cco => cco.course_outcome_id);
     }
-    
+
     // For each CO, get associated Bloom's levels
+    console.log(`Processing ${selectedCOs.length} selected COs: [${selectedCOs.join(', ')}]`);
+
     for (const coId of selectedCOs) {
         const coBloomsLinks = await CoBloomsTaxonomy.findAll({
             where: { course_outcome_id: coId },
@@ -79,13 +87,15 @@ const getCOsAndBloomsMapping = async (subjectId, componentWeightageId, component
                 as: 'bloomsTaxonomy'
             }]
         });
-        
+
+        console.log(`CO ${coId} has ${coBloomsLinks.length} Bloom's level mappings`);
+
         coBloomsMapping[coId] = coBloomsLinks.map(link => ({
             bloomsId: link.blooms_taxonomy_id,
             bloomsName: link.bloomsTaxonomy ? link.bloomsTaxonomy.name : 'Unknown'
         }));
     }
-    
+
     return coBloomsMapping;
 };
 
@@ -98,16 +108,16 @@ const getCOsAndBloomsMapping = async (subjectId, componentWeightageId, component
  */
 const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber) => {
     const distributionRecords = [];
-    
+
     try {
         console.log(`Calculating marks distribution for student ${studentId}, subject ${subjectId}, semester ${semesterNumber}`);
-        
+
         // Get student information
         const student = await Student.findByPk(studentId);
         if (!student) {
             throw new Error('Student not found');
         }
-        
+
         // Get component weightage configuration
         const componentWeightage = await ComponentWeightage.findOne({
             where: { subjectId: subjectId },
@@ -116,12 +126,12 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
                 as: 'subComponents'
             }]
         });
-        
+
         if (!componentWeightage) {
             console.warn(`No component weightage found for subject ${subjectId}`);
             return distributionRecords;
         }
-        
+
         // Get all student marks for this subject and semester
         const studentMarks = await StudentMarks.findAll({
             where: {
@@ -134,17 +144,21 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
                 as: 'subComponent'
             }]
         });
-        
+
         if (studentMarks.length === 0) {
             console.log(`No marks found for student ${studentId} in subject ${subjectId}`);
             return distributionRecords;
         }
-        
+
+        console.log(`Found ${studentMarks.length} mark entries for processing`);
+
         // Process each mark entry
         for (const markEntry of studentMarks) {
+            console.log(`Processing mark entry: ${markEntry.componentType}, isSubComponent: ${markEntry.isSubComponent}, marks: ${markEntry.marksObtained}/${markEntry.totalMarks}`);
+
             let weightagePercentage = 0;
             let coBloomsMapping = {};
-            
+
             if (markEntry.isSubComponent && markEntry.subComponent) {
                 // For subcomponents, get weightage from SubComponents table
                 weightagePercentage = markEntry.subComponent.weightage;
@@ -156,12 +170,23 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
                 );
             } else {
                 // For main components, get weightage from ComponentWeightage table
-                const componentTypeLower = markEntry.componentType.toLowerCase();
+                let componentTypeLower = markEntry.componentType.toLowerCase();
+
+                // Handle CSE/CA mapping - ComponentWeightage table uses 'cse' field
+                if (componentTypeLower === 'ca') {
+                    componentTypeLower = 'cse';
+                }
+
                 weightagePercentage = componentWeightage[componentTypeLower] || 0;
-                
+
+                console.log(`Component: ${markEntry.componentType}, Field: ${componentTypeLower}, Weightage: ${weightagePercentage}`);
+
                 // Skip if component has no weightage
-                if (weightagePercentage === 0) continue;
-                
+                if (weightagePercentage === 0) {
+                    console.log(`Skipping component ${markEntry.componentType} - no weightage configured`);
+                    continue;
+                }
+
                 coBloomsMapping = await getCOsAndBloomsMapping(
                     subjectId,
                     componentWeightage.id,
@@ -169,7 +194,7 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
                     null
                 );
             }
-            
+
             // Calculate weighted marks
             const weightedMarks = calculateWeightedMarks(
                 markEntry.marksObtained,
@@ -177,15 +202,18 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
                 weightagePercentage,
                 150 // Total subject marks fixed at 150
             );
-            
+
             console.log(`Component: ${markEntry.componentType}${markEntry.isSubComponent ? ' - ' + markEntry.componentName : ''}`);
             console.log(`Marks: ${markEntry.marksObtained}/${markEntry.totalMarks}, Weightage: ${weightagePercentage}%, Weighted Marks: ${weightedMarks}`);
-            
+
             // Distribute weighted marks to all associated COs and Bloom's levels
+            console.log(`CO-Blooms mapping for ${markEntry.componentType}:`, Object.keys(coBloomsMapping).length, 'COs found');
+
             for (const [coId, bloomsLevels] of Object.entries(coBloomsMapping)) {
+                console.log(`Processing CO ${coId} with ${bloomsLevels.length} Bloom's levels`);
                 for (const bloom of bloomsLevels) {
                     // Each CO-Bloom combination gets the full weighted marks
-                    distributionRecords.push({
+                    const record = {
                         studentId: studentId,
                         semesterNumber: semesterNumber,
                         subjectId: subjectId,
@@ -197,14 +225,16 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
                         bloomsTaxonomyId: bloom.bloomsId,
                         assignedMarks: weightedMarks,
                         calculatedAt: new Date()
-                    });
+                    };
+                    distributionRecords.push(record);
+                    console.log(`Added distribution record: Component=${markEntry.componentType}, CO=${coId}, Bloom=${bloom.bloomsId}, Marks=${weightedMarks}`);
                 }
             }
         }
-        
+
         console.log(`Generated ${distributionRecords.length} distribution records`);
         return distributionRecords;
-        
+
     } catch (error) {
         console.error('Error in calculateAndDistributeMarks:', error);
         throw error;
@@ -218,7 +248,7 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
  */
 const aggregateMarksByBlooms = (distributionRecords) => {
     const bloomsAggregation = {};
-    
+
     distributionRecords.forEach(record => {
         if (!bloomsAggregation[record.bloomsTaxonomyId]) {
             bloomsAggregation[record.bloomsTaxonomyId] = {
@@ -226,19 +256,19 @@ const aggregateMarksByBlooms = (distributionRecords) => {
                 records: []
             };
         }
-        
+
         // Add marks (not accumulate, as each CO-Bloom pair should have unique marks)
         // Check if this component was already added for this Bloom's level
         const existingComponent = bloomsAggregation[record.bloomsTaxonomyId].records.find(
             r => r.studentMarksSubjectComponentId === record.studentMarksSubjectComponentId
         );
-        
+
         if (!existingComponent) {
             bloomsAggregation[record.bloomsTaxonomyId].totalMarks += record.assignedMarks;
             bloomsAggregation[record.bloomsTaxonomyId].records.push(record);
         }
     });
-    
+
     return bloomsAggregation;
 };
 
@@ -251,9 +281,9 @@ const aggregateMarksByBlooms = (distributionRecords) => {
 const processStudentMarksDistribution = async (studentId, semesterNumber, subjectId = null) => {
     try {
         console.log(`Processing marks distribution for student ${studentId}, semester ${semesterNumber}`);
-        
+
         let subjects = [];
-        
+
         if (subjectId) {
             subjects = [{ subjectId }];
         } else {
@@ -266,22 +296,22 @@ const processStudentMarksDistribution = async (studentId, semesterNumber, subjec
                 attributes: ['subjectId'],
                 group: ['subjectId']
             });
-            
+
             subjects = studentMarks.map(sm => ({ subjectId: sm.subjectId }));
         }
-        
+
         const allDistributionRecords = [];
-        
+
         for (const subject of subjects) {
             const distributionRecords = await calculateAndDistributeMarks(
                 studentId,
                 subject.subjectId,
                 semesterNumber
             );
-            
+
             allDistributionRecords.push(...distributionRecords);
         }
-        
+
         if (allDistributionRecords.length > 0) {
             // Clear existing distribution records for this student and semester
             await StudentBloomsDistribution.destroy({
@@ -291,19 +321,19 @@ const processStudentMarksDistribution = async (studentId, semesterNumber, subjec
                     ...(subjectId ? { subjectId: subjectId } : {})
                 }
             });
-            
+
             // Insert new distribution records
             await StudentBloomsDistribution.bulkCreate(allDistributionRecords);
-            
+
             console.log(`Successfully stored ${allDistributionRecords.length} distribution records`);
         }
-        
+
         return {
             success: true,
             recordsCreated: allDistributionRecords.length,
             distributions: allDistributionRecords
         };
-        
+
     } catch (error) {
         console.error('Error in processStudentMarksDistribution:', error);
         throw error;
