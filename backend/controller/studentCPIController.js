@@ -577,7 +577,7 @@ exports.getStudentComponentMarksAndSubjectsByEmail = async (req, res) => {
                     } : null,
                     componentWeightage: componentWeightage ? {
                         ese: componentWeightage.ese,
-                        cse: componentWeightage.cse,
+                        cse: componentWeightage.cse,  // Both tables now use 'cse' field consistently
                         ia: componentWeightage.ia,
                         tw: componentWeightage.tw,
                         viva: componentWeightage.viva

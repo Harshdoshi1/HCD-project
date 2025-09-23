@@ -264,7 +264,7 @@ const getSubjectComponentsForGrading = async (req, res) => {
 
         // Structure the response to match frontend expectations
         const componentStructure = {
-            CA: { enabled: componentWeightage.ca > 0, totalMarks: componentMarks.cse, subComponents: [] },
+            CA: { enabled: componentWeightage.cse > 0, totalMarks: componentMarks.cse, subComponents: [] },
             ESE: { enabled: componentWeightage.ese > 0, totalMarks: componentMarks.ese, subComponents: [] },
             IA: { enabled: componentWeightage.ia > 0, totalMarks: componentMarks.ia, subComponents: [] },
             TW: { enabled: componentWeightage.tw > 0, totalMarks: componentMarks.tw, subComponents: [] },

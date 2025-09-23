@@ -428,7 +428,7 @@ const addSubjectWithComponents = async (req, res) => {
         }
 
         // Map component names from frontend to database
-        // Both ComponentWeightage and ComponentMarks now use 'cse'
+        // Both ComponentWeightage and ComponentMarks now use 'cse' consistently
         const componentMap = {
             'CA': 'cse',
             'CSE': 'cse',
