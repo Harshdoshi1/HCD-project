@@ -273,6 +273,168 @@ const aggregateMarksByBlooms = (distributionRecords) => {
 };
 
 /**
+ * Ensure all 6 Bloom's taxonomy levels exist for a student-subject combination
+ * @param {number} studentId - Student ID
+ * @param {string} subjectId - Subject ID
+ * @param {number} semesterNumber - Semester number
+ */
+const ensureAllBloomsLevelsExist = async (studentId, subjectId, semesterNumber) => {
+    try {
+        console.log(`Ensuring all Bloom's levels exist for student ${studentId}, subject ${subjectId}, semester ${semesterNumber}`);
+
+        // Get all existing Bloom's levels for this student-subject combination
+        const existingBloomsLevels = await StudentBloomsDistribution.findAll({
+            where: {
+                studentId: studentId,
+                subjectId: subjectId,
+                semesterNumber: semesterNumber
+            },
+            attributes: ['bloomsTaxonomyId'],
+            group: ['bloomsTaxonomyId']
+        });
+
+        const existingBloomsIds = existingBloomsLevels.map(level => level.bloomsTaxonomyId);
+        console.log(`Found existing Bloom's levels: [${existingBloomsIds.join(', ')}]`);
+
+        // Create placeholder entries for missing Bloom's levels (1-6)
+        const placeholderRecords = [];
+        for (let bloomsLevel = 1; bloomsLevel <= 6; bloomsLevel++) {
+            if (!existingBloomsIds.includes(bloomsLevel)) {
+                console.log(`Creating placeholder for Bloom's level ${bloomsLevel}`);
+                
+                // Create a placeholder record with 0 marks
+                const placeholderRecord = {
+                    studentId: studentId,
+                    semesterNumber: semesterNumber,
+                    subjectId: subjectId,
+                    studentMarksSubjectComponentId: 0, // Placeholder component ID
+                    totalMarksOfComponent: 0,
+                    subComponentWeightage: 0,
+                    selectedCOs: [],
+                    courseOutcomeId: 0, // Placeholder CO ID
+                    bloomsTaxonomyId: bloomsLevel,
+                    assignedMarks: 0,
+                    calculatedAt: new Date()
+                };
+                placeholderRecords.push(placeholderRecord);
+            }
+        }
+
+        if (placeholderRecords.length > 0) {
+            await StudentBloomsDistribution.bulkCreate(placeholderRecords);
+            console.log(`Created ${placeholderRecords.length} placeholder Bloom's level entries`);
+        }
+
+        return placeholderRecords.length;
+
+    } catch (error) {
+        console.error('Error in ensureAllBloomsLevelsExist:', error);
+        throw error;
+    }
+};
+
+/**
+ * Update existing Bloom's level entries with new marks (accumulative)
+ * @param {array} distributionRecords - New distribution records to process
+ * @param {number} studentId - Student ID
+ * @param {string} subjectId - Subject ID
+ * @param {number} semesterNumber - Semester number
+ */
+const updateBloomsDistribution = async (distributionRecords, studentId, subjectId, semesterNumber) => {
+    try {
+        console.log(`Updating Bloom's distribution for ${distributionRecords.length} records`);
+
+        for (const record of distributionRecords) {
+            // Find existing entry for this Bloom's level
+            const existingEntry = await StudentBloomsDistribution.findOne({
+                where: {
+                    studentId: studentId,
+                    subjectId: subjectId,
+                    semesterNumber: semesterNumber,
+                    bloomsTaxonomyId: record.bloomsTaxonomyId,
+                    courseOutcomeId: record.courseOutcomeId
+                }
+            });
+
+            if (existingEntry) {
+                // Update existing entry by adding new marks
+                const updatedMarks = parseFloat(existingEntry.assignedMarks) + parseFloat(record.assignedMarks);
+                await existingEntry.update({
+                    assignedMarks: updatedMarks,
+                    calculatedAt: new Date(),
+                    // Update other fields if they're not placeholder values
+                    ...(record.studentMarksSubjectComponentId !== 0 && {
+                        studentMarksSubjectComponentId: record.studentMarksSubjectComponentId,
+                        totalMarksOfComponent: record.totalMarksOfComponent,
+                        subComponentWeightage: record.subComponentWeightage,
+                        selectedCOs: record.selectedCOs
+                    })
+                });
+                console.log(`Updated Bloom's level ${record.bloomsTaxonomyId}, CO ${record.courseOutcomeId}: ${existingEntry.assignedMarks} + ${record.assignedMarks} = ${updatedMarks}`);
+            } else {
+                // Create new entry if it doesn't exist
+                await StudentBloomsDistribution.create(record);
+                console.log(`Created new entry for Bloom's level ${record.bloomsTaxonomyId}, CO ${record.courseOutcomeId}: ${record.assignedMarks}`);
+            }
+        }
+
+    } catch (error) {
+        console.error('Error in updateBloomsDistribution:', error);
+        throw error;
+    }
+};
+
+/**
+ * Initialize all Bloom's levels for existing students (utility function for data migration)
+ * @param {number} studentId - Optional student ID to process specific student
+ * @param {string} subjectId - Optional subject ID to process specific subject
+ * @param {number} semesterNumber - Optional semester number to process specific semester
+ */
+const initializeBloomsLevelsForExistingData = async (studentId = null, subjectId = null, semesterNumber = null) => {
+    try {
+        console.log('Initializing Bloom\'s levels for existing data...');
+
+        // Build where clause based on provided parameters
+        const whereClause = {};
+        if (studentId) whereClause.studentId = studentId;
+        if (subjectId) whereClause.subjectId = subjectId;
+        if (semesterNumber) whereClause.enrollmentSemester = semesterNumber;
+
+        // Get all unique student-subject-semester combinations
+        const uniqueCombinations = await StudentMarks.findAll({
+            where: whereClause,
+            attributes: ['studentId', 'subjectId', 'enrollmentSemester'],
+            group: ['studentId', 'subjectId', 'enrollmentSemester']
+        });
+
+        console.log(`Found ${uniqueCombinations.length} unique student-subject-semester combinations to process`);
+
+        let totalPlaceholdersCreated = 0;
+
+        for (const combination of uniqueCombinations) {
+            const placeholdersCreated = await ensureAllBloomsLevelsExist(
+                combination.studentId,
+                combination.subjectId,
+                combination.enrollmentSemester
+            );
+            totalPlaceholdersCreated += placeholdersCreated;
+        }
+
+        console.log(`Initialization complete. Created ${totalPlaceholdersCreated} placeholder entries.`);
+
+        return {
+            success: true,
+            combinationsProcessed: uniqueCombinations.length,
+            placeholdersCreated: totalPlaceholdersCreated
+        };
+
+    } catch (error) {
+        console.error('Error in initializeBloomsLevelsForExistingData:', error);
+        throw error;
+    }
+};
+
+/**
  * Main function to process marks distribution for a student
  * @param {number} studentId - Student ID
  * @param {number} semesterNumber - Semester number
@@ -303,6 +465,9 @@ const processStudentMarksDistribution = async (studentId, semesterNumber, subjec
         const allDistributionRecords = [];
 
         for (const subject of subjects) {
+            // First, ensure all Bloom's levels exist for this subject
+            await ensureAllBloomsLevelsExist(studentId, subject.subjectId, semesterNumber);
+
             const distributionRecords = await calculateAndDistributeMarks(
                 studentId,
                 subject.subjectId,
@@ -313,11 +478,13 @@ const processStudentMarksDistribution = async (studentId, semesterNumber, subjec
         }
 
         if (allDistributionRecords.length > 0) {
-            // Clear existing distribution records for this student and semester
+            // Instead of clearing all records, we'll update them incrementally
+            // First, clear only the records that will be recalculated (non-placeholder records)
             await StudentBloomsDistribution.destroy({
                 where: {
                     studentId: studentId,
                     semesterNumber: semesterNumber,
+                    studentMarksSubjectComponentId: { [Op.ne]: 0 }, // Don't delete placeholder records
                     ...(subjectId ? { subjectId: subjectId } : {})
                 }
             });
@@ -345,5 +512,8 @@ module.exports = {
     getCOsAndBloomsMapping,
     calculateAndDistributeMarks,
     aggregateMarksByBlooms,
+    ensureAllBloomsLevelsExist,
+    updateBloomsDistribution,
+    initializeBloomsLevelsForExistingData,
     processStudentMarksDistribution
 };
