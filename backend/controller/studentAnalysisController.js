@@ -29,11 +29,11 @@ const getStudentAnalysisData = async (req, res) => {
 
         // Fetch academic data for all semesters up to current
         const academicData = [];
-        
+
         for (let semesterNum = 1; semesterNum <= currentSemester; semesterNum++) {
             // Find semester record
             const semester = await Semester.findOne({
-                where: { 
+                where: {
                     semesterNumber: semesterNum,
                     batchId: student.batchId
                 }
@@ -42,7 +42,7 @@ const getStudentAnalysisData = async (req, res) => {
             if (!semester) {
                 continue;
             }
-            
+
             // Get all marks for this student in this semester using raw query
             const rawMarks = await sequelize.query(`
                 SELECT sm.*, sub.sub_name, sub.sub_code 
@@ -106,8 +106,8 @@ const getStudentAnalysisData = async (req, res) => {
                 semesterTotalPossible += subject.totalPossible;
             });
 
-            const semesterPercentage = semesterTotalPossible > 0 
-                ? (semesterTotalObtained / semesterTotalPossible) * 100 
+            const semesterPercentage = semesterTotalPossible > 0
+                ? (semesterTotalObtained / semesterTotalPossible) * 100
                 : 0;
 
             academicData.push({
@@ -128,8 +128,8 @@ const getStudentAnalysisData = async (req, res) => {
             return acc;
         }, { totalObtained: 0, totalPossible: 0, totalSubjects: 0 });
 
-        const overallPercentage = overallStats.totalPossible > 0 
-            ? (overallStats.totalObtained / overallStats.totalPossible) * 100 
+        const overallPercentage = overallStats.totalPossible > 0
+            ? (overallStats.totalObtained / overallStats.totalPossible) * 100
             : 0;
 
         // Generate academic insights
@@ -222,11 +222,11 @@ const generateAcademicInsights = (academicData, overallPercentage) => {
             percentage: subject.totalPossible > 0 ? (subject.totalMarks / subject.totalPossible) * 100 : 0
         }));
 
-        const bestSubject = subjectPerformances.reduce((max, subject) => 
+        const bestSubject = subjectPerformances.reduce((max, subject) =>
             subject.percentage > max.percentage ? subject : max
         );
 
-        const worstSubject = subjectPerformances.reduce((min, subject) => 
+        const worstSubject = subjectPerformances.reduce((min, subject) =>
             subject.percentage < min.percentage ? subject : min
         );
 
@@ -247,94 +247,139 @@ const generateAcademicInsights = (academicData, overallPercentage) => {
 const getBloomsTaxonomyDistribution = async (req, res) => {
     try {
         const { enrollmentNumber, semesterNumber } = req.params;
-        const student = await Student.findOne({ where: { enrollmentNumber } });
-        if (!student) return res.status(404).json({ error: 'Student not found' });
 
-        // 1. Single, comprehensive query with the CORRECT join condition
-        const results = await sequelize.query(`
-            SELECT
-                sm.subjectId, sub.sub_name, sm.marksObtained, sm.totalMarks AS subComponentTotalMarks,
-                sm.componentType, sc.id AS subComponentId, sc.weightage AS subComponentWeightage,
-                cw.id AS componentWeightageId, cw.ese, cw.ia, cw.tw, cw.viva, cw.ca,
-                co.id AS coId, bt.name AS bloomsLevel
-            FROM StudentMarks sm
-            JOIN SubComponents sc ON sm.subComponentId = sc.id
-            JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
-            JOIN UniqueSubDegrees sub ON sm.subjectId = sub.sub_code
-            LEFT JOIN subject_component_cos scc ON scc.subject_component_id = sc.id -- Corrected JOIN
-            LEFT JOIN course_outcomes co ON scc.course_outcome_id = co.id
-            LEFT JOIN co_blooms_taxonomy cbt ON cbt.course_outcome_id = co.id
-            LEFT JOIN blooms_taxonomy bt ON cbt.blooms_taxonomy_id = bt.id
-            WHERE sm.studentId = :studentId AND sm.enrollmentSemester = :semesterNumber
-        `, { replacements: { studentId: student.id, semesterNumber }, type: sequelize.QueryTypes.SELECT });
+        console.log(`🔍 [DEBUG] Fetching Bloom's taxonomy for enrollment: ${enrollmentNumber}, semester: ${semesterNumber}`);
 
-        const subjectBloomsData = {};
-
-        // 2. Process each unique student mark to avoid double-counting
-        const uniqueMarks = results.filter((v, i, a) => a.findIndex(t => (t.subComponentId === v.subComponentId)) === i);
-
-        for (const mark of uniqueMarks) {
-            if (!mark.subComponentId) continue;
-
-            // 3. Calculate effective marks for the sub-component
-            let componentTotal = 0;
-            switch (mark.componentType) {
-                case 'ESE': componentTotal = mark.ese; break;
-                case 'IA': componentTotal = mark.ia; break;
-                case 'TW': componentTotal = mark.tw; break;
-                case 'VIVA': componentTotal = mark.viva; break;
-                case 'CA': componentTotal = mark.ca; break;
-            }
-            if (componentTotal === 0) continue;
-
-            const effectiveTotal = (componentTotal * (mark.subComponentWeightage / 100));
-            const effectiveObtained = (mark.marksObtained / mark.subComponentTotalMarks) * effectiveTotal;
-
-            // 4. Distribute marks to relevant COs
-            const cosForSubComponent = results.filter(r => r.subComponentId === mark.subComponentId && r.coId);
-            const uniqueCoIds = [...new Set(cosForSubComponent.map(r => r.coId))];
-            if (uniqueCoIds.length === 0) continue;
-
-            const marksPerCo = effectiveObtained / uniqueCoIds.length;
-            const totalPerCo = effectiveTotal / uniqueCoIds.length;
-
-            // 5. Distribute marks from COs to Bloom's Levels
-            for (const coId of uniqueCoIds) {
-                const bloomsForCo = results.filter(r => r.coId === coId && r.bloomsLevel);
-                const uniqueBloomLevels = [...new Set(bloomsForCo.map(r => r.bloomsLevel))];
-                if (uniqueBloomLevels.length === 0) continue;
-
-                const marksPerBloom = marksPerCo / uniqueBloomLevels.length;
-                const totalPerBloom = totalPerCo / uniqueBloomLevels.length;
-
-                for (const bloomLevel of uniqueBloomLevels) {
-                    if (!subjectBloomsData[mark.subjectId]) {
-                        subjectBloomsData[mark.subjectId] = { subject: mark.sub_name, code: mark.subjectId, bloomsLevels: {} };
-                    }
-                    if (!subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel]) {
-                        subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel] = { obtained: 0, possible: 0 };
-                    }
-                    subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel].obtained += marksPerBloom;
-                    subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel].possible += totalPerBloom;
-                }
-            }
+        // Validate parameters
+        if (!enrollmentNumber || !semesterNumber) {
+            console.log('❌ [ERROR] Missing required parameters');
+            return res.status(400).json({
+                error: 'Missing required parameters',
+                details: { enrollmentNumber, semesterNumber }
+            });
         }
 
-        // 6. Format for frontend response
-        const bloomsData = Object.values(subjectBloomsData).map(subject => ({
-            subject: subject.subject,
-            code: subject.code,
-            bloomsLevels: Object.entries(subject.bloomsLevels).map(([level, data]) => ({
-                level,
-                score: data.possible > 0 ? Math.round((data.obtained / data.possible) * 100) : 0
-            }))
-        }));
+        const student = await Student.findOne({ where: { enrollmentNumber } });
+        if (!student) {
+            console.log(`❌ [ERROR] Student not found: ${enrollmentNumber}`);
+            return res.status(404).json({ error: 'Student not found' });
+        }
 
-        res.status(200).json({ semester: parseInt(semesterNumber), bloomsDistribution: bloomsData });
+        console.log(`✅ [DEBUG] Student found: ID=${student.id}, Name=${student.name}`);
+
+        // Validate semester number
+        const semesterNum = parseInt(semesterNumber);
+        if (isNaN(semesterNum) || semesterNum < 1 || semesterNum > 8) {
+            console.log(`❌ [ERROR] Invalid semester number: ${semesterNumber}`);
+            return res.status(400).json({
+                error: 'Invalid semester number',
+                details: { semesterNumber, parsed: semesterNum }
+            });
+        }
+
+        // Fetch real data from student_blooms_distribution table
+        console.log(`🔍 [DEBUG] Fetching from student_blooms_distribution table for studentId: ${student.id}, semester: ${semesterNum}`);
+
+        const sqlQuery = `
+            SELECT 
+                sbd.subjectId,
+                sub.sub_name as subjectName,
+                bt.name as bloomsLevel,
+                SUM(sbd.assignedMarks) as totalMarks
+            FROM student_blooms_distribution sbd
+            JOIN blooms_taxonomy bt ON sbd.bloomsTaxonomyId = bt.id
+            LEFT JOIN UniqueSubDegrees sub ON sbd.subjectId = sub.sub_code
+            WHERE sbd.studentId = :studentId 
+            AND sbd.semesterNumber = :semesterNumber
+            GROUP BY sbd.subjectId, sbd.bloomsTaxonomyId, bt.name, sub.sub_name
+            ORDER BY sbd.subjectId, bt.id
+        `;
+
+        console.log(`📝 [DEBUG] SQL Query: ${sqlQuery.replace(/\s+/g, ' ').trim()}`);
+
+        const results = await sequelize.query(sqlQuery, {
+            replacements: { studentId: student.id, semesterNumber: semesterNum },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        console.log(`📊 [DEBUG] Query returned ${results.length} rows`);
+
+        // Check if we have any data
+        if (results.length === 0) {
+            console.log(`⚠️ [DEBUG] No data found in student_blooms_distribution for student ${enrollmentNumber} in semester ${semesterNumber}`);
+            return res.status(200).json({
+                semester: semesterNum,
+                bloomsDistribution: [],
+                message: 'No Bloom\'s taxonomy data available for this student and semester'
+            });
+        }
+
+        // Group data by subject
+        const subjectBloomsData = {};
+
+        for (const row of results) {
+            const subjectId = row.subjectId;
+            const subjectName = row.subjectName || subjectId;
+
+            if (!subjectBloomsData[subjectId]) {
+                subjectBloomsData[subjectId] = {
+                    subject: subjectName,
+                    code: subjectId,
+                    bloomsLevels: {},
+                    totalMarks: 0
+                };
+            }
+
+            // Add bloom's level data
+            subjectBloomsData[subjectId].bloomsLevels[row.bloomsLevel] = parseFloat(row.totalMarks) || 0;
+            subjectBloomsData[subjectId].totalMarks += parseFloat(row.totalMarks) || 0;
+        }
+
+        // Calculate percentages and format for frontend
+        const bloomsData = Object.values(subjectBloomsData).map(subject => {
+            const bloomsLevels = [];
+            const totalSubjectMarks = subject.totalMarks;
+
+            // Ensure all 6 Bloom's levels are included
+            const allBloomsLevels = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'];
+
+            for (const level of allBloomsLevels) {
+                const marks = subject.bloomsLevels[level] || 0;
+                const percentage = totalSubjectMarks > 0 ? Math.round((marks / totalSubjectMarks) * 100) : 0;
+
+                bloomsLevels.push({
+                    level,
+                    marks: marks,
+                    score: percentage
+                });
+            }
+
+            return {
+                subject: subject.subject,
+                code: subject.code,
+                totalMarks: totalSubjectMarks,
+                bloomsLevels
+            };
+        });
+
+        console.log(`✅ [DEBUG] Successfully processed Bloom's data for ${bloomsData.length} subjects`);
+        console.log(`📊 [DEBUG] Sample data:`, bloomsData.length > 0 ? bloomsData[0] : 'No data');
+
+        res.status(200).json({
+            semester: semesterNum,
+            bloomsDistribution: bloomsData,
+            totalSubjects: bloomsData.length
+        });
 
     } catch (error) {
-        console.error('Error fetching Bloom\'s taxonomy distribution:', error);
-        res.status(500).json({ error: error.message });
+        console.error('❌ [ERROR] Error fetching Bloom\'s taxonomy distribution:', error);
+        console.error('❌ [ERROR] Stack trace:', error.stack);
+
+        res.status(500).json({
+            error: error.message,
+            type: error.name,
+            details: 'Check server logs for more information'
+        });
     }
 };
 
@@ -355,7 +400,7 @@ const getSubjectWisePerformance = async (req, res) => {
 
         if (!student) {
             console.log(`Student not found with enrollment: ${enrollmentNumber}`);
-            return res.status(404).json({ 
+            return res.status(404).json({
                 error: 'Student not found',
                 details: { enrollmentNumber }
             });
@@ -373,12 +418,12 @@ const getSubjectWisePerformance = async (req, res) => {
             where: { batchId: student.batchId },
             attributes: ['id', 'semesterNumber', 'batchId']
         });
-        console.log(`Found ${allSemesters.length} semesters for batch ${student.batchId}:`, 
+        console.log(`Found ${allSemesters.length} semesters for batch ${student.batchId}:`,
             allSemesters.map(s => s.semesterNumber));
 
         // Find the specific semester
         const semester = await Semester.findOne({
-            where: { 
+            where: {
                 semesterNumber: parseInt(semesterNumber),
                 batchId: student.batchId
             }
@@ -388,11 +433,11 @@ const getSubjectWisePerformance = async (req, res) => {
             const availableSemesters = allSemesters.map(s => s.semesterNumber);
             const currentSemester = student.currentSemester || 1;
             const suggestedSemester = Math.min(currentSemester, ...availableSemesters);
-            
+
             const errorMessage = availableSemesters.length === 0
                 ? 'No semesters found for this batch. Please contact support.'
                 : `Semester ${semesterNumber} not available. Available semesters: ${availableSemesters.join(', ')}.`;
-        
+
             console.log('Semester not found. Details:', {
                 requestedSemester: parseInt(semesterNumber),
                 batchId: student.batchId,
@@ -400,8 +445,8 @@ const getSubjectWisePerformance = async (req, res) => {
                 currentSemester,
                 suggestedSemester
             });
-        
-            return res.status(404).json({ 
+
+            return res.status(404).json({
                 error: errorMessage,
                 details: {
                     requestedSemester: parseInt(semesterNumber),
@@ -446,7 +491,7 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
             AND sm.enrollmentSemester = :semesterNumber
             ORDER BY sm.subjectId, sm.componentType, sm.isSubComponent
         `, {
-            replacements: { 
+            replacements: {
                 studentId: student.id,
                 semesterNumber: parseInt(semesterNumber)
             },
@@ -482,9 +527,10 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
             const componentType = mark.componentType.toUpperCase();
             let effectiveMarks = parseFloat(mark.marksObtained) || 0;
 
-            
-            // Map component types to table columns
-            switch(componentType) {
+
+            // Map component types to table columns (normalize CA to CSE)
+            const normalizedComponentType = componentType === 'CA' ? 'CSE' : componentType;
+            switch (normalizedComponentType) {
                 case 'ESE':
                     subjectData[subjectCode].ese += effectiveMarks;
                     break;
@@ -497,7 +543,6 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
                 case 'VIVA':
                     subjectData[subjectCode].viva += effectiveMarks;
                     break;
-                case 'CA':
                 case 'CSE':
                     subjectData[subjectCode].cse += effectiveMarks;
                     break;
@@ -505,7 +550,7 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
 
             subjectData[subjectCode].total += effectiveMarks;
             subjectData[subjectCode].totalPossible += parseFloat(mark.totalMarks) || 0;
-            
+
             // Use grade if available
             if (mark.grades && mark.grades !== 'F') {
                 subjectData[subjectCode].grade = mark.grades;
@@ -514,10 +559,10 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
 
         // Calculate percentages and final grades
         Object.values(subjectData).forEach(subject => {
-            subject.percentage = subject.totalPossible > 0 
-                ? ((subject.total / subject.totalPossible) * 100).toFixed(1) 
+            subject.percentage = subject.totalPossible > 0
+                ? ((subject.total / subject.totalPossible) * 100).toFixed(1)
                 : 0;
-            
+
             // Calculate grade based on percentage if not already set
             if (subject.grade === 'F') {
                 const percentage = parseFloat(subject.percentage);
@@ -533,10 +578,10 @@ LEFT JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
         });
 
         const subjects = Object.values(subjectData);
-        
+
         // Calculate summary statistics
         const totalCredits = subjects.reduce((sum, subject) => sum + subject.credits, 0);
-        const averagePercentage = subjects.length > 0 
+        const averagePercentage = subjects.length > 0
             ? (subjects.reduce((sum, subject) => sum + parseFloat(subject.percentage), 0) / subjects.length).toFixed(1)
             : 0;
         const passedSubjects = subjects.filter(s => s.grade !== 'F').length;
