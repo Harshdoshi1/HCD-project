@@ -123,7 +123,7 @@ const deleteComponentWeightage = async (req, res) => {
 const getComponentWeightagesBySubjectCode = async (req, res) => {
   try {
     const { subjectCode } = req.params;
-    
+
     const weightages = await ComponentWeightage.findAll({
       where: { subjectId: subjectCode }, // Query by subjectId which stores the subject code
       include: [
@@ -137,6 +137,7 @@ const getComponentWeightagesBySubjectCode = async (req, res) => {
       return res.status(404).json({ error: "Component Weightages not found for this subject code" });
     }
 
+    console.log("Fetched Weightages for subject " + subjectCode + ":", JSON.stringify(weightages, null, 2));
     res.status(200).json(weightages);
   } catch (error) {
     console.error("Error in getComponentWeightagesBySubjectCode:", error);
