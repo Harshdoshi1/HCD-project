@@ -50,31 +50,32 @@ const getCOsAndBloomsMapping = async (subjectId, componentWeightageId, component
 
     console.log(`Getting CO mapping for: subjectId=${subjectId}, componentWeightageId=${componentWeightageId}, componentType=${componentType}, subComponentId=${subComponentId}`);
 
-    if (subComponentId) {
-        // For subcomponents, get COs from SubComponents table
-        const subComponent = await SubComponents.findByPk(subComponentId);
-        if (subComponent && subComponent.selectedCOs) {
-            selectedCOs = subComponent.selectedCOs;
-            console.log(`Found ${selectedCOs.length} COs for subcomponent ${subComponentId}`);
-        } else {
-            console.log(`No COs found for subcomponent ${subComponentId}`);
-        }
-    } else {
-        // For main components, get COs from SubjectComponentCo table
-        const componentCOs = await SubjectComponentCo.findAll({
-            where: {
-                subject_component_id: componentWeightageId,
-                component: componentType
-            },
-            include: [{
-                model: CourseOutcome,
-                as: 'courseOutcome'
-            }]
-        });
+    // Use the updated subject_component_cos table to get CO mappings
+    const whereClause = {
+        subject_component_id: componentWeightageId,
+        component: componentType
+    };
 
-        console.log(`Found ${componentCOs.length} CO mappings for component ${componentType}`);
-        selectedCOs = componentCOs.map(cco => cco.course_outcome_id);
+    if (subComponentId) {
+        // For subcomponents, filter by sub_component_id
+        whereClause.sub_component_id = subComponentId;
+        console.log(`Looking for subcomponent mappings with ID: ${subComponentId}`);
+    } else {
+        // For main components, ensure sub_component_id is null
+        whereClause.sub_component_id = null;
+        console.log(`Looking for main component mappings (sub_component_id = null)`);
     }
+
+    const componentCOs = await SubjectComponentCo.findAll({
+        where: whereClause,
+        include: [{
+            model: CourseOutcome,
+            as: 'courseOutcome'
+        }]
+    });
+
+    console.log(`Found ${componentCOs.length} CO mappings for ${subComponentId ? 'subcomponent' : 'main component'} ${componentType}`);
+    selectedCOs = componentCOs.map(cco => cco.course_outcome_id);
 
     // For each CO, get associated Bloom's levels
     console.log(`Processing ${selectedCOs.length} selected COs: [${selectedCOs.join(', ')}]`);
@@ -243,14 +244,8 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
                 studentId: studentId,
                 semesterNumber: semesterNumber,
                 subjectId: subjectId,
-                studentMarksSubjectComponentId: 0, // Set to 0 as these are aggregated records
-                totalMarksOfComponent: 150, // Total subject marks
-                subComponentWeightage: 100, // Total weightage
-                selectedCOs: [], // Will contain all COs that contributed
-                courseOutcomeId: 0, // Aggregated, not specific to one CO
                 bloomsTaxonomyId: bloomsLevel,
-                assignedMarks: parseFloat(assignedMarks.toFixed(2)),
-                calculatedAt: new Date()
+                assignedMarks: parseFloat(assignedMarks.toFixed(2))
             };
             
             distributionRecords.push(record);
@@ -327,19 +322,13 @@ const ensureAllBloomsLevelsExist = async (studentId, subjectId, semesterNumber) 
             if (!existingBloomsIds.includes(bloomsLevel)) {
                 console.log(`Creating placeholder for Bloom's level ${bloomsLevel}`);
                 
-                // Create a placeholder record with 0 marks
+                // Create a placeholder record with 0 marks using simplified model
                 const placeholderRecord = {
                     studentId: studentId,
                     semesterNumber: semesterNumber,
                     subjectId: subjectId,
-                    studentMarksSubjectComponentId: 0, // Placeholder component ID
-                    totalMarksOfComponent: 0,
-                    subComponentWeightage: 0,
-                    selectedCOs: [],
-                    courseOutcomeId: 0, // Placeholder CO ID
                     bloomsTaxonomyId: bloomsLevel,
-                    assignedMarks: 0,
-                    calculatedAt: new Date()
+                    assignedMarks: 0
                 };
                 placeholderRecords.push(placeholderRecord);
             }
@@ -359,7 +348,7 @@ const ensureAllBloomsLevelsExist = async (studentId, subjectId, semesterNumber) 
 };
 
 /**
- * Update existing Bloom's level entries with new marks (accumulative)
+ * Update existing Bloom's level entries with new marks (replace, not accumulative)
  * @param {array} distributionRecords - New distribution records to process
  * @param {number} studentId - Student ID
  * @param {string} subjectId - Subject ID
@@ -370,36 +359,26 @@ const updateBloomsDistribution = async (distributionRecords, studentId, subjectI
         console.log(`Updating Bloom's distribution for ${distributionRecords.length} records`);
 
         for (const record of distributionRecords) {
-            // Find existing entry for this Bloom's level
+            // Find existing entry for this Bloom's level (simplified model has unique constraint)
             const existingEntry = await StudentBloomsDistribution.findOne({
                 where: {
                     studentId: studentId,
                     subjectId: subjectId,
                     semesterNumber: semesterNumber,
-                    bloomsTaxonomyId: record.bloomsTaxonomyId,
-                    courseOutcomeId: record.courseOutcomeId
+                    bloomsTaxonomyId: record.bloomsTaxonomyId
                 }
             });
 
             if (existingEntry) {
-                // Update existing entry by adding new marks
-                const updatedMarks = parseFloat(existingEntry.assignedMarks) + parseFloat(record.assignedMarks);
+                // Update existing entry with new marks (replace, not add)
                 await existingEntry.update({
-                    assignedMarks: updatedMarks,
-                    calculatedAt: new Date(),
-                    // Update other fields if they're not placeholder values
-                    ...(record.studentMarksSubjectComponentId !== 0 && {
-                        studentMarksSubjectComponentId: record.studentMarksSubjectComponentId,
-                        totalMarksOfComponent: record.totalMarksOfComponent,
-                        subComponentWeightage: record.subComponentWeightage,
-                        selectedCOs: record.selectedCOs
-                    })
+                    assignedMarks: parseFloat(record.assignedMarks)
                 });
-                console.log(`Updated Bloom's level ${record.bloomsTaxonomyId}, CO ${record.courseOutcomeId}: ${existingEntry.assignedMarks} + ${record.assignedMarks} = ${updatedMarks}`);
+                console.log(`Updated Bloom's level ${record.bloomsTaxonomyId}: ${record.assignedMarks} marks`);
             } else {
                 // Create new entry if it doesn't exist
                 await StudentBloomsDistribution.create(record);
-                console.log(`Created new entry for Bloom's level ${record.bloomsTaxonomyId}, CO ${record.courseOutcomeId}: ${record.assignedMarks}`);
+                console.log(`Created new entry for Bloom's level ${record.bloomsTaxonomyId}: ${record.assignedMarks} marks`);
             }
         }
 

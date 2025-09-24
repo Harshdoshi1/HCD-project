@@ -73,6 +73,16 @@ const SubjectComponentCo = sequelize.define(
       allowNull: false,
       comment: 'Component name (e.g., CA, ESE, IA, TW, VIVA)',
     },
+    sub_component_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Reference to SubComponents.id if this is a subcomponent mapping, null for main components'
+    },
+    sub_component_name: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Name of the subcomponent if this is a subcomponent mapping'
+    },
   },
   {
     tableName: 'subject_component_cos',
@@ -83,7 +93,7 @@ const SubjectComponentCo = sequelize.define(
     // 👇 Define shorter explicit unique key
     uniqueKeys: {
       uniq_subcomp_co: {
-        fields: ['subject_component_id', 'course_outcome_id'],
+        fields: ['subject_component_id', 'course_outcome_id', 'component', 'sub_component_id'],
       },
     },
   }

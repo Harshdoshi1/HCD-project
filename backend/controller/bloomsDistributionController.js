@@ -92,11 +92,15 @@ const getStoredBloomsDistribution = async (req, res) => {
                 };
             }
 
+            // Calculate percentage based on total possible marks (150 per subject)
+            const totalPossibleMarks = 150;
+            const percentage = totalPossibleMarks > 0 ? (parseFloat(record.assignedMarks) / totalPossibleMarks) * 100 : 0;
+
             subjectBloomsData[subjectCode].bloomsLevels.push({
                 level: record.bloomsTaxonomy?.name || 'Unknown',
-                marks: parseFloat(record.distributedMarks),
-                totalMarks: parseFloat(record.totalPossibleMarks),
-                percentage: parseFloat(record.percentage)
+                marks: parseFloat(record.assignedMarks),
+                totalMarks: totalPossibleMarks,
+                percentage: parseFloat(percentage.toFixed(2))
             });
         });
 
