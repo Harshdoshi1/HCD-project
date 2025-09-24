@@ -355,7 +355,7 @@ const addSubjectWithComponents = async (req, res) => {
 
         // Create subject with required fields
         const validType = type && ['central', 'department'].includes(type) ? type : 'central';
-        
+
         console.log('Creating subject with type:', validType);
 
         const subjectRecord = await UniqueSubDegree.create({
@@ -428,12 +428,14 @@ const addSubjectWithComponents = async (req, res) => {
         }
 
         // Map component names from frontend to database
+        // Both ComponentWeightage and ComponentMarks now use 'cse' consistently
         const componentMap = {
-            'CA': 'CA',   // Keep as CA instead of cse
-            'ESE': 'ESE',  // Keep as ESE
-            'IA': 'IA',    // Keep as IA
-            'TW': 'TW',    // Keep as TW
-            'VIVA': 'VIVA' // Keep as VIVA
+            'CA': 'cse',
+            'CSE': 'cse',
+            'ESE': 'ese',
+            'IA': 'ia',
+            'TW': 'tw',
+            'VIVA': 'viva'
         };
 
         // Prepare weightage and marks data
@@ -443,9 +445,10 @@ const addSubjectWithComponents = async (req, res) => {
         // Process components
         for (const component of components) {
             const dbField = componentMap[component.name];
+            
             if (dbField) {
-                weightageData[dbField.toLowerCase()] = component.weightage; // Convert to lowercase for DB fields
-                marksData[dbField.toLowerCase()] = component.totalMarks; // Convert to lowercase for DB fields
+                weightageData[dbField] = component.weightage;
+                marksData[dbField] = component.totalMarks;
             }
         }
 
@@ -464,7 +467,7 @@ const addSubjectWithComponents = async (req, res) => {
         for (const component of components) {
             if (component.subcomponents && Array.isArray(component.subcomponents) && component.subcomponents.length > 0) {
                 console.log(`Processing ${component.subcomponents.length} subcomponents for ${component.name}:`, component.subcomponents);
-                
+
                 for (const subComponent of component.subcomponents) {
                     // Check if sub-component has a name (enabled is not always sent from frontend)
                     if (subComponent.name && subComponent.name.trim() !== '') {
@@ -479,7 +482,7 @@ const addSubjectWithComponents = async (req, res) => {
                                 selectedCOs: subComponent.selectedCOs || [],
                                 isEnabled: subComponent.enabled !== undefined ? subComponent.enabled : true
                             });
-                            
+
                             const subComponentRecord = await SubComponents.create({
                                 componentWeightageId: weightage.id,
                                 componentType: component.name,
@@ -510,7 +513,7 @@ const addSubjectWithComponents = async (req, res) => {
         for (const coRecord of createdCOs) { // Iterate through each created Course Outcome
             const associatedComponentNames = [];
             // Find all components from the input `components` array that are associated with this coRecord
-            for (const inputComponent of components) { 
+            for (const inputComponent of components) {
                 // Ensure componentMap has the component and selectedCOs is valid
                 if (componentMap[inputComponent.name] && inputComponent.selectedCOs && Array.isArray(inputComponent.selectedCOs)) {
                     if (inputComponent.selectedCOs.includes(coRecord.co_code)) {
@@ -554,7 +557,7 @@ const addSubjectWithComponents = async (req, res) => {
             stack: error.stack,
             errors: error.errors
         });
-        res.status(500).json({ 
+        res.status(500).json({
             error: error.message,
             type: error.name,
             details: error.errors?.map(e => e.message) || []

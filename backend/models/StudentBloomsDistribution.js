@@ -119,11 +119,6 @@ const StudentBloomsDistribution = sequelize.define('StudentBloomsDistribution', 
         allowNull: false,
         comment: 'Semester number'
     },
-    batchId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        comment: 'Batch ID reference'
-    },
     subjectId: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -178,18 +173,16 @@ const StudentBloomsDistribution = sequelize.define('StudentBloomsDistribution', 
     timestamps: true,
     indexes: [
         {
-            // 🔹 Changed: removed "unique: true"
-            // Now it's a normal index, not unique → no duplicate errors
             name: 'idx_student_component_co_blooms',
             fields: ['studentId', 'studentMarksSubjectComponentId', 'courseOutcomeId', 'bloomsTaxonomyId']
         },
         {
-            name: 'idx_student_semester_batch',
-            fields: ['studentId', 'semesterNumber', 'batchId']
+            name: 'idx_student_semester',
+            fields: ['studentId', 'semesterNumber']
         },
         {
-            name: 'idx_subject_semester_batch',
-            fields: ['subjectId', 'semesterNumber', 'batchId']
+            name: 'idx_subject_semester',
+            fields: ['subjectId', 'semesterNumber']
         },
         {
             name: 'idx_component_reference',
