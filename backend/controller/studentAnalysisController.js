@@ -277,27 +277,22 @@ const getBloomsTaxonomyDistribution = async (req, res) => {
             });
         }
 
-        // 1. Single, comprehensive query with the CORRECT join condition
-        console.log(`🔍 [DEBUG] Executing SQL query with studentId: ${student.id}, semesterNumber: ${semesterNum}`);
+        // Fetch real data from student_blooms_distribution table
+        console.log(`🔍 [DEBUG] Fetching from student_blooms_distribution table for studentId: ${student.id}, semester: ${semesterNum}`);
 
         const sqlQuery = `
-            SELECT
-                sm.subjectId, sub.sub_name, sm.marksObtained, sm.totalMarks AS subComponentTotalMarks,
-                sm.componentType, sc.id AS subComponentId, sc.weightage AS subComponentWeightage,
-                cw.id AS componentWeightageId, cw.ese, cw.ia, cw.tw, cw.viva, cw.cse,
-                co.id AS coId, bt.name AS bloomsLevel
-            FROM StudentMarks sm
-            JOIN SubComponents sc ON sm.subComponentId = sc.id
-            JOIN ComponentWeightages cw ON sc.componentWeightageId = cw.id
-            JOIN UniqueSubDegrees sub ON sm.subjectId = sub.sub_code
-            LEFT JOIN subject_component_cos scc ON scc.subject_component_id = sc.id
-            LEFT JOIN course_outcomes co ON scc.course_outcome_id = co.id
-            LEFT JOIN co_blooms_taxonomy cbt ON cbt.course_outcome_id = co.id
-            LEFT JOIN blooms_taxonomy bt ON cbt.blooms_taxonomy_id = bt.id
-            WHERE sm.studentId = :studentId 
-            AND sm.enrollmentSemester = :semesterNumber
-            AND sm.subComponentId IS NOT NULL
-            AND sc.id IS NOT NULL
+            SELECT 
+                sbd.subjectId,
+                sub.sub_name as subjectName,
+                bt.name as bloomsLevel,
+                SUM(sbd.assignedMarks) as totalMarks
+            FROM student_blooms_distribution sbd
+            JOIN blooms_taxonomy bt ON sbd.bloomsTaxonomyId = bt.id
+            LEFT JOIN UniqueSubDegrees sub ON sbd.subjectId = sub.sub_code
+            WHERE sbd.studentId = :studentId 
+            AND sbd.semesterNumber = :semesterNumber
+            GROUP BY sbd.subjectId, sbd.bloomsTaxonomyId, bt.name, sub.sub_name
+            ORDER BY sbd.subjectId, bt.id
         `;
 
         console.log(`📝 [DEBUG] SQL Query: ${sqlQuery.replace(/\s+/g, ' ').trim()}`);
@@ -311,7 +306,7 @@ const getBloomsTaxonomyDistribution = async (req, res) => {
 
         // Check if we have any data
         if (results.length === 0) {
-            console.log(`⚠️ [DEBUG] No data found for student ${enrollmentNumber} in semester ${semesterNumber}`);
+            console.log(`⚠️ [DEBUG] No data found in student_blooms_distribution for student ${enrollmentNumber} in semester ${semesterNumber}`);
             return res.status(200).json({
                 semester: semesterNum,
                 bloomsDistribution: [],
@@ -319,147 +314,66 @@ const getBloomsTaxonomyDistribution = async (req, res) => {
             });
         }
 
+        // Group data by subject
         const subjectBloomsData = {};
 
-        // 2. Process each unique student mark to avoid double-counting
-        const uniqueMarks = results.filter((v, i, a) => a.findIndex(t => (t.subComponentId === v.subComponentId)) === i);
-        console.log(`🔍 [DEBUG] Processing ${uniqueMarks.length} unique marks from ${results.length} total results`);
+        for (const row of results) {
+            const subjectId = row.subjectId;
+            const subjectName = row.subjectName || subjectId;
 
-        if (results.length > 0) {
-            console.log(`📋 [DEBUG] Sample result structure:`, {
-                subjectId: results[0].subjectId,
-                componentType: results[0].componentType,
-                hasCSE: 'cse' in results[0],
-                hasCA: 'ca' in results[0],
-                availableColumns: Object.keys(results[0])
-            });
+            if (!subjectBloomsData[subjectId]) {
+                subjectBloomsData[subjectId] = {
+                    subject: subjectName,
+                    code: subjectId,
+                    bloomsLevels: {},
+                    totalMarks: 0
+                };
+            }
+
+            // Add bloom's level data
+            subjectBloomsData[subjectId].bloomsLevels[row.bloomsLevel] = parseFloat(row.totalMarks) || 0;
+            subjectBloomsData[subjectId].totalMarks += parseFloat(row.totalMarks) || 0;
         }
 
-        for (const mark of uniqueMarks) {
-            if (!mark.subComponentId) {
-                console.log(`⚠️ [DEBUG] Skipping mark without subComponentId:`, mark);
-                continue;
-            }
+        // Calculate percentages and format for frontend
+        const bloomsData = Object.values(subjectBloomsData).map(subject => {
+            const bloomsLevels = [];
+            const totalSubjectMarks = subject.totalMarks;
 
-            // 3. Calculate effective marks for the sub-component
-            let componentTotal = 0;
-            // Normalize component type - convert CA to CSE for consistency
-            const normalizedComponentType = mark.componentType === 'CA' ? 'CSE' : mark.componentType;
-            console.log(`🔍 [DEBUG] Processing mark for component type: ${mark.componentType} (normalized: ${normalizedComponentType})`);
+            // Ensure all 6 Bloom's levels are included
+            const allBloomsLevels = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'];
 
-            switch (normalizedComponentType) {
-                case 'ESE':
-                    componentTotal = mark.ese;
-                    console.log(`📊 [DEBUG] ESE component total: ${componentTotal}`);
-                    break;
-                case 'IA':
-                    componentTotal = mark.ia;
-                    console.log(`📊 [DEBUG] IA component total: ${componentTotal}`);
-                    break;
-                case 'TW':
-                    componentTotal = mark.tw;
-                    console.log(`📊 [DEBUG] TW component total: ${componentTotal}`);
-                    break;
-                case 'VIVA':
-                    componentTotal = mark.viva;
-                    console.log(`📊 [DEBUG] VIVA component total: ${componentTotal}`);
-                    break;
-                case 'CSE':
-                    componentTotal = mark.cse;
-                    console.log(`📊 [DEBUG] CSE component total: ${componentTotal}`);
-                    break;
-                default:
-                    console.log(`⚠️ [DEBUG] Unknown component type: ${normalizedComponentType} (original: ${mark.componentType})`);
-                    break;
-            }
+            for (const level of allBloomsLevels) {
+                const marks = subject.bloomsLevels[level] || 0;
+                const percentage = totalSubjectMarks > 0 ? Math.round((marks / totalSubjectMarks) * 100) : 0;
 
-            if (componentTotal === 0 || componentTotal === null || componentTotal === undefined) {
-                console.log(`⚠️ [DEBUG] Skipping mark with zero/null component total for ${mark.componentType} (value: ${componentTotal})`);
-                continue;
-            }
-
-            // Validate required fields
-            if (!mark.subComponentWeightage || !mark.subComponentTotalMarks || !mark.marksObtained) {
-                console.log(`⚠️ [DEBUG] Skipping mark with missing required fields:`, {
-                    subComponentWeightage: mark.subComponentWeightage,
-                    subComponentTotalMarks: mark.subComponentTotalMarks,
-                    marksObtained: mark.marksObtained
+                bloomsLevels.push({
+                    level,
+                    marks: marks,
+                    score: percentage
                 });
-                continue;
             }
 
-            const effectiveTotal = (componentTotal * (mark.subComponentWeightage / 100));
-            const effectiveObtained = (mark.marksObtained / mark.subComponentTotalMarks) * effectiveTotal;
-
-            // 4. Distribute marks to relevant COs
-            const cosForSubComponent = results.filter(r => r.subComponentId === mark.subComponentId && r.coId);
-            const uniqueCoIds = [...new Set(cosForSubComponent.map(r => r.coId))];
-            if (uniqueCoIds.length === 0) continue;
-
-            const marksPerCo = effectiveObtained / uniqueCoIds.length;
-            const totalPerCo = effectiveTotal / uniqueCoIds.length;
-
-            // 5. Distribute marks from COs to Bloom's Levels
-            for (const coId of uniqueCoIds) {
-                const bloomsForCo = results.filter(r => r.coId === coId && r.bloomsLevel);
-                const uniqueBloomLevels = [...new Set(bloomsForCo.map(r => r.bloomsLevel))];
-                if (uniqueBloomLevels.length === 0) continue;
-
-                const marksPerBloom = marksPerCo / uniqueBloomLevels.length;
-                const totalPerBloom = totalPerCo / uniqueBloomLevels.length;
-
-                for (const bloomLevel of uniqueBloomLevels) {
-                    if (!subjectBloomsData[mark.subjectId]) {
-                        subjectBloomsData[mark.subjectId] = { subject: mark.sub_name, code: mark.subjectId, bloomsLevels: {} };
-                    }
-                    if (!subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel]) {
-                        subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel] = { obtained: 0, possible: 0 };
-                    }
-                    subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel].obtained += marksPerBloom;
-                    subjectBloomsData[mark.subjectId].bloomsLevels[bloomLevel].possible += totalPerBloom;
-                }
-            }
-        }
-
-        // 6. Format for frontend response
-        const bloomsData = Object.values(subjectBloomsData).map(subject => ({
-            subject: subject.subject,
-            code: subject.code,
-            bloomsLevels: Object.entries(subject.bloomsLevels).map(([level, data]) => ({
-                level,
-                score: data.possible > 0 ? Math.round((data.obtained / data.possible) * 100) : 0
-            }))
-        }));
+            return {
+                subject: subject.subject,
+                code: subject.code,
+                totalMarks: totalSubjectMarks,
+                bloomsLevels
+            };
+        });
 
         console.log(`✅ [DEBUG] Successfully processed Bloom's data for ${bloomsData.length} subjects`);
-        
-        // Check if we have any valid Bloom's data after processing
-        if (bloomsData.length === 0) {
-            console.log(`⚠️ [DEBUG] No valid Bloom's taxonomy data found after processing`);
-            return res.status(200).json({
-                semester: semesterNum,
-                bloomsDistribution: [],
-                message: 'No valid Bloom\'s taxonomy data available after processing'
-            });
-        }
+        console.log(`📊 [DEBUG] Sample data:`, bloomsData.length > 0 ? bloomsData[0] : 'No data');
 
-        console.log(`📊 [DEBUG] Final response:`, { semester: semesterNum, bloomsDistribution: bloomsData });
-
-        res.status(200).json({ semester: semesterNum, bloomsDistribution: bloomsData });
+        res.status(200).json({
+            semester: semesterNum,
+            bloomsDistribution: bloomsData,
+            totalSubjects: bloomsData.length
+        });
 
     } catch (error) {
         console.error('❌ [ERROR] Error fetching Bloom\'s taxonomy distribution:', error);
         console.error('❌ [ERROR] Stack trace:', error.stack);
-
-        // Check if it's a database column error
-        if (error.message && error.message.includes('Unknown column')) {
-            console.error('❌ [ERROR] Database column error detected - this suggests the database schema is not updated');
-            return res.status(500).json({
-                error: 'Database schema error - column not found',
-                details: error.message,
-                suggestion: 'Please ensure the database schema is updated with the correct column names (cse instead of ca)'
-            });
-        }
 
         res.status(500).json({
             error: error.message,

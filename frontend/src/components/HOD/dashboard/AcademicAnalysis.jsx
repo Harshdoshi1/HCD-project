@@ -355,9 +355,9 @@ const AcademicAnalysis = ({ student, academicData }) => {
         score:
           bloomsAggregation[level].count > 0
             ? Math.round(
-                bloomsAggregation[level].totalMarks /
-                  bloomsAggregation[level].count
-              )
+              bloomsAggregation[level].totalMarks /
+              bloomsAggregation[level].count
+            )
             : 0,
       }));
     }
@@ -432,11 +432,11 @@ const AcademicAnalysis = ({ student, academicData }) => {
     const averagePercentage =
       subjectGrades.length > 0
         ? (
-            subjectGrades.reduce(
-              (sum, subject) => sum + subject.percentage,
-              0
-            ) / subjectGrades.length
-          ).toFixed(1)
+          subjectGrades.reduce(
+            (sum, subject) => sum + subject.percentage,
+            0
+          ) / subjectGrades.length
+        ).toFixed(1)
         : 0;
     const passedSubjects = subjectGrades.filter((s) => s.grade !== "F").length;
 
@@ -471,9 +471,8 @@ const AcademicAnalysis = ({ student, academicData }) => {
           {semesterPoints.map((point) => (
             <button
               key={point.semester}
-              className={`semester-btn-nonacademic ${
-                selectedSemester === point.semester ? "active-nonacademic" : ""
-              }`}
+              className={`semester-btn-nonacademic ${selectedSemester === point.semester ? "active-nonacademic" : ""
+                }`}
               onClick={() => handleSemesterChange(point.semester)}
             >
               Semester {point.semester}
