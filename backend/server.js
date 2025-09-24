@@ -27,6 +27,9 @@ const student_event_routes = require('./routes/student_event_routes');
 const classSectionRoutes = require('./routes/classSection_routes');
 const studentMarksRoutes = require('./routes/studentMarks_routes');
 const studentAnalysisRoutes = require('./routes/studentAnalysis_routes');
+const bloomsAnalysisRoutes = require('./routes/bloomsAnalysis_routes');
+const componentWeightageRoutes = require('./routes/component_weightage_router');
+const maintenanceRoutes = require('./routes/maintenance_routes');
 const app = express();
 
 // Enable CORS
@@ -76,6 +79,9 @@ app.use('/api/blooms-taxonomy', bloomsTaxonomyRoutes);
 app.use('/api/course-outcomes', courseOutcomeRoutes);
 app.use('/api/student-marks', studentMarksRoutes);
 app.use('/api/student-analysis', studentAnalysisRoutes);
+app.use('/api/blooms-analysis', bloomsAnalysisRoutes);
+app.use('/api/weightages', componentWeightageRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 
 app.get("/api/marks/students/:batchId", gettedmarksController.getStudentMarksByBatchAndSubject);

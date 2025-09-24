@@ -129,13 +129,17 @@ const addSubjectWithComponents = async (req, res) => {
       if (Array.isArray(components)) {
         components.forEach(comp => {
           if (comp.name && typeof comp.value === 'number') {
-            const key = comp.name.toUpperCase();
+            let key = comp.name.toUpperCase();
+            // Normalize 'CA' to 'CSE' to match database column
+            if (key === 'CA') key = 'CSE';
             if (map.hasOwnProperty(key)) {
               map[key] = comp.value;
             }
           } else if (comp.name && typeof comp.weightage === 'number') {
             // fallback for weightage
-            const key = comp.name.toUpperCase();
+            let key = comp.name.toUpperCase();
+            // Normalize 'CA' to 'CSE' to match database column
+            if (key === 'CA') key = 'CSE';
             if (map.hasOwnProperty(key)) {
               map[key] = comp.weightage;
             }
@@ -150,11 +154,11 @@ const addSubjectWithComponents = async (req, res) => {
     // Map marks
     const marksMap = mapComponents(componentsMarks);
 
-    // Insert into ComponentWeightage
+    // Insert into ComponentWeightage (now uses 'cse' field consistently)
     const newWeightage = await ComponentWeightage.create({
       subjectId: subjectRecord.sub_code,
       ese: weightageMap.ESE,
-      cse: weightageMap.CSE,
+      cse: weightageMap.CSE,  // Both tables now use 'cse' field consistently
       ia: weightageMap.IA,
       tw: weightageMap.TW,
       viva: weightageMap.VIVA

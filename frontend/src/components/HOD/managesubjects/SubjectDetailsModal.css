@@ -36,26 +36,27 @@
 
 .modal-close-btn {
     position: absolute;
-    top: 15px; /* Adjusted position */
-    right: 20px; /* Adjusted position */
-    background: #f0f0f0;
+    top: 10px;
+    right: 10px;
+    background: #e74c3c;
     border: none;
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    font-size: 1.2rem; /* Adjusted for new button size */
-    color: #333;
+    width: 35px;
+    height: 35px;
+    font-size: 1.5rem;
+    color: #fff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     line-height: 1;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .modal-close-btn:hover {
-    background-color: #e0e0e0;
-    color: #000;
+    background-color: #c0392b;
+    transform: scale(1.1);
 }
 
 /* Hover style combined above */

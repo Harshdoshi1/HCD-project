@@ -166,15 +166,20 @@ const updateStudentMarks = async (req, res) => {
             }
         }
 
-        // After successfully updating marks, trigger Bloom's distribution calculation
+        // After successfully updating marks, trigger weighted Bloom's distribution calculation
         try {
             const student = await Student.findByPk(studentId);
             if (student) {
-                await calculateAndStoreBloomsDistributionDirect(student.enrollmentNumber, enrollmentSemester);
-                console.log(`Bloom's distribution calculated for student ${student.enrollmentNumber}, semester ${enrollmentSemester}`);
+                // Pass subject ID to calculate distribution for the specific subject
+                await calculateAndStoreBloomsDistributionDirect(
+                    student.enrollmentNumber, 
+                    enrollmentSemester,
+                    subjectCode
+                );
+                console.log(`Weighted Bloom's distribution calculated for student ${student.enrollmentNumber}, semester ${enrollmentSemester}, subject ${subjectCode}`);
             }
         } catch (bloomsError) {
-            console.error('Error calculating Bloom\'s distribution:', bloomsError);
+            console.error('Error calculating weighted Bloom\'s distribution:', bloomsError);
             // Don't fail the main operation if Bloom's calculation fails
         }
 
@@ -251,7 +256,7 @@ const getSubjectComponentsForGrading = async (req, res) => {
             return res.status(404).json({ error: 'Component configuration not found for this subject' });
         }
 
-        // Get sub-components
+        // Get sub-components (including main components without sub-components)
         const subComponents = await SubComponents.findAll({
             where: { componentWeightageId: componentWeightage.id },
             order: [['componentType', 'ASC'], ['subComponentName', 'ASC']]
@@ -259,23 +264,32 @@ const getSubjectComponentsForGrading = async (req, res) => {
 
         // Structure the response to match frontend expectations
         const componentStructure = {
-            CA: { enabled: componentWeightage.ca > 0, totalMarks: componentMarks.cse, subComponents: [] },
-            ESE: { enabled: componentWeightage.ese > 0, totalMarks: componentMarks.ese, subComponents: [] },
-            IA: { enabled: componentWeightage.ia > 0, totalMarks: componentMarks.ia, subComponents: [] },
-            TW: { enabled: componentWeightage.tw > 0, totalMarks: componentMarks.tw, subComponents: [] },
-            VIVA: { enabled: componentWeightage.viva > 0, totalMarks: componentMarks.viva, subComponents: [] }
+            CA: { enabled: componentWeightage.cse > 0, totalMarks: componentMarks.cse, subComponents: [], hasSubComponents: false, selectedCOs: [] },
+            ESE: { enabled: componentWeightage.ese > 0, totalMarks: componentMarks.ese, subComponents: [], hasSubComponents: false, selectedCOs: [] },
+            IA: { enabled: componentWeightage.ia > 0, totalMarks: componentMarks.ia, subComponents: [], hasSubComponents: false, selectedCOs: [] },
+            TW: { enabled: componentWeightage.tw > 0, totalMarks: componentMarks.tw, subComponents: [], hasSubComponents: false, selectedCOs: [] },
+            VIVA: { enabled: componentWeightage.viva > 0, totalMarks: componentMarks.viva, subComponents: [], hasSubComponents: false, selectedCOs: [] }
         };
 
         // Group sub-components by component type
         subComponents.forEach(subComp => {
             if (componentStructure[subComp.componentType]) {
-                componentStructure[subComp.componentType].subComponents.push({
-                    id: subComp.id,
-                    name: subComp.subComponentName,
-                    totalMarks: subComp.totalMarks,
-                    weightage: subComp.weightage,
-                    selectedCOs: subComp.selectedCOs
-                });
+                if (subComp.subComponentName === null) {
+                    // This is a main component without sub-components
+                    componentStructure[subComp.componentType].hasSubComponents = false;
+                    componentStructure[subComp.componentType].selectedCOs = subComp.selectedCOs || [];
+                    componentStructure[subComp.componentType].mainComponentId = subComp.id;
+                } else {
+                    // This is an actual sub-component
+                    componentStructure[subComp.componentType].hasSubComponents = true;
+                    componentStructure[subComp.componentType].subComponents.push({
+                        id: subComp.id,
+                        name: subComp.subComponentName,
+                        totalMarks: subComp.totalMarks,
+                        weightage: subComp.weightage,
+                        selectedCOs: subComp.selectedCOs
+                    });
+                }
             }
         });
 

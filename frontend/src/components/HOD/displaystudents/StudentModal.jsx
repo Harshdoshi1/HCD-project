@@ -10,6 +10,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
         enrollment: '',
         batchID: '',
         currentSemester: '',
+        currentClassName: ''
     });
     const [batches, setBatches] = useState([]);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -78,7 +79,8 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
         }
 
         // Validate required headers and build payload using desired column names
-        const REQUIRED_HEADERS = ['Enrollment Number', 'Name', 'Email', 'Batch Name', 'Semester'];
+        // Added "Class" to capture and send currentClassName to backend
+        const REQUIRED_HEADERS = ['Enrollment Number', 'Name', 'Email', 'Batch Name', 'Semester', 'Class'];
         const firstRow = parsedData[0] || {};
         const presentHeaders = Object.keys(firstRow);
         const missing = REQUIRED_HEADERS.filter(h => !presentHeaders.includes(h));
@@ -94,13 +96,14 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
             const email = row['Email']?.toString().trim();
             const batchID = row['Batch Name']?.toString().trim();
             const currentSemester = parseInt(row['Semester']);
+            const currentClassName = row['Class']?.toString().trim();
 
             if (!enrollment || !name || !email || !batchID || isNaN(currentSemester)) {
                 console.warn('Skipping invalid row:', row);
                 continue;
             }
 
-            studentsPayload.push({ enrollment, name, email, batchID, currentSemester });
+            studentsPayload.push({ enrollment, name, email, batchID, currentSemester, currentClassName });
         }
 
         if (studentsPayload.length === 0) {
@@ -187,7 +190,8 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                 email: studentData.email,
                 enrollment: studentData.enrollment,
                 batchID: selectedBatch.batchName,
-                currentSemester: currentSem
+                currentSemester: currentSem,
+                currentClassName: studentData.currentClassName || null
             });
 
             const response = await fetch(buildUrl('/students/createStudent'), {
@@ -197,7 +201,8 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                     email: studentData.email,
                     enrollment: studentData.enrollment,
                     batchID: selectedBatch.batchName,
-                    currentSemester: currentSem
+                    currentSemester: currentSem,
+                    currentClassName: studentData.currentClassName || null
                 }),
                 headers: {
                     'Content-Type': 'application/json'
@@ -219,7 +224,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
     };
 
     const clearManualEntryFields = () => {
-        setStudentData({ name: '', email: '', enrollment: '', batchID: '', currentSemester: '' });
+        setStudentData({ name: '', email: '', enrollment: '', batchID: '', currentSemester: '', currentClassName: '' });
     };
 
     const clearFileUpload = () => {
@@ -250,6 +255,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                             ))}
                         </select>
                         <input type="number" name="currentSemester" placeholder="Current Semester" value={studentData.currentSemester} onChange={handleChange} required min="1" max="8" />
+                        <input type="text" name="currentClassName" placeholder="Class (e.g., CS-A)" value={studentData.currentClassName} onChange={handleChange} />
                         <button type="button" onClick={clearManualEntryFields}>Clear Fields</button>
                         <div className="actions-add-student-model">
                             <button type="button" onClick={onClose}>Cancel</button>
@@ -270,6 +276,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                                         <th style={{ border: '1px solid #ddd', padding: '6px' }}>Email</th>
                                         <th style={{ border: '1px solid #ddd', padding: '6px' }}>Batch Name</th>
                                         <th style={{ border: '1px solid #ddd', padding: '6px' }}>Semester</th>
+                                        <th style={{ border: '1px solid #ddd', padding: '6px' }}>Class</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -279,6 +286,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                                         <td style={{ border: '1px solid #ddd', padding: '6px' }}>ritesh@ggmail.com</td>
                                         <td style={{ border: '1px solid #ddd', padding: '6px' }}>Gegree 22-26</td>
                                         <td style={{ border: '1px solid #ddd', padding: '6px' }}>3</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>CS-A</td>
                                     </tr>
                                     <tr>
                                         <td style={{ border: '1px solid #ddd', padding: '6px' }}>92200133002</td>
@@ -286,6 +294,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess = () => { } }) => {
                                         <td style={{ border: '1px solid #ddd', padding: '6px' }}>harsh@gmail.com</td>
                                         <td style={{ border: '1px solid #ddd', padding: '6px' }}>Degree 22-26</td>
                                         <td style={{ border: '1px solid #ddd', padding: '6px' }}>3</td>
+                                        <td style={{ border: '1px solid #ddd', padding: '6px' }}>CS-B</td>
                                     </tr>
 
                                 </tbody>
