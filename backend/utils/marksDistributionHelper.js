@@ -152,9 +152,12 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
 
         console.log(`Found ${studentMarks.length} mark entries for processing`);
 
+        // Map to track unique Bloom's levels and their accumulated marks
+        const bloomsAccumulator = {};
+
         // Process each mark entry
         for (const markEntry of studentMarks) {
-            console.log(`Processing mark entry: ${markEntry.componentType}, isSubComponent: ${markEntry.isSubComponent}, marks: ${markEntry.marksObtained}/${markEntry.totalMarks}`);
+            console.log(`\nProcessing mark entry: ${markEntry.componentType}, isSubComponent: ${markEntry.isSubComponent}, marks: ${markEntry.marksObtained}/${markEntry.totalMarks}`);
 
             let weightagePercentage = 0;
             let coBloomsMapping = {};
@@ -206,33 +209,55 @@ const calculateAndDistributeMarks = async (studentId, subjectId, semesterNumber)
             console.log(`Component: ${markEntry.componentType}${markEntry.isSubComponent ? ' - ' + markEntry.componentName : ''}`);
             console.log(`Marks: ${markEntry.marksObtained}/${markEntry.totalMarks}, Weightage: ${weightagePercentage}%, Weighted Marks: ${weightedMarks}`);
 
-            // Distribute weighted marks to all associated COs and Bloom's levels
+            // Collect unique Bloom's taxonomy IDs from all COs
+            const uniqueBloomsIds = new Set();
+            
             console.log(`CO-Blooms mapping for ${markEntry.componentType}:`, Object.keys(coBloomsMapping).length, 'COs found');
 
             for (const [coId, bloomsLevels] of Object.entries(coBloomsMapping)) {
-                console.log(`Processing CO ${coId} with ${bloomsLevels.length} Bloom's levels`);
+                console.log(`CO ${coId} maps to Bloom's levels: [${bloomsLevels.map(b => b.bloomsId).join(', ')}]`);
                 for (const bloom of bloomsLevels) {
-                    // Each CO-Bloom combination gets the full weighted marks
-                    const record = {
-                        studentId: studentId,
-                        semesterNumber: semesterNumber,
-                        subjectId: subjectId,
-                        studentMarksSubjectComponentId: markEntry.id,
-                        totalMarksOfComponent: markEntry.totalMarks,
-                        subComponentWeightage: weightagePercentage,
-                        selectedCOs: Object.keys(coBloomsMapping).map(id => parseInt(id)),
-                        courseOutcomeId: parseInt(coId),
-                        bloomsTaxonomyId: bloom.bloomsId,
-                        assignedMarks: weightedMarks,
-                        calculatedAt: new Date()
-                    };
-                    distributionRecords.push(record);
-                    console.log(`Added distribution record: Component=${markEntry.componentType}, CO=${coId}, Bloom=${bloom.bloomsId}, Marks=${weightedMarks}`);
+                    uniqueBloomsIds.add(bloom.bloomsId);
                 }
+            }
+
+            // Distribute the weighted marks to EACH unique Bloom's taxonomy level ONCE
+            console.log(`Unique Bloom's IDs for this component: [${Array.from(uniqueBloomsIds).join(', ')}]`);
+            
+            for (const bloomsId of uniqueBloomsIds) {
+                // Track accumulated marks per Bloom's level
+                if (!bloomsAccumulator[bloomsId]) {
+                    bloomsAccumulator[bloomsId] = 0;
+                }
+                bloomsAccumulator[bloomsId] += weightedMarks;
+                
+                console.log(`Adding ${weightedMarks} marks to Bloom's level ${bloomsId} (Total so far: ${bloomsAccumulator[bloomsId]})`);
             }
         }
 
-        console.log(`Generated ${distributionRecords.length} distribution records`);
+        // Create distribution records for each Bloom's level with accumulated marks
+        for (let bloomsLevel = 1; bloomsLevel <= 6; bloomsLevel++) {
+            const assignedMarks = bloomsAccumulator[bloomsLevel] || 0;
+            
+            const record = {
+                studentId: studentId,
+                semesterNumber: semesterNumber,
+                subjectId: subjectId,
+                studentMarksSubjectComponentId: 0, // Set to 0 as these are aggregated records
+                totalMarksOfComponent: 150, // Total subject marks
+                subComponentWeightage: 100, // Total weightage
+                selectedCOs: [], // Will contain all COs that contributed
+                courseOutcomeId: 0, // Aggregated, not specific to one CO
+                bloomsTaxonomyId: bloomsLevel,
+                assignedMarks: parseFloat(assignedMarks.toFixed(2)),
+                calculatedAt: new Date()
+            };
+            
+            distributionRecords.push(record);
+            console.log(`Final distribution for Bloom's level ${bloomsLevel}: ${assignedMarks.toFixed(2)} marks`);
+        }
+
+        console.log(`\nGenerated ${distributionRecords.length} distribution records (one per Bloom's level)`);
         return distributionRecords;
 
     } catch (error) {
@@ -442,7 +467,7 @@ const initializeBloomsLevelsForExistingData = async (studentId = null, subjectId
  */
 const processStudentMarksDistribution = async (studentId, semesterNumber, subjectId = null) => {
     try {
-        console.log(`Processing marks distribution for student ${studentId}, semester ${semesterNumber}`);
+        console.log(`\n=== Processing marks distribution for student ${studentId}, semester ${semesterNumber} ===`);
 
         let subjects = [];
 
@@ -462,43 +487,62 @@ const processStudentMarksDistribution = async (studentId, semesterNumber, subjec
             subjects = studentMarks.map(sm => ({ subjectId: sm.subjectId }));
         }
 
-        const allDistributionRecords = [];
+        console.log(`Processing ${subjects.length} subjects`);
 
         for (const subject of subjects) {
-            // First, ensure all Bloom's levels exist for this subject
-            await ensureAllBloomsLevelsExist(studentId, subject.subjectId, semesterNumber);
-
+            console.log(`\nProcessing subject: ${subject.subjectId}`);
+            
+            // Calculate distribution for this subject
             const distributionRecords = await calculateAndDistributeMarks(
                 studentId,
                 subject.subjectId,
                 semesterNumber
             );
 
-            allDistributionRecords.push(...distributionRecords);
-        }
+            if (distributionRecords.length > 0) {
+                // Clear existing records for this student-subject-semester combination
+                const deleteCount = await StudentBloomsDistribution.destroy({
+                    where: {
+                        studentId: studentId,
+                        subjectId: subject.subjectId,
+                        semesterNumber: semesterNumber
+                    }
+                });
+                
+                console.log(`Deleted ${deleteCount} existing records for subject ${subject.subjectId}`);
 
-        if (allDistributionRecords.length > 0) {
-            // Instead of clearing all records, we'll update them incrementally
-            // First, clear only the records that will be recalculated (non-placeholder records)
-            await StudentBloomsDistribution.destroy({
-                where: {
-                    studentId: studentId,
-                    semesterNumber: semesterNumber,
-                    studentMarksSubjectComponentId: { [Op.ne]: 0 }, // Don't delete placeholder records
-                    ...(subjectId ? { subjectId: subjectId } : {})
+                // Insert new distribution records (one per Bloom's level)
+                const createdRecords = await StudentBloomsDistribution.bulkCreate(distributionRecords);
+                
+                console.log(`Created ${createdRecords.length} new Bloom's distribution records for subject ${subject.subjectId}`);
+                
+                // Log summary of marks distribution
+                console.log(`\nMarks distribution summary for subject ${subject.subjectId}:`);
+                for (const record of distributionRecords) {
+                    const bloomsName = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'][record.bloomsTaxonomyId - 1];
+                    console.log(`  Bloom's Level ${record.bloomsTaxonomyId} (${bloomsName}): ${record.assignedMarks} marks`);
                 }
-            });
-
-            // Insert new distribution records
-            await StudentBloomsDistribution.bulkCreate(allDistributionRecords);
-
-            console.log(`Successfully stored ${allDistributionRecords.length} distribution records`);
+            } else {
+                console.log(`No marks to distribute for subject ${subject.subjectId}`);
+            }
         }
+
+        // Get all created records for return
+        const allCreatedRecords = await StudentBloomsDistribution.findAll({
+            where: {
+                studentId: studentId,
+                semesterNumber: semesterNumber,
+                ...(subjectId ? { subjectId: subjectId } : {})
+            },
+            order: [['subjectId', 'ASC'], ['bloomsTaxonomyId', 'ASC']]
+        });
+
+        console.log(`\n=== Distribution complete: ${allCreatedRecords.length} total records ===`);
 
         return {
             success: true,
-            recordsCreated: allDistributionRecords.length,
-            distributions: allDistributionRecords
+            recordsCreated: allCreatedRecords.length,
+            distributions: allCreatedRecords
         };
 
     } catch (error) {

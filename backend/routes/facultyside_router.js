@@ -17,3 +17,4 @@ router.post('/marks/update/:studentId/:subjectId', updateStudentMarks);
 
 router.get('/marks/getsubjectByBatchAndSemester/:batchId/:semesterId/:facultyName', getSubjectByBatchAndSemester);
 module.exports = router;
+ 
