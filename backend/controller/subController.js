@@ -476,10 +476,12 @@ const addSubjectWithComponents = async (req, res) => {
         const marks = await ComponentMarks.create(marksData);
         console.log('Created marks:', marks);
 
-        // Process and create sub-components
+        // Process and create sub-components (including components without sub-components)
         const createdSubComponents = [];
         console.log('Starting sub-component creation process...');
         for (const component of components) {
+            const normalizedComponentName = normalizeComponentName(component.name);
+            
             if (component.subcomponents && Array.isArray(component.subcomponents) && component.subcomponents.length > 0) {
                 console.log(`Processing ${component.subcomponents.length} subcomponents for ${component.name}:`, component.subcomponents);
 
@@ -487,9 +489,6 @@ const addSubjectWithComponents = async (req, res) => {
                     // Check if sub-component has a name (enabled is not always sent from frontend)
                     if (subComponent.name && subComponent.name.trim() !== '') {
                         try {
-                            // Normalize component name BEFORE creating
-                            const normalizedComponentName = normalizeComponentName(component.name);
-                            
                             console.log(`Creating sub-component: ${subComponent.name} for ${component.name} (normalized: ${normalizedComponentName})`);
                             console.log('Sub-component data to create:', {
                                 componentWeightageId: weightage.id,
@@ -520,6 +519,25 @@ const addSubjectWithComponents = async (req, res) => {
                     } else {
                         console.log(`Skipping sub-component with empty name:`, subComponent);
                     }
+                }
+            } else {
+                // Component has no sub-components, store it as a main component entry in SubComponents table
+                console.log(`Component ${component.name} has no sub-components, storing as main component entry`);
+                try {
+                    const mainComponentRecord = await SubComponents.create({
+                        componentWeightageId: weightage.id,
+                        componentType: normalizedComponentName,
+                        subComponentName: null, // Null for main components without sub-components
+                        weightage: component.weightage || 0,
+                        totalMarks: component.totalMarks || 0,
+                        selectedCOs: component.selectedCOs || [],
+                        isEnabled: true
+                    });
+                    createdSubComponents.push(mainComponentRecord);
+                    console.log(`✅ Successfully created main component entry: ${component.name} with ID: ${mainComponentRecord.id}`);
+                } catch (mainError) {
+                    console.error(`❌ Error creating main component entry for ${component.name}:`, mainError);
+                    console.error('Main component error details:', mainError.message);
                 }
             }
         }
@@ -609,54 +627,64 @@ const addSubjectWithComponents = async (req, res) => {
             } else {
                 console.log(`Component ${inputComponent.name} has no subcomponents, processing as main component`);
                 
-                // For components without subcomponents, create main component associations
-                let mainComponentCOs = [];
-                if (inputComponent.selectedCOs && Array.isArray(inputComponent.selectedCOs) && inputComponent.selectedCOs.length > 0) {
-                    mainComponentCOs = inputComponent.selectedCOs;
-                } else {
-                    // Default to all available COs if none selected
-                    mainComponentCOs = createdCOs.map(co => co.co_code);
-                }
+                // Find the main component record in SubComponents table
+                const mainComponentRecord = createdSubComponents.find(sc => 
+                    sc.componentType === normalizedComponentName && 
+                    sc.subComponentName === null
+                );
                 
-                if (mainComponentCOs.length > 0) {
-                    console.log(`Main component ${inputComponent.name} has COs: [${mainComponentCOs.join(', ')}]`);
+                if (mainComponentRecord) {
+                    // For components without subcomponents, create main component associations
+                    let mainComponentCOs = [];
+                    if (inputComponent.selectedCOs && Array.isArray(inputComponent.selectedCOs) && inputComponent.selectedCOs.length > 0) {
+                        mainComponentCOs = inputComponent.selectedCOs;
+                    } else {
+                        // Default to all available COs if none selected
+                        mainComponentCOs = createdCOs.map(co => co.co_code);
+                    }
                     
-                    for (const coCode of mainComponentCOs) {
-                        const coRecord = createdCOs.find(co => co.co_code === coCode);
-                        if (coRecord) {
-                            try {
-                                // Check if association already exists to avoid duplicates
-                                const existingAssoc = await SubjectComponentCo.findOne({
-                                    where: {
-                                        subject_component_id: weightage.id,
-                                        course_outcome_id: coRecord.id,
-                                        component: normalizedComponentName,
-                                        sub_component_id: null
-                                    }
-                                });
-                                
-                                if (!existingAssoc) {
-                                    const mainComponentAssociation = await SubjectComponentCo.create({
-                                        subject_component_id: weightage.id,
-                                        course_outcome_id: coRecord.id,
-                                        component: normalizedComponentName,
-                                        sub_component_id: null,
-                                        sub_component_name: null
+                    if (mainComponentCOs.length > 0) {
+                        console.log(`Main component ${inputComponent.name} has COs: [${mainComponentCOs.join(', ')}]`);
+                        
+                        for (const coCode of mainComponentCOs) {
+                            const coRecord = createdCOs.find(co => co.co_code === coCode);
+                            if (coRecord) {
+                                try {
+                                    // Check if association already exists to avoid duplicates
+                                    const existingAssoc = await SubjectComponentCo.findOne({
+                                        where: {
+                                            subject_component_id: weightage.id,
+                                            course_outcome_id: coRecord.id,
+                                            component: normalizedComponentName,
+                                            sub_component_id: mainComponentRecord.id
+                                        }
                                     });
-                                    allAssociations.push(mainComponentAssociation);
-                                    console.log(`✅ Created main component association: ${inputComponent.name} -> ${coCode}`);
-                                } else {
-                                    console.log(`⚠️ Association already exists: ${inputComponent.name} -> ${coCode}`);
+                                    
+                                    if (!existingAssoc) {
+                                        const mainComponentAssociation = await SubjectComponentCo.create({
+                                            subject_component_id: weightage.id,
+                                            course_outcome_id: coRecord.id,
+                                            component: normalizedComponentName,
+                                            sub_component_id: mainComponentRecord.id,
+                                            sub_component_name: null
+                                        });
+                                        allAssociations.push(mainComponentAssociation);
+                                        console.log(`✅ Created main component association: ${inputComponent.name} -> ${coCode}`);
+                                    } else {
+                                        console.log(`⚠️ Association already exists: ${inputComponent.name} -> ${coCode}`);
+                                    }
+                                } catch (error) {
+                                    console.error(`❌ Error creating main component association for ${inputComponent.name} -> ${coCode}:`, error.message);
                                 }
-                            } catch (error) {
-                                console.error(`❌ Error creating main component association for ${inputComponent.name} -> ${coCode}:`, error.message);
+                            } else {
+                                console.warn(`⚠️ CO record not found for code: ${coCode}`);
                             }
-                        } else {
-                            console.warn(`⚠️ CO record not found for code: ${coCode}`);
                         }
+                    } else {
+                        console.log(`⚠️ Main component ${inputComponent.name} has no selectedCOs`);
                     }
                 } else {
-                    console.log(`⚠️ Main component ${inputComponent.name} has no selectedCOs`);
+                    console.warn(`⚠️ Could not find main component record for ${inputComponent.name}`);
                 }
             }
         }

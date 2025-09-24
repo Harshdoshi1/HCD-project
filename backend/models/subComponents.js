@@ -24,7 +24,7 @@ const SubComponents = sequelize.define(
     },
     subComponentName: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true, // Allow null for components without sub-components
     },
     weightage: {
       type: DataTypes.INTEGER,
