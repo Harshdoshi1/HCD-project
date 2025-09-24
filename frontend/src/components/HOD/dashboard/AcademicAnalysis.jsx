@@ -248,27 +248,36 @@ const AcademicAnalysis = ({ student, academicData }) => {
         (bl) => bl.level === level
       );
       if (levelData) {
-        return Math.round(levelData.score);
+        // Use the actual marks for heatmap visualization
+        return Math.round(levelData.marks * 100) / 100; // Round to 2 decimal places
       }
     }
 
-    // Fallback to mock data if real data not available
-    const baseScore = 75; // Default base score
-    const variations = {
-      Remember: Math.min(Math.max(baseScore + Math.random() * 10 - 5, 0), 100),
-      Understand: Math.min(Math.max(baseScore + Math.random() * 8 - 4, 0), 100),
-      Apply: Math.min(Math.max(baseScore - Math.random() * 15, 0), 100),
-      Analyze: Math.min(Math.max(baseScore - Math.random() * 20, 0), 100),
-      Evaluate: Math.min(Math.max(baseScore - Math.random() * 25, 0), 100),
-      Create: Math.min(Math.max(baseScore - Math.random() * 30, 0), 100),
-    };
-    return Math.round(variations[level]);
+    // Return 0 if no real data available (instead of random fallback)
+    return 0;
   };
 
-  const getBloomClass = (score) => {
-    if (score >= 85) return "excellent-bloom";
-    if (score >= 70) return "good-bloom";
-    if (score >= 55) return "average-bloom";
+  const getBloomClass = (marks) => {
+    // Calculate max marks across all subjects and levels for relative comparison
+    let maxMarks = 0;
+    if (bloomsData && bloomsData.length > 0) {
+      bloomsData.forEach(subject => {
+        subject.bloomsLevels.forEach(level => {
+          if (level.marks > maxMarks) {
+            maxMarks = level.marks;
+          }
+        });
+      });
+    }
+    
+    if (maxMarks === 0) return "weak-bloom";
+    
+    // Calculate relative percentage for color coding
+    const relativePercentage = (marks / maxMarks) * 100;
+    
+    if (relativePercentage >= 85) return "excellent-bloom";
+    if (relativePercentage >= 70) return "good-bloom";
+    if (relativePercentage >= 55) return "average-bloom";
     return "weak-bloom";
   };
 
@@ -336,42 +345,89 @@ const AcademicAnalysis = ({ student, academicData }) => {
 
       // Initialize aggregation
       bloomLevels.forEach((level) => {
-        bloomsAggregation[level] = { totalMarks: 0, count: 0 };
+        bloomsAggregation[level] = { totalMarks: 0 };
       });
 
-      // Aggregate marks from all subjects
+      // Sum actual marks from all subjects
       bloomsData.forEach((subjectData) => {
         subjectData.bloomsLevels.forEach((levelData) => {
           if (bloomsAggregation[levelData.level]) {
-            bloomsAggregation[levelData.level].totalMarks += levelData.score;
-            bloomsAggregation[levelData.level].count += 1;
+            bloomsAggregation[levelData.level].totalMarks += levelData.marks || 0;
           }
         });
       });
 
-      // Calculate average scores
+      // Return total marks for each level
       return bloomLevels.map((level) => ({
         level,
-        score:
-          bloomsAggregation[level].count > 0
-            ? Math.round(
-              bloomsAggregation[level].totalMarks /
-              bloomsAggregation[level].count
-            )
-            : 0,
+        marks: Math.round(bloomsAggregation[level].totalMarks * 100) / 100, // Round to 2 decimal places
       }));
     }
 
     // Fallback to mock data if no real data available
     const levels = [
-      { level: "Remember", score: 85 },
-      { level: "Understand", score: 78 },
-      { level: "Apply", score: 72 },
-      { level: "Analyze", score: 65 },
-      { level: "Evaluate", score: 58 },
-      { level: "Create", score: 52 },
+      { level: "Remember", marks: 85 },
+      { level: "Understand", marks: 78 },
+      { level: "Apply", marks: 72 },
+      { level: "Analyze", marks: 65 },
+      { level: "Evaluate", marks: 58 },
+      { level: "Create", marks: 52 },
     ];
     return levels;
+  };
+
+  // Get Bloom's Taxonomy data for pie chart (percentages)
+  const getBloomsPieChartData = () => {
+    if (bloomsData && bloomsData.length > 0) {
+      // Aggregate Bloom's data across all subjects for the pie chart
+      const bloomsAggregation = {};
+      const bloomLevels = [
+        "Remember",
+        "Understand", 
+        "Apply",
+        "Analyze",
+        "Evaluate",
+        "Create",
+      ];
+
+      // Initialize aggregation
+      bloomLevels.forEach((level) => {
+        bloomsAggregation[level] = { totalMarks: 0 };
+      });
+
+      // Sum actual marks from all subjects
+      bloomsData.forEach((subjectData) => {
+        subjectData.bloomsLevels.forEach((levelData) => {
+          if (bloomsAggregation[levelData.level]) {
+            bloomsAggregation[levelData.level].totalMarks += levelData.marks || 0;
+          }
+        });
+      });
+
+      // Calculate total marks across all levels
+      const totalMarks = Object.values(bloomsAggregation).reduce((sum, level) => sum + level.totalMarks, 0);
+
+      // Return percentage data for pie chart with colors
+      const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff0000'];
+      
+      return bloomLevels.map((level, index) => ({
+        level,
+        marks: Math.round(bloomsAggregation[level].totalMarks * 100) / 100,
+        percentage: totalMarks > 0 ? Math.round((bloomsAggregation[level].totalMarks / totalMarks) * 100) : 0,
+        fill: colors[index]
+      }));
+    }
+
+    // Fallback data
+    const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff0000'];
+    return [
+      { level: "Remember", marks: 85, percentage: 25, fill: colors[0] },
+      { level: "Understand", marks: 78, percentage: 23, fill: colors[1] },
+      { level: "Apply", marks: 72, percentage: 21, fill: colors[2] },
+      { level: "Analyze", marks: 65, percentage: 19, fill: colors[3] },
+      { level: "Evaluate", marks: 58, percentage: 17, fill: colors[4] },
+      { level: "Create", marks: 52, percentage: 15, fill: colors[5] },
+    ];
   };
 
   // New sorting and filtering functions
@@ -417,10 +473,25 @@ const AcademicAnalysis = ({ student, academicData }) => {
     return subjects;
   };
 
+  // Get subjects from bloomsData for heatmap
+  const getHeatmapSubjects = () => {
+    if (bloomsData && bloomsData.length > 0) {
+      return bloomsData.map(subject => ({
+        id: subject.code,
+        code: subject.code,
+        subject: subject.subject,
+        shortName: subject.subject.length > 15 ? subject.subject.substring(0, 15) + '...' : subject.subject
+      }));
+    }
+    return [];
+  };
+
+  const heatmapSubjects = getHeatmapSubjects();
+  
   const filteredSubjects =
     selectedSubject === "all"
-      ? subjectGrades
-      : subjectGrades.filter((s) => s.subject === selectedSubject);
+      ? heatmapSubjects
+      : heatmapSubjects.filter((s) => s.subject === selectedSubject);
 
   const filteredAndSortedSubjects = sortSubjects(filterSubjects(subjectGrades));
 
@@ -684,46 +755,90 @@ const AcademicAnalysis = ({ student, academicData }) => {
 
           {/* Bloom's Charts Section - Below the table in left column */}
           <div className="bloom-charts-section">
-            {/* Bloom's Taxonomy Analysis Chart */}
-            <div className="chart-container-enhanced bloom-spider-chart">
-              <div className="card-header">
-                <h3> Bloom's Taxonomy Analysis</h3>
+            {/* Bloom's Taxonomy Analysis Charts Container */}
+            <div className="bloom-charts-container" style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+              
+              {/* Spider Chart - Absolute Marks */}
+              <div className="chart-container-enhanced bloom-spider-chart" style={{ flex: 1 }}>
+                <div className="card-header">
+                  <h3>Bloom's Taxonomy - Marks Distribution</h3>
+                </div>
+                <div className="spider-chart-wrapper">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <RadarChart data={getBloomsTaxonomyData()}>
+                      <PolarGrid gridType="polygon" />
+                      <PolarAngleAxis
+                        dataKey="level"
+                        fontSize={11}
+                        fontWeight={600}
+                      />
+                      <PolarRadiusAxis
+                        angle={90}
+                        domain={[0, 'dataMax']}
+                        fontSize={10}
+                        tickCount={5}
+                      />
+                      <Radar
+                        name="Cognitive Level Marks"
+                        dataKey="marks"
+                        stroke="#3674B5"
+                        fill="#3674B5"
+                        fillOpacity={0.3}
+                        strokeWidth={2}
+                        dot={{ fill: "#3674B5", strokeWidth: 1, r: 4 }}
+                      />
+                      <Tooltip
+                        formatter={(value) => [`${value} marks`, "Marks"]}
+                        labelStyle={{ color: "#333" }}
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #3674B5",
+                          borderRadius: "4px",
+                        }}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-              <div className="spider-chart-wrapper">
-                <ResponsiveContainer width="100%" height={280}>
-                  <RadarChart data={getBloomsTaxonomyData()}>
-                    <PolarGrid gridType="polygon" />
-                    <PolarAngleAxis
-                      dataKey="level"
-                      fontSize={11}
-                      fontWeight={600}
-                    />
-                    <PolarRadiusAxis
-                      angle={90}
-                      domain={[0, 100]}
-                      fontSize={10}
-                      tickCount={5}
-                    />
-                    <Radar
-                      name="Cognitive Level Score"
-                      dataKey="score"
-                      stroke="#3674B5"
-                      fill="#3674B5"
-                      fillOpacity={0.3}
-                      strokeWidth={2}
-                      dot={{ fill: "#3674B5", strokeWidth: 1, r: 4 }}
-                    />
-                    <Tooltip
-                      formatter={(value) => [`${value}%`, "Score"]}
-                      labelStyle={{ color: "#333" }}
-                      contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #3674B5",
-                        borderRadius: "4px",
-                      }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
+
+              {/* Pie Chart - Relative Percentages */}
+              <div className="chart-container-enhanced bloom-pie-chart" style={{ flex: 1 }}>
+                <div className="card-header">
+                  <h3>Bloom's Taxonomy - Percentage Distribution</h3>
+                </div>
+                <div className="pie-chart-wrapper">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie
+                        data={getBloomsPieChartData()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ level, percentage }) => `${level}: ${percentage}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="percentage"
+                      >
+                        {getBloomsPieChartData().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value, name, props) => [
+                          `${value}% (${props.payload.marks} marks)`,
+                          "Distribution"
+                        ]}
+                        labelStyle={{ color: "#333" }}
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #ccc",
+                          borderRadius: "4px",
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
 
@@ -738,7 +853,7 @@ const AcademicAnalysis = ({ student, academicData }) => {
                     className="subject-dropdown"
                   >
                     <option value="all">All Subjects</option>
-                    {subjectGrades.map((subject) => (
+                    {heatmapSubjects.map((subject) => (
                       <option key={subject.id} value={subject.subject}>
                         {subject.shortName}
                       </option>
@@ -747,35 +862,41 @@ const AcademicAnalysis = ({ student, academicData }) => {
                 </div>
               </div>
 
-              <div className="bloom-heatmap">
-                <div className="heatmap-grid">
-                  <div className="heatmap-header">
-                    <div className="subject-col">Subject</div>
+              <div className="bloom-heatmap-container">
+                <div className="bloom-heatmap-grid">
+                  <div className="bloom-heatmap-header">
+                    <div className="bloom-subject-header">Subject</div>
                     {bloomLevels.map((level) => (
-                      <div key={level} className="bloom-col">
+                      <div key={level} className="bloom-level-header">
                         {level.slice(0, 3)}
                       </div>
                     ))}
                   </div>
-                  {filteredSubjects.slice(0, 4).map((subject) => (
-                    <div key={subject.id} className="heatmap-row">
-                      <div className="subject-cell">{subject.shortName}</div>
+                  {filteredSubjects.map((subject) => (
+                    <div key={subject.id} className="bloom-heatmap-row">
+                      <div className="bloom-subject-name">{subject.shortName}</div>
                       {bloomLevels.map((level) => {
-                        const score = getBloomScore(subject.code, level);
+                        const marks = getBloomScore(subject.code, level);
+                        // Get percentage for tooltip
+                        const subjectBloomsData = bloomsData.find(data => data.code === subject.code);
+                        const levelData = subjectBloomsData?.bloomsLevels?.find(bl => bl.level === level);
+                        const percentage = levelData?.score || 0;
+                        
                         return (
                           <div
                             key={level}
-                            className={`bloom-cell ${getBloomClass(score)}`}
+                            className={`bloom-marks-cell ${getBloomClass(marks)}`}
                             onMouseEnter={() =>
                               setShowTooltip({
                                 subject: subject.subject,
                                 level,
-                                score,
+                                score: percentage,
+                                marks: marks
                               })
                             }
                             onMouseLeave={() => setShowTooltip(null)}
                           >
-                            {score}
+                            {marks}
                           </div>
                         );
                       })}
@@ -786,17 +907,16 @@ const AcademicAnalysis = ({ student, academicData }) => {
                 <div className="bloom-legend">
                   <span className="legend-item">
                     <span className="legend-dot excellent-bloom"></span>
-                    Excellent (85+)
+                    Excellent (Top 15%)
                   </span>
                   <span className="legend-item">
-                    <span className="legend-dot good-bloom"></span>Good (70-84)
+                    <span className="legend-dot good-bloom"></span>Good (70-85%)
                   </span>
                   <span className="legend-item">
-                    <span className="legend-dot average-bloom"></span>Average
-                    (55-69)
+                    <span className="legend-dot average-bloom"></span>Average (55-70%)
                   </span>
                   <span className="legend-item">
-                    <span className="legend-dot weak-bloom"></span>Weak (&lt;55)
+                    <span className="legend-dot weak-bloom"></span>Weak (Below 55%)
                   </span>
                 </div>
               </div>
@@ -991,7 +1111,9 @@ const AcademicAnalysis = ({ student, academicData }) => {
         <div className="custom-tooltip">
           <strong>{showTooltip.subject}</strong>
           <br />
-          {showTooltip.level}: {showTooltip.score}%
+          {showTooltip.level}: {showTooltip.marks} marks
+          <br />
+          <small>({showTooltip.score}% of subject total)</small>
         </div>
       )}
 
