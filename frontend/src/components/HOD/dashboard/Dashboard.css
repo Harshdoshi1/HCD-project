@@ -1,18 +1,15 @@
-.dashboard-container {
-  display: flex;
-  min-height: 100vh;
-  transition: margin-left 0.3s ease-in-out;
-  padding: 2rem;
-  background-color: #f8f9fa;
-  margin-top: 0;
-}
+/* Removed duplicate dashboard-container - using the one below */
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
   overflow-x: hidden;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 .dashboard-content {
@@ -20,7 +17,12 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  gap: 1rem;
 }
 
 .dashboard-header-hod {
@@ -28,14 +30,12 @@
   padding: 1rem;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-left: 0;
-  width: 121%;
-  margin-left: -280px;
-  margin-top: -30px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-header-hod h1 {
@@ -192,12 +192,15 @@
 
 .students-row {
   background-color: #fff;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 10px;
-  width: 123%;
+  width: 100%;
+  max-width: 100%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-left: -295px;
-  height: 126vh;
+  box-sizing: border-box;
+  min-height: 70vh;
+  overflow-x: auto;
+  margin: 0;
 }
 
 .filters-section {
@@ -239,7 +242,10 @@
   width: calc(100% - 14vw);
   display: flex;
   flex-direction: column;
-  padding-left: 1rem;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  box-sizing: border-box;
 }
 
 .dashboard-container.collapsed {
@@ -296,25 +302,100 @@ tr:hover {
   z-index: 1000;
 }
 
+/* Responsive design improvements */
+@media (max-width: 1400px) {
+  .dashboard-container {
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .dashboard-header-hod {
+    padding: 0.8rem;
+  }
+  
+  .students-row {
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .dashboard-container {
+    padding: 0.15rem 0.3rem;
+  }
+  
+  .dashboard-header-hod {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+    padding: 0.75rem;
+  }
+  
+  .dashboard-controls {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .students-row {
+    padding: 0.75rem;
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard-container {
     margin-left: 5vw;
-    padding: 1rem;
+    padding: 0.1rem 0.25rem;
+    width: calc(100% - 5vw);
   }
 
   .dashboard-header-hod {
     flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
+    gap: 0.75rem;
+    align-items: stretch;
+    padding: 0.6rem;
   }
 
   .dashboard-actions {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .filters-section {
     flex-direction: column;
     align-items: stretch;
+  }
+  
+  .students-row {
+    padding: 0.5rem;
+    min-height: 60vh;
+  }
+  
+  .batch-filter-container {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .batch-filter-selected {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 0.1rem 0.2rem;
+  }
+  
+  .dashboard-header-hod {
+    padding: 0.4rem;
+  }
+  
+  .students-row {
+    padding: 0.4rem;
+  }
+  
+  .dashboard-header-hod h1 {
+    font-size: 1.4rem;
+    text-align: center;
   }
 }

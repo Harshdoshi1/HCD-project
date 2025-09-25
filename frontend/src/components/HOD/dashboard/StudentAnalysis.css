@@ -1336,13 +1336,20 @@
 /* Participation Diversity Styles */
 .diversity-overview {
   display: flex !important;
-  gap: 16px !important;
+  flex-direction: column !important;
+  gap: 24px !important;
   margin: 16px 0 !important;
-  align-items: flex-start !important;
+  align-items: center !important;
+  min-height: auto !important;
+  overflow: visible !important;
 }
 
 .diversity-gauge {
-  flex: 0 0 140px !important;
+  flex: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
 }
 
 .gauge-container {
@@ -1396,15 +1403,116 @@
 }
 
 .diversity-breakdown {
-  flex: 1 !important;
+  flex: none !important;
+  width: 100% !important;
+  max-width: 500px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  align-items: center !important;
 }
 
 .diversity-breakdown h5 {
   color: #3674B5 !important;
   font-size: 16px !important;
   font-weight: 600 !important;
-  margin-bottom: 16px !important;
+  margin-bottom: 8px !important;
   text-align: center !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* Recharts pie chart container fixes */
+.diversity-breakdown .recharts-wrapper {
+  overflow: visible !important;
+}
+
+.diversity-breakdown .recharts-surface {
+  overflow: visible !important;
+}
+
+.diversity-breakdown .recharts-pie {
+  overflow: visible !important;
+}
+
+.diversity-breakdown .recharts-pie-label-text {
+  font-size: 12px !important;
+  fill: #333 !important;
+  font-weight: 600 !important;
+  text-anchor: middle !important;
+  dominant-baseline: middle !important;
+}
+
+/* Legend styling for better layout */
+.diversity-breakdown .recharts-legend-wrapper {
+  position: relative !important;
+  margin-top: 0px !important;
+}
+
+.diversity-breakdown .recharts-default-legend {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px 16px !important;
+  max-width: 100% !important;
+}
+
+.diversity-breakdown .recharts-legend-item {
+  display: flex !important;
+  align-items: center !important;
+  margin: 2px 8px !important;
+  font-size: 11px !important;
+  color: #333 !important;
+  white-space: nowrap !important;
+}
+
+.diversity-breakdown .recharts-legend-item-text {
+  margin-left: 4px !important;
+  font-size: 11px !important;
+  color: #333 !important;
+  font-weight: 500 !important;
+}
+
+/* Custom Legend Grid Styles */
+.custom-legend-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr !important;
+  gap: 8px 16px !important;
+  margin: 16px auto !important;
+  padding: 0 20px !important;
+  justify-items: center !important;
+  align-items: center !important;
+  max-width: 100% !important;
+  width: fit-content !important;
+}
+
+.legend-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 11px !important;
+  color: #333 !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  min-width: 0 !important;
+  justify-content: flex-start !important;
+}
+
+.legend-color-box {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  flex-shrink: 0 !important;
+}
+
+.legend-text {
+  font-size: 11px !important;
+  color: #333 !important;
+  font-weight: 500 !important;
 }
 
 .diversity-insights {
@@ -1415,6 +1523,7 @@
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
   gap: 16px !important;
+  margin-top: 16px !important;
 }
 
 .diversity-card {
@@ -1508,23 +1617,88 @@
     align-items: center !important;
     gap: 12px !important;
   }
-  
+
   .network-stats {
     grid-template-columns: 1fr 1fr !important;
     width: 100% !important;
   }
-  
+
   .diversity-overview {
     flex-direction: column !important;
     align-items: center !important;
+    gap: 20px !important;
+    min-height: auto !important;
   }
-  
+
   .diversity-gauge {
     flex: none !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
   }
-  
+
+  .diversity-breakdown {
+    width: 100% !important;
+    max-width: 450px !important;
+    padding: 0 !important;
+  }
+
   .summary-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .diversity-overview {
+    gap: 16px !important;
+    min-height: auto !important;
+  }
+
+  .diversity-breakdown h5 {
+    font-size: 15px !important;
+  }
+  
+  .diversity-breakdown .recharts-legend-item {
+    margin: 1px 6px !important;
+    font-size: 10px !important;
+  }
+  
+  .diversity-breakdown .recharts-legend-item-text {
+    font-size: 10px !important;
+  }
+  
+  .diversity-breakdown .recharts-default-legend {
+    gap: 6px 12px !important;
+  }
+  
+  .custom-legend-grid {
+    gap: 6px 12px !important;
+    margin: 12px auto !important;
+    padding: 0 16px !important;
+  }
+  
+  .legend-item {
+    font-size: 10px !important;
+  }
+  
+  .legend-text {
+    font-size: 10px !important;
+  }
+
+  .gauge-container {
+    width: 110px !important;
+    height: 110px !important;
+  }
+
+  .gauge-container::before {
+    width: 80px !important;
+    height: 80px !important;
+    top: 15px !important;
+    left: 15px !important;
+  }
+
+  .gauge-value {
+    font-size: 18px !important;
   }
 }
 
@@ -1532,61 +1706,127 @@
   .analytics-feature {
     padding: 16px !important;
   }
-  
+
   .domain-list {
     gap: 8px !important;
   }
-  
+
   .domain-item {
     padding: 10px 12px !important;
   }
-  
+
   .network-stats {
     grid-template-columns: 1fr !important;
   }
-  
+
   .network-nodes {
     gap: 8px !important;
   }
-  
+
   .insight-grid {
     grid-template-columns: 1fr !important;
   }
-  
+
   .score-circle {
     width: 80px !important;
     height: 80px !important;
   }
-  
+
   .score-circle::before {
     width: 100px !important;
     height: 100px !important;
   }
-  
+
   .score-value {
     font-size: 18px !important;
   }
-  
+
   .gauge-container {
     width: 100px !important;
     height: 100px !important;
   }
-  
+
   .gauge-container::before {
     width: 70px !important;
     height: 70px !important;
     top: 15px !important;
     left: 15px !important;
   }
-  
+
   .gauge-value {
     font-size: 16px !important;
   }
+
+  .diversity-overview {
+    gap: 16px !important;
+    min-height: auto !important;
+  }
+
+  .diversity-breakdown {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .diversity-breakdown .recharts-pie-label-text {
+    font-size: 10px !important;
+  }
   
+  .diversity-breakdown .recharts-legend-item {
+    margin: 1px 4px !important;
+    font-size: 10px !important;
+  }
+  
+  .diversity-breakdown .recharts-legend-item-text {
+    font-size: 10px !important;
+  }
+  
+  .diversity-breakdown .recharts-default-legend {
+    gap: 4px 8px !important;
+  }
+  
+  .custom-legend-grid {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: 1fr 1fr 1fr !important;
+    gap: 4px 8px !important;
+    margin: 8px auto !important;
+    padding: 0 12px !important;
+  }
+  
+  .legend-item {
+    font-size: 9px !important;
+  }
+  
+  .legend-text {
+    font-size: 9px !important;
+  }
+  
+  .legend-color-box {
+    width: 10px !important;
+    height: 10px !important;
+  }
+
+  .diversity-breakdown h5 {
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .diversity-card {
+    min-height: 100px !important;
+    padding: 12px !important;
+  }
+
+  .diversity-card h6 {
+    font-size: 12px !important;
+  }
+
+  .diversity-card p {
+    font-size: 11px !important;
+  }
+
   .summary-item {
     padding: 12px !important;
   }
-  
+
   .summary-icon {
     width: 30px !important;
     height: 30px !important;

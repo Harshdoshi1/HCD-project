@@ -719,29 +719,29 @@ const StudentAnalysis = ({ student, onClose }) => {
   const generateNetworkingData = () => {
     const collaborationScore = activityList
       ? activityList.reduce((score, activity) => {
-          // Team-based activities get higher collaboration scores
-          if (
-            activity.category === "Hackathon" ||
-            activity.category === "Tech Competition"
-          ) {
-            score += 15;
-          }
-          if (
-            activity.position &&
-            (activity.position.toLowerCase().includes("leader") ||
-              activity.position.toLowerCase().includes("head") ||
-              activity.position.toLowerCase().includes("captain"))
-          ) {
-            score += 20;
-          }
-          if (
-            activity.category === "Workshop" ||
-            activity.category === "Seminar"
-          ) {
-            score += 8;
-          }
-          return score;
-        }, 30)
+        // Team-based activities get higher collaboration scores
+        if (
+          activity.category === "Hackathon" ||
+          activity.category === "Tech Competition"
+        ) {
+          score += 15;
+        }
+        if (
+          activity.position &&
+          (activity.position.toLowerCase().includes("leader") ||
+            activity.position.toLowerCase().includes("head") ||
+            activity.position.toLowerCase().includes("captain"))
+        ) {
+          score += 20;
+        }
+        if (
+          activity.category === "Workshop" ||
+          activity.category === "Seminar"
+        ) {
+          score += 8;
+        }
+        return score;
+      }, 30)
       : 45; // Base score
 
     const networkStrength = Math.min(100, collaborationScore);
@@ -781,17 +781,17 @@ const StudentAnalysis = ({ student, onClose }) => {
       networkNodes,
       teamProjects: activityList
         ? activityList.filter(
-            (a) =>
-              a.category === "Hackathon" || a.category === "Tech Competition"
-          ).length
+          (a) =>
+            a.category === "Hackathon" || a.category === "Tech Competition"
+        ).length
         : 2,
       leadershipRoles: activityList
         ? activityList.filter(
-            (a) =>
-              a.position &&
-              (a.position.toLowerCase().includes("leader") ||
-                a.position.toLowerCase().includes("head"))
-          ).length
+          (a) =>
+            a.position &&
+            (a.position.toLowerCase().includes("leader") ||
+              a.position.toLowerCase().includes("head"))
+        ).length
         : 1,
     };
   };
@@ -929,17 +929,15 @@ const StudentAnalysis = ({ student, onClose }) => {
             <h2>Comprehensive Student Analysis: {student.name}</h2>
             <div className="header-tabs">
               <button
-                className={`tab-btn ${
-                  activeTab === "academic" ? "active" : ""
-                }`}
+                className={`tab-btn ${activeTab === "academic" ? "active" : ""
+                  }`}
                 onClick={() => setActiveTab("academic")}
               >
                 Academic
               </button>
               <button
-                className={`tab-btn ${
-                  activeTab === "nonacademic" ? "active" : ""
-                }`}
+                className={`tab-btn ${activeTab === "nonacademic" ? "active" : ""
+                  }`}
                 onClick={() => setActiveTab("nonacademic")}
               >
                 Co/Extra-Curricular
@@ -1074,11 +1072,10 @@ const StudentAnalysis = ({ student, onClose }) => {
                         {semesterPoints.map((point) => (
                           <button
                             key={point.semester}
-                            className={`semester-btn-nonacademic ${
-                              selectedSemester === point.semester
-                                ? "active-nonacademic"
-                                : ""
-                            }`}
+                            className={`semester-btn-nonacademic ${selectedSemester === point.semester
+                              ? "active-nonacademic"
+                              : ""
+                              }`}
                             onClick={() => handleSemesterChange(point.semester)}
                           >
                             Semester {point.semester}
@@ -1199,7 +1196,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                           <div className="insight-card">
                             <h4>Areas for Improvement</h4>
                             {performanceInsights.areasForImprovement.length >
-                            0 ? (
+                              0 ? (
                               <div className="insight-list">
                                 <p className="insight-header">
                                   Suggested areas to explore:
@@ -1264,11 +1261,11 @@ const StudentAnalysis = ({ student, onClose }) => {
                               <span className="metric-value">
                                 {activityList.length > 0
                                   ? Math.round(
-                                      activityList.reduce(
-                                        (sum, act) => sum + (act.points || 0),
-                                        0
-                                      ) / activityList.length
-                                    )
+                                    activityList.reduce(
+                                      (sum, act) => sum + (act.points || 0),
+                                      0
+                                    ) / activityList.length
+                                  )
                                   : 0}
                               </span>
                             </div>
@@ -1367,7 +1364,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                             </div> */}
                           </div>
                         </div>
-                        <div className="network-visualization">
+                        {/* <div className="network-visualization">
                           <h5>🕸️ Collaboration Network:</h5>
                           <div className="network-nodes">
                             {networkingData.networkNodes.map((node, index) => (
@@ -1386,7 +1383,7 @@ const StudentAnalysis = ({ student, onClose }) => {
                               </div>
                             ))}
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
 
@@ -1416,19 +1413,31 @@ const StudentAnalysis = ({ student, onClose }) => {
                           </div>
                           <div className="diversity-breakdown">
                             <h5>Category Participation:</h5>
-                            <ResponsiveContainer width="80%" height={250}>
-                              <PieChart>
+                            <ResponsiveContainer width="100%" height={320}>
+                              <PieChart margin={{ top: 40, right: 60, bottom: 20, left: 60 }}>
                                 <Pie
                                   data={diversityData.sunburstData}
                                   cx="50%"
                                   cy="50%"
-                                  outerRadius={80}
+                                  outerRadius={60}
                                   fill="#8884d8"
                                   dataKey="value"
                                   nameKey="name"
-                                  label={({ name, value }) =>
-                                    value > 1 ? `${name}: ${value}` : name
-                                  }
+                                  label={({ value, name, percent, payload }) => {
+                                    // Get the actual scores from diversityData.categoryBreakdown
+                                    const actualScores = diversityData.categoryBreakdown;
+                                    const actualValue = actualScores[name] || 0;
+                                    
+                                    // Calculate total from actual scores (not display values)
+                                    const totalActual = Object.values(actualScores).reduce((sum, score) => sum + score, 0);
+                                    
+                                    // Calculate accurate percentage from actual values
+                                    const accuratePercent = totalActual > 0 ? Math.round((actualValue / totalActual) * 100) : 0;
+                                    
+                                    // Only show percentage if there's actual participation (not just display value of 1)
+                                    return actualValue > 0 ? `${accuratePercent}%` : '';
+                                  }}
+                                  labelLine={false}
                                 >
                                   {diversityData.sunburstData.map(
                                     (entry, index) => (
@@ -1450,9 +1459,23 @@ const StudentAnalysis = ({ student, onClose }) => {
                                     name,
                                   ]}
                                 />
-                                <Legend />
                               </PieChart>
                             </ResponsiveContainer>
+
+                            {/* Custom Legend in 2x3 Grid */}
+                            <div className="custom-legend-grid">
+                              {diversityData.sunburstData.map((entry, index) => (
+                                <div key={entry.name} className="legend-item">
+                                  <div 
+                                    className="legend-color-box"
+                                    style={{
+                                      backgroundColor: entry.fill || COLORS[index % COLORS.length]
+                                    }}
+                                  ></div>
+                                  <span className="legend-text">{entry.name}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                         <div className="diversity-insights">
@@ -1463,10 +1486,10 @@ const StudentAnalysis = ({ student, onClose }) => {
                                 {diversityData.diversityIndex >= 80
                                   ? "Well-Rounded Explorer"
                                   : diversityData.diversityIndex >= 60
-                                  ? "Balanced Participant"
-                                  : diversityData.diversityIndex >= 40
-                                  ? "Focused Specialist"
-                                  : "Emerging Participant"}
+                                    ? "Balanced Participant"
+                                    : diversityData.diversityIndex >= 40
+                                      ? "Focused Specialist"
+                                      : "Emerging Participant"}
                               </p>
                             </div>
                             <div className="insight-card diversity-card">
