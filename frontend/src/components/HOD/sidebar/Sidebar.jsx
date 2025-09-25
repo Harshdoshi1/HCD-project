@@ -70,7 +70,7 @@ const Sidebar = ({ activeItem, setActiveItem, isCollapsed, setIsCollapsed }) => 
         <>
             <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
                 <div className="sidebar-header">
-                    <button className="toggle-button" onClick={() => setIsCollapsed(!isCollapsed)}>
+                    <button className="toggle-button" onClick={() => setIsCollapsed(!isCollapsed)} style={{ display: 'none' }}>
                         <Menu size={24} />
                     </button>
                 </div>
