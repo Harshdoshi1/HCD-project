@@ -288,8 +288,7 @@ const DashboardHOD = () => {
           <div className="dashboard-content">
             {activeItem === "dashboard" && (
               <>
-                <div className="dashboard-container">
-                  <header className="dashboard-header-hod">
+                <header className="dashboard-header-hod">
                     <h1>Dashboard</h1>
                     <div className="dashboard-controls">
                       <div className="batch-filter-container">
@@ -353,8 +352,7 @@ const DashboardHOD = () => {
                     </div>
                   </header>
 
-                  <div className="dashboard-content">
-                    <div className="students-row">
+                  <div className="students-row">
                       <div className="charts-row">
                         <PerformanceOverview
                           selectedBatch={selectedBatch}
@@ -367,7 +365,6 @@ const DashboardHOD = () => {
                         onPointsFilter={handlePointsFilter}
                         onStudentSelect={handleStudentSelect}
                       />
-                    </div>
                   </div>
 
                   {showEmailModal && (
@@ -401,7 +398,6 @@ const DashboardHOD = () => {
                       }}
                     />
                   )}
-                </div>
               </>
             )}
 
